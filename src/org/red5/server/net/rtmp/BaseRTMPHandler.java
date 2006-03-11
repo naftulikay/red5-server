@@ -10,7 +10,7 @@ import org.red5.server.context.AppContext;
 import org.red5.server.context.BaseApplication;
 import org.red5.server.context.HostContext;
 import org.red5.server.context.Scope;
-import org.red5.server.net.BaseHandler;
+import org.red5.server.net.OldBaseHandler;
 import org.red5.server.net.ProtocolState;
 import org.red5.server.net.rtmp.codec.RTMP;
 import org.red5.server.net.rtmp.message.Constants;
@@ -34,7 +34,7 @@ import org.red5.server.stream.Stream;
  * Inherit from this class and overwrite the two "write" methods to support
  * any network library.
  */
-public class BaseRTMPHandler extends BaseHandler implements Constants {
+public class BaseRTMPHandler extends OldBaseHandler implements Constants {
 	protected static Log log =
         LogFactory.getLog(BaseRTMPHandler.class.getName());
 	

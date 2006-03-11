@@ -9,10 +9,10 @@ import org.apache.mina.filter.codec.ProtocolCodecFactory;
 import org.red5.server.context.GlobalContext;
 import org.red5.server.service.ServiceInvoker;
 
-public class BaseHandler extends IoHandlerAdapter {
+public class OldBaseHandler extends IoHandlerAdapter {
 
 	protected static Log log =
-        LogFactory.getLog(BaseHandler.class.getName());
+        LogFactory.getLog(OldBaseHandler.class.getName());
 	
 	public GlobalContext globalContext = null;
 	public ServiceInvoker serviceInvoker = null;

@@ -8,12 +8,12 @@ import org.apache.mina.common.IdleStatus;
 import org.apache.mina.common.IoSession;
 import org.apache.mina.filter.LoggingFilter;
 import org.apache.mina.filter.codec.ProtocolCodecFilter;
-import org.red5.server.net.BaseHandler;
+import org.red5.server.net.OldBaseHandler;
 import org.red5.server.net.remoting.message.RemotingCall;
 import org.red5.server.net.remoting.message.RemotingPacket;
 //import org.red5.server.net.remoting.message.RemotingResponse;
 
-public class RemotingHandler extends BaseHandler {
+public class RemotingHandler extends OldBaseHandler {
 
 	protected static Log log =
         LogFactory.getLog(RemotingHandler.class.getName());

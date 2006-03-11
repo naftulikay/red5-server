@@ -5,18 +5,25 @@ import java.util.Set;
 
 import org.apache.commons.collections.set.UnmodifiableSet;
 import org.red5.server.api.Client;
+import org.red5.server.api.IConnection;
 import org.red5.server.api.Stream;
 
-public abstract class AbstractConnection extends AttributeStore 
-	implements org.red5.server.api.Connection {
+public abstract class Connection extends AttributeStore 
+	implements IConnection {
 	
 	private Client client = null;
+	private String contextPath = null;
 	private Scope scope = null;
 	private HashSet streams = new HashSet();
 
-	public AbstractConnection(Client client, Scope scope){
+	public Connection(Client client, String contextPath){
 		this.client = client;
-		this.scope = scope;
+		this.contextPath = contextPath;
+	}
+	
+	public Connection(Client client, Scope scope){
+		this.client = client;
+		setScope(scope);
 	}
 	
 	public abstract void close();
@@ -25,6 +32,10 @@ public abstract class AbstractConnection extends AttributeStore
 
 	public Client getClient() {
 		return client;
+	}
+	
+	public String getContextPath(){
+		return contextPath;
 	}
 
 	public org.red5.server.api.Scope getScope() {
@@ -39,13 +50,18 @@ public abstract class AbstractConnection extends AttributeStore
 
 	public abstract boolean isConnected();
 
+	public void setScope(Scope scope){
+		this.scope = scope;
+		contextPath = scope.getContextPath();
+	}
+	
 	public boolean switchScope(String contextPath) {
 		// At the moment this method is not dealing with tree schematics
 		Scope newScope = (Scope) ScopeUtils.resolveScope(scope, contextPath);
 		if(newScope == null) return false;
 		if(newScope.connect(this)){
 			scope.disconnect(this);
-			scope = newScope;
+			setScope(newScope);
 			return true;
 		} else 	return false;
 	}

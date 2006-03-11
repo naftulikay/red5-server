@@ -61,7 +61,7 @@ public interface ScopeHandler {
 	 *            the connection object
 	 * @return true if the client can connect, otherwise false
 	 */
-	boolean canConnect(Connection conn, Scope scope);
+	boolean canConnect(IConnection conn, Scope scope);
 
 	/**
 	 * Called just after a client has connected to a scope
@@ -69,7 +69,7 @@ public interface ScopeHandler {
 	 * @param conn
 	 *            connection object
 	 */
-	void onConnect(Connection conn);
+	void onConnect(IConnection conn);
 
 	/**
 	 * Called just before the client disconnects from the scope
@@ -77,7 +77,7 @@ public interface ScopeHandler {
 	 * @param conn
 	 *            connection object
 	 */
-	void onDisconnect(Connection conn);
+	void onDisconnect(IConnection conn);
 
 	/**
 	 * Can the service call proceed

@@ -2,7 +2,7 @@ package org.red5.server.api.impl;
 
 import java.util.HashMap;
 
-import org.red5.server.api.Connection;
+import org.red5.server.api.IConnection;
 import org.red5.server.api.Scope;
 
 public class Client extends AttributeStore  
@@ -31,8 +31,8 @@ public class Client extends AttributeStore
 		return creationTime;
 	}
 
-	public Connection lookupConnection(Scope scope){
-		return (Connection) scopeToConnMap.get(scope);
+	public IConnection lookupConnection(Scope scope){
+		return (IConnection) scopeToConnMap.get(scope);
 	}
 	
 	/* at the moment only a single conn per scope allowed
@@ -75,11 +75,11 @@ public class Client extends AttributeStore
 		return "Client: "+id;
 	}
 	
-	void register(Connection conn){
+	void register(IConnection conn){
 		scopeToConnMap.put(conn.getScope(), conn);
 	}
 	
-	void unregister(Connection conn){
+	void unregister(IConnection conn){
 		scopeToConnMap.remove(conn.getScope());
 	}
 		

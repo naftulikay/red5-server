@@ -2,7 +2,7 @@ package org.red5.server.api.impl;
 
 import org.red5.server.api.BroadcastStream;
 import org.red5.server.api.Call;
-import org.red5.server.api.Connection;
+import org.red5.server.api.IConnection;
 import org.red5.server.api.OnDemandStream;
 import org.red5.server.api.Scope;
 import org.red5.server.api.ScopeHandler;
@@ -90,7 +90,7 @@ public class ScopeAdapter implements ScopeHandler {
 		return canCallService;
 	}
 
-	public boolean canConnect(Connection conn, Scope scope) {
+	public boolean canConnect(IConnection conn, Scope scope) {
 		return canConnect;
 	}
 
@@ -138,11 +138,11 @@ public class ScopeAdapter implements ScopeHandler {
 		// nothing
 	}
 
-	public void onConnect(Connection conn) {
+	public void onConnect(IConnection conn) {
 		// nothing
 	}
 
-	public void onDisconnect(Connection conn) {
+	public void onDisconnect(IConnection conn) {
 		// nothing
 	}
 

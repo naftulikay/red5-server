@@ -35,7 +35,7 @@ import java.util.Set;
  * @author The Red5 Project (red5@osflash.org)
  * @author Luke Hubbard (luke@codegent.com)
  */
-public interface Connection extends AttributeStore {
+public interface IConnection extends AttributeStore {
 
 	/**
 	 * Persistent connection type, eg RTMP
@@ -80,7 +80,14 @@ public interface Connection extends AttributeStore {
 	public Client getClient();
 
 	/**
-	 * Get the scope object assicated with this connection
+	 * Get the context path for this connection
+	 * 
+	 * @return context path
+	 */
+	public String getContextPath();
+	
+	/**
+	 * Get the scope object associated with this connection
 	 * 
 	 * @return scope object
 	 */
@@ -94,9 +101,9 @@ public interface Connection extends AttributeStore {
 	 *            any kind of simple object
 	 */
 	public void dispatchEvent(Object object);
-
+	
 	/**
-	 * Attempt to enter a new scope
+	 * Attempt to change to a new scope
 	 * 
 	 * @param contextPath
 	 *            the desired context path, can be relative or absolute

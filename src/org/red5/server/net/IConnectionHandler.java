@@ -1,19 +1,19 @@
 package org.red5.server.net;
 
 import org.red5.server.api.Client;
-import org.red5.server.api.Connection;
+import org.red5.server.api.IConnection;
 import org.red5.server.api.Scope;
 
 public interface IConnectionHandler {
 
-	public Client newClient();
+	public Client newClient(String host) throws HostNotFoundException;
 	
-	public Client lookupClient(String sessionId);
+	public Client lookupClient(String sessionId) throws ClientNotFoundException;
 	
-	public Scope  lookupScope(String host, String contextPath);
+	public Scope  lookupScope(Client client, String contextPath) throws ScopeNotFoundException;
 	
-	public boolean connect(Connection conn);
+	public boolean connect(IConnection conn) throws AccessDeniedException;
 	
-	public void disconnect(Connection conn);
+	public void disconnect(IConnection conn);
 	
 }

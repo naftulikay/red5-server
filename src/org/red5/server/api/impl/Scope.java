@@ -7,7 +7,7 @@ import java.util.Set;
 
 import org.apache.commons.collections.set.UnmodifiableSet;
 import org.red5.server.api.BroadcastStream;
-import org.red5.server.api.Connection;
+import org.red5.server.api.IConnection;
 import org.red5.server.api.ScopeHandler;
 import org.red5.server.api.SharedObject;
 import org.springframework.context.ApplicationContext;
@@ -107,7 +107,7 @@ public class Scope extends AttributeStore
 		return (parent != null);
 	}
 
-	boolean connect(Connection conn) {
+	boolean connect(IConnection conn) {
 		if(!handler.canConnect(conn, this)) return false;
 		if(!clients.contains(conn.getClient())){
 			clients.add(conn.getClient());
@@ -116,7 +116,7 @@ public class Scope extends AttributeStore
 		return true;
 	}
 	
-	void disconnect(Connection conn){
+	void disconnect(IConnection conn){
 		if(clients.contains(conn.getClient())){
 			clients.remove(conn.getClient());
 			handler.onDisconnect(conn);

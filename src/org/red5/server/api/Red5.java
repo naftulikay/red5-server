@@ -45,7 +45,7 @@ public class Red5 {
 
 	private static ThreadLocal connThreadLocal = new ThreadLocal();
 
-	public Connection conn = null;
+	public IConnection conn = null;
 
 	/**
 	 * Create a new Red5 object using given connection
@@ -53,7 +53,7 @@ public class Red5 {
 	 * @param conn
 	 *            connection object
 	 */
-	public Red5(Connection conn) {
+	public Red5(IConnection conn) {
 		this.conn = conn;
 	}
 
@@ -65,7 +65,7 @@ public class Red5 {
 		conn = Red5.getConnectionLocal();
 	}
 
-	static void setConnectionLocal(Connection connection) {
+	static void setConnectionLocal(IConnection connection) {
 		connThreadLocal.set(connection);
 	}
 
@@ -74,8 +74,8 @@ public class Red5 {
 	 * 
 	 * @return connection object
 	 */
-	public static Connection getConnectionLocal() {
-		return (Connection) connThreadLocal.get();
+	public static IConnection getConnectionLocal() {
+		return (IConnection) connThreadLocal.get();
 	}
 
 	/**
@@ -83,7 +83,7 @@ public class Red5 {
 	 * 
 	 * @return connection object
 	 */
-	public Connection getConnection() {
+	public IConnection getConnection() {
 		return conn;
 	}
 

@@ -16,7 +16,6 @@ import org.red5.io.object.Deserializer;
 import org.red5.io.object.Serializer;
 import org.red5.server.api.SharedObject;
 import org.red5.server.context.AppContext;
-import org.red5.server.context.PersistentSharedObject;
 import org.springframework.core.io.Resource;
 
 
@@ -77,7 +76,7 @@ public class SharedObjectFilePersistence
 				Deserializer deserializer = new Deserializer();
 				String name = (String) deserializer.deserialize(in);
 				Map attributes = (Map) deserializer.deserialize(in);
-				PersistentSharedObject sharedObject = new PersistentSharedObject(name, true, this);
+				org.red5.server.api.impl.SharedObject sharedObject = new org.red5.server.api.impl.SharedObject(name, true, this);
 				sharedObject.setData(attributes);
 				super.storeSharedObject(sharedObject);
 				log.info("Loaded shared object " + sharedObject.getName() + " from " + filename);

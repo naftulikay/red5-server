@@ -159,17 +159,17 @@ public class BaseRTMPHandler extends BaseHandler implements Constants {
 				 *      a "disconnect" - the same event is sent for the "clear" method
 				 *      as well as the disconnect of a client.
 				 */
-				so.clear();
+				so.removeAttributes();
 				break;
 			
 			case SO_SET_ATTRIBUTE:
 				// The client wants to update an attribute
-				so.updateAttribute(event.getKey(), event.getValue());
+				so.setAttribute(event.getKey(), event.getValue());
 				break;
 			
 			case SO_DELETE_ATTRIBUTE:
 				// The client wants to remove an attribute
-				so.deleteAttribute(event.getKey());
+				so.removeAttribute(event.getKey());
 				break;
 				
 			case SO_SEND_MESSAGE:

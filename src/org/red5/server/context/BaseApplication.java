@@ -96,7 +96,7 @@ public class BaseApplication
 			// Unregister client from shared objects
 			Iterator it = this.soPersistence.getSharedObjects();
 			while (it.hasNext()) {
-				PersistentSharedObject so = (PersistentSharedObject) it.next();
+				SharedObject so = (SharedObject) it.next();
 				so.unregisterClient(client);
 			}
 		}
@@ -314,14 +314,14 @@ public class BaseApplication
 			
 		if (persistence == null) {
 			// XXX: maybe we should thow an exception here as a non-persistent SO doesn't make any sense...
-			return new PersistentSharedObject(name, false, null);
+			return new org.red5.server.api.impl.SharedObject(name, false, null);
 		}
 		
 		SharedObject result = persistence.loadSharedObject(name);
 		if (result == null) {
 			// Create new shared object with given name
 			log.info("Creating new shared object " + name);
-			result = new PersistentSharedObject(name, persistent, persistence);
+			result = new org.red5.server.api.impl.SharedObject(name, persistent, persistence);
 			persistence.storeSharedObject(result);
 		}
 		

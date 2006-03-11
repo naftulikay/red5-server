@@ -33,9 +33,9 @@ import org.red5.server.context.Client;
  * <p>
  * <code>
  * SharedObject.beginUpdate();<br />
- * SharedObject.updateAttribute("One", "1");<br />
- * SharedObject.updateAttribute("Two", "2");<br />
- * SharedObject.deleteAttribute("Three");<br />
+ * SharedObject.setAttribute("One", "1");<br />
+ * SharedObject.setAttribute("Two", "2");<br />
+ * SharedObject.setAttribute("Three");<br />
  * SharedObject.endUpdate();<br />
  * </code>
  * </p>
@@ -47,7 +47,7 @@ import org.red5.server.context.Client;
  * @author Joachim Bauch (jojo@struktur.de)
  */
 
-public interface SharedObject {
+public interface SharedObject extends AttributeStore {
 
 	/**
 	 * Returns the name of the shared object.
@@ -82,35 +82,6 @@ public interface SharedObject {
 	public Map getData();
 
 	/**
-	 * Add / edit an attribute.
-	 * 
-	 * @param name
-	 *            the name of the attribute to change
-	 * @param value
-	 *            the new value of the attribute
-	 * @return true if the attribute value has changed, false otherwise
-	 */
-	public boolean updateAttribute(String name, Object value);
-
-	/**
-	 * Return the value for a given attribute.
-	 * 
-	 * @param name
-	 *            the name of the attribute to get
-	 * @return the attribute value or null if the attribute doesn't exist
-	 */
-	public Object getAttribute(String name);
-
-	/**
-	 * Remove an attribute from the shared object.
-	 * 
-	 * @param name
-	 *            the name of the attribute to delete
-	 * @return true if the attribute has been found and deleted, false otherwise
-	 */
-	public boolean deleteAttribute(String name);
-
-	/**
 	 * Send a message to a handler of the shared object.
 	 * 
 	 * @param handler
@@ -120,11 +91,6 @@ public interface SharedObject {
 	 *            handler
 	 */
 	public void sendMessage(String handler, List arguments);
-
-	/**
-	 * Delete all attributes of the shared object.
-	 */
-	public void clear();
 
 	/**
 	 * Start performing multiple updates to the shared object.

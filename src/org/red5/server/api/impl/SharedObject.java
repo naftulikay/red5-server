@@ -1,30 +1,32 @@
-package org.red5.server.context;
+package org.red5.server.api.impl;
 
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.red5.server.api.SharedObject;
+import org.red5.server.context.Client;
+import org.red5.server.context.Scope;
 import org.red5.server.net.rtmp.Channel;
 import org.red5.server.net.rtmp.BaseConnection;
 import org.red5.server.net.rtmp.message.Constants;
 import org.red5.server.net.rtmp.message.SharedObjectEvent;
 import org.red5.server.SharedObjectPersistence;
 
-public class PersistentSharedObject implements SharedObject, Constants {
+public class SharedObject implements org.red5.server.api.SharedObject, Constants {
 
 	protected static Log log =
-        LogFactory.getLog(PersistentSharedObject.class.getName());
+        LogFactory.getLog(SharedObject.class.getName());
 
 	protected String name;
 	protected SharedObjectPersistence persistence = null;
 	protected int version = 0;
 	protected boolean persistent = true;
-	protected HashMap data = new HashMap();
+	protected AttributeStore data = new AttributeStore();
 	protected HashSet clients = new HashSet();
 	protected int updateCounter = 0;
 	protected boolean modified = false;
@@ -32,7 +34,7 @@ public class PersistentSharedObject implements SharedObject, Constants {
 	private org.red5.server.net.rtmp.message.SharedObject ownerMessage;
 	private org.red5.server.net.rtmp.message.SharedObject syncMessage;
 	
-	public PersistentSharedObject(String name, boolean persistent, SharedObjectPersistence persistence) {
+	public SharedObject(String name, boolean persistent, SharedObjectPersistence persistence) {
 		this.name = name;
 		this.persistent = persistent;
 		this.persistence = persistence;
@@ -113,16 +115,21 @@ public class PersistentSharedObject implements SharedObject, Constants {
 		this.sendUpdates();
 	}
 	
-	public Object getAttribute(String name) {
-		return this.data.get(name);
+	public boolean hasAttribute(String name) {
+		return this.data.hasAttribute(name);
 	}
 	
-	public boolean updateAttribute(String name, Object value) {
-		Object old = this.data.get(name);
-		// Send confirmation to client
+	public Set getAttributeNames() {
+		return this.data.getAttributeNames();
+	}
+	
+	public Object getAttribute(String name) {
+		return this.data.getAttribute(name);
+	}
+	
+	public boolean setAttribute(String name, Object value) {
 		this.ownerMessage.addEvent(new SharedObjectEvent(SO_CLIENT_UPDATE_ATTRIBUTE, name, null));
-		if ((old == null) || (!old.equals(value))) {
-			this.data.put(name, value);
+		if (this.data.setAttribute(name, value)) {
 			this.modified = true;
 			// only sync if the attribute changed 
 			this.syncMessage.addEvent(new SharedObjectEvent(SO_CLIENT_UPDATE_DATA, name, value));
@@ -134,9 +141,28 @@ public class PersistentSharedObject implements SharedObject, Constants {
 		}
 	}
 	
-	public boolean deleteAttribute(String name) {
-		boolean result = this.data.containsKey(name);
-		this.data.remove(name);
+	public void setAttributes(Map values) {
+		beginUpdate();
+		Iterator it = values.keySet().iterator();
+		while (it.hasNext()) {
+			String name = (String) it.next();
+			setAttribute(name, values.get(name));
+		}
+		endUpdate();
+	}
+	
+	public void setAttributes(org.red5.server.api.AttributeStore values) {
+		beginUpdate();
+		Iterator it = values.getAttributeNames().iterator();
+		while (it.hasNext()) {
+			String name = (String) it.next();
+			setAttribute(name, values.getAttribute(name));
+		}
+		endUpdate();
+	}
+	
+	public boolean removeAttribute(String name) {
+		boolean result = this.data.removeAttribute(name);
 		// Send confirmation to client
 		this.ownerMessage.addEvent(new SharedObjectEvent(SO_CLIENT_DELETE_DATA, name, null));
 		if (result) {
@@ -153,13 +179,21 @@ public class PersistentSharedObject implements SharedObject, Constants {
 	}
 	
 	public void setData(Map data) {
-		this.data.clear();
-		this.data.putAll(data);
+		this.data.removeAttributes();
+		this.data.setAttributes(data);
 		this.modified = false;
 	}
 	
 	public Map getData() {
-		return this.data;
+		Map result = new HashMap();
+		Iterator it = this.data.getAttributeNames().iterator();
+		while (it.hasNext()) {
+			String name = (String) it.next();
+			Object value = this.data.getAttribute(name);
+			result.put(name, value);
+		}
+		
+		return result;
 	}
 	
 	public int getVersion() {
@@ -170,16 +204,16 @@ public class PersistentSharedObject implements SharedObject, Constants {
 		this.version += 1;
 	}
 	
-	public void clear() {
+	public void removeAttributes() {
 		// TODO: there must be a direct way to clear the SO on the client side...
-		Iterator keys = this.data.keySet().iterator();
+		Iterator keys = this.data.getAttributeNames().iterator();
 		while (keys.hasNext()) {
 			String key = (String) keys.next();
 			this.ownerMessage.addEvent(new SharedObjectEvent(SO_CLIENT_DELETE_DATA, key, null));
 			this.syncMessage.addEvent(new SharedObjectEvent(SO_CLIENT_DELETE_DATA, key, null));
 		}
 		
-		this.data.clear();
+		this.data.removeAttributes();
 		this.modified = true;
 		this.notifyModified();
 	}
@@ -189,7 +223,7 @@ public class PersistentSharedObject implements SharedObject, Constants {
 		
 		// prepare response for new client
 		this.ownerMessage.addEvent(new SharedObjectEvent(SO_CLIENT_INITIAL_DATA, null, null));
-		if (!this.data.isEmpty())
+		if (!this.data.getAttributeNames().isEmpty())
 			this.ownerMessage.addEvent(new SharedObjectEvent(SO_CLIENT_UPDATE_DATA, null, this.data));
 		
 		// we call notifyModified here to send response if we're not in a beginUpdate block
@@ -200,7 +234,7 @@ public class PersistentSharedObject implements SharedObject, Constants {
 		this.clients.remove(client);
 		if (!this.persistent && this.clients.isEmpty()) {
 			log.info("Deleting shared object " + this.name + " because all clients disconnected.");
-			this.data.clear();
+			this.data.removeAttributes();
 			this.persistence.deleteSharedObject(this.name);
 		}
 	}

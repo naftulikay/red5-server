@@ -1,5 +1,6 @@
 package org.red5.server.api;
 
+import java.util.Map;
 import java.util.Set;
 
 /*
@@ -47,9 +48,26 @@ public interface AttributeStore {
 	 *            the name of the attribute to change
 	 * @param value
 	 *            the new value of the attribute
+	 * @return true if the attribute value changed otherwise false
 	 */
-	public void setAttribute(String name, Object value);
+	public boolean setAttribute(String name, Object value);
 
+	/**
+	 * Set multiple attributes on this object
+	 * 
+	 * @param values
+	 *            the attributes to set
+	 */
+	public void setAttributes(Map values);
+	
+	/**
+	 * Set multiple attributes on this object
+	 * 
+	 * @param values
+	 *            the attributes to set
+	 */
+	public void setAttributes(AttributeStore values);
+	
 	/**
 	 * Return the value for a given attribute.
 	 * 
@@ -73,7 +91,12 @@ public interface AttributeStore {
 	 * 
 	 * @param name
 	 *            the name of the attribute to remove
+	 * @return true if the attribute was found and removed otherwise false
 	 */
-	public void removeAttribute(String name);
+	public boolean removeAttribute(String name);
 
+	/**
+	 * Remove all attributes
+	 */
+	public void removeAttributes();
 }

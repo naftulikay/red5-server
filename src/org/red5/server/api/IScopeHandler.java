@@ -37,15 +37,6 @@ package org.red5.server.api;
 public interface IScopeHandler {
 
 	/**
-	 * Can a new scope be created for a given context path
-	 * 
-	 * @param contextPath
-	 *            the context path, eg: /myapp/room
-	 * @return true if the scope can be created, otherwise false
-	 */
-	boolean canCreateScope(String contextPath);
-
-	/**
 	 * Called when a scope is created for the first time
 	 * 
 	 * @param scope
@@ -57,15 +48,6 @@ public interface IScopeHandler {
 	 * Called just before a scope is disposed
 	 */
 	void onDisposeScope(IScope scope);
-
-	/**
-	 * Can a given client connect to a scope
-	 * 
-	 * @param conn
-	 *            the connection object
-	 * @return true if the client can connect, otherwise false
-	 */
-	boolean canConnect(IConnection conn, IScope scope);
 
 	/**
 	 * Called just after a client has connected to a scope
@@ -82,15 +64,6 @@ public interface IScopeHandler {
 	 *            connection object
 	 */
 	void onDisconnect(IConnection conn);
-
-	/**
-	 * Can the service call proceed
-	 * 
-	 * @param call
-	 *            call object holding service name, method, and arguments
-	 * @return true if the client can call the service, otherwise false
-	 */
-	boolean canCallService(ICall call);
 
 	/**
 	 * Called just before a service call This is a chance to modify the call
@@ -120,15 +93,6 @@ public interface IScopeHandler {
 	ICall postProcessServiceCall(ICall call);
 
 	/**
-	 * Can an event be broadcast to all connected clients
-	 * 
-	 * @param event
-	 *            the event object
-	 * @return true if the broadcast can continue
-	 */
-	boolean canBroadcastEvent(Object event);
-
-	/**
 	 * Called when an event is broadcast
 	 * 
 	 * @param event
@@ -137,15 +101,6 @@ public interface IScopeHandler {
 	void onEventBroadcast(Object event);
 
 	// The following methods will only be called for RTMP connections
-
-	/**
-	 * Can the stream be published
-	 * 
-	 * @param name
-	 *            of the stream
-	 * @return true if the client can publish the stream, otherwise false
-	 */
-	boolean canPublishStream(String name);
 
 	/**
 	 * Called when the client begins publishing
@@ -181,15 +136,6 @@ public interface IScopeHandler {
 	void onBroadcastStreamStart(IStream stream);
 
 	/**
-	 * Can a client record a stream with a given name
-	 * 
-	 * @param name
-	 *            name of the stream to be recorded, usually the name of the FLV
-	 * @return true if the record can continue, otherwise false
-	 */
-	boolean canRecordStream(String name);
-
-	/**
 	 * Called when a recording starts
 	 * 
 	 * @param stream
@@ -204,15 +150,6 @@ public interface IScopeHandler {
 	 *            the stream object
 	 */
 	void onRecordStreamStop(IStream stream);
-
-	/**
-	 * Can a client subscribe to a broadcast stream
-	 * 
-	 * @param name
-	 *            the name of the stream
-	 * @return true if they can subscribe, otherwise false
-	 */
-	boolean canSubscribeToBroadcastStream(String name);
 
 	/**
 	 * Called when a client subscribes to a broadcast
@@ -231,15 +168,6 @@ public interface IScopeHandler {
 	void onBroadcastStreamUnsubscribe(IBroadcastStream stream);
 
 	/**
-	 * Can a client connect to an on demand stream
-	 * 
-	 * @param name
-	 *            the name of the stream, this is normally the path to the FLV
-	 * @return true if the connect can continue, otherwise false to reject
-	 */
-	boolean canConnectToOnDemandStream(String name);
-
-	/**
 	 * Called when a client connects to an on demand stream
 	 * 
 	 * @param stream
@@ -256,34 +184,12 @@ public interface IScopeHandler {
 	void onOnDemandStreamDisconnect(IOnDemandStream stream);
 
 	/**
-	 * Can a client connect to a shared object
-	 * 
-	 * @param soName
-	 *            the name of the shared object, since it may not exist yet
-	 * @return true if they can connect, otherwise false
-	 */
-	boolean canConnectSharedObject(String soName);
-
-	/**
 	 * Called when a client connects to a shared object
 	 * 
 	 * @param so
 	 *            the shared object
 	 */
 	void onSharedObjectConnect(ISharedObject so);
-
-	/**
-	 * Can a shared object attribute be updated
-	 * 
-	 * @param so
-	 *            the shared object be updated
-	 * @param key
-	 *            the name of the attribute
-	 * @param value
-	 *            the value of the attribute
-	 * @return true if the update can continue
-	 */
-	boolean canUpdateSharedObject(ISharedObject so, String key, Object value);
 
 	/**
 	 * Called when a shared object attribute is updated
@@ -298,17 +204,6 @@ public interface IScopeHandler {
 	void onSharedObjectUpdate(ISharedObject so, String key, Object value);
 
 	/**
-	 * Can the client delete a shared object attribute
-	 * 
-	 * @param so
-	 *            the shared object
-	 * @param key
-	 *            the name of the attribute to be deleted
-	 * @return true if the delete can continue, otherwise false
-	 */
-	boolean canDeleteSharedObject(ISharedObject so, String key);
-
-	/**
 	 * Called when an attribute is deleted from the shared object
 	 * 
 	 * @param so
@@ -317,19 +212,6 @@ public interface IScopeHandler {
 	 *            the name of the attribute to delete
 	 */
 	void onSharedObjectDelete(ISharedObject so, String key);
-
-	/**
-	 * Can a shared object send continue
-	 * 
-	 * @param so
-	 *            the shared object
-	 * @param method
-	 *            the method name
-	 * @param params
-	 *            the arguments
-	 * @return true if the send can continue, otherwise false
-	 */
-	boolean canSendSharedObject(ISharedObject so, String method, Object[] params);
 
 	/**
 	 * Called when a shared object method call is sent
@@ -343,4 +225,9 @@ public interface IScopeHandler {
 	 */
 	void onSharedObjectSend(ISharedObject so, String method, Object[] params);
 
+	/**
+	 * Get the autorization object for this scope handler
+	 */
+	IScopeAuth getScopeAuth(IScope scope); 
+	
 }

@@ -5,12 +5,12 @@ import org.red5.server.api.ICall;
 import org.red5.server.api.IConnection;
 import org.red5.server.api.IOnDemandStream;
 import org.red5.server.api.IScope;
+import org.red5.server.api.IScopeAuth;
 import org.red5.server.api.IScopeHandler;
 import org.red5.server.api.ISharedObject;
 import org.red5.server.api.IStream;
 
-
-public class ScopeAdapter implements IScopeHandler {
+public class DefaultScopeAdapter implements IScopeHandler, IScopeAuth {
 
 	private boolean canCreateScope = true;
 	private boolean canConnect = true;
@@ -130,6 +130,11 @@ public class ScopeAdapter implements IScopeHandler {
 		return canSubscribeToBroadcastStream;
 	}
 
+	public IScopeAuth getScopeAuth(IScope scope){
+		// you can override this method to provide specific auth objects
+		return this;
+	}
+	
 	public void onCreateScope(IScope scope) {
 		// nothing
 	}

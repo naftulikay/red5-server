@@ -166,6 +166,13 @@ public interface IScope extends IAttributeStore {
 	public IScopeHandler getHandler();
 
 	/**
+	 * Get the scope auth
+	 * 
+	 * @return scope auth
+	 */
+	public IScopeAuth getAuth();
+	
+	/**
 	 * Does the scope have a broadcast stream registered with a given name
 	 * 
 	 * @param name
@@ -189,5 +196,10 @@ public interface IScope extends IAttributeStore {
 	 * @return set containing all broadcast names
 	 */
 	public Set getBroadcastStreamNames();
-
+	
+	public boolean isGlobal();
+	public boolean isHost();
+	public boolean isApplication();
+	public boolean isInstance();
+	public int getDepth();
 }

@@ -19,7 +19,7 @@ import org.red5.io.object.Deserializer;
 import org.red5.server.api.Red5;
 import org.red5.server.api.IConnection;
 import org.red5.server.api.ISharedObject;
-import org.red5.server.context.Scope;
+import org.red5.server.context.ZScope;
 import org.red5.server.net.rtmp.Channel;
 import org.red5.server.net.rtmp.RTMPConnection;
 import org.red5.server.net.rtmp.message.Constants;
@@ -87,7 +87,7 @@ public class SharedObject implements ISharedObject, Constants {
 			// Send update to "owner" of this update request
 			this.ownerMessage.setSoId(this.version);
 			this.ownerMessage.setSealed(false);
-			Channel channel = Scope.getChannel();
+			Channel channel = ZScope.getChannel();
 			if (channel != null) {
 				channel.write(this.ownerMessage);
 				log.debug("Owner: " + channel);

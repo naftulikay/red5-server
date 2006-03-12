@@ -9,6 +9,7 @@ import org.apache.commons.collections.set.UnmodifiableSet;
 import org.red5.server.api.IBroadcastStream;
 import org.red5.server.api.IConnection;
 import org.red5.server.api.IScope;
+import org.red5.server.api.IScopeAuth;
 import org.red5.server.api.IScopeHandler;
 import org.red5.server.api.ISharedObject;
 import org.springframework.context.ApplicationContext;
@@ -16,10 +17,17 @@ import org.springframework.core.io.Resource;
 
 public class Scope extends AttributeStore implements IScope {
 	
+	public static final int GLOBAL = 0x00;
+	public static final int HOST = 0x01;
+	public static final int APPLICATION = 0x02;
+	public static final int INSTANCE = 0x04;
+	
 	private IScope parent;
 	private String contextPath = "";
 	private IScopeHandler handler;
+	private IScopeAuth auth; 
 	private ApplicationContext context;
+	private int depth;
 	
 	private HashMap childScopes = new HashMap();
 
@@ -30,8 +38,11 @@ public class Scope extends AttributeStore implements IScope {
 	public Scope(IScope parent, String contextPath, IScopeHandler handler, ApplicationContext context){
 		this.parent = parent;
 		this.contextPath = contextPath;
-		this.handler = handler;
+		this.handler = handler;	
 		this.context = context;
+		this.auth = handler.getScopeAuth(this);
+		if(parent == null) depth = GLOBAL;
+		else depth = parent.getDepth() + 1;
 	}
 	
 	public void dispatchEvent(Object event) {
@@ -70,6 +81,10 @@ public class Scope extends AttributeStore implements IScope {
 		return contextPath;
 	}
 
+	public IScopeAuth getAuth() {
+		return auth;
+	}
+	
 	public IScopeHandler getHandler() {
 		return handler;
 	}
@@ -108,7 +123,7 @@ public class Scope extends AttributeStore implements IScope {
 	}
 
 	boolean connect(IConnection conn) {
-		if(!handler.canConnect(conn, this)) return false;
+		if(!auth.canConnect(conn, this)) return false;
 		if(!clients.contains(conn.getClient())){
 			clients.add(conn.getClient());
 			handler.onConnect(conn);		
@@ -121,6 +136,26 @@ public class Scope extends AttributeStore implements IScope {
 			clients.remove(conn.getClient());
 			handler.onDisconnect(conn);
 		}
+	}
+
+	public int getDepth() {
+		return depth;
+	}
+
+	public boolean isApplication() {
+		return depth == APPLICATION;
+	}
+
+	public boolean isGlobal() {
+		return depth == HOST;
+	}
+
+	public boolean isHost() {
+		return depth == HOST;
+	}
+
+	public boolean isInstance() {
+		return depth == INSTANCE;
 	}
 	
 }

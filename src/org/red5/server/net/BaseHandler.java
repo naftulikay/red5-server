@@ -6,7 +6,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.red5.server.api.IClient;
 import org.red5.server.api.IConnection;
-import org.red5.server.api.Scope;
+import org.red5.server.api.IScope;
 import org.red5.server.context.AppContext;
 import org.red5.server.context.GlobalContext;
 import org.red5.server.context.HostContext;
@@ -83,7 +83,7 @@ public class BaseHandler implements IConnectionHandler {
 		return null;
 	}
 
-	public Scope lookupScope(IClient client, String contextPath)
+	public IScope lookupScope(IClient client, String contextPath)
 			throws ScopeNotFoundException {
 		// TODO Auto-generated method stub
 		return null;

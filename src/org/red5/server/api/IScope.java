@@ -36,7 +36,7 @@ import org.springframework.core.io.Resource;
  * @author The Red5 Project (red5@osflash.org)
  * @author Luke Hubbard (luke@codegent.com)
  */
-public interface Scope extends IAttributeStore {
+public interface IScope extends IAttributeStore {
 
 	/**
 	 * Does this scope have a parent
@@ -50,7 +50,7 @@ public interface Scope extends IAttributeStore {
 	 * 
 	 * @return parent scope, or null if this scope doesn't have a parent
 	 */
-	public Scope getParent();
+	public IScope getParent();
 
 	/**
 	 * Get the context path. eg. /myapp/someroom
@@ -110,7 +110,7 @@ public interface Scope extends IAttributeStore {
 	 *            name of the child scope
 	 * @return the child scope, or null if no scope is found
 	 */
-	public Scope getChildScope(String name);
+	public IScope getChildScope(String name);
 
 	/**
 	 * Get a set of the shared object names
@@ -137,7 +137,7 @@ public interface Scope extends IAttributeStore {
 	 *            the name of the shared object
 	 * @return shared object, or null if not found
 	 */
-	public SharedObject getSharedObject(String name);
+	public ISharedObject getSharedObject(String name);
 
 	/**
 	 * Get a set of connected clients You can get the connections by passing the
@@ -160,7 +160,7 @@ public interface Scope extends IAttributeStore {
 	 * 
 	 * @return scope handler
 	 */
-	public ScopeHandler getHandler();
+	public IScopeHandler getHandler();
 
 	/**
 	 * Does the scope have a broadcast stream registered with a given name
@@ -178,7 +178,7 @@ public interface Scope extends IAttributeStore {
 	 *            the name of the broadcast
 	 * @return broadcast stream object
 	 */
-	public BroadcastStream getBroadcastStream(String name);
+	public IBroadcastStream getBroadcastStream(String name);
 
 	/**
 	 * Get a set containing the names of all the broadcasts

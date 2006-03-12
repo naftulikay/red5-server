@@ -7,7 +7,8 @@ import java.util.Set;
 import org.apache.commons.collections.set.UnmodifiableSet;
 import org.red5.server.api.IClient;
 import org.red5.server.api.IConnection;
-import org.red5.server.api.Stream;
+import org.red5.server.api.IScope;
+import org.red5.server.api.IStream;
 
 public abstract class Connection extends AttributeStore 
 	implements IConnection {
@@ -41,7 +42,7 @@ public abstract class Connection extends AttributeStore
 		return contextPath;
 	}
 
-	public org.red5.server.api.Scope getScope() {
+	public IScope getScope() {
 		return scope;
 	}
 
@@ -69,11 +70,11 @@ public abstract class Connection extends AttributeStore
 		} else 	return false;
 	}
 	
-	void register(Stream stream){
+	void register(IStream stream){
 		streams.add(stream);
 	}
 	
-	void unregister(Stream stream){
+	void unregister(IStream stream){
 		if(streams.contains(stream))
 			streams.remove(stream);
 	}

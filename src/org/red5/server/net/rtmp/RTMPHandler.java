@@ -8,6 +8,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.mina.common.ByteBuffer;
 import org.red5.server.api.IConnection;
+import org.red5.server.api.ISharedObject;
 import org.red5.server.api.Red5;
 import org.red5.server.context.AppContext;
 import org.red5.server.context.BaseApplication;
@@ -140,7 +141,7 @@ public class RTMPHandler extends BaseHandler implements Constants {
 		String name = request.getName();
 		
 		log.debug("Received SO request from " + channel + "(" + request + ")");
-		org.red5.server.api.SharedObject so = app.getSharedObject(name, request.isPersistent());
+		ISharedObject so = app.getSharedObject(name, request.isPersistent());
 		
 		so.beginUpdate();
 		Iterator it = request.getEvents().iterator();

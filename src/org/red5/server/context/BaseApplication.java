@@ -11,8 +11,8 @@ import org.red5.server.SharedObjectRamPersistence;
 import org.red5.server.api.IClient;
 import org.red5.server.api.IConnection;
 import org.red5.server.api.IMapping;
+import org.red5.server.api.ISharedObject;
 import org.red5.server.api.Red5;
-import org.red5.server.api.SharedObject;
 import org.red5.server.net.rtmp.RTMPConnection;
 import org.red5.server.net.rtmp.message.Ping;
 import org.red5.server.net.rtmp.status.StatusObject;
@@ -107,7 +107,7 @@ public class BaseApplication
 			// Unregister client from shared objects
 			Iterator it = this.soPersistence.getSharedObjects();
 			while (it.hasNext()) {
-				SharedObject so = (SharedObject) it.next();
+				ISharedObject so = (ISharedObject) it.next();
 				so.unregister(connection);
 			}
 		}
@@ -319,7 +319,7 @@ public class BaseApplication
 	
 	// -----------------------------------------------------------------------------
 	
-	public SharedObject getSharedObject(String name, boolean persistent) {
+	public ISharedObject getSharedObject(String name, boolean persistent) {
 		SharedObjectPersistence persistence = this.soPersistence;
 		if (!persistent) {
 			persistence = this.soTransience;
@@ -330,7 +330,7 @@ public class BaseApplication
 			return new org.red5.server.api.impl.SharedObject(name, false, null);
 		}
 		
-		SharedObject result = persistence.loadSharedObject(name);
+		ISharedObject result = persistence.loadSharedObject(name);
 		if (result == null) {
 			// Create new shared object with given name
 			log.info("Creating new shared object " + name);

@@ -45,7 +45,7 @@ import java.util.List;
  * @author Joachim Bauch (jojo@struktur.de)
  */
 
-public interface SharedObject extends IAttributeStore {
+public interface ISharedObject extends IAttributeStore {
 
 	/**
 	 * Returns the name of the shared object.

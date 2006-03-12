@@ -4,7 +4,7 @@ import java.util.HashMap;
 
 import org.red5.server.api.IClient;
 import org.red5.server.api.IConnection;
-import org.red5.server.api.Scope;
+import org.red5.server.api.IScope;
 import org.red5.server.api.impl.Client;
 import org.red5.server.net.AccessDeniedException;
 import org.red5.server.net.ClientNotFoundException;
@@ -49,7 +49,7 @@ public class DefaultClientRegistry implements IClientRegistry {
 		return (IClient) clients.get(sessionId);
 	}
 
-	public Scope lookupScope(IClient client, String contextPath)
+	public IScope lookupScope(IClient client, String contextPath)
 			throws ScopeNotFoundException {
 		// TODO Auto-generated method stub
 		return null;

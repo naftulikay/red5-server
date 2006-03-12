@@ -1,16 +1,16 @@
 package org.red5.server.api.impl;
 
-import org.red5.server.api.BroadcastStream;
-import org.red5.server.api.Call;
+import org.red5.server.api.IBroadcastStream;
+import org.red5.server.api.ICall;
 import org.red5.server.api.IConnection;
-import org.red5.server.api.OnDemandStream;
-import org.red5.server.api.Scope;
-import org.red5.server.api.ScopeHandler;
-import org.red5.server.api.SharedObject;
-import org.red5.server.api.Stream;
+import org.red5.server.api.IOnDemandStream;
+import org.red5.server.api.IScope;
+import org.red5.server.api.IScopeHandler;
+import org.red5.server.api.ISharedObject;
+import org.red5.server.api.IStream;
 
 
-public class ScopeAdapter implements ScopeHandler {
+public class ScopeAdapter implements IScopeHandler {
 
 	private boolean canCreateScope = true;
 	private boolean canConnect = true;
@@ -86,11 +86,11 @@ public class ScopeAdapter implements ScopeHandler {
 		return canBroadcastEvent;
 	}
 
-	public boolean canCallService(Call call) {
+	public boolean canCallService(ICall call) {
 		return canCallService;
 	}
 
-	public boolean canConnect(IConnection conn, Scope scope) {
+	public boolean canConnect(IConnection conn, IScope scope) {
 		return canConnect;
 	}
 
@@ -98,15 +98,15 @@ public class ScopeAdapter implements ScopeHandler {
 		return canConnectSharedObject;
 	}
 
-	public boolean canDeleteSharedObject(SharedObject so, String key) {
+	public boolean canDeleteSharedObject(ISharedObject so, String key) {
 		return canDeleteSharedObject;
 	}
 
-	public boolean canSendSharedObject(SharedObject so, String method, Object[] args) {
+	public boolean canSendSharedObject(ISharedObject so, String method, Object[] args) {
 		return canSendSharedObject;
 	}
 
-	public boolean canUpdateSharedObject(SharedObject so, String key, Object value) {
+	public boolean canUpdateSharedObject(ISharedObject so, String key, Object value) {
 		return canUpdateSharedObject;
 	}
 
@@ -130,11 +130,11 @@ public class ScopeAdapter implements ScopeHandler {
 		return canSubscribeToBroadcastStream;
 	}
 
-	public void onCreateScope(Scope scope) {
+	public void onCreateScope(IScope scope) {
 		// nothing
 	}
 
-	public void onDisposeScope(Scope scope) {
+	public void onDisposeScope(IScope scope) {
 		// nothing
 	}
 
@@ -150,71 +150,71 @@ public class ScopeAdapter implements ScopeHandler {
 		// nothing
 	}
 
-	public void onServiceCall(Call call) {
+	public void onServiceCall(ICall call) {
 		// nothing
 	}
 
-	public void onSharedObjectConnect(SharedObject so) {
+	public void onSharedObjectConnect(ISharedObject so) {
 		// nothing
 	}
 
-	public void onSharedObjectDelete(SharedObject so, String key) {
+	public void onSharedObjectDelete(ISharedObject so, String key) {
 		// nothing
 	}
 
-	public void onSharedObjectSend(SharedObject so, String method, Object[] params) {
+	public void onSharedObjectSend(ISharedObject so, String method, Object[] params) {
 		// nothing
 	}
 
-	public void onSharedObjectUpdate(SharedObject so, String key, Object value) {
+	public void onSharedObjectUpdate(ISharedObject so, String key, Object value) {
 		// nothing
 	}
 
-	public void onStreamPublish(Stream stream) {
+	public void onStreamPublish(IStream stream) {
 		// nothing
 	}
 
-	public void onBroadcastStreamStart(Stream stream) {
+	public void onBroadcastStreamStart(IStream stream) {
 		// TODO Auto-generated method stub
 	}
 
-	public void onBroadcastStreamSubscribe(BroadcastStream stream) {
+	public void onBroadcastStreamSubscribe(IBroadcastStream stream) {
 		// TODO Auto-generated method stub
 	}
 
-	public void onBroadcastStreamUnsubscribe(BroadcastStream stream) {
+	public void onBroadcastStreamUnsubscribe(IBroadcastStream stream) {
 		// TODO Auto-generated method stub		
 	}
 
-	public void onOnDemandStreamConnect(OnDemandStream stream) {
+	public void onOnDemandStreamConnect(IOnDemandStream stream) {
 		// TODO Auto-generated method stub
 	}
 
-	public void onOnDemandStreamDisconnect(OnDemandStream stream) {
+	public void onOnDemandStreamDisconnect(IOnDemandStream stream) {
 		// TODO Auto-generated method stub
 	}
 
-	public void onRecordStreamStart(Stream stream) {
+	public void onRecordStreamStart(IStream stream) {
 		// TODO Auto-generated method stub
 	}
 
-	public void onRecordStreamStop(Stream stream) {
+	public void onRecordStreamStop(IStream stream) {
 		// TODO Auto-generated method stub
 	}
 
-	public void onStreamPublishStart(Stream stream) {
+	public void onStreamPublishStart(IStream stream) {
 		// TODO Auto-generated method stub
 	}
 
-	public void onStreamPublishStop(Stream stream) {
+	public void onStreamPublishStop(IStream stream) {
 		// TODO Auto-generated method stub
 	}
 
-	public Call postProcessServiceCall(Call call) {
+	public ICall postProcessServiceCall(ICall call) {
 		return call;
 	}
 
-	public Call preProcessServiceCall(Call call) {
+	public ICall preProcessServiceCall(ICall call) {
 		return call;
 	}
 	

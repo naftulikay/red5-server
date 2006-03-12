@@ -92,7 +92,7 @@ public class Red5 {
 	 * 
 	 * @return scope object
 	 */
-	public Scope getScope() {
+	public IScope getScope() {
 		return conn.getScope();
 	}
 

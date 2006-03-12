@@ -40,7 +40,7 @@ public interface IMapping {
 	 *            the name of the context path eg: /myapp/room
 	 * @return scope handler object, or null if no handler was found
 	 */
-	public ScopeHandler mapContextPathToScopeHandler(String contextPath);
+	public IScopeHandler mapContextPathToScopeHandler(String contextPath);
 
 	/**
 	 * Maps between a service name and a service object

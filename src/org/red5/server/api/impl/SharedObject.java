@@ -11,6 +11,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.red5.server.api.Red5;
 import org.red5.server.api.IConnection;
+import org.red5.server.api.ISharedObject;
 import org.red5.server.context.Scope;
 import org.red5.server.net.rtmp.Channel;
 import org.red5.server.net.rtmp.RTMPConnection;
@@ -18,7 +19,7 @@ import org.red5.server.net.rtmp.message.Constants;
 import org.red5.server.net.rtmp.message.SharedObjectEvent;
 import org.red5.server.SharedObjectPersistence;
 
-public class SharedObject implements org.red5.server.api.SharedObject, Constants {
+public class SharedObject implements ISharedObject, Constants {
 
 	protected static Log log =
         LogFactory.getLog(SharedObject.class.getName());

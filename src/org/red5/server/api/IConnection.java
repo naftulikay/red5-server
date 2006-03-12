@@ -91,7 +91,7 @@ public interface IConnection extends IAttributeStore {
 	 * 
 	 * @return scope object
 	 */
-	public Scope getScope();
+	public IScope getScope();
 
 	/**
 	 * Dispatch an event down this connection You should call isConnected first

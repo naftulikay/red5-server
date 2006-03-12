@@ -14,7 +14,8 @@ import org.red5.io.amf.Input;
 import org.red5.io.amf.Output;
 import org.red5.io.object.Deserializer;
 import org.red5.io.object.Serializer;
-import org.red5.server.api.SharedObject;
+import org.red5.server.api.ISharedObject;
+import org.red5.server.api.impl.SharedObject;
 import org.red5.server.context.AppContext;
 import org.springframework.core.io.Resource;
 
@@ -76,7 +77,7 @@ public class SharedObjectFilePersistence
 				Deserializer deserializer = new Deserializer();
 				String name = (String) deserializer.deserialize(in);
 				Map attributes = (Map) deserializer.deserialize(in);
-				org.red5.server.api.impl.SharedObject sharedObject = new org.red5.server.api.impl.SharedObject(name, true, this);
+				SharedObject sharedObject = new SharedObject(name, true, this);
 				sharedObject.setData(attributes);
 				super.storeSharedObject(sharedObject);
 				log.info("Loaded shared object " + sharedObject.getName() + " from " + filename);
@@ -87,7 +88,7 @@ public class SharedObjectFilePersistence
 		}
 	}
 	
-	private void saveSharedObject(SharedObject object) {
+	private void saveSharedObject(ISharedObject object) {
 		File file = new File(this.appCtx.getBaseDir() + "/sharedObjects");
 		if (!file.isDirectory() && !file.mkdir()) {
 			log.error("Could not create directory " + file.getAbsolutePath());
@@ -121,7 +122,7 @@ public class SharedObjectFilePersistence
 		this.loadSharedObjects();
 	}
 	
-	public void storeSharedObject(SharedObject object) {
+	public void storeSharedObject(ISharedObject object) {
 		super.storeSharedObject(object);
 		this.saveSharedObject(object);
 	}

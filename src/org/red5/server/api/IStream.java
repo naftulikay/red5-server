@@ -25,7 +25,7 @@ package org.red5.server.api;
  * Provides all the common methods shared between OnDemandStream and
  * BroadcastStream
  */
-public abstract interface Stream {
+public abstract interface IStream {
 
 	/**
 	 * Get the current position in seconds
@@ -67,7 +67,7 @@ public abstract interface Stream {
 	 * 
 	 * @return scope object
 	 */
-	public Scope getScope();
+	public IScope getScope();
 
 	/**
 	 * Close this stream, this will disconnect all clients

@@ -20,23 +20,17 @@ package org.red5.server.api;
  */
 
 /**
- * Extends stream to add methods for broadcast streaming
+ * Object representing a methods call. This object will be passed to
+ * ScopeHandlers and also returned by RTMP and Remoting client calls when we
+ * have client code.
  * 
- * TODO: What should be pass to the methods?
+ * TODO: Will be a subset of our current call object
  * 
  * @author The Red5 Project (red5@osflash.org)
  * @author Luke Hubbard (luke@codegent.com)
  */
-public interface BroadcastStream extends Stream {
+public interface ICall {
 
-	/**
-	 * Subscribe to this stream
-	 */
-	public void subscribe();
-
-	/**
-	 * Unsubscire to this stream
-	 */
-	public void unsubscirbe();
+	// TODO: Will be a subset of our current call object
 
 }

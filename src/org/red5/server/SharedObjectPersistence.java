@@ -2,7 +2,7 @@ package org.red5.server;
 
 import java.util.Iterator;
 
-import org.red5.server.api.SharedObject;
+import org.red5.server.api.ISharedObject;
 import org.red5.server.context.AppContext;
 
 /*
@@ -49,7 +49,7 @@ public interface SharedObjectPersistence {
 	 * 
 	 * @param	object	the shared object to store
 	 */
-	void storeSharedObject(SharedObject object);
+	void storeSharedObject(ISharedObject object);
 
 	/**
 	 * Returns the shared object with the given name.
@@ -57,7 +57,7 @@ public interface SharedObjectPersistence {
 	 * @param	name	the name of the shared object to load
 	 * @return	the requested object or <code>null</code> if no such shared object exists
 	 */
-	SharedObject loadSharedObject(String name);
+	ISharedObject loadSharedObject(String name);
 
 	/**
 	 * Delete the shared object with the specified name.

@@ -1,7 +1,7 @@
 package org.red5.server.api.impl;
 
 import org.red5.server.api.IMapping;
-import org.red5.server.api.ScopeHandler;
+import org.red5.server.api.IScopeHandler;
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
@@ -33,17 +33,17 @@ public class DefaultMapping implements IMapping, ApplicationContextAware {
 		this.serviceSuffix = serviceSuffix;
 	}
 
-	public ScopeHandler mapContextPathToScopeHandler(String contextPath) {
-		ScopeHandler handler = null;
+	public IScopeHandler mapContextPathToScopeHandler(String contextPath) {
+		IScopeHandler handler = null;
 		if(contextPath == null || contextPath.equals("") ){
-			handler = (ScopeHandler) context.getBean(appScopeHandlerName);
+			handler = (IScopeHandler) context.getBean(appScopeHandlerName);
 		} else {
 			if(contextPath.indexOf("/") != -1){
 				contextPath = contextPath.substring(0, contextPath.indexOf("/"));
 			}
-			handler = (ScopeHandler) context.getBean(contextPath+scopeHandlerSuffix);
+			handler = (IScopeHandler) context.getBean(contextPath+scopeHandlerSuffix);
 			if(handler == null){
-				handler =  (ScopeHandler) context.getBean(scopeHandlerSuffix);
+				handler =  (IScopeHandler) context.getBean(scopeHandlerSuffix);
 			}
 		}
 		return handler;

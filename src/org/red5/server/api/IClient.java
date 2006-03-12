@@ -68,6 +68,6 @@ public interface IClient extends IAttributeStore {
 	 *            the current scope object
 	 * @return connection the associated connection object
 	 */
-	public IConnection lookupConnection(Scope scope);
+	public IConnection lookupConnection(IScope scope);
 
 }

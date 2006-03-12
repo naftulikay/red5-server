@@ -25,7 +25,7 @@ package org.red5.server.api;
  * @author The Red5 Project (red5@osflash.org)
  * @author Luke Hubbard (luke@codegent.com)
  */
-public interface OnDemandStream extends Stream {
+public interface IOnDemandStream extends IStream {
 
 	/**
 	 * Start playback

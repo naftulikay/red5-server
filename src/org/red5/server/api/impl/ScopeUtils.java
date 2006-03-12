@@ -1,13 +1,13 @@
 package org.red5.server.api.impl;
 
-import org.red5.server.api.Scope;
+import org.red5.server.api.IScope;
 
 public class ScopeUtils {
 	
 	private static final String SLASH = "/";
 	
-	public static Scope resolveScope(Scope from, String path){
-		Scope current = from;
+	public static IScope resolveScope(IScope from, String path){
+		IScope current = from;
 		if(path.startsWith(SLASH)){
 			current = ScopeUtils.findRoot(current);
 			path = path.substring(1,path.length());
@@ -30,16 +30,16 @@ public class ScopeUtils {
 		return current;
 	}
 
-	public static Scope findRoot(Scope from){
-		Scope current = from;
+	public static IScope findRoot(IScope from){
+		IScope current = from;
 		while(current.hasParent()){
 			current = current.getParent();
 		}
 		return current;
 	}
 	
-	public static boolean isAncestor(Scope from, Scope ancestor){
-		Scope current = from;
+	public static boolean isAncestor(IScope from, IScope ancestor){
+		IScope current = from;
 		while(current.hasParent()){
 			current = current.getParent();
 			if(current.equals(ancestor)) return true;

@@ -3,7 +3,7 @@ package org.red5.server.api.impl;
 import java.util.HashMap;
 
 import org.red5.server.api.IConnection;
-import org.red5.server.api.Scope;
+import org.red5.server.api.IScope;
 
 public class Client extends AttributeStore  
 	implements  org.red5.server.api.IClient {
@@ -31,7 +31,7 @@ public class Client extends AttributeStore
 		return creationTime;
 	}
 
-	public IConnection lookupConnection(Scope scope){
+	public IConnection lookupConnection(IScope scope){
 		return (IConnection) scopeToConnMap.get(scope);
 	}
 	

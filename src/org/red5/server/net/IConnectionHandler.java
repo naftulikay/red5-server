@@ -2,7 +2,7 @@ package org.red5.server.net;
 
 import org.red5.server.api.IClient;
 import org.red5.server.api.IConnection;
-import org.red5.server.api.Scope;
+import org.red5.server.api.IScope;
 
 public interface IConnectionHandler {
 
@@ -10,7 +10,7 @@ public interface IConnectionHandler {
 	
 	public IClient lookupClient(String sessionId) throws ClientNotFoundException;
 	
-	public Scope  lookupScope(IClient client, String contextPath) throws ScopeNotFoundException;
+	public IScope lookupScope(IClient client, String contextPath) throws ScopeNotFoundException;
 	
 	public boolean connect(IConnection conn) throws AccessDeniedException;
 	

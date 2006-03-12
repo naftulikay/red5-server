@@ -30,7 +30,7 @@ package org.red5.server.api;
  * @author The Red5 Project (red5@osflash.org)
  * @author Luke Hubbard (luke@codegent.com)
  */
-public interface ScopeHandler {
+public interface IScopeHandler {
 
 	/**
 	 * Can a new scope be created for a given context path
@@ -47,12 +47,12 @@ public interface ScopeHandler {
 	 * @param scope
 	 *            the new scope object
 	 */
-	void onCreateScope(Scope scope);
+	void onCreateScope(IScope scope);
 
 	/**
 	 * Called just before a scope is disposed
 	 */
-	void onDisposeScope(Scope scope);
+	void onDisposeScope(IScope scope);
 
 	/**
 	 * Can a given client connect to a scope
@@ -61,7 +61,7 @@ public interface ScopeHandler {
 	 *            the connection object
 	 * @return true if the client can connect, otherwise false
 	 */
-	boolean canConnect(IConnection conn, Scope scope);
+	boolean canConnect(IConnection conn, IScope scope);
 
 	/**
 	 * Called just after a client has connected to a scope
@@ -86,7 +86,7 @@ public interface ScopeHandler {
 	 *            call object holding service name, method, and arguments
 	 * @return true if the client can call the service, otherwise false
 	 */
-	boolean canCallService(Call call);
+	boolean canCallService(ICall call);
 
 	/**
 	 * Called just before a service call This is a chance to modify the call
@@ -96,7 +96,7 @@ public interface ScopeHandler {
 	 *            the call object
 	 * @return same or modified call object
 	 */
-	Call preProcessServiceCall(Call call);
+	ICall preProcessServiceCall(ICall call);
 
 	/**
 	 * Called when a service is called
@@ -104,7 +104,7 @@ public interface ScopeHandler {
 	 * @param call
 	 *            the call object
 	 */
-	void onServiceCall(Call call);
+	void onServiceCall(ICall call);
 
 	/**
 	 * Called just after a service call This is a chance to modify the result
@@ -113,7 +113,7 @@ public interface ScopeHandler {
 	 * @param call
 	 * @return same or modified call object
 	 */
-	Call postProcessServiceCall(Call call);
+	ICall postProcessServiceCall(ICall call);
 
 	/**
 	 * Can an event be broadcast to all connected clients
@@ -149,7 +149,7 @@ public interface ScopeHandler {
 	 * @param stream
 	 *            the stream object
 	 */
-	void onStreamPublishStart(Stream stream);
+	void onStreamPublishStart(IStream stream);
 
 	/**
 	 * Called when the client stops publishing
@@ -157,7 +157,7 @@ public interface ScopeHandler {
 	 * @param stream
 	 *            the stream object
 	 */
-	void onStreamPublishStop(Stream stream);
+	void onStreamPublishStop(IStream stream);
 
 	/**
 	 * Can the client broadcast a stream
@@ -174,7 +174,7 @@ public interface ScopeHandler {
 	 * @param stream
 	 *            the stream object
 	 */
-	void onBroadcastStreamStart(Stream stream);
+	void onBroadcastStreamStart(IStream stream);
 
 	/**
 	 * Can a client record a stream with a given name
@@ -191,7 +191,7 @@ public interface ScopeHandler {
 	 * @param stream
 	 *            the stream object
 	 */
-	void onRecordStreamStart(Stream stream);
+	void onRecordStreamStart(IStream stream);
 
 	/**
 	 * Called when a recording stops
@@ -199,7 +199,7 @@ public interface ScopeHandler {
 	 * @param stream
 	 *            the stream object
 	 */
-	void onRecordStreamStop(Stream stream);
+	void onRecordStreamStop(IStream stream);
 
 	/**
 	 * Can a client subscribe to a broadcast stream
@@ -216,7 +216,7 @@ public interface ScopeHandler {
 	 * @param stream
 	 *            the stream object
 	 */
-	void onBroadcastStreamSubscribe(BroadcastStream stream);
+	void onBroadcastStreamSubscribe(IBroadcastStream stream);
 
 	/**
 	 * Called when a client unsubscribes from a broadcast
@@ -224,7 +224,7 @@ public interface ScopeHandler {
 	 * @param stream
 	 *            the stream object
 	 */
-	void onBroadcastStreamUnsubscribe(BroadcastStream stream);
+	void onBroadcastStreamUnsubscribe(IBroadcastStream stream);
 
 	/**
 	 * Can a client connect to an on demand stream
@@ -241,7 +241,7 @@ public interface ScopeHandler {
 	 * @param stream
 	 *            the stream object
 	 */
-	void onOnDemandStreamConnect(OnDemandStream stream);
+	void onOnDemandStreamConnect(IOnDemandStream stream);
 
 	/**
 	 * Called when a client disconnects from an on demand stream
@@ -249,7 +249,7 @@ public interface ScopeHandler {
 	 * @param stream
 	 *            the stream object
 	 */
-	void onOnDemandStreamDisconnect(OnDemandStream stream);
+	void onOnDemandStreamDisconnect(IOnDemandStream stream);
 
 	/**
 	 * Can a client connect to a shared object
@@ -266,7 +266,7 @@ public interface ScopeHandler {
 	 * @param so
 	 *            the shared object
 	 */
-	void onSharedObjectConnect(SharedObject so);
+	void onSharedObjectConnect(ISharedObject so);
 
 	/**
 	 * Can a shared object attribute be updated
@@ -279,7 +279,7 @@ public interface ScopeHandler {
 	 *            the value of the attribute
 	 * @return true if the update can continue
 	 */
-	boolean canUpdateSharedObject(SharedObject so, String key, Object value);
+	boolean canUpdateSharedObject(ISharedObject so, String key, Object value);
 
 	/**
 	 * Called when a shared object attribute is updated
@@ -291,7 +291,7 @@ public interface ScopeHandler {
 	 * @param value
 	 *            the value of the attribute
 	 */
-	void onSharedObjectUpdate(SharedObject so, String key, Object value);
+	void onSharedObjectUpdate(ISharedObject so, String key, Object value);
 
 	/**
 	 * Can the client delete a shared object attribute
@@ -302,7 +302,7 @@ public interface ScopeHandler {
 	 *            the name of the attribute to be deleted
 	 * @return true if the delete can continue, otherwise false
 	 */
-	boolean canDeleteSharedObject(SharedObject so, String key);
+	boolean canDeleteSharedObject(ISharedObject so, String key);
 
 	/**
 	 * Called when an attribute is deleted from the shared object
@@ -312,7 +312,7 @@ public interface ScopeHandler {
 	 * @param key
 	 *            the name of the attribute to delete
 	 */
-	void onSharedObjectDelete(SharedObject so, String key);
+	void onSharedObjectDelete(ISharedObject so, String key);
 
 	/**
 	 * Can a shared object send continue
@@ -325,7 +325,7 @@ public interface ScopeHandler {
 	 *            the arguments
 	 * @return true if the send can continue, otherwise false
 	 */
-	boolean canSendSharedObject(SharedObject so, String method, Object[] params);
+	boolean canSendSharedObject(ISharedObject so, String method, Object[] params);
 
 	/**
 	 * Called when a shared object method call is sent
@@ -337,6 +337,6 @@ public interface ScopeHandler {
 	 * @param params
 	 *            the arguments
 	 */
-	void onSharedObjectSend(SharedObject so, String method, Object[] params);
+	void onSharedObjectSend(ISharedObject so, String method, Object[] params);
 
 }

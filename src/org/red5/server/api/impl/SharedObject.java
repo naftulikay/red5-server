@@ -16,7 +16,6 @@ import org.apache.mina.common.ByteBuffer;
 import org.red5.io.amf.Input;
 import org.red5.io.amf.Output;
 import org.red5.io.object.Deserializer;
-import org.red5.io.object.Serializer;
 import org.red5.server.api.Red5;
 import org.red5.server.api.IConnection;
 import org.red5.server.api.ISharedObject;

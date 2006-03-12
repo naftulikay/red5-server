@@ -1,6 +1,5 @@
-package org.red5.server.api.impl;
+package org.red5.server.api;
 
-import org.red5.server.api.IScope;
 
 public class ScopeUtils {
 	

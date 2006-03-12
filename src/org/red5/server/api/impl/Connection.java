@@ -9,6 +9,7 @@ import org.red5.server.api.IClient;
 import org.red5.server.api.IConnection;
 import org.red5.server.api.IScope;
 import org.red5.server.api.IStream;
+import org.red5.server.api.ScopeUtils;
 
 public abstract class Connection extends AttributeStore 
 	implements IConnection {

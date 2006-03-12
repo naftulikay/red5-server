@@ -11,7 +11,7 @@ import org.red5.server.api.IScope;
 import org.red5.server.api.IStream;
 import org.red5.server.api.ScopeUtils;
 
-public abstract class Connection extends AttributeStore 
+public abstract class AbstractConnection extends AttributeStore 
 	implements IConnection {
 	
 	protected IClient client = null;
@@ -19,12 +19,12 @@ public abstract class Connection extends AttributeStore
 	protected Scope scope = null;
 	private HashSet streams = new HashSet();
 
-	public Connection(IClient client, String contextPath){
+	public AbstractConnection(IClient client, String contextPath){
 		this.client = client;
 		this.contextPath = contextPath;
 	}
 	
-	public Connection(IClient client, Scope scope){
+	public AbstractConnection(IClient client, Scope scope){
 		this.client = client;
 		setScope(scope);
 	}

@@ -6,13 +6,13 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.red5.server.api.IClient;
 import org.red5.server.api.IConnection;
-import org.red5.server.api.impl.Connection;
+import org.red5.server.api.impl.AbstractConnection;
 import org.red5.server.context.AppContext;
 import org.red5.server.net.rtmp.message.Ping;
 import org.red5.server.stream.DownStreamSink;
 import org.red5.server.stream.Stream;
 
-public abstract class RTMPConnection extends Connection {
+public abstract class RTMPConnection extends AbstractConnection {
 
 	protected static Log log =
         LogFactory.getLog(RTMPConnection.class.getName());

@@ -28,7 +28,7 @@ import org.red5.server.net.servlet.ServletUtils;
 import org.red5.server.persistence.IPersistable;
 import org.red5.server.persistence.IPersistentStorage;
 
-public class SharedObject implements ISharedObject, Constants {
+public class SharedObject implements ISharedObject, IPersistable, Constants {
 
 	protected static Log log =
         LogFactory.getLog(SharedObject.class.getName());
@@ -141,7 +141,7 @@ public class SharedObject implements ISharedObject, Constants {
 		
 		if (this.modified && this.storage != null) {
 			try {
-				this.storage.storeObject((IPersistable)this);
+				this.storage.storeObject(this);
 			} catch (IOException e) {
 				log.error("Could not store shared object.", e);
 			}

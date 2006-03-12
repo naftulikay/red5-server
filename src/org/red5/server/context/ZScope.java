@@ -4,7 +4,7 @@ import org.red5.server.net.rtmp.Channel;
 import org.red5.server.net.rtmp.status.StatusObjectService;
 import org.red5.server.stream.Stream;
 
-public class Scope {
+public class ZScope {
 
 	private static ThreadLocal channelLocal = new ThreadLocal();
 	private static ThreadLocal statusObjectServiceLocal = new ThreadLocal();

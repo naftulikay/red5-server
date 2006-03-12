@@ -84,6 +84,8 @@ public abstract class EasyAppAdapter extends DefaultScopeAdapter implements IAtt
 		else if(scope.isInstance()) ezInstanceStop(scope);
 	}
 
+	
+	
 	public void ezAppStart(IScope app){
 		// do nothing
 	}

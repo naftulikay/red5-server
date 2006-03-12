@@ -1,5 +1,5 @@
 package org.red5.server.net;
 
-public class HostNotFoundException extends Exception {
+public class HostNotFoundException extends RuntimeException {
 
 }

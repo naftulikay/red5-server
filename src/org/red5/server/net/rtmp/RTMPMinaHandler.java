@@ -8,7 +8,7 @@ import org.apache.mina.filter.LoggingFilter;
 import org.apache.mina.filter.codec.ProtocolCodecFactory;
 import org.apache.mina.filter.codec.ProtocolCodecFilter;
 import org.red5.server.context.GlobalContext;
-import org.red5.server.net.ProtocolState;
+import org.red5.server.net.protocol.ProtocolState;
 import org.red5.server.net.rtmp.codec.RTMP;
 import org.red5.server.net.rtmp.status.StatusObjectService;
 import org.red5.server.service.ServiceInvoker;

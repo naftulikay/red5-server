@@ -1,5 +1,5 @@
 package org.red5.server.net;
 
-public class AccessDeniedException extends Exception {
+public class AccessDeniedException extends RuntimeException {
 
 }

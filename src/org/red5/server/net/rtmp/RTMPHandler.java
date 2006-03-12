@@ -10,11 +10,11 @@ import org.apache.mina.common.ByteBuffer;
 import org.red5.server.api.ISharedObject;
 import org.red5.server.api.Red5;
 import org.red5.server.context.AppContext;
-import org.red5.server.context.BaseApplication;
-import org.red5.server.context.Scope;
-import org.red5.server.net.BaseHandler;
+import org.red5.server.context.ZBaseApplication;
+import org.red5.server.context.ZScope;
+import org.red5.server.net.impl.BaseHandler;
 import org.red5.server.net.HostNotFoundException;
-import org.red5.server.net.ProtocolState;
+import org.red5.server.net.protocol.ProtocolState;
 import org.red5.server.net.rtmp.codec.RTMP;
 import org.red5.server.net.rtmp.message.Constants;
 import org.red5.server.net.rtmp.message.InPacket;
@@ -71,9 +71,9 @@ public class RTMPHandler extends BaseHandler implements Constants {
 				
 			// Is this a bad for performance ?
 			Red5.setConnectionLocal(conn);
-			Scope.setChannel(channel);
-			Scope.setStream(stream);
-			Scope.setStatusObjectService(statusObjectService);
+			ZScope.setChannel(channel);
+			ZScope.setStream(stream);
+			ZScope.setStatusObjectService(statusObjectService);
 			
 			switch(message.getDataType()){
 			case TYPE_INVOKE:
@@ -135,7 +135,7 @@ public class RTMPHandler extends BaseHandler implements Constants {
 	
 	protected void onSharedObject(RTMPConnection conn, Channel channel, PacketHeader  source, SharedObject request) {
 		AppContext ctx = conn.getAppContext();
-		BaseApplication app = (BaseApplication) ctx.getBean(AppContext.APP_SERVICE_NAME);
+		ZBaseApplication app = (ZBaseApplication) ctx.getBean(AppContext.APP_SERVICE_NAME);
 		String name = request.getName();
 		
 		log.debug("Received SO request from " + channel + "(" + request + ")");

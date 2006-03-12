@@ -17,6 +17,7 @@ import org.red5.server.net.rtmp.RTMPConnection;
 import org.red5.server.net.rtmp.message.Ping;
 import org.red5.server.net.rtmp.status.StatusObject;
 import org.red5.server.net.rtmp.status.StatusObjectService;
+import org.red5.server.persistence.IPersistable;
 import org.red5.server.persistence.IPersistentStorage;
 import org.red5.server.persistence.RamPersistence;
 import org.red5.server.stream.IStreamSource;
@@ -29,8 +30,8 @@ import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 
-public class BaseApplication 
-	implements AppLifecycleAware, ApplicationContextAware, BeanPostProcessor {
+public class ZBaseApplication 
+	implements ZAppLifecycleAware, ApplicationContextAware, BeanPostProcessor {
 
 	//private StatusObjectService statusObjectService = null;
 	private ApplicationContext appCtx = null;
@@ -45,7 +46,7 @@ public class BaseApplication
 	private IMapping scopeMapping = null;
 	
 	protected static Log log =
-        LogFactory.getLog(BaseApplication.class.getName());
+        LogFactory.getLog(ZBaseApplication.class.getName());
 	
 	public void setApplicationContext(ApplicationContext appCtx){
 		this.appCtx = appCtx;
@@ -75,7 +76,7 @@ public class BaseApplication
 	
 	private StatusObject getStatus(String statusCode){
 		// TODO: fix this, getting the status service out of the thread scope is a hack
-		final StatusObjectService statusObjectService = Scope.getStatusObjectService();
+		final StatusObjectService statusObjectService = ZScope.getStatusObjectService();
 		return statusObjectService.getStatusObject(statusCode);
 	}
 	
@@ -136,7 +137,7 @@ public class BaseApplication
 	}
 	
 	public void play(String name, Double number){
-		final Stream stream = Scope.getStream();
+		final Stream stream = ZScope.getStream();
 		if (stream == null) {
 			// XXX: invalid request, we must return an error to the client here...
 			// NetStream.Play.Failed
@@ -233,7 +234,7 @@ public class BaseApplication
 	}
 	
 	public StatusObject publish(String name, String mode){
-		final Stream stream = Scope.getStream();
+		final Stream stream = ZScope.getStream();
 		if (stream == null) {
 			log.debug("No stream created before publishing or published to wrong stream.");
 			return getStatus(StatusObjectService.NS_PUBLISH_BADNAME);
@@ -255,7 +256,7 @@ public class BaseApplication
 	
 	public void pause(boolean pause, int time){
 		log.info("Pause called: "+pause+" true:"+time);
-		final Stream stream = Scope.getStream();
+		final Stream stream = ZScope.getStream();
 		if (stream == null) {
 			// XXX: invalid request, we must return an error to the client here...
 		}
@@ -276,7 +277,7 @@ public class BaseApplication
 	}
 	
 	public void closeStream(){
-		final Stream stream = Scope.getStream();
+		final Stream stream = ZScope.getStream();
 		if (stream == null) {
 			// XXX: invalid request, we must return an error to the client here...
 		}
@@ -302,13 +303,13 @@ public class BaseApplication
 	public void onDisconnect(IClient client){
 		Iterator it = listeners.iterator();
 		while(it.hasNext()){
-			AppLifecycleAware el = (AppLifecycleAware) it.next();
+			ZAppLifecycleAware el = (ZAppLifecycleAware) it.next();
 			el.onDisconnect(client);
 		}
 	}
 
 	public Object postProcessBeforeInitialization(Object bean, String name) throws BeansException {
-		if(bean instanceof AppLifecycleAware){
+		if(bean instanceof ZAppLifecycleAware){
 			listeners.add(bean);
 		}
 		return bean;
@@ -344,7 +345,7 @@ public class BaseApplication
 			log.info("Creating new shared object " + name);
 			result = new SharedObject(name, persistent, persistence);
 			try {
-				persistence.storeObject(result);
+				persistence.storeObject((IPersistable) result);
 			} catch (IOException e) {
 				log.error("Could not store shared object.", e);
 			}

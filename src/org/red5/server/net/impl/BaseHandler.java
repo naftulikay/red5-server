@@ -1,4 +1,4 @@
-package org.red5.server.net;
+package org.red5.server.net.impl;
 
 import java.util.Map;
 
@@ -11,6 +11,11 @@ import org.red5.server.context.AppContext;
 import org.red5.server.context.GlobalContext;
 import org.red5.server.context.HostContext;
 import org.red5.server.context.IClientRegistry;
+import org.red5.server.net.AccessDeniedException;
+import org.red5.server.net.ClientNotFoundException;
+import org.red5.server.net.HostNotFoundException;
+import org.red5.server.net.IConnectionHandler;
+import org.red5.server.net.ScopeNotFoundException;
 import org.red5.server.service.ServiceInvoker;
 
 public class BaseHandler implements IConnectionHandler {

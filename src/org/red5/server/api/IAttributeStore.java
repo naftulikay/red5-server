@@ -34,7 +34,7 @@ import org.red5.server.persistence.IPersistable;
  * @author The Red5 Project (red5@osflash.org)
  * @author Luke Hubbard (luke@codegent.com)
  */
-public interface IAttributeStore extends IPersistable {
+public interface IAttributeStore  {
 
 	/**
 	 * Get the attribute names

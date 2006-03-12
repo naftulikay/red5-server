@@ -5,7 +5,7 @@ import org.red5.server.api.IConnection;
 import org.red5.server.api.IScope;
 
 public interface IConnectionHandler {
-
+	
 	public IClient newClient(String host) throws HostNotFoundException;
 	
 	public IClient lookupClient(String sessionId) throws ClientNotFoundException;

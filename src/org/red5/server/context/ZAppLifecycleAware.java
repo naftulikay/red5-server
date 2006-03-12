@@ -4,7 +4,7 @@ import java.util.List;
 
 import org.red5.server.api.IClient;
 
-public interface AppLifecycleAware {
+public interface ZAppLifecycleAware {
 	
 	public void onAppStart();
 

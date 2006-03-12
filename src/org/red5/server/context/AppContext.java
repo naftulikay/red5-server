@@ -52,15 +52,15 @@ public class AppContext
 			streamManager = (StreamManager) this.getBean(STREAM_MANAGER_NAME);
 		}
 		
-		BaseApplication app = null;
+		ZBaseApplication app = null;
 		if(!this.containsBean(APP_SERVICE_NAME)){
-			app = new BaseApplication();
+			app = new ZBaseApplication();
 			app.setApplicationContext(this);
 			this.getBeanFactory().registerSingleton(APP_SERVICE_NAME, app);
 			app.setStreamManager(streamManager);
 			app.initialize();
 		} else {
-			app = (BaseApplication) this.getBean(APP_SERVICE_NAME);
+			app = (ZBaseApplication) this.getBean(APP_SERVICE_NAME);
 			app.setApplicationContext(this);
 			app.setStreamManager(streamManager);
 			app.initialize();

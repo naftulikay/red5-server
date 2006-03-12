@@ -1,4 +1,4 @@
-package org.red5.server.net;
+package org.red5.server.net.protocol;
 
 import org.apache.mina.common.ByteBuffer;
 

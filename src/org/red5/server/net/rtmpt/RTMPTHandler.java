@@ -1,6 +1,6 @@
 package org.red5.server.net.rtmpt;
 
-import org.red5.server.net.SimpleProtocolCodecFactory;
+import org.red5.server.net.protocol.SimpleProtocolCodecFactory;
 import org.red5.server.net.rtmp.RTMPHandler;
 import org.red5.server.net.rtmp.message.Constants;
 import org.apache.commons.logging.Log;

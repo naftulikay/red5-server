@@ -12,7 +12,7 @@ import org.red5.server.net.protocol.ProtocolState;
 import org.red5.server.net.protocol.SimpleProtocolDecoder;
 import org.red5.server.net.protocol.SimpleProtocolEncoder;
 import org.red5.server.net.rtmp.RTMPConnection;
-import org.red5.server.net.rtmp.RTMPHandler;
+import org.red5.server.net.rtmp.ZRTMPHandler;
 import org.red5.server.net.rtmp.codec.RTMP;
 import org.red5.server.net.rtmp.message.OutPacket;
 
@@ -29,7 +29,7 @@ public class RTMPTClient extends RTMPConnection {
 	protected RTMP state;
 	protected SimpleProtocolDecoder decoder;
 	protected SimpleProtocolEncoder encoder;
-	protected RTMPHandler handler;
+	protected ZRTMPHandler handler;
 	protected ByteBuffer buffer;
 	protected List pendingMessages = new LinkedList();
 	protected List notifyMessages = new LinkedList();

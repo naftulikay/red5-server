@@ -17,12 +17,12 @@ import org.red5.server.service.ServiceInvoker;
  * Mina implementation of the RTMP handler.
  * 
  */
-public class RTMPMinaHandler extends IoHandlerAdapter {
+public class ZRTMPMinaHandler extends IoHandlerAdapter {
 
 	protected static Log log =
-        LogFactory.getLog(RTMPMinaHandler.class.getName());
+        LogFactory.getLog(ZRTMPMinaHandler.class.getName());
 	
-	protected RTMPHandler handler = new RTMPHandler();
+	protected ZRTMPHandler handler = new ZRTMPHandler();
 	private ProtocolCodecFactory codecFactory = null;
 	
 	

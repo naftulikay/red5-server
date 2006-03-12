@@ -12,8 +12,8 @@ import org.red5.server.api.Red5;
 import org.red5.server.context.AppContext;
 import org.red5.server.context.ZBaseApplication;
 import org.red5.server.context.ZScope;
-import org.red5.server.net.impl.BaseHandler;
 import org.red5.server.net.HostNotFoundException;
+import org.red5.server.net.impl.ZBaseHandler;
 import org.red5.server.net.protocol.ProtocolState;
 import org.red5.server.net.rtmp.codec.RTMP;
 import org.red5.server.net.rtmp.message.Constants;
@@ -37,9 +37,9 @@ import org.red5.server.stream.Stream;
  * Inherit from this class and overwrite the two "write" methods to support
  * any network library.
  */
-public class RTMPHandler extends BaseHandler implements Constants {
+public class ZRTMPHandler extends ZBaseHandler implements Constants {
 	protected static Log log =
-        LogFactory.getLog(RTMPHandler.class.getName());
+        LogFactory.getLog(ZRTMPHandler.class.getName());
 	
 	public StatusObjectService statusObjectService = null;
 

@@ -325,9 +325,9 @@ public class SharedObject implements ISharedObject, Constants {
 		persistent = true;
 		data.deserialize(input);
 		this.ownerMessage.setName(name);
-		this.ownerMessage.setType(persistent ? 2 : 0);
+		this.ownerMessage.setType(2);
 		this.syncMessage.setName(name);
-		this.syncMessage.setType(persistent ? 2 : 0);
+		this.syncMessage.setType(2);
 	}
 	
 	public IPersistentStorage getStorage() {

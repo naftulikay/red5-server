@@ -1,13 +1,42 @@
 package org.red5.server.api.impl;
 
+import java.io.InputStream;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
-public class AttributeStore implements org.red5.server.api.IAttributeStore {
+import org.apache.mina.common.ByteBuffer;
+import org.red5.io.amf.Input;
+import org.red5.io.amf.Output;
+import org.red5.io.object.Deserializer;
+import org.red5.io.object.Serializer;
+
+import org.red5.server.api.IAttributeStore;
+
+import org.red5.server.net.servlet.ServletUtils;
+import org.red5.server.persistence.IPersistable;
+import org.red5.server.persistence.IPersistentStorage;
+
+public class AttributeStore implements IAttributeStore, IPersistable {
 
 	private HashMap attributes = new HashMap();
+	private IPersistentStorage storage = null;
+	private String persistentId = null;
+	
+	public AttributeStore() {
+		// Object is not associated with a persistence storage
+	}
+	
+	public AttributeStore(IPersistentStorage storage) {
+		this.storage = storage;
+	}
+	
+	public void setStorage(IPersistentStorage storage) {
+		this.storage = storage;
+	}
 	
 	public Set getAttributeNames(){
 		return attributes.keySet();
@@ -59,5 +88,47 @@ public class AttributeStore implements org.red5.server.api.IAttributeStore {
 	synchronized public void removeAttributes() {
 		attributes.clear();
 	}	
+	
+	public String getPersistentId() {
+		if (persistentId == null && storage != null) {
+			persistentId = storage.newPersistentId(); 
+		}
+		
+		return persistentId;
+	}
+	
+	public void serialize(OutputStream output) throws IOException {
+		ByteBuffer buf = ByteBuffer.allocate(1024);
+		buf.setAutoExpand(true);
+		serialize(buf);
+		buf.flip();
+		ServletUtils.copy(buf.asInputStream(), output);
+	}
+	
+	public void serialize(ByteBuffer output) throws IOException {
+		Output out = new Output(output);
+		Serializer serializer = new Serializer();
+		serializer.writeMap(out, attributes);
+	}
+	
+	public void deserialize(InputStream input) throws IOException {
+		ByteBuffer buf = ByteBuffer.allocate(1024);
+		buf.setAutoExpand(true);
+		ServletUtils.copy(input, buf.asOutputStream());
+		buf.flip();
+		deserialize(buf);
+	}
+	
+	public void deserialize(ByteBuffer input) throws IOException {
+		Input in = new Input(input);
+		Deserializer deserializer = new Deserializer();
+		Map data = (Map) deserializer.deserialize(in);
+		attributes.clear();
+		attributes.putAll(data);
+	}
+	
+	public IPersistentStorage getStorage() {
+		return storage;
+	}
 	
 }

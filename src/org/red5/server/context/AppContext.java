@@ -5,8 +5,8 @@ import org.apache.commons.logging.LogFactory;
 import org.red5.io.flv.FLVServiceImpl;
 import org.red5.server.api.IMapping;
 import org.red5.server.api.impl.DefaultMapping;
-import org.red5.server.SharedObjectPersistence;
-import org.red5.server.SharedObjectRamPersistence;
+import org.red5.server.persistence.IPersistentStorage;
+import org.red5.server.persistence.RamPersistence;
 import org.red5.server.service.ServiceInvoker;
 import org.red5.server.stream.StreamManager;
 import org.red5.server.stream.VideoCodecFactory;
@@ -66,13 +66,13 @@ public class AppContext
 			app.initialize();
 		}
 		
-		SharedObjectPersistence soPersistence = null;
+		IPersistentStorage soPersistence = null;
 		if(!this.containsBean(SO_PERSISTENCE_NAME)){
-			soPersistence = new SharedObjectRamPersistence();
+			soPersistence = new RamPersistence();
 			soPersistence.setApplicationContext(this);
 			app.setSharedObjectPersistence(soPersistence);
 		} else {
-			soPersistence = (SharedObjectPersistence) this.getBean(SO_PERSISTENCE_NAME);
+			soPersistence = (IPersistentStorage) this.getBean(SO_PERSISTENCE_NAME);
 			soPersistence.setApplicationContext(this);
 			app.setSharedObjectPersistence(soPersistence);
 		}

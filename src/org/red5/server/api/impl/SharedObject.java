@@ -1,5 +1,8 @@
 package org.red5.server.api.impl;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -9,6 +12,11 @@ import java.util.Set;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.mina.common.ByteBuffer;
+import org.red5.io.amf.Input;
+import org.red5.io.amf.Output;
+import org.red5.io.object.Deserializer;
+import org.red5.io.object.Serializer;
 import org.red5.server.api.Red5;
 import org.red5.server.api.IConnection;
 import org.red5.server.api.ISharedObject;
@@ -17,17 +25,20 @@ import org.red5.server.net.rtmp.Channel;
 import org.red5.server.net.rtmp.RTMPConnection;
 import org.red5.server.net.rtmp.message.Constants;
 import org.red5.server.net.rtmp.message.SharedObjectEvent;
-import org.red5.server.SharedObjectPersistence;
+import org.red5.server.net.servlet.ServletUtils;
+import org.red5.server.persistence.IPersistentStorage;
 
 public class SharedObject implements ISharedObject, Constants {
 
 	protected static Log log =
         LogFactory.getLog(SharedObject.class.getName());
 
-	protected String name;
-	protected SharedObjectPersistence persistence = null;
+	public final static String PERSISTENT_ID_PREFIX = "_RED5_SO_";
+	
+	protected String name = "";
+	protected IPersistentStorage storage = null;
 	protected int version = 0;
-	protected boolean persistent = true;
+	protected boolean persistent = false;
 	protected AttributeStore data = new AttributeStore();
 	protected HashSet connections = new HashSet();
 	protected int updateCounter = 0;
@@ -35,11 +46,23 @@ public class SharedObject implements ISharedObject, Constants {
 	
 	private org.red5.server.net.rtmp.message.SharedObject ownerMessage;
 	private org.red5.server.net.rtmp.message.SharedObject syncMessage;
-	
-	public SharedObject(String name, boolean persistent, SharedObjectPersistence persistence) {
+
+	public SharedObject() {
+		this.ownerMessage = new org.red5.server.net.rtmp.message.SharedObject();
+		this.ownerMessage.setName(name);
+		this.ownerMessage.setTimestamp(0);
+		this.ownerMessage.setType(persistent ? 2 : 0);
+		
+		this.syncMessage = new org.red5.server.net.rtmp.message.SharedObject();
+		this.syncMessage.setName(name);
+		this.syncMessage.setTimestamp(0);
+		this.syncMessage.setType(persistent ? 2 : 0);
+	}
+
+	public SharedObject(String name, boolean persistent, IPersistentStorage storage) {
 		this.name = name;
 		this.persistent = persistent;
-		this.persistence = persistence;
+		this.storage = storage;
 		
 		this.ownerMessage = new org.red5.server.net.rtmp.message.SharedObject();
 		this.ownerMessage.setName(name);
@@ -116,8 +139,13 @@ public class SharedObject implements ISharedObject, Constants {
 			// The client sent at least one update -> increase version of SO
 			this.updateVersion();
 		
-		if (this.modified && this.persistence != null)
-			this.persistence.storeSharedObject(this);
+		if (this.modified && this.storage != null) {
+			try {
+				this.storage.storeObject(this);
+			} catch (IOException e) {
+				log.error("Could not store shared object.", e);
+			}
+		}
 		
 		this.sendUpdates();
 	}
@@ -242,7 +270,11 @@ public class SharedObject implements ISharedObject, Constants {
 		if (!this.persistent && this.connections.isEmpty()) {
 			log.info("Deleting shared object " + this.name + " because all clients disconnected.");
 			this.data.removeAttributes();
-			this.persistence.deleteSharedObject(this.name);
+			try {
+				this.storage.removeObject(this.getPersistentId());
+			} catch (IOException e) {
+				log.error("Could not remove shared object.", e);
+			}
 		}
 	}
 	
@@ -259,5 +291,51 @@ public class SharedObject implements ISharedObject, Constants {
 		
 		if (this.updateCounter == 0)
 			this.notifyModified();
+	}
+	
+	public String getPersistentId() {
+		return PERSISTENT_ID_PREFIX + this.getName();
+	}
+	
+	public void serialize(OutputStream output) throws IOException {
+		ByteBuffer buf = ByteBuffer.allocate(1024);
+		buf.setAutoExpand(true);
+		serialize(buf);
+		buf.flip();
+		ServletUtils.copy(buf.asInputStream(), output);
+	}
+	
+	public void serialize(ByteBuffer output) throws IOException {
+		Output out = new Output(output);
+		out.writeString(this.getName());
+		data.serialize(output);
+	}
+	
+	public void deserialize(InputStream input) throws IOException {
+		ByteBuffer buf = ByteBuffer.allocate(1024);
+		buf.setAutoExpand(true);
+		ServletUtils.copy(input, buf.asOutputStream());
+		buf.flip();
+		deserialize(buf);
+	}
+	
+	public void deserialize(ByteBuffer input) throws IOException {
+		Input in = new Input(input);
+		Deserializer deserializer = new Deserializer();
+		name = (String) deserializer.deserialize(in);
+		persistent = true;
+		data.deserialize(input);
+		this.ownerMessage.setName(name);
+		this.ownerMessage.setType(persistent ? 2 : 0);
+		this.syncMessage.setName(name);
+		this.syncMessage.setType(persistent ? 2 : 0);
+	}
+	
+	public IPersistentStorage getStorage() {
+		return storage;
+	}
+	
+	public void setStorage(IPersistentStorage storage) {
+		this.storage = storage;
 	}
 }

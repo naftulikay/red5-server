@@ -165,7 +165,9 @@
 		<property name="globalContext" ref="globalContext" />
 	</bean>
 	
-	<bean id="sharedObjectPersistence" class="org.red5.server.SharedObjectFilePersistence" />
+	<bean id="sharedObjectPersistence" class="org.red5.server.persistence.FilePersistence">
+        <property name="path" value="sharedObjects" />
+    </bean>
 	
 	<!--
 	<bean id="debugProxyHandler"

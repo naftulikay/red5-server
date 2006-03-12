@@ -1,22 +1,24 @@
 package org.red5.server.context;
 
+import java.io.IOException;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.red5.server.SharedObjectPersistence;
-import org.red5.server.SharedObjectRamPersistence;
 import org.red5.server.api.IClient;
 import org.red5.server.api.IConnection;
 import org.red5.server.api.IMapping;
 import org.red5.server.api.ISharedObject;
 import org.red5.server.api.Red5;
+import org.red5.server.api.impl.SharedObject;
 import org.red5.server.net.rtmp.RTMPConnection;
 import org.red5.server.net.rtmp.message.Ping;
 import org.red5.server.net.rtmp.status.StatusObject;
 import org.red5.server.net.rtmp.status.StatusObjectService;
+import org.red5.server.persistence.IPersistentStorage;
+import org.red5.server.persistence.RamPersistence;
 import org.red5.server.stream.IStreamSource;
 import org.red5.server.stream.Stream;
 import org.red5.server.stream.StreamManager;
@@ -35,9 +37,9 @@ public class BaseApplication
 	private HashSet clients = new HashSet();
 	private StreamManager streamManager = null;
 	// Persistent shared objects are configured through red5.xml
-	private SharedObjectPersistence soPersistence = null;
+	private IPersistentStorage soPersistence = null;
 	// Non-persistent shared objects are only stored in memory
-	private SharedObjectRamPersistence soTransience = new SharedObjectRamPersistence(); 
+	private RamPersistence soTransience = new RamPersistence(); 
 	private HashSet listeners = new HashSet();
 	private VideoCodecFactory videoCodecs = null;
 	private IMapping scopeMapping = null;
@@ -53,7 +55,7 @@ public class BaseApplication
 		this.streamManager = streamManager;
 	}
 	
-	public void setSharedObjectPersistence(SharedObjectPersistence soPersistence) {
+	public void setSharedObjectPersistence(IPersistentStorage soPersistence) {
 		this.soPersistence = soPersistence;
 	}
 	
@@ -105,7 +107,7 @@ public class BaseApplication
 		clients.remove(client);
 		if (this.soPersistence != null) {
 			// Unregister client from shared objects
-			Iterator it = this.soPersistence.getSharedObjects();
+			Iterator it = this.soPersistence.getObjects();
 			while (it.hasNext()) {
 				ISharedObject so = (ISharedObject) it.next();
 				so.unregister(connection);
@@ -320,22 +322,32 @@ public class BaseApplication
 	// -----------------------------------------------------------------------------
 	
 	public ISharedObject getSharedObject(String name, boolean persistent) {
-		SharedObjectPersistence persistence = this.soPersistence;
+		IPersistentStorage persistence = this.soPersistence;
 		if (!persistent) {
 			persistence = this.soTransience;
 		}
 			
 		if (persistence == null) {
 			// XXX: maybe we should thow an exception here as a non-persistent SO doesn't make any sense...
-			return new org.red5.server.api.impl.SharedObject(name, false, null);
+			return new SharedObject(name, false, null);
 		}
 		
-		ISharedObject result = persistence.loadSharedObject(name);
+		ISharedObject result;
+		try {
+			result = (ISharedObject) persistence.loadObject(SharedObject.PERSISTENT_ID_PREFIX + name);
+		} catch (IOException e) {
+			log.error("Could not load shared object.", e);
+			result = null;
+		}
 		if (result == null) {
 			// Create new shared object with given name
 			log.info("Creating new shared object " + name);
-			result = new org.red5.server.api.impl.SharedObject(name, persistent, persistence);
-			persistence.storeSharedObject(result);
+			result = new SharedObject(name, persistent, persistence);
+			try {
+				persistence.storeObject(result);
+			} catch (IOException e) {
+				log.error("Could not store shared object.", e);
+			}
 		}
 		
 		return result;

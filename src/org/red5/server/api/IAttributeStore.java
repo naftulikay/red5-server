@@ -3,6 +3,8 @@ package org.red5.server.api;
 import java.util.Map;
 import java.util.Set;
 
+import org.red5.server.persistence.IPersistable;
+
 /*
  * RED5 Open Source Flash Server - http://www.osflash.org/red5
  * 
@@ -32,7 +34,7 @@ import java.util.Set;
  * @author The Red5 Project (red5@osflash.org)
  * @author Luke Hubbard (luke@codegent.com)
  */
-public interface IAttributeStore {
+public interface IAttributeStore extends IPersistable {
 
 	/**
 	 * Get the attribute names

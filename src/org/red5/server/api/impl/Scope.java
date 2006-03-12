@@ -147,7 +147,7 @@ public class Scope extends AttributeStore implements IScope {
 	}
 
 	public boolean isGlobal() {
-		return depth == HOST;
+		return depth == GLOBAL;
 	}
 
 	public boolean isHost() {

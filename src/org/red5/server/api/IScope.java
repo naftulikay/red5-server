@@ -26,12 +26,15 @@ import org.springframework.core.io.Resource;
  */
 
 /**
- * The Scope Object A statefull object shared between a group of clients
- * connected to the same context path. Scopes are arranged in a hierarchical
- * way, so its possible for a scope to have a parent. If a client is connect to
- * a scope then they are also connected to its parent scope. The scope object is
- * used to access resources, shared object, streams, etc. The following are all
- * names for scopes: application, room, place, lobby.
+ * The Scope Object.
+ * 
+ * A statefull object shared between a group of clients connected to the same
+ * context path. Scopes are arranged in a hierarchical way, so its possible for
+ * a scope to have a parent. If a client is connect to a scope then they are also
+ * connected to its parent scope. The scope object is used to access resources,
+ * shared object, streams, etc.
+ * 
+ * The following are all names for scopes: application, room, place, lobby.
  * 
  * @author The Red5 Project (red5@osflash.org)
  * @author Luke Hubbard (luke@codegent.com)

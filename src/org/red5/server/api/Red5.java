@@ -22,19 +22,19 @@ import org.springframework.context.ApplicationContext;
  */
 
 /**
- * Utility class for accessing red5 API objects
+ * Utility class for accessing red5 API objects.
  * 
  * This class uses a thread local, and will be setup by the service invoker
  * 
  * The code below shows various uses.
  * <p>
  * <code>
- * Connection conn = Red5.getConnectionLocal();
- * Red5 r5 = new Red5();
- * Scope scope = r5.getScope();
- * conn = r5.getConnection();
- * r5 = new Red5(conn);
- * Client client = r5.getClient();
+ * IConnection conn = Red5.getConnectionLocal();<br />
+ * Red5 r5 = new Red5();<br />
+ * IScope scope = r5.getScope();<br />
+ * conn = r5.getConnection();<br />
+ * r5 = new Red5(conn);<br />
+ * IClient client = r5.getClient();<br />
  * </code>
  * </p>
  * 

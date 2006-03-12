@@ -20,7 +20,7 @@ package org.red5.server.api;
  */
 
 /**
- * Use to Map between names and objects
+ * Use to Map between names and objects.
  * 
  * Provides mapping for:
  * <ul>

@@ -20,12 +20,16 @@ package org.red5.server.api;
  */
 
 /**
- * The Scope Handler Controls actions performed against a scope object, and also
- * is notified of all events Gives fine grained control over what actions can be
- * performed with the can* methods Allows for detailed reporting on what is
- * happening within the scope with the on* methods This is the core interface
- * users implement to create applications The thread local connection is always
- * available via the Red5 object within these methods
+ * The Scope Handler controls actions performed against a scope object, and also
+ * is notified of all events.
+ * 
+ * Gives fine grained control over what actions can be performed with the can*
+ * methods. Allows for detailed reporting on what is happening within the scope
+ * with the on* methods. This is the core interface users implement to create
+ * applications.
+ * 
+ * The thread local connection is always available via the Red5 object within
+ * these methods
  * 
  * @author The Red5 Project (red5@osflash.org)
  * @author Luke Hubbard (luke@codegent.com)

@@ -27,7 +27,7 @@ import java.util.Set;
  */
 
 /**
- * Base Interface for all API objects with attributes
+ * Base interface for all API objects with attributes
  * 
  * @author The Red5 Project (red5@osflash.org)
  * @author Luke Hubbard (luke@codegent.com)

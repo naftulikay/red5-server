@@ -104,7 +104,7 @@ public interface ISharedObject extends IAttributeStore {
 	/**
 	 * Register a connection that should receive updates of the shared object.
 	 * 
-	 * @param client
+	 * @param connection
 	 *            connection to subscribe to this object
 	 */
 	public void register(IConnection connection);
@@ -112,7 +112,7 @@ public interface ISharedObject extends IAttributeStore {
 	/**
 	 * Unregister a connection from this shared object.
 	 * 
-	 * @param client
+	 * @param connection
 	 *            the connection to unsubscribe from this object
 	 */
 	public void unregister(IConnection connection);

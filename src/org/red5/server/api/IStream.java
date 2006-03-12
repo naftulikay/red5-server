@@ -20,7 +20,7 @@ package org.red5.server.api;
  */
 
 /**
- * Base interface for stream objects
+ * Base interface for stream objects.
  * 
  * Provides all the common methods shared between OnDemandStream and
  * BroadcastStream

@@ -20,7 +20,7 @@ package org.red5.server.api;
  */
 
 /**
- * Extends stream to add methods for on demand access
+ * Extends stream to add methods for on demand access.
  * 
  * @author The Red5 Project (red5@osflash.org)
  * @author Luke Hubbard (luke@codegent.com)

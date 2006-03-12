@@ -20,7 +20,7 @@ package org.red5.server.api;
  */
 
 /**
- * Extends stream to add methods for broadcast streaming
+ * Extends stream to add methods for broadcast streaming.
  * 
  * TODO: What should be pass to the methods?
  * 

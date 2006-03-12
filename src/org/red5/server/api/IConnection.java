@@ -23,7 +23,7 @@ import java.util.Set;
  */
 
 /**
- * The connection object
+ * The connection object.
  * 
  * Each connection has an associated client and scope. Connections may be
  * persistent, polling, or transient. The aim of this interface is to provide

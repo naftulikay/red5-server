@@ -10,8 +10,10 @@ import org.apache.mina.common.IoSession;
 import org.apache.mina.filter.LoggingFilter;
 import org.apache.mina.filter.codec.ProtocolCodecFactory;
 import org.apache.mina.filter.codec.ProtocolCodecFilter;
+import org.red5.server.context.GlobalContext;
 import org.red5.server.net.remoting.message.RemotingCall;
 import org.red5.server.net.remoting.message.RemotingPacket;
+import org.red5.server.service.ServiceInvoker;
 //import org.red5.server.net.remoting.message.RemotingResponse;
 
 public class RemotingHandler extends IoHandlerAdapter {
@@ -20,11 +22,21 @@ public class RemotingHandler extends IoHandlerAdapter {
         LogFactory.getLog(RemotingHandler.class.getName());
 	
 	private ProtocolCodecFactory codecFactory = null;
+	private ServiceInvoker serviceInvoker = null;
+	private GlobalContext globalContext = null;
 
+	public void setGlobalContext(GlobalContext globalContext) {
+		this.globalContext = globalContext;
+	}
+	
 	public void setCodecFactory(ProtocolCodecFactory codecFactory) {
 		this.codecFactory = codecFactory;
 	}
 	
+	public void setServiceInvoker(ServiceInvoker serviceInvoker) {
+		this.serviceInvoker = serviceInvoker;
+	}
+
 	public void exceptionCaught(IoSession arg0, Throwable arg1) throws Exception {
 		// TODO Auto-generated method stub
 		super.exceptionCaught(arg0, arg1);

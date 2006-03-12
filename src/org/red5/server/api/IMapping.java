@@ -31,7 +31,7 @@ package org.red5.server.api;
  * @author The Red5 Project (red5@osflash.org)
  * @author Luke Hubbard (luke@codegent.com)
  */
-public interface Mapping {
+public interface IMapping {
 
 	/**
 	 * Maps between a contextPath and a scope handler object

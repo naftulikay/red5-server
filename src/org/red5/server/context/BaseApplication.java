@@ -8,8 +8,12 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.red5.server.SharedObjectPersistence;
 import org.red5.server.SharedObjectRamPersistence;
+import org.red5.server.api.IClient;
+import org.red5.server.api.IConnection;
+import org.red5.server.api.IMapping;
+import org.red5.server.api.Red5;
 import org.red5.server.api.SharedObject;
-import org.red5.server.net.rtmp.BaseConnection;
+import org.red5.server.net.rtmp.RTMPConnection;
 import org.red5.server.net.rtmp.message.Ping;
 import org.red5.server.net.rtmp.status.StatusObject;
 import org.red5.server.net.rtmp.status.StatusObjectService;
@@ -36,6 +40,7 @@ public class BaseApplication
 	private SharedObjectRamPersistence soTransience = new SharedObjectRamPersistence(); 
 	private HashSet listeners = new HashSet();
 	private VideoCodecFactory videoCodecs = null;
+	private IMapping scopeMapping = null;
 	
 	protected static Log log =
         LogFactory.getLog(BaseApplication.class.getName());
@@ -56,6 +61,10 @@ public class BaseApplication
 		this.videoCodecs = factory;
 	}
 	
+	public void setScopeMapping(IMapping mapping) {
+		this.scopeMapping = mapping;
+	}
+	
 	/*
 	public void setStatusObjectService(StatusObjectService statusObjectService){
 		this.statusObjectService = this.statusObjectService;
@@ -74,11 +83,12 @@ public class BaseApplication
 	}
 	
 	public final StatusObject connect(List params){
-		final Client client = Scope.getClient();
+		IConnection connection = Red5.getConnectionLocal();
+		final IClient client = connection.getClient();
 		log.debug("Calling onConnect");
 		if(onConnect(client, params)){
 			clients.add(client);
-			BaseConnection conn = (BaseConnection) client;
+			RTMPConnection conn = (RTMPConnection) connection;
 			Ping ping = new Ping();
 			ping.setValue1((short)0);
 			ping.setValue2(0);
@@ -90,14 +100,15 @@ public class BaseApplication
 	}
 	
 	public final void disconnect(){
-		final Client client = Scope.getClient();
+		final IConnection connection = Red5.getConnectionLocal();
+		final IClient client = connection.getClient();
 		clients.remove(client);
 		if (this.soPersistence != null) {
 			// Unregister client from shared objects
 			Iterator it = this.soPersistence.getSharedObjects();
 			while (it.hasNext()) {
 				SharedObject so = (SharedObject) it.next();
-				so.unregisterClient(client);
+				so.unregister(connection);
 			}
 		}
 		log.info("Calling onDisconnect");
@@ -109,8 +120,9 @@ public class BaseApplication
 	public int createStream(){
 		// Reserve a slot for the new stream and send id of new stream to client
 		// This stream id will be checked by publish below
-		final BaseConnection conn = (BaseConnection) Scope.getClient();
-		Stream stream = conn.createNewStream();
+		final IConnection conn = Red5.getConnectionLocal();
+		// TODO: create stream through streamhandler?
+		Stream stream = ((RTMPConnection) conn).createNewStream();
 		if (stream == null) {
 			// XXX: no more stream slots available, return error to the client...
 		}
@@ -250,12 +262,13 @@ public class BaseApplication
 	}
 	
 	public void deleteStream(int number){
-		BaseConnection conn = (BaseConnection) Scope.getClient();
-		Stream stream = conn.getStreamById(number);
+		IConnection conn = Red5.getConnectionLocal();
+		// TODO: change to not depend on BaseConnection
+		Stream stream = ((RTMPConnection) conn).getStreamById(number);
 		if (stream == null) {
 			// XXX: invalid request, we must return an error to the client here...
 		}
-		conn.deleteStreamById(number);
+		((RTMPConnection) conn).deleteStreamById(number);
 		log.debug("Delete stream: "+stream+" number: "+number);
 		streamManager.deleteStream(stream);
 	}
@@ -279,16 +292,16 @@ public class BaseApplication
 		
 	}
 	
-	public boolean onConnect(Client conn, List params){
+	public boolean onConnect(IClient client, List params){
 		// always ok, override
 		return true;
 	}
 	
-	public void onDisconnect(Client conn){
+	public void onDisconnect(IClient client){
 		Iterator it = listeners.iterator();
 		while(it.hasNext()){
 			AppLifecycleAware el = (AppLifecycleAware) it.next();
-			el.onDisconnect(conn);
+			el.onDisconnect(client);
 		}
 	}
 

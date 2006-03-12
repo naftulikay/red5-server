@@ -36,7 +36,7 @@ import org.springframework.core.io.Resource;
  * @author The Red5 Project (red5@osflash.org)
  * @author Luke Hubbard (luke@codegent.com)
  */
-public interface Scope extends AttributeStore {
+public interface Scope extends IAttributeStore {
 
 	/**
 	 * Does this scope have a parent

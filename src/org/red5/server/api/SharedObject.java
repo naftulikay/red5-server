@@ -3,8 +3,6 @@ package org.red5.server.api;
 import java.util.Map;
 import java.util.List;
 
-import org.red5.server.context.Client;
-
 /*
  * RED5 Open Source Flash Server - http://www.osflash.org/red5
  * 
@@ -47,7 +45,7 @@ import org.red5.server.context.Client;
  * @author Joachim Bauch (jojo@struktur.de)
  */
 
-public interface SharedObject extends AttributeStore {
+public interface SharedObject extends IAttributeStore {
 
 	/**
 	 * Returns the name of the shared object.
@@ -104,18 +102,18 @@ public interface SharedObject extends AttributeStore {
 	public void endUpdate();
 
 	/**
-	 * Register a new client that should receive updates of the shared object.
+	 * Register a connection that should receive updates of the shared object.
 	 * 
 	 * @param client
-	 *            client to subscribe to this object
+	 *            connection to subscribe to this object
 	 */
-	public void registerClient(Client client);
+	public void register(IConnection connection);
 
 	/**
-	 * Unregister all channels of a client.
+	 * Unregister a connection from this shared object.
 	 * 
 	 * @param client
-	 *            the client to unsubscribe from this object
+	 *            the connection to unsubscribe from this object
 	 */
-	public void unregisterClient(Client client);
+	public void unregister(IConnection connection);
 }

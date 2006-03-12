@@ -1,7 +1,7 @@
 package org.red5.server.net.rtmpt;
 
 import org.red5.server.net.SimpleProtocolCodecFactory;
-import org.red5.server.net.rtmp.BaseRTMPHandler;
+import org.red5.server.net.rtmp.RTMPHandler;
 import org.red5.server.net.rtmp.message.Constants;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -14,7 +14,7 @@ import org.mortbay.xml.XmlConfiguration;
  * Jetty implementation of the RTMP handler.
  * 
  */
-public class RTMPTHandler extends BaseRTMPHandler implements Constants {
+public class RTMPTHandler extends RTMPHandler implements Constants {
 
 	protected static Log log =
         LogFactory.getLog(RTMPTHandler.class.getName());

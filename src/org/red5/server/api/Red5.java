@@ -65,7 +65,7 @@ public class Red5 {
 		conn = Red5.getConnectionLocal();
 	}
 
-	static void setConnectionLocal(IConnection connection) {
+	public static void setConnectionLocal(IConnection connection) {
 		connThreadLocal.set(connection);
 	}
 
@@ -101,7 +101,7 @@ public class Red5 {
 	 * 
 	 * @return client object
 	 */
-	public Client getClient() {
+	public IClient getClient() {
 		return conn.getClient();
 	}
 

@@ -5,7 +5,7 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
-public class AttributeStore implements org.red5.server.api.AttributeStore {
+public class AttributeStore implements org.red5.server.api.IAttributeStore {
 
 	private HashMap attributes = new HashMap();
 	
@@ -38,7 +38,7 @@ public class AttributeStore implements org.red5.server.api.AttributeStore {
 		attributes.putAll(values);
 	}
 	
-	synchronized public void setAttributes(org.red5.server.api.AttributeStore values) {
+	synchronized public void setAttributes(org.red5.server.api.IAttributeStore values) {
 		Iterator it = values.getAttributeNames().iterator();
 		while (it.hasNext()) {
 			String name = (String) it.next();

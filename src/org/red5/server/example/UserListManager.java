@@ -4,7 +4,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 
 import java.util.List;
-import org.red5.server.context.Client;
+import org.red5.server.api.IClient;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -19,7 +19,7 @@ public class UserListManager {
 		if(userList == null) userList = Collections.synchronizedList(new LinkedList());
 	}
 	
-	public synchronized void addUser(Client p_clientID, String p_userName)
+	public synchronized void addUser(IClient p_clientID, String p_userName)
 	{
 		init();
 		userCount++;
@@ -40,7 +40,7 @@ public class UserListManager {
 		*/
 	}
 	
-	public synchronized boolean removeUser(Client client)
+	public synchronized boolean removeUser(IClient client)
 	{
 		
 		for(Iterator it=userList.iterator(); it.hasNext();)

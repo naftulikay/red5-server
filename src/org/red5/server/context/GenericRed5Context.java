@@ -15,6 +15,7 @@ import org.springframework.core.io.support.ResourcePatternResolver;
 public class GenericRed5Context extends GenericApplicationContext
 	implements ApplicationContextAware {
 
+	protected static final String CLIENT_REGISTRY = "clientRegistry";
 	protected String baseDir = "";
 	protected String configFilePath = "applicationContext.xml";
 	protected ResourcePatternResolver resourcePatternResolver = null;
@@ -94,7 +95,20 @@ public class GenericRed5Context extends GenericApplicationContext
 			return resourcePatternResolver.getResources(pattern);
 		
 	}
-	
-	
 
+	public boolean hasClientRegistry() {
+		return containsBean(CLIENT_REGISTRY);
+	}
+	
+	public IClientRegistry getClientRegistry() {
+		IClientRegistry registry;
+		if (!hasClientRegistry()) {
+			// No special client registry configured, create default
+			registry = new DefaultClientRegistry();
+			this.getBeanFactory().registerSingleton(CLIENT_REGISTRY, registry);
+		} else
+			registry = (IClientRegistry) getBean(CLIENT_REGISTRY);
+		
+		return registry;
+	}
 }

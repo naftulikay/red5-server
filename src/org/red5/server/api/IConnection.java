@@ -1,6 +1,6 @@
 package org.red5.server.api;
 
-import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /*
@@ -35,7 +35,7 @@ import java.util.Set;
  * @author The Red5 Project (red5@osflash.org)
  * @author Luke Hubbard (luke@codegent.com)
  */
-public interface IConnection extends AttributeStore {
+public interface IConnection extends IAttributeStore {
 
 	/**
 	 * Persistent connection type, eg RTMP
@@ -77,7 +77,7 @@ public interface IConnection extends AttributeStore {
 	 * 
 	 * @return client object
 	 */
-	public Client getClient();
+	public IClient getClient();
 
 	/**
 	 * Get the context path for this connection
@@ -121,8 +121,8 @@ public interface IConnection extends AttributeStore {
 	/**
 	 * Get the connection params
 	 * 
-	 * @return readonly list of connect params
+	 * @return readonly map of connect params
 	 */
-	public List getParams();
+	public Map getParams();
 
 }

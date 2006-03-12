@@ -9,10 +9,11 @@ import java.util.Set;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.red5.server.context.Client;
+import org.red5.server.api.Red5;
+import org.red5.server.api.IConnection;
 import org.red5.server.context.Scope;
 import org.red5.server.net.rtmp.Channel;
-import org.red5.server.net.rtmp.BaseConnection;
+import org.red5.server.net.rtmp.RTMPConnection;
 import org.red5.server.net.rtmp.message.Constants;
 import org.red5.server.net.rtmp.message.SharedObjectEvent;
 import org.red5.server.SharedObjectPersistence;
@@ -27,7 +28,7 @@ public class SharedObject implements org.red5.server.api.SharedObject, Constants
 	protected int version = 0;
 	protected boolean persistent = true;
 	protected AttributeStore data = new AttributeStore();
-	protected HashSet clients = new HashSet();
+	protected HashSet connections = new HashSet();
 	protected int updateCounter = 0;
 	protected boolean modified = false;
 	
@@ -59,7 +60,6 @@ public class SharedObject implements org.red5.server.api.SharedObject, Constants
 	}
 	
 	private void sendUpdates() {
-		BaseConnection conn = (BaseConnection) Scope.getClient();
 		if (!this.ownerMessage.getEvents().isEmpty()) {
 			// Send update to "owner" of this update request
 			this.ownerMessage.setSoId(this.version);
@@ -75,20 +75,26 @@ public class SharedObject implements org.red5.server.api.SharedObject, Constants
 		
 		if (!this.syncMessage.getEvents().isEmpty()) {
 			// Synchronize updates with all registered clients of this shared object
+			IConnection conn = Red5.getConnectionLocal();
 			this.syncMessage.setSoId(this.version);
 			this.syncMessage.setSealed(false);
 			// Acquire the packet, this will stop the data inside being released
 			this.syncMessage.acquire();
-			Iterator clients = this.clients.iterator();
-			while (clients.hasNext()) {
-				BaseConnection connection = (BaseConnection) clients.next();
+			Iterator connections = this.connections.iterator();
+			while (connections.hasNext()) {
+				IConnection connection = (IConnection) connections.next();
 				if (connection == conn) {
 					// Don't re-send update to active client
 					log.debug("Skipped " + connection);
 					continue;
 				}
 				
-				Channel c = connection.getChannel((byte) 3);
+				if (!(connection instanceof RTMPConnection)) {
+					log.warn("Can't send sync message to unknown connection " + connection);
+					continue;
+				}
+				
+				Channel c = ((RTMPConnection) connection).getChannel((byte) 3);
 				log.debug("Send to " + c);
 				c.write(this.syncMessage);
 				this.syncMessage.setSealed(false);
@@ -151,7 +157,7 @@ public class SharedObject implements org.red5.server.api.SharedObject, Constants
 		endUpdate();
 	}
 	
-	public void setAttributes(org.red5.server.api.AttributeStore values) {
+	public void setAttributes(org.red5.server.api.IAttributeStore values) {
 		beginUpdate();
 		Iterator it = values.getAttributeNames().iterator();
 		while (it.hasNext()) {
@@ -218,29 +224,29 @@ public class SharedObject implements org.red5.server.api.SharedObject, Constants
 		this.notifyModified();
 	}
 	
-	public void registerClient(Client client) {
-		this.clients.add(client);
+	public void register(IConnection connection) {
+		this.connections.add(connection);
 		
 		// prepare response for new client
 		this.ownerMessage.addEvent(new SharedObjectEvent(SO_CLIENT_INITIAL_DATA, null, null));
 		if (!this.data.getAttributeNames().isEmpty())
-			this.ownerMessage.addEvent(new SharedObjectEvent(SO_CLIENT_UPDATE_DATA, null, this.data));
+			this.ownerMessage.addEvent(new SharedObjectEvent(SO_CLIENT_UPDATE_DATA, null, this.getData()));
 		
 		// we call notifyModified here to send response if we're not in a beginUpdate block
 		this.notifyModified();
 	}
 	
-	public void unregisterClient(Client client) {
-		this.clients.remove(client);
-		if (!this.persistent && this.clients.isEmpty()) {
+	public void unregister(IConnection connection) {
+		this.connections.remove(connection);
+		if (!this.persistent && this.connections.isEmpty()) {
 			log.info("Deleting shared object " + this.name + " because all clients disconnected.");
 			this.data.removeAttributes();
 			this.persistence.deleteSharedObject(this.name);
 		}
 	}
 	
-	public HashSet getClients() {
-		return this.clients;
+	public HashSet getConnections() {
+		return this.connections;
 	}
 	
 	public void beginUpdate() {

@@ -30,7 +30,7 @@ package org.red5.server.api;
  * @author The Red5 Project (red5@osflash.org)
  * @author Luke Hubbard (luke@codegent.com)
  */
-public interface Client extends AttributeStore {
+public interface IClient extends IAttributeStore {
 
 	/**
 	 * The key used to store the client object in a http session

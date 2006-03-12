@@ -142,7 +142,7 @@
 	<bean id="serviceInvoker" class="org.red5.server.service.ServiceInvoker" />
 		
 	<bean id="rtmpHandler"
-		class="org.red5.server.net.rtmp.RTMPHandler">
+		class="org.red5.server.net.rtmp.RTMPMinaHandler">
 		<property name="codecFactory" ref="rtmpCodecFactory" />
 		<property name="statusObjectService" ref="statusObjectService" />
 		<property name="serviceInvoker" ref="serviceInvoker" />

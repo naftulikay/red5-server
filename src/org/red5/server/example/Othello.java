@@ -25,8 +25,8 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.LinkedList;
+import org.red5.server.api.IClient;
 import org.red5.server.example.UserListManager;
-import org.red5.server.context.Client;
 import org.red5.server.context.BaseApplication;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -61,7 +61,7 @@ public class Othello extends BaseApplication
 		log.debug("!!!!!!!!!!!!!!!!!! Othello.onAppStop...");
 	}
 
-	public boolean onConnect(Client client, List params)
+	public boolean onConnect(IClient client, List params)
 	{
 		/*
 		// initialize the userList if not done already
@@ -81,14 +81,14 @@ public class Othello extends BaseApplication
 		return true;
 	}
 
-	public void onDisconnect(Client client) 
+	public void onDisconnect(IClient client) 
 	{
 		//userListManager.removeUser(client);
 		//if(clients.size() > 1) removeClient(client);
 		log.debug("!!!!!!!!!!!!!!!!!! onDisconnect..." + client);
 	}
 		
-	private void removeClient(Client client)
+	private void removeClient(IClient client)
 	{		
 		// Removing for now since line 95 causes an error.  Don't know why
 		for(Iterator it=clients.iterator(); it.hasNext();)

@@ -6,7 +6,7 @@ import org.red5.server.api.IConnection;
 import org.red5.server.api.Scope;
 
 public class Client extends AttributeStore  
-	implements  org.red5.server.api.Client {
+	implements  org.red5.server.api.IClient {
 
 	protected String id;
 	protected String host;

@@ -1,27 +1,28 @@
 package org.red5.server.api.impl;
 
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.collections.set.UnmodifiableSet;
-import org.red5.server.api.Client;
+import org.red5.server.api.IClient;
 import org.red5.server.api.IConnection;
 import org.red5.server.api.Stream;
 
 public abstract class Connection extends AttributeStore 
 	implements IConnection {
 	
-	private Client client = null;
-	private String contextPath = null;
-	private Scope scope = null;
+	protected IClient client = null;
+	protected String contextPath = null;
+	protected Scope scope = null;
 	private HashSet streams = new HashSet();
 
-	public Connection(Client client, String contextPath){
+	public Connection(IClient client, String contextPath){
 		this.client = client;
 		this.contextPath = contextPath;
 	}
 	
-	public Connection(Client client, Scope scope){
+	public Connection(IClient client, Scope scope){
 		this.client = client;
 		setScope(scope);
 	}
@@ -30,7 +31,9 @@ public abstract class Connection extends AttributeStore
 
 	public abstract void dispatchEvent(Object object);
 
-	public Client getClient() {
+	public abstract Map getParams();
+	
+	public IClient getClient() {
 		return client;
 	}
 	

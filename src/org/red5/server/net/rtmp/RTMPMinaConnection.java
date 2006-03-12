@@ -2,18 +2,17 @@ package org.red5.server.net.rtmp;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.mina.common.ByteBuffer;
 import org.apache.mina.common.IoSession;
-import org.red5.server.net.rtmp.message.OutPacket;
 
-public class Connection extends BaseConnection {
+public class RTMPMinaConnection extends RTMPConnection {
 
 	protected static Log log =
-        LogFactory.getLog(Connection.class.getName());
+        LogFactory.getLog(RTMPMinaConnection.class.getName());
 
 	private IoSession ioSession;
 	
-	public Connection(IoSession protocolSession){
+	public RTMPMinaConnection(IoSession protocolSession) {
+		super();
 		this.ioSession = protocolSession;
 	}
 	
@@ -21,11 +20,11 @@ public class Connection extends BaseConnection {
 		return ioSession;
 	}
 
-	public void write(OutPacket packet){
+	public void dispatchEvent(Object packet){
 		ioSession.write(packet);
 	}
 	
-	public void write(ByteBuffer packet){
-		ioSession.write(packet);
+	public boolean isConnected() {
+		return this.ioSession.isConnected();
 	}
 }

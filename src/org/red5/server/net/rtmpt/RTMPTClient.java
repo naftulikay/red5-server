@@ -7,15 +7,16 @@ import java.util.LinkedList;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.mina.common.ByteBuffer;
+import org.red5.server.api.IConnection;
 import org.red5.server.net.ProtocolState;
 import org.red5.server.net.SimpleProtocolDecoder;
 import org.red5.server.net.SimpleProtocolEncoder;
-import org.red5.server.net.rtmp.BaseConnection;
-import org.red5.server.net.rtmp.BaseRTMPHandler;
+import org.red5.server.net.rtmp.RTMPConnection;
+import org.red5.server.net.rtmp.RTMPHandler;
 import org.red5.server.net.rtmp.codec.RTMP;
 import org.red5.server.net.rtmp.message.OutPacket;
 
-public class RTMPTClient extends BaseConnection {
+public class RTMPTClient extends RTMPConnection {
 
 	protected static Log log =
         LogFactory.getLog(RTMPTClient.class.getName());
@@ -28,7 +29,7 @@ public class RTMPTClient extends BaseConnection {
 	protected RTMP state;
 	protected SimpleProtocolDecoder decoder;
 	protected SimpleProtocolEncoder encoder;
-	protected BaseRTMPHandler handler;
+	protected RTMPHandler handler;
 	protected ByteBuffer buffer;
 	protected List pendingMessages = new LinkedList();
 	protected List notifyMessages = new LinkedList();
@@ -47,6 +48,14 @@ public class RTMPTClient extends BaseConnection {
 	
 	public String getId() {
 		return new Integer(this.hashCode()).toString();
+	}
+	
+	public String getType() {
+		return IConnection.POLLING;
+	}
+	
+	public boolean isConnected() {
+		return true;
 	}
 	
 	public ProtocolState getState() {
@@ -85,6 +94,15 @@ public class RTMPTClient extends BaseConnection {
 		synchronized (this.pendingMessages) {
 			this.pendingMessages.add(packet);
 		}
+	}
+	
+	public void dispatchEvent(Object event) {
+		if (event instanceof ByteBuffer) {
+			write((ByteBuffer) event);
+		} else if (event instanceof OutPacket) {
+			write((OutPacket) event);
+		} else
+			log.error("Don't know how to dispatch event " + event);
 	}
 
 	public ByteBuffer getPendingMessages(int targetSize) {

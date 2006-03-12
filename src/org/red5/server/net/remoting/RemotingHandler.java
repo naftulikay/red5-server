@@ -5,18 +5,25 @@ import java.util.Iterator;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.mina.common.IdleStatus;
+import org.apache.mina.common.IoHandlerAdapter;
 import org.apache.mina.common.IoSession;
 import org.apache.mina.filter.LoggingFilter;
+import org.apache.mina.filter.codec.ProtocolCodecFactory;
 import org.apache.mina.filter.codec.ProtocolCodecFilter;
-import org.red5.server.net.OldBaseHandler;
 import org.red5.server.net.remoting.message.RemotingCall;
 import org.red5.server.net.remoting.message.RemotingPacket;
 //import org.red5.server.net.remoting.message.RemotingResponse;
 
-public class RemotingHandler extends OldBaseHandler {
+public class RemotingHandler extends IoHandlerAdapter {
 
 	protected static Log log =
         LogFactory.getLog(RemotingHandler.class.getName());
+	
+	private ProtocolCodecFactory codecFactory = null;
+
+	public void setCodecFactory(ProtocolCodecFactory codecFactory) {
+		this.codecFactory = codecFactory;
+	}
 	
 	public void exceptionCaught(IoSession arg0, Throwable arg1) throws Exception {
 		// TODO Auto-generated method stub

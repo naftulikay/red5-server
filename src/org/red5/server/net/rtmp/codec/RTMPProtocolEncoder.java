@@ -1,9 +1,9 @@
 package org.red5.server.net.rtmp.codec;
 
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -234,7 +234,7 @@ public class RTMPProtocolEncoder implements org.apache.mina.filter.codec.Protoco
 			case SO_CLIENT_UPDATE_DATA:
 				if (event.getKey() == null) {
 					// Update multiple attributes in one request
-					HashMap initialData = (HashMap) event.getValue();
+					Map initialData = (Map) event.getValue();
 					
 					// Buffer for all initial attributes
 					ByteBuffer completeBuffer = ByteBuffer.allocate(128);

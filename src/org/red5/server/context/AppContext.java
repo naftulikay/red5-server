@@ -3,9 +3,10 @@ package org.red5.server.context;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.red5.io.flv.FLVServiceImpl;
+import org.red5.server.api.IMapping;
+import org.red5.server.api.impl.DefaultMapping;
 import org.red5.server.SharedObjectPersistence;
 import org.red5.server.SharedObjectRamPersistence;
-import org.red5.server.api.Red5;
 import org.red5.server.service.ServiceInvoker;
 import org.red5.server.stream.StreamManager;
 import org.red5.server.stream.VideoCodecFactory;
@@ -19,6 +20,7 @@ public class AppContext
 	public static final String SO_PERSISTENCE_NAME = "sharedObjectPersistence";
 	public static final String STREAM_MANAGER_NAME = "streamManager";
 	public static final String VIDEO_CODEC_FACTORY = "videoCodecFactory";
+	public static final String SCOPE_MAPPING = "scopeMapping";
 	
 	protected String appPath;
 	protected String appName;
@@ -79,6 +81,15 @@ public class AppContext
 			VideoCodecFactory videoFactory = (VideoCodecFactory) this.getBean(VIDEO_CODEC_FACTORY);
 			app.setVideoCodecFactory(videoFactory);
 		}
+		
+		IMapping scopeMapping;
+		if (this.containsBean(SCOPE_MAPPING))
+			scopeMapping = (IMapping) this.getBean(SCOPE_MAPPING);
+		else {
+			scopeMapping = new DefaultMapping();
+			this.getBeanFactory().registerSingleton(SCOPE_MAPPING, scopeMapping);
+		}
+		app.setScopeMapping(scopeMapping);
 	}
 	
 	public ServiceInvoker getServiceInvoker(){

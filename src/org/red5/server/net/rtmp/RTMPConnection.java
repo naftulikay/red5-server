@@ -4,18 +4,18 @@ import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.mina.common.ByteBuffer;
+import org.red5.server.api.IClient;
+import org.red5.server.api.IConnection;
+import org.red5.server.api.impl.Connection;
 import org.red5.server.context.AppContext;
-import org.red5.server.context.Client;
-import org.red5.server.net.rtmp.message.OutPacket;
 import org.red5.server.net.rtmp.message.Ping;
 import org.red5.server.stream.DownStreamSink;
 import org.red5.server.stream.Stream;
 
-public abstract class BaseConnection extends Client {
+public abstract class RTMPConnection extends Connection {
 
 	protected static Log log =
-        LogFactory.getLog(BaseConnection.class.getName());
+        LogFactory.getLog(RTMPConnection.class.getName());
 
 	private final static int MAX_STREAMS = 12;
 	
@@ -23,6 +23,17 @@ public abstract class BaseConnection extends Client {
 	private Channel[] channels = new Channel[64];
 	private Stream[] streams = new Stream[MAX_STREAMS];
 	private AppContext appCtx = null;
+	private Map params = null;
+
+	public RTMPConnection() {
+		// We start with an anonymous connection without a scope.
+		// These parameters will be set during the call of "connect" later.
+		super(null, "");
+	}
+
+	public void setClient(IClient client) {
+		this.client = client;
+	}
 	
 	public AppContext getAppContext() {
 		return appCtx;
@@ -30,6 +41,10 @@ public abstract class BaseConnection extends Client {
 	
 	public void setAppContext(AppContext appCtx) {
 		this.appCtx = appCtx;
+	}
+
+	public String getType() {
+		return IConnection.PERSISTENT;
 	}
 	
 	public int getNextAvailableChannelId(){
@@ -57,14 +72,12 @@ public abstract class BaseConnection extends Client {
 		channels[channelId] = null;
 	}
 
-	// This method must be overwritten by the connection implementation
-	public abstract void write(OutPacket packet);
-	
-	// This method must be overwritten by the connection implementation
-	public abstract void write(ByteBuffer packet);
-	
 	public void setParameters(Map params){
 		this.params = params;
+	}
+	
+	public Map getParams() {
+		return this.params;
 	}
 	
 	/* Returns a stream for the next available stream id or null if all slots are in use. */

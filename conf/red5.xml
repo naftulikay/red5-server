@@ -110,7 +110,7 @@
     </bean>
 
 	<bean id="rtmpCodecFactory"
-		class="org.red5.server.net.rtmp.codec.RTMPCodecFactory"
+		class="org.red5.server.net.rtmp.codec.RTMPMinaCodecFactory"
 		init-method="init">
 		<property name="serializer" ref="serializer" />
 		<property name="deserializer" ref="deserializer" />

@@ -9,17 +9,17 @@ import org.red5.server.net.protocol.SimpleProtocolCodecFactory;
 import org.red5.server.net.protocol.SimpleProtocolDecoder;
 import org.red5.server.net.protocol.SimpleProtocolEncoder;
 
-public class RTMPCodecFactory implements ProtocolCodecFactory, SimpleProtocolCodecFactory {
+public class RTMPMinaCodecFactory implements ProtocolCodecFactory, SimpleProtocolCodecFactory {
 
 	protected Deserializer deserializer = null;
 	protected Serializer serializer = null;
-	protected RTMPProtocolDecoder decoder;
-	protected RTMPProtocolEncoder encoder;
+	protected RTMPMinaProtocolDecoder decoder;
+	protected RTMPMinaProtocolEncoder encoder;
 	
 	public void init(){
-		decoder = new RTMPProtocolDecoder();
+		decoder = new RTMPMinaProtocolDecoder();
 		decoder.setDeserializer(deserializer);
-		encoder = new RTMPProtocolEncoder();
+		encoder = new RTMPMinaProtocolEncoder();
 		encoder.setSerializer(serializer);
 	}	
 	

@@ -3,8 +3,6 @@ package org.red5.server.api;
 import java.util.Map;
 import java.util.Set;
 
-import org.red5.server.persistence.IPersistable;
-
 /*
  * RED5 Open Source Flash Server - http://www.osflash.org/red5
  * 

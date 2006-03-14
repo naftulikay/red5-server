@@ -226,7 +226,7 @@ public interface IScopeHandler {
 	void onSharedObjectSend(ISharedObject so, String method, Object[] params);
 
 	/**
-	 * Get the autorization object for this scope handler
+	 * Get the auth object for this scope handler
 	 */
 	IScopeAuth getScopeAuth(IScope scope); 
 	

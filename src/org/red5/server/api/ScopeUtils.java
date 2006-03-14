@@ -1,5 +1,8 @@
 package org.red5.server.api;
 
+/**
+ * Collection of utils for working with scopes
+ */
 public class ScopeUtils {
 	
 	private static final int GLOBAL = 0x00;

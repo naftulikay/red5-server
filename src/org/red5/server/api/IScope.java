@@ -1,10 +1,7 @@
 package org.red5.server.api;
 
-import java.io.IOException;
 import java.util.Set;
 
-import org.springframework.context.ApplicationContext;
-import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.ResourcePatternResolver;
 
 /*

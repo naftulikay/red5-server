@@ -6,13 +6,13 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.red5.server.api.IClient;
 import org.red5.server.api.IConnection;
-import org.red5.server.api.impl.AbstractConnection;
+import org.red5.server.api.impl.BaseConnection;
 import org.red5.server.context.AppContext;
 import org.red5.server.net.rtmp.message.Ping;
 import org.red5.server.stream.DownStreamSink;
 import org.red5.server.stream.Stream;
 
-public abstract class RTMPConnection extends AbstractConnection {
+public abstract class RTMPConnection extends BaseConnection {
 
 	protected static Log log =
         LogFactory.getLog(RTMPConnection.class.getName());
@@ -28,7 +28,8 @@ public abstract class RTMPConnection extends AbstractConnection {
 	public RTMPConnection() {
 		// We start with an anonymous connection without a scope.
 		// These parameters will be set during the call of "connect" later.
-		super(null, "");
+		//super(null, "");	temp fix to get things to compile
+		super(IConnection.PERSISTENT,null,null,null,null);
 	}
 
 	public void setClient(IClient client) {

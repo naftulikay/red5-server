@@ -5,12 +5,12 @@ import java.util.Map;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.red5.server.api.IClient;
+import org.red5.server.api.IClientRegistry;
 import org.red5.server.api.IConnection;
 import org.red5.server.api.IScope;
 import org.red5.server.context.AppContext;
 import org.red5.server.context.GlobalContext;
 import org.red5.server.context.HostContext;
-import org.red5.server.context.IClientRegistry;
 import org.red5.server.net.AccessDeniedException;
 import org.red5.server.net.ClientNotFoundException;
 import org.red5.server.net.HostNotFoundException;
@@ -79,7 +79,7 @@ public class ZBaseHandler implements IConnectionHandler {
 		else
 			registry = globalContext.getClientRegistry();
 		
-		return registry.newClient(host);
+		return registry.newClient();
 	}
 
 	public IClient lookupClient(String sessionId)

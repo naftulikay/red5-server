@@ -3,8 +3,6 @@ package org.red5.server.context;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.red5.io.flv.FLVServiceImpl;
-import org.red5.server.api.IMapping;
-import org.red5.server.api.impl.DefaultMapping;
 import org.red5.server.persistence.IPersistentStorage;
 import org.red5.server.persistence.RamPersistence;
 import org.red5.server.service.ServiceInvoker;
@@ -13,7 +11,7 @@ import org.red5.server.stream.VideoCodecFactory;
 import org.springframework.beans.BeansException;
 
 public class AppContext 
-	extends GenericRed5Context {
+	extends ZBaseContext {
 	
 	public static final String APP_CONFIG = "app.xml";
 	public static final String APP_SERVICE_NAME = "appService";
@@ -82,6 +80,7 @@ public class AppContext
 			app.setVideoCodecFactory(videoFactory);
 		}
 		
+		/*
 		IMapping scopeMapping;
 		if (this.containsBean(SCOPE_MAPPING))
 			scopeMapping = (IMapping) this.getBean(SCOPE_MAPPING);
@@ -90,6 +89,7 @@ public class AppContext
 			this.getBeanFactory().registerSingleton(SCOPE_MAPPING, scopeMapping);
 		}
 		app.setScopeMapping(scopeMapping);
+		*/
 	}
 	
 	public ServiceInvoker getServiceInvoker(){

@@ -1,7 +1,6 @@
 package org.red5.server.api;
 
 import java.util.Map;
-import java.util.Set;
 
 /*
  * RED5 Open Source Flash Server - http://www.osflash.org/red5
@@ -80,11 +79,34 @@ public interface IConnection extends IAttributeStore {
 	public IClient getClient();
 
 	/**
-	 * Get the context path for this connection
+	 * Get the hostname that the client is connected to. If they connected to an
+	 * IP, the IP address will be returned as a String.
 	 * 
-	 * @return context path
+	 * @return String containing the hostname
 	 */
-	public String getContextPath();
+	public String getHost();
+	
+	/**
+	 * Get the path for this connection
+	 * This is not updated if you switch scope
+	 * 
+	 * @return path
+	 */
+	public String getPath();
+	
+	/**
+	 * Get the session id, this may be null
+	 * 
+	 * @return session id
+	 */
+	public String getSessionId();
+	
+	/**
+	 * Get the context this connection is within
+	 * 
+	 * @return context object
+	 */
+	public IContext getContext();
 	
 	/**
 	 * Get the scope object associated with this connection
@@ -100,23 +122,14 @@ public interface IConnection extends IAttributeStore {
 	 * @param object
 	 *            any kind of simple object
 	 */
-	public void dispatchEvent(Object object);
-	
-	/**
-	 * Attempt to change to a new scope
-	 * 
-	 * @param contextPath
-	 *            the desired context path, can be relative or absolute
-	 * @return true of the switch succeeded
-	 */
-	public boolean switchScope(String contextPath);
+	/*public void dispatchEvent(Object object);*/
 
 	/**
 	 * Get a list of the stream object associated with this connection
 	 * 
 	 * @return set of stream objects
 	 */
-	public Set getStreams();
+	/*public Set getStreams();*/
 
 	/**
 	 * Get the connection params
@@ -125,4 +138,14 @@ public interface IConnection extends IAttributeStore {
 	 */
 	public Map getParams();
 
+	/**
+	 * Try to connect to the scope
+	 */
+	public boolean connect(IScope scope);
+	
+	/**
+	 * Initialize the connection
+	 */
+	public void initialize(IClient client, IContext context);
+	
 }

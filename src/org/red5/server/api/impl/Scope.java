@@ -8,25 +8,20 @@ import java.util.Set;
 import org.apache.commons.collections.set.UnmodifiableSet;
 import org.red5.server.api.IBroadcastStream;
 import org.red5.server.api.IConnection;
+import org.red5.server.api.IContext;
 import org.red5.server.api.IScope;
 import org.red5.server.api.IScopeAuth;
 import org.red5.server.api.IScopeHandler;
 import org.red5.server.api.ISharedObject;
-import org.springframework.context.ApplicationContext;
 import org.springframework.core.io.Resource;
 
 public class Scope extends AttributeStore implements IScope {
-	
-	public static final int GLOBAL = 0x00;
-	public static final int HOST = 0x01;
-	public static final int APPLICATION = 0x02;
-	public static final int INSTANCE = 0x04;
-	
+		
 	private IScope parent;
-	private String contextPath = "";
+	private String name = "";
 	private IScopeHandler handler;
 	private IScopeAuth auth; 
-	private ApplicationContext context;
+	private IContext context;
 	private int depth;
 	
 	private HashMap childScopes = new HashMap();
@@ -35,13 +30,13 @@ public class Scope extends AttributeStore implements IScope {
 	private HashMap sharedObjects = new HashMap();
 	private HashSet clients = new HashSet();
 	
-	public Scope(IScope parent, String contextPath, IScopeHandler handler, ApplicationContext context){
+	public Scope(IScope parent, String name, IContext context){
 		this.parent = parent;
-		this.contextPath = contextPath;
-		this.handler = handler;	
+		this.name = name;
 		this.context = context;
-		this.auth = handler.getScopeAuth(this);
-		if(parent == null) depth = GLOBAL;
+		handler = context.lookupScopeHandler(getPath());
+		auth = handler.getScopeAuth(this);
+		if(parent == null) depth = 0;
 		else depth = parent.getDepth() + 1;
 	}
 	
@@ -73,12 +68,17 @@ public class Scope extends AttributeStore implements IScope {
 		return UnmodifiableSet.decorate(clients);
 	}
 
-	public ApplicationContext getContext() {
+	public IContext getContext() {
 		return context;
 	}
 
-	public String getContextPath() {
-		return contextPath;
+	public String getName() {
+		return name;
+	}
+	
+	public String getPath() {
+		if(hasParent()) return parent.getPath() + "/" + name;
+		else return "";
 	}
 
 	public IScopeAuth getAuth() {
@@ -92,15 +92,7 @@ public class Scope extends AttributeStore implements IScope {
 	public IScope getParent() {
 		return parent;
 	}
-
-	public Resource getResource(String path) {
-		return context.getResource(contextPath + '/' + path);
-	}
-
-	public Resource[] getResources(String pattern) throws IOException {
-		return context.getResources(contextPath + '/' + pattern);
-	}
-
+	
 	public boolean createSharedObject(String name, boolean persistent){
 		// TODO:
 		return false;
@@ -142,20 +134,12 @@ public class Scope extends AttributeStore implements IScope {
 		return depth;
 	}
 
-	public boolean isApplication() {
-		return depth == APPLICATION;
+	public Resource[] getResources(String path) throws IOException {
+		return context.getResources(path);
 	}
 
-	public boolean isGlobal() {
-		return depth == GLOBAL;
+	public Resource getResource(String path) {
+		return context.getResource(path);
 	}
 
-	public boolean isHost() {
-		return depth == HOST;
-	}
-
-	public boolean isInstance() {
-		return depth == INSTANCE;
-	}
-	
 }

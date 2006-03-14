@@ -205,7 +205,8 @@ public class ZRTMPHandler extends ZBaseHandler implements Constants {
 		out.put((byte)0x03);
 		out.fill((byte)0x00,Constants.HANDSHAKE_SIZE);
 		out.put(in).flip();
-		conn.dispatchEvent(out);
+		// again temp fix.
+		//conn.dispatchEvent(out);
 	}
 
 	public void invokeCall(RTMPConnection conn, Call call){

@@ -9,7 +9,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.red5.server.api.IClient;
 import org.red5.server.api.IConnection;
-import org.red5.server.api.IMapping;
 import org.red5.server.api.ISharedObject;
 import org.red5.server.api.Red5;
 import org.red5.server.api.impl.SharedObject;
@@ -43,7 +42,6 @@ public class ZBaseApplication
 	private RamPersistence soTransience = new RamPersistence(); 
 	private HashSet listeners = new HashSet();
 	private VideoCodecFactory videoCodecs = null;
-	private IMapping scopeMapping = null;
 	
 	protected static Log log =
         LogFactory.getLog(ZBaseApplication.class.getName());
@@ -62,10 +60,6 @@ public class ZBaseApplication
 	
 	public void setVideoCodecFactory(VideoCodecFactory factory) {
 		this.videoCodecs = factory;
-	}
-	
-	public void setScopeMapping(IMapping mapping) {
-		this.scopeMapping = mapping;
 	}
 	
 	/*

@@ -44,15 +44,7 @@ public interface IClient extends IAttributeStore {
 	 * @return String containing the id
 	 */
 	public String getId();
-
-	/**
-	 * Get the hostname that the client connected to. If they connected to an
-	 * IP, the IP address will be returned as a String.
-	 * 
-	 * @return String containing the hostname
-	 */
-	public String getHost();
-
+	
 	/**
 	 * Get the creation time for this client object
 	 * 

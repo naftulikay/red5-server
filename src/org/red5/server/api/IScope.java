@@ -5,6 +5,7 @@ import java.util.Set;
 
 import org.springframework.context.ApplicationContext;
 import org.springframework.core.io.Resource;
+import org.springframework.core.io.support.ResourcePatternResolver;
 
 /*
  * RED5 Open Source Flash Server - http://www.osflash.org/red5
@@ -39,7 +40,7 @@ import org.springframework.core.io.Resource;
  * @author The Red5 Project (red5@osflash.org)
  * @author Luke Hubbard (luke@codegent.com)
  */
-public interface IScope extends IAttributeStore {
+public interface IScope extends IAttributeStore, ResourcePatternResolver {
 
 	/**
 	 * Does this scope have a parent
@@ -56,40 +57,26 @@ public interface IScope extends IAttributeStore {
 	public IScope getParent();
 
 	/**
-	 * Get the context path. eg. /myapp/someroom
+	 * Get the full absolute path. eg. host/myapp/someroom
 	 * 
-	 * @return context path
+	 * @return path
 	 */
-	public String getContextPath();
-
+	public String getPath();
+	
 	/**
-	 * Get the spring application context
+	 * Get the name of this scope. eg. someroom
+	 * 
+	 * @return name
+	 */
+	public String getName();
+	
+	/**
+	 * Get the context
 	 * 
 	 * @return context object
 	 */
-	public ApplicationContext getContext();
-
-	/**
-	 * Attempts to load a resource given a path from the context directory
-	 * Supports other protocols such as HTTP, see Spring docs
-	 * 
-	 * @param path
-	 *            the path or URI to a resource
-	 * @return resource object
-	 */
-	public Resource getResource(String path);
-
-	/**
-	 * Attempts to resolve a pattern to an array of resources Works just like
-	 * getResource but can take ant style patterns
-	 * 
-	 * @param pattern
-	 *            an ant style pattern
-	 * @return an array of resource objects
-	 * @throws IOException
-	 */
-	public Resource[] getResources(String pattern) throws IOException;
-
+	public IContext getContext();
+	
 	/**
 	 * Check to see if this scope has a child scope matching a given name
 	 * 
@@ -197,9 +184,10 @@ public interface IScope extends IAttributeStore {
 	 */
 	public Set getBroadcastStreamNames();
 	
-	public boolean isGlobal();
-	public boolean isHost();
-	public boolean isApplication();
-	public boolean isInstance();
+	/**
+	 * Get the scopes depth, how far down the scope tree is it
+	 * 
+	 * @return depth
+	 */
 	public int getDepth();
 }

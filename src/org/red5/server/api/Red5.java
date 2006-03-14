@@ -1,6 +1,5 @@
 package org.red5.server.api;
 
-import org.springframework.context.ApplicationContext;
 
 /*
  * RED5 Open Source Flash Server - http://www.osflash.org/red5
@@ -41,7 +40,7 @@ import org.springframework.context.ApplicationContext;
  * @author The Red5 Project (red5@osflash.org)
  * @author Luke Hubbard (luke@codegent.com)
  */
-public class Red5 {
+public final class Red5 {
 
 	private static ThreadLocal connThreadLocal = new ThreadLocal();
 
@@ -110,8 +109,8 @@ public class Red5 {
 	 * 
 	 * @return application context
 	 */
-	public ApplicationContext getContext() {
-		return conn.getScope().getContext();
+	public IContext getContext() {
+		return conn.getContext();
 	}
 
 }

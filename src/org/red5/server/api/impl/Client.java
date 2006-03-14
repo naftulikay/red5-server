@@ -9,22 +9,16 @@ public class Client extends AttributeStore
 	implements  org.red5.server.api.IClient {
 
 	protected String id;
-	protected String host;
 	protected long creationTime;
 	protected HashMap scopeToConnMap = new HashMap();
 	
-	public Client(String id, String host){
+	public Client(String id){
 		this.id = id;
-		this.host = host;
 		this.creationTime = System.currentTimeMillis();
 	}
 
 	public String getId() {
 		return id;
-	}
-	
-	public String getHost() {
-		return host;
 	}
 
 	public long getCreationTime() {

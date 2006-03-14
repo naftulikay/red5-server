@@ -9,7 +9,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.core.io.Resource;
 
 public class HostContext 
-	extends GenericRed5Context {
+	extends ZBaseContext {
 	
 	public static final String HOST_CONFIG = "host.xml";
 	public static final String APP_DIR = "apps";

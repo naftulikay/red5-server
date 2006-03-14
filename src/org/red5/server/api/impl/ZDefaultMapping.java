@@ -1,6 +1,5 @@
 package org.red5.server.api.impl;
 
-import org.red5.server.api.IMapping;
 import org.red5.server.api.IScopeHandler;
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
@@ -10,7 +9,7 @@ import org.springframework.context.ApplicationContextAware;
  * Provides mapping between context paths and scope handlers
  * Provides mapping between service names and service beans
  */
-public class DefaultMapping implements IMapping, ApplicationContextAware {
+public class ZDefaultMapping implements ApplicationContextAware {
 	
 	public ApplicationContext context;
 	public String appScopeHandlerName = "appScopeHandler";

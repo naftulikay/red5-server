@@ -7,6 +7,7 @@ import org.red5.server.api.IAttributeStore;
 import org.red5.server.api.IConnection;
 import org.red5.server.api.IScope;
 import org.red5.server.api.Red5;
+import org.red5.server.api.ScopeUtils;
 
 public abstract class EasyAppAdapter extends DefaultScopeAdapter implements IAttributeStore {
 	
@@ -65,27 +66,25 @@ public abstract class EasyAppAdapter extends DefaultScopeAdapter implements IAtt
 	}
 	
 	public void onConnect(IConnection conn) {
-		if(conn.getScope().isApplication()) ezAppConnect(conn);
-		else if(conn.getScope().isInstance()) ezInstanceConnect(conn);
+		if(ScopeUtils.isApplication(conn.getScope())) ezAppConnect(conn);
+		else if(ScopeUtils.isInstance(conn.getScope())) ezInstanceConnect(conn);
 	}
 
 	public void onCreateScope(IScope scope) {
-		if(scope.isApplication()) ezAppStart(scope);
-		else if(scope.isInstance()) ezInstanceStart(scope);
+		if(ScopeUtils.isApplication(scope)) ezAppStart(scope);
+		else if(ScopeUtils.isInstance(scope)) ezInstanceStart(scope);
 	}
 
 	public void onDisconnect(IConnection conn) {
-		if(conn.getScope().isApplication()) ezAppDisconnect(conn);
-		else if(conn.getScope().isInstance()) ezInstanceDisconnect(conn);
+		if(ScopeUtils.isApplication(conn.getScope())) ezAppDisconnect(conn);
+		else if(ScopeUtils.isInstance(conn.getScope())) ezInstanceDisconnect(conn);
 	}
 
 	public void onDisposeScope(IScope scope) {
-		if(scope.isApplication()) ezAppStop(scope);
-		else if(scope.isInstance()) ezInstanceStop(scope);
+		if(ScopeUtils.isApplication(scope)) ezAppStop(scope);
+		else if(ScopeUtils.isInstance(scope)) ezInstanceStop(scope);
 	}
 
-	
-	
 	public void ezAppStart(IScope app){
 		// do nothing
 	}

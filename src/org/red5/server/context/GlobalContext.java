@@ -11,7 +11,7 @@ import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 
 public class GlobalContext 
-	extends GenericRed5Context {
+	extends ZBaseContext {
 	
 	public static final String DEFAULT_HOST = "__default__";
 	public String hostsPath = "hosts";
@@ -30,7 +30,7 @@ public class GlobalContext
 	
 	public void initialize(){
 		XmlBeanDefinitionReader xmlReader = new XmlBeanDefinitionReader(this);
-		ApplicationContext c = getWebContent();
+		ApplicationContext c = getWebContext();
 		if(c!=null)
 			xmlReader.loadBeanDefinitions(c.getResource(configFilePath));
 		else

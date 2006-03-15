@@ -36,20 +36,34 @@ public interface IScopeAuth {
 	/**
 	 * Can a new scope be created for a given context path
 	 * 
-	 * @param contextPath
+	 * @param path
 	 *            the context path, eg: /myapp/room
 	 * @return true if the scope can be created, otherwise false
 	 */
-	boolean canCreateScope(String contextPath);
+	boolean canStart(String path);
 
 	/**
-	 * Can a given client connect to a scope
+	 * Can a given connection connect to a scope
 	 * 
 	 * @param conn
 	 *            the connection object
+	 * @param scope
+	 * 		  the scope object
 	 * @return true if the client can connect, otherwise false
 	 */
 	boolean canConnect(IConnection conn, IScope scope);
+	
+	/**
+	 * Can a given client join the scope
+	 * 
+	 * @param client
+	 *            the client object
+	 * @param scope
+	 * 		   the scope object
+	 * @return true if the client can connect, otherwise false
+	 */
+	boolean canJoin(IClient client, IScope scope);
+	
 
 	/**
 	 * Can the service call proceed

@@ -42,15 +42,15 @@ public interface IScopeHandler {
 	 * @param scope
 	 *            the new scope object
 	 */
-	void onCreateScope(IScope scope);
+	void onStart(IScope scope);
 
 	/**
 	 * Called just before a scope is disposed
 	 */
-	void onDisposeScope(IScope scope);
+	void onStop(IScope scope);
 
 	/**
-	 * Called just after a client has connected to a scope
+	 * Called just before every connection to a scope
 	 * 
 	 * @param conn
 	 *            connection object
@@ -58,12 +58,28 @@ public interface IScopeHandler {
 	void onConnect(IConnection conn);
 
 	/**
-	 * Called just before the client disconnects from the scope
+	 * Called just after the a connection is disconnected
 	 * 
 	 * @param conn
 	 *            connection object
 	 */
 	void onDisconnect(IConnection conn);
+	
+	/**
+	 * Called just before a client enters the scope
+	 * 
+	 * @param client
+	 *            client object
+	 */
+	void onJoin(IClient client, IScope scope);
+
+	/**
+	 * Called just after the client leaves the scope
+	 * 
+	 * @param client
+	 *            client object
+	 */
+	void onLeave(IClient client, IScope scope);
 
 	/**
 	 * Called just before a service call This is a chance to modify the call

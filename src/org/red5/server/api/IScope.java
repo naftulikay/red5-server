@@ -1,5 +1,6 @@
 package org.red5.server.api;
 
+import java.util.Iterator;
 import java.util.Set;
 
 import org.springframework.core.io.support.ResourcePatternResolver;
@@ -133,7 +134,7 @@ public interface IScope extends IAttributeStore, ResourcePatternResolver {
 	 * @return set containing all connected clients
 	 */
 	public Set getClients();
-
+	
 	/**
 	 * Dispatch an event to all connected clients
 	 * 
@@ -187,4 +188,19 @@ public interface IScope extends IAttributeStore, ResourcePatternResolver {
 	 * @return depth
 	 */
 	public int getDepth();
+	
+	/**
+	 * Lookup connections
+	 * 
+	 * @param	client object
+	 * @return set of connection objects (readonly)
+	 */
+	public Set lookupConnections(IClient client);
+	
+	/**
+	 * Get a connection iterator, you can call remove, and the connection will be closed.
+	 * @return iterator holding all connections
+	 */
+	public Iterator getConnections();
+	
 }

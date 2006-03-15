@@ -1,16 +1,18 @@
 package org.red5.server.api.impl;
 
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Set;
 
 import org.red5.server.api.IConnection;
-import org.red5.server.api.IScope;
 
 public class Client extends AttributeStore  
 	implements  org.red5.server.api.IClient {
 
 	protected String id;
 	protected long creationTime;
-	protected HashMap scopeToConnMap = new HashMap();
+	protected HashMap connToScope = new HashMap();
 	
 	public Client(String id){
 		this.id = id;
@@ -24,40 +26,6 @@ public class Client extends AttributeStore
 	public long getCreationTime() {
 		return creationTime;
 	}
-
-	public IConnection lookupConnection(IScope scope){
-		return (IConnection) scopeToConnMap.get(scope);
-	}
-	
-	/* at the moment only a single conn per scope allowed
-	public Connection getConnection(Scope scope) {
-		if(!conns.containsKey(scope)) 
-			return null;
-		Object value = conns.get(scope);
-		if(value instanceof Connection) 
-			return (Connection) value;
-		List scopeConns = (List) value;
-		// First we look for a persistent connection
-		// We will search in order (newer connections at the top of the list)
-		Iterator it = scopeConns.iterator();
-		while(it.hasNext()){
-			Connection conn = (Connection) it.next();
-			if(conn.getType() == Connection.PERSISTENT) 
-				return conn;
-		}
-		// Ok so no persistent connection
-		// lets check to see if we have polling (next best thing)
-		it = scopeConns.iterator();
-		while(it.hasNext()){
-			Connection conn = (Connection) it.next();
-			if(conn.getType() == Connection.POLLING) 
-				return conn;
-		}
-		// Looks like they are all transient connections, 
-		// return the most recent one
-		return (Connection) scopeConns.get(0);
-	}
-	*/
 	
 	public boolean equals(Object obj) {
 		if(!(obj instanceof Client)) return false;
@@ -69,12 +37,28 @@ public class Client extends AttributeStore
 		return "Client: "+id;
 	}
 	
+	public Set getConnections() {
+		return connToScope.keySet();
+	}
+
+	public Collection getScopes() {
+		return connToScope.values();
+	}
+
+	public void disconnect() {
+		Iterator conns = getConnections().iterator();
+		while(conns.hasNext()){
+			IConnection conn = (IConnection) conns.next();
+			conn.close();
+		}
+	}
+		
 	void register(IConnection conn){
-		scopeToConnMap.put(conn.getScope(), conn);
+		connToScope.put(conn, conn.getScope());
 	}
 	
 	void unregister(IConnection conn){
-		scopeToConnMap.remove(conn.getScope());
+		connToScope.remove(conn);
 	}
-		
+
 }

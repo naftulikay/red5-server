@@ -8,7 +8,7 @@ public class ScopeUtils {
 	private static final int GLOBAL = 0x00;
 	private static final int HOST = 0x01;
 	private static final int APPLICATION = 0x02;
-	private static final int INSTANCE = 0x04;
+	private static final int ROOM = 0x04;
 	
 	private static final String SLASH = "/";
 	
@@ -61,12 +61,12 @@ public class ScopeUtils {
 		return scope.getDepth() == HOST;
 	}
 	
-	public static boolean isApplication(IScope scope){
+	public static boolean isApp(IScope scope){
 		return scope.getDepth() == APPLICATION;
 	}
 
-	public static boolean isInstance(IScope scope){
-		return scope.getDepth() == INSTANCE;
+	public static boolean isRoom(IScope scope){
+		return scope.getDepth() >= ROOM;
 	}
 	
 }

@@ -3,10 +3,11 @@ package org.red5.server.api.impl;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Set;
 
-import org.apache.commons.collections.set.UnmodifiableSet;
 import org.red5.server.api.IBroadcastStream;
+import org.red5.server.api.IClient;
 import org.red5.server.api.IConnection;
 import org.red5.server.api.IContext;
 import org.red5.server.api.IScope;
@@ -17,7 +18,7 @@ import org.springframework.core.io.Resource;
 
 public class Scope extends AttributeStore implements IScope {
 		
-	private IScope parent;
+	private Scope parent;
 	private String name = "";
 	private IScopeHandler handler;
 	private IScopeAuth auth; 
@@ -28,9 +29,9 @@ public class Scope extends AttributeStore implements IScope {
 
 	private HashMap broadcastStreams = new HashMap();
 	private HashMap sharedObjects = new HashMap();
-	private HashSet clients = new HashSet();
+	private HashMap clients = new HashMap();
 	
-	public Scope(IScope parent, String name, IContext context){
+	public Scope(Scope parent, String name, IContext context){
 		this.parent = parent;
 		this.name = name;
 		this.context = context;
@@ -65,7 +66,7 @@ public class Scope extends AttributeStore implements IScope {
 	}
 
 	public Set getClients() {
-		return UnmodifiableSet.decorate(clients);
+		return clients.keySet();
 	}
 
 	public IContext getContext() {
@@ -80,7 +81,7 @@ public class Scope extends AttributeStore implements IScope {
 		if(hasParent()) return parent.getPath() + "/" + name;
 		else return "";
 	}
-
+	
 	public IScopeAuth getAuth() {
 		return auth;
 	}
@@ -115,18 +116,35 @@ public class Scope extends AttributeStore implements IScope {
 	}
 
 	boolean connect(IConnection conn) {
+		if(hasParent() && !parent.connect(conn)) return false;
 		if(!auth.canConnect(conn, this)) return false;
-		if(!clients.contains(conn.getClient())){
-			clients.add(conn.getClient());
-			handler.onConnect(conn);		
+		final IClient client = conn.getClient();
+		if(!clients.containsKey(client)){
+			//handler.onClientConnect(Client client);
+			final Set conns = new HashSet();
+			conns.add(conn);
+			clients.put(conn.getClient(), conns);
+		} else {
+			final Set conns = (Set) clients.get(client);
+			conns.add(conn);
 		}
+		if(handler != null) 
+			handler.onConnect(conn);
 		return true;
 	}
 	
 	void disconnect(IConnection conn){
-		if(clients.contains(conn.getClient())){
-			clients.remove(conn.getClient());
-			handler.onDisconnect(conn);
+		if(hasParent()) parent.disconnect(conn);
+		final IClient client = conn.getClient();
+		if(clients.containsKey(client)){
+			final Set conns = (Set) clients.get(client);
+			conns.remove(conn);
+			if(handler != null) 
+				handler.onDisconnect(conn);
+			if(conns.isEmpty()) {
+				clients.remove(clients);
+				//handler.onClientDisconnect(client);
+			}
 		}
 	}
 
@@ -141,5 +159,44 @@ public class Scope extends AttributeStore implements IScope {
 	public Resource getResource(String path) {
 		return context.getResource(path);
 	}
+	
+	public Iterator getConnections() {
+		return new ConnectionIterator();
+	}
 
+	public Set lookupConnections(IClient client) {
+		return (Set) clients.get(client);
+	}
+
+	class ConnectionIterator implements Iterator {
+
+		private Iterator setIterator; 
+		private Iterator connIterator;
+		private IConnection current;
+		
+		public ConnectionIterator(){
+			setIterator = clients.values().iterator();
+		}
+		
+		public boolean hasNext() {
+			return connIterator.hasNext() || setIterator.hasNext();
+		}
+
+		public Object next() {
+			if(!connIterator.hasNext()){
+				if(!setIterator.hasNext()) return null;
+				connIterator = ((Set) setIterator.next()).iterator();
+			}
+			current = (IConnection) connIterator.next();
+			return current;
+		}
+
+		public void remove() {
+			if(current!=null){
+				disconnect(current);
+			}
+		}
+		
+	}
+	
 }

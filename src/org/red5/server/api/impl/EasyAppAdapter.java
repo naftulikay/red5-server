@@ -4,12 +4,15 @@ import java.util.Map;
 import java.util.Set;
 
 import org.red5.server.api.IAttributeStore;
+import org.red5.server.api.IClient;
 import org.red5.server.api.IConnection;
+import org.red5.server.api.IEasyAppHandler;
 import org.red5.server.api.IScope;
 import org.red5.server.api.Red5;
 import org.red5.server.api.ScopeUtils;
 
-public abstract class EasyAppAdapter extends DefaultScopeAdapter implements IAttributeStore {
+public abstract class EasyAppAdapter extends DefaultScopeAdapter 
+	implements IAttributeStore, IEasyAppHandler {
 	
 	public static final String STORE_CONNECTION = "connection";
 	public static final String STORE_SCOPE = "scope";
@@ -66,23 +69,33 @@ public abstract class EasyAppAdapter extends DefaultScopeAdapter implements IAtt
 	}
 	
 	public void onConnect(IConnection conn) {
-		if(ScopeUtils.isApplication(conn.getScope())) ezAppConnect(conn);
-		else if(ScopeUtils.isInstance(conn.getScope())) ezInstanceConnect(conn);
+		if(ScopeUtils.isApp(conn.getScope())) ezAppConnect(conn);
+		else if(ScopeUtils.isRoom(conn.getScope())) ezRoomConnect(conn);
 	}
 
-	public void onCreateScope(IScope scope) {
-		if(ScopeUtils.isApplication(scope)) ezAppStart(scope);
-		else if(ScopeUtils.isInstance(scope)) ezInstanceStart(scope);
+	public void onStart(IScope scope) {
+		if(ScopeUtils.isApp(scope)) ezAppStart(scope);
+		else if(ScopeUtils.isRoom(scope)) ezRoomStart(scope);
 	}
 
 	public void onDisconnect(IConnection conn) {
-		if(ScopeUtils.isApplication(conn.getScope())) ezAppDisconnect(conn);
-		else if(ScopeUtils.isInstance(conn.getScope())) ezInstanceDisconnect(conn);
+		if(ScopeUtils.isApp(conn.getScope())) ezAppDisconnect(conn);
+		else if(ScopeUtils.isRoom(conn.getScope())) ezRoomDisconnect(conn);
 	}
 
-	public void onDisposeScope(IScope scope) {
-		if(ScopeUtils.isApplication(scope)) ezAppStop(scope);
-		else if(ScopeUtils.isInstance(scope)) ezInstanceStop(scope);
+	public void onStop(IScope scope) {
+		if(ScopeUtils.isApp(scope)) ezAppStop(scope);
+		else if(ScopeUtils.isRoom(scope)) ezRoomStop(scope);
+	}
+
+	public void onJoin(IClient client, IScope scope) {
+		if(ScopeUtils.isApp(scope)) ezAppJoin(client, scope);
+		else if(ScopeUtils.isRoom(scope)) ezRoomJoin(client, scope);
+	}
+
+	public void onLeave(IClient client, IScope scope) {
+		if(ScopeUtils.isApp(scope)) ezAppLeave(client, scope);
+		else if(ScopeUtils.isRoom(scope)) ezRoomLeave(client, scope);
 	}
 
 	public void ezAppStart(IScope app){
@@ -93,11 +106,11 @@ public abstract class EasyAppAdapter extends DefaultScopeAdapter implements IAtt
 		// do nothing
 	}
 	
-	public void ezInstanceStart(IScope instance){
+	public void ezRoomStart(IScope room){
 		//	do nothing
 	}
 	
-	public void ezInstanceStop(IScope instance){
+	public void ezRoomStop(IScope room){
 		//	do nothing
 	}
 	
@@ -105,7 +118,7 @@ public abstract class EasyAppAdapter extends DefaultScopeAdapter implements IAtt
 		// do nothing
 	}
 	
-	public void ezInstanceConnect(IConnection conn){
+	public void ezRoomConnect(IConnection conn){
 		// do nothing
 	}
 	
@@ -113,8 +126,24 @@ public abstract class EasyAppAdapter extends DefaultScopeAdapter implements IAtt
 		// do nothing
 	}
 	
-	public void ezInstanceDisconnect(IConnection conn){
+	public void ezRoomDisconnect(IConnection conn){
 		// do nothing
+	}
+	
+	public void ezAppJoin(IClient client, IScope app){
+		
+	}
+	
+	public void ezAppLeave(IClient client, IScope app){
+		
+	}
+	
+	public void ezRoomJoin(IClient client, IScope room){
+		
+	}
+	
+	public void ezRoomLeave(IClient client, IScope room){
+		
 	}
 	
 }

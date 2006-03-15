@@ -2,6 +2,7 @@ package org.red5.server.api.impl;
 
 import org.red5.server.api.IBroadcastStream;
 import org.red5.server.api.ICall;
+import org.red5.server.api.IClient;
 import org.red5.server.api.IConnection;
 import org.red5.server.api.IOnDemandStream;
 import org.red5.server.api.IScope;
@@ -12,8 +13,9 @@ import org.red5.server.api.IStream;
 
 public class DefaultScopeAdapter implements IScopeHandler, IScopeAuth {
 
-	private boolean canCreateScope = true;
+	private boolean canStart = true;
 	private boolean canConnect = true;
+	private boolean canJoin = true;
 	private boolean canCallService = true;
 	private boolean canBroadcastEvent = true;
 	private boolean canConnectSharedObject = true;
@@ -26,8 +28,8 @@ public class DefaultScopeAdapter implements IScopeHandler, IScopeAuth {
 	private boolean canSubscribeToBroadcastStream = true;
 	private boolean canConnectToOnDemandStream = true;
 	
-	public void setCanCreateScope(boolean canCreateScope) {
-		this.canCreateScope = canCreateScope;
+	public void setCanStart(boolean canStart) {
+		this.canStart = canStart;
 	}
 
 	public void setCanBroadcastEvent(boolean canBroadcastEvent) {
@@ -42,6 +44,10 @@ public class DefaultScopeAdapter implements IScopeHandler, IScopeAuth {
 		this.canConnect = canConnect;
 	}
 
+	public void setJoin(boolean canJoin) {
+		this.canJoin = canJoin;
+	}
+	
 	public void setCanConnectSharedObject(boolean canConnectSharedObject) {
 		this.canConnectSharedObject = canConnectSharedObject;
 	}
@@ -78,8 +84,8 @@ public class DefaultScopeAdapter implements IScopeHandler, IScopeAuth {
 		this.canSubscribeToBroadcastStream = canSubscribeToBroadcastStream;
 	}
 
-	public boolean canCreateScope(String contextPath) {
-		return canCreateScope;
+	public boolean canStart(String path) {
+		return canStart;
 	}
 
 	public boolean canBroadcastEvent(Object event) {
@@ -92,6 +98,10 @@ public class DefaultScopeAdapter implements IScopeHandler, IScopeAuth {
 
 	public boolean canConnect(IConnection conn, IScope scope) {
 		return canConnect;
+	}
+	
+	public boolean canJoin(IClient client, IScope scope) {
+		return canJoin;
 	}
 
 	public boolean canConnectSharedObject(String soName) {
@@ -135,22 +145,30 @@ public class DefaultScopeAdapter implements IScopeHandler, IScopeAuth {
 		return this;
 	}
 	
-	public void onCreateScope(IScope scope) {
+	public void onStart(IScope scope) {
 		// nothing
 	}
 
-	public void onDisposeScope(IScope scope) {
+	public void onStop(IScope scope) {
 		// nothing
 	}
-
+	
 	public void onConnect(IConnection conn) {
 		// nothing
 	}
-
+	
 	public void onDisconnect(IConnection conn) {
 		// nothing
 	}
 
+	public void onJoin(IClient client, IScope scope) {
+		// nothing
+	}
+	
+	public void onLeave(IClient client, IScope scope){
+		// nothing
+	}
+	
 	public void onEventBroadcast(Object event) {
 		// nothing
 	}

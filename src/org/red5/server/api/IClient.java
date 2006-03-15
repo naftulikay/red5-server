@@ -1,5 +1,8 @@
 package org.red5.server.api;
 
+import java.util.Collection;
+import java.util.Set;
+
 /*
  * RED5 Open Source Flash Server - http://www.osflash.org/red5
  * 
@@ -51,15 +54,21 @@ public interface IClient extends IAttributeStore {
 	 * @return long representing the time in milliseconds when this object was
 	 *         created
 	 */
-	public long getCreationTime();
+	public long getCreationTime();	
+	
+	/**
+	 * Get a set of scopes
+	 */
+	public Collection getScopes();
 
 	/**
-	 * Lookup a connection associated with a given scope
-	 * 
-	 * @param scope
-	 *            the current scope object
-	 * @return connection the associated connection object
+	 * Get a set of connections
 	 */
-	public IConnection lookupConnection(IScope scope);
-
+	public Set getConnections();
+	
+	/**
+	 * Closes all the connections
+	 */
+	public void disconnect();
+	
 }

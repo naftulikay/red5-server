@@ -53,6 +53,10 @@ public class ScopeUtils {
 		return false;
 	}
 
+	public static boolean isRoot(IScope scope){
+		return !scope.hasParent();	
+	}
+
 	public static boolean isGlobal(IScope scope){
 		return scope.getDepth() == GLOBAL;	
 	}

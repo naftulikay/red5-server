@@ -11,17 +11,17 @@ import org.red5.server.api.ScopeUtils;
 public class BaseConnection extends AttributeStore 
 	implements IConnection {
 	
-	protected String type = null;
-	protected String host = null;
-	protected String path = null;
-	protected String sessionId = null;
-	protected Map params = null;
+	protected String type;
+	protected String host;
+	protected String path;
+	protected String sessionId;
+	protected Map<String,String> params = null;
 	
 	protected IClient client = null;
 	protected IContext context = null;
 	protected Scope scope = null;
 	
-	public BaseConnection(String type, String host, String path, String sessionId, Map params){
+	public BaseConnection(String type, String host, String path, String sessionId, Map<String,String> params){
 		this.type = type;
 		this.host = host;
 		this.path = path;
@@ -50,7 +50,7 @@ public class BaseConnection extends AttributeStore
 		return sessionId;
 	}
 
-	public Map getParams(){
+	public Map<String,String> getParams(){
 		return params;
 	}
 

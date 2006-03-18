@@ -6,13 +6,14 @@ import java.util.Iterator;
 import java.util.Set;
 
 import org.red5.server.api.IConnection;
+import org.red5.server.api.IScope;
 
 public class Client extends AttributeStore  
 	implements  org.red5.server.api.IClient {
 
 	protected String id;
 	protected long creationTime;
-	protected HashMap connToScope = new HashMap();
+	protected HashMap<IConnection,IScope> connToScope = new HashMap<IConnection,IScope>();
 	
 	public Client(String id){
 		this.id = id;
@@ -37,19 +38,18 @@ public class Client extends AttributeStore
 		return "Client: "+id;
 	}
 	
-	public Set getConnections() {
+	public Set<IConnection> getConnections() {
 		return connToScope.keySet();
 	}
 
-	public Collection getScopes() {
+	public Collection<IScope> getScopes() {
 		return connToScope.values();
 	}
 
 	public void disconnect() {
-		Iterator conns = getConnections().iterator();
+		Iterator<IConnection> conns = getConnections().iterator();
 		while(conns.hasNext()){
-			IConnection conn = (IConnection) conns.next();
-			conn.close();
+			conns.next().close();
 		}
 	}
 		

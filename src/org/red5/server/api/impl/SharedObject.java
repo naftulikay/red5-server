@@ -219,15 +219,14 @@ public class SharedObject implements ISharedObject, IPersistable, Constants {
 		this.modified = false;
 	}
 	
-	public Map getData() {
-		Map result = new HashMap();
-		Iterator it = this.data.getAttributeNames().iterator();
+	public Map<String,Object> getData() {
+		Map<String,Object> result = new HashMap<String,Object>();
+		Iterator<String> it = this.data.getAttributeNames().iterator();
 		while (it.hasNext()) {
-			String name = (String) it.next();
+			String name = it.next();
 			Object value = this.data.getAttribute(name);
 			result.put(name, value);
 		}
-		
 		return result;
 	}
 	

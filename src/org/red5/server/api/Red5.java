@@ -42,7 +42,7 @@ package org.red5.server.api;
  */
 public final class Red5 {
 
-	private static ThreadLocal connThreadLocal = new ThreadLocal();
+	private static ThreadLocal<IConnection> connThreadLocal = new ThreadLocal<IConnection>();
 
 	public IConnection conn = null;
 
@@ -74,7 +74,7 @@ public final class Red5 {
 	 * @return connection object
 	 */
 	public static IConnection getConnectionLocal() {
-		return (IConnection) connThreadLocal.get();
+		return connThreadLocal.get();
 	}
 
 	/**

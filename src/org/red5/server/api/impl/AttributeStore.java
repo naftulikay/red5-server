@@ -22,7 +22,7 @@ import org.red5.server.persistence.IPersistentStorage;
 
 public class AttributeStore implements IAttributeStore, IPersistable {
 
-	private HashMap attributes = new HashMap();
+	private HashMap<String,Object> attributes = new HashMap<String,Object>();
 	private IPersistentStorage storage = null;
 	private String persistentId = null;
 	
@@ -38,7 +38,7 @@ public class AttributeStore implements IAttributeStore, IPersistable {
 		this.storage = storage;
 	}
 	
-	public Set getAttributeNames(){
+	public Set<String> getAttributeNames(){
 		return attributes.keySet();
 	}
 
@@ -63,7 +63,7 @@ public class AttributeStore implements IAttributeStore, IPersistable {
 			return false;
 	}
 
-	synchronized public void setAttributes(Map values) {
+	synchronized public void setAttributes(Map<String,Object> values) {
 		attributes.putAll(values);
 	}
 	
@@ -122,7 +122,7 @@ public class AttributeStore implements IAttributeStore, IPersistable {
 	public void deserialize(ByteBuffer input) throws IOException {
 		Input in = new Input(input);
 		Deserializer deserializer = new Deserializer();
-		Map data = (Map) deserializer.deserialize(in);
+		Map<String,Object> data = (Map<String,Object>) deserializer.deserialize(in);
 		attributes.clear();
 		attributes.putAll(data);
 	}

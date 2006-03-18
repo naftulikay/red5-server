@@ -29,8 +29,7 @@ public class BaseHandler implements IConnectionHandler {
 		IContext context = globalContext;
 		
 		// First thing to do is lookup the scope.. 
-		IScopeResolver resolver = context.getScopeResolver();
-		IScope scope = resolver.resolveScope(conn.getHost(), conn.getPath());
+		IScope scope = context.resolveScope(conn.getHost(), conn.getPath());
 		
 		// Right we can switch context now, to the context associated with our new scope
 		context = scope.getContext();

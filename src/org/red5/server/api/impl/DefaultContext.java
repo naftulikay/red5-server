@@ -15,24 +15,38 @@ import org.springframework.context.ApplicationContextAware;
 import org.springframework.core.io.Resource;
 
 public class DefaultContext implements IContext, ApplicationContextAware {
-
-	protected static final String RED5_SERVICE_PREFIX = "red5.";
-	protected static final String SCOPE_RESOLVER = "scopeResolver";
-	protected static final String CLIENT_REGISTRY = "clientRegistry";
-	protected static final String SERVICE_INVOKER = "serviceInvoker";
-	protected static final String MAPPING_STRATEGY = "mappingStrategy";
 	
 	private ApplicationContext applicationContext; 
-	private String contextPath;
+	private String contextPath = "";
 	
 	private IScopeResolver scopeResolver;
 	private IClientRegistry clientRegistry;
 	private IServiceInvoker serviceInvoker;
 	private IMappingStrategy mappingStrategy;
 	
+	public DefaultContext(){
+		
+	}
+	
 	public DefaultContext(ApplicationContext context, String contextPath){
 		this.applicationContext = context;
 		this.contextPath = contextPath;
+	}
+
+	public void setClientRegistry(IClientRegistry clientRegistry) {
+		this.clientRegistry = clientRegistry;
+	}
+
+	public void setMappingStrategy(IMappingStrategy mappingStrategy) {
+		this.mappingStrategy = mappingStrategy;
+	}
+
+	public void setScopeResolver(IScopeResolver scopeResolver) {
+		this.scopeResolver = scopeResolver;
+	}
+
+	public void setServiceInvoker(IServiceInvoker serviceInvoker) {
+		this.serviceInvoker = serviceInvoker;
 	}
 
 	public void setApplicationContext(ApplicationContext context) {
@@ -44,18 +58,8 @@ public class DefaultContext implements IContext, ApplicationContextAware {
 	}
 	
 	public void setContextPath(String contextPath){
+		if(!contextPath.endsWith("/")) contextPath += "/";
 		this.contextPath = contextPath;
-	}
-	
-	public void init() {
-		scopeResolver = (IScopeResolver) applicationContext.getBean(
-				RED5_SERVICE_PREFIX+SCOPE_RESOLVER);
-		clientRegistry = (IClientRegistry) applicationContext.getBean(
-				RED5_SERVICE_PREFIX+CLIENT_REGISTRY);
-		serviceInvoker = (IServiceInvoker) applicationContext.getBean(
-				RED5_SERVICE_PREFIX+SERVICE_INVOKER);
-		mappingStrategy = (IMappingStrategy) applicationContext.getBean(
-				RED5_SERVICE_PREFIX+MAPPING_STRATEGY);
 	}
 
 	public IClientRegistry getClientRegistry() {
@@ -78,9 +82,11 @@ public class DefaultContext implements IContext, ApplicationContextAware {
 		else throw new ServiceNotFoundException(serviceName);
 	}
 
+	/*
 	public IScopeResolver getScopeResolver() {
 		return scopeResolver;
 	}
+	*/
 
 	public IScopeHandler lookupScopeHandler(String contextPath) {
 		String scopeHandlerName = getMappingStrategy().mapScopeHandlerName(contextPath); 
@@ -95,11 +101,15 @@ public class DefaultContext implements IContext, ApplicationContextAware {
 	}
 
 	public Resource[] getResources(String pattern) throws IOException {
-		return applicationContext.getResources(pattern);
+		return applicationContext.getResources(contextPath + pattern);
 	}
 
 	public Resource getResource(String path) {
-		return applicationContext.getResource(path);
+		return applicationContext.getResource(contextPath + path);
+	}
+
+	public IScope resolveScope(String host, String path) {
+		return scopeResolver.resolveScope(host,path);
 	}
 
 }

@@ -59,12 +59,12 @@ public interface IClient extends IAttributeStore {
 	/**
 	 * Get a set of scopes
 	 */
-	public Collection getScopes();
+	public Collection<IScope> getScopes();
 
 	/**
 	 * Get a set of connections
 	 */
-	public Set getConnections();
+	public Set<IConnection> getConnections();
 	
 	/**
 	 * Closes all the connections

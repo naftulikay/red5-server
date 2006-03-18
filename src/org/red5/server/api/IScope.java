@@ -89,7 +89,7 @@ public interface IScope extends IAttributeStore, ResourcePatternResolver {
 	 * 
 	 * @return set containing child scope names
 	 */
-	public Set getChildScopeNames();
+	public Set<String> getChildScopeNames();
 
 	/**
 	 * Get a child scope by name
@@ -101,87 +101,13 @@ public interface IScope extends IAttributeStore, ResourcePatternResolver {
 	public IScope getChildScope(String name);
 
 	/**
-	 * Get a set of the shared object names
-	 * 
-	 * @return set containing the shared object names
-	 */
-	public Set getSharedObjectNames();
-
-	/**
-	 * Create a new shared object
-	 * 
-	 * @param name
-	 *            the name of the shared object
-	 * @param persistent
-	 *            will the shared object be persistent
-	 * @return true if the shared object was created, otherwise false
-	 */
-	public boolean createSharedObject(String name, boolean persistent);
-
-	/**
-	 * Get a shared object by name
-	 * 
-	 * @param name
-	 *            the name of the shared object
-	 * @return shared object, or null if not found
-	 */
-	public ISharedObject getSharedObject(String name);
-
-	/**
 	 * Get a set of connected clients You can get the connections by passing the
 	 * scope to the clients lookupConnection method
 	 * 
 	 * @return set containing all connected clients
 	 */
-	public Set getClients();
-	
-	/**
-	 * Dispatch an event to all connected clients
-	 * 
-	 * @param event
-	 *            any simple object, which can be serialized and sent to clients
-	 */
-	public void dispatchEvent(Object event);
-
-	/**
-	 * Get the scope handler
-	 * 
-	 * @return scope handler
-	 */
-	public IScopeHandler getHandler();
-
-	/**
-	 * Get the scope auth
-	 * 
-	 * @return scope auth
-	 */
-	public IScopeAuth getAuth();
-	
-	/**
-	 * Does the scope have a broadcast stream registered with a given name
-	 * 
-	 * @param name
-	 *            name of the broadcast
-	 * @return true is a stream exists, otherwise false
-	 */
-	public boolean hasBroadcastStream(String name);
-
-	/**
-	 * Get a broadcast stream by name
-	 * 
-	 * @param name
-	 *            the name of the broadcast
-	 * @return broadcast stream object
-	 */
-	public IBroadcastStream getBroadcastStream(String name);
-
-	/**
-	 * Get a set containing the names of all the broadcasts
-	 * 
-	 * @return set containing all broadcast names
-	 */
-	public Set getBroadcastStreamNames();
-	
+	public Set<IClient> getClients();
+		
 	/**
 	 * Get the scopes depth, how far down the scope tree is it
 	 * 
@@ -195,12 +121,23 @@ public interface IScope extends IAttributeStore, ResourcePatternResolver {
 	 * @param	client object
 	 * @return set of connection objects (readonly)
 	 */
-	public Set lookupConnections(IClient client);
+	public Set<IConnection> lookupConnections(IClient client);
 	
 	/**
 	 * Get a connection iterator, you can call remove, and the connection will be closed.
 	 * @return iterator holding all connections
 	 */
-	public Iterator getConnections();
+	public Iterator<IConnection> getConnections();
+	
+	
+	/**
+	 * Dispatch an event to all connected clients
+	 * 
+	 * @param event
+	 *            any simple object, which can be serialized and sent to clients
+	 */
+	//public void dispatchEvent(Object event);
+	
+	public boolean createChildScope(String name);
 	
 }

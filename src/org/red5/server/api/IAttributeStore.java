@@ -39,7 +39,7 @@ public interface IAttributeStore  {
 	 * 
 	 * @return set containing all attribute names
 	 */
-	public Set getAttributeNames();
+	public Set<String> getAttributeNames();
 
 	/**
 	 * Set an attribute on this object
@@ -58,7 +58,7 @@ public interface IAttributeStore  {
 	 * @param values
 	 *            the attributes to set
 	 */
-	public void setAttributes(Map values);
+	public void setAttributes(Map<String,Object> values);
 	
 	/**
 	 * Set multiple attributes on this object

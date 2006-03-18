@@ -42,12 +42,16 @@ public interface IScopeHandler {
 	 * @param scope
 	 *            the new scope object
 	 */
-	void onStart(IScope scope);
+	boolean start(IScope scope);
 
 	/**
 	 * Called just before a scope is disposed
 	 */
-	void onStop(IScope scope);
+	void stop(IScope scope);
+	
+	boolean addChildScope(IScope scope);
+	
+	void removeChildScope(IScope scope);
 
 	/**
 	 * Called just before every connection to a scope
@@ -55,7 +59,7 @@ public interface IScopeHandler {
 	 * @param conn
 	 *            connection object
 	 */
-	void onConnect(IConnection conn);
+	boolean connect(IConnection conn);
 
 	/**
 	 * Called just after the a connection is disconnected
@@ -63,7 +67,7 @@ public interface IScopeHandler {
 	 * @param conn
 	 *            connection object
 	 */
-	void onDisconnect(IConnection conn);
+	void disconnect(IConnection conn);
 	
 	/**
 	 * Called just before a client enters the scope
@@ -71,7 +75,7 @@ public interface IScopeHandler {
 	 * @param client
 	 *            client object
 	 */
-	void onJoin(IClient client, IScope scope);
+	boolean join(IClient client, IScope scope);
 
 	/**
 	 * Called just after the client leaves the scope
@@ -79,7 +83,7 @@ public interface IScopeHandler {
 	 * @param client
 	 *            client object
 	 */
-	void onLeave(IClient client, IScope scope);
+	void leave(IClient client, IScope scope);
 
 	/**
 	 * Called just before a service call This is a chance to modify the call
@@ -97,7 +101,7 @@ public interface IScopeHandler {
 	 * @param call
 	 *            the call object
 	 */
-	void onServiceCall(ICall call);
+	boolean serviceCall(ICall call);
 
 	/**
 	 * Called just after a service call This is a chance to modify the result
@@ -114,136 +118,6 @@ public interface IScopeHandler {
 	 * @param event
 	 *            the event object
 	 */
-	void onEventBroadcast(Object event);
+	boolean eventBroadcast(Object event);
 
-	// The following methods will only be called for RTMP connections
-
-	/**
-	 * Called when the client begins publishing
-	 * 
-	 * @param stream
-	 *            the stream object
-	 */
-	void onStreamPublishStart(IStream stream);
-
-	/**
-	 * Called when the client stops publishing
-	 * 
-	 * @param stream
-	 *            the stream object
-	 */
-	void onStreamPublishStop(IStream stream);
-
-	/**
-	 * Can the client broadcast a stream
-	 * 
-	 * @param name
-	 *            name of the stream
-	 * @return true if the broadcast is allowed, otherwise false
-	 */
-	boolean canBroadcastStream(String name);
-
-	/**
-	 * Called when the broadcast starts
-	 * 
-	 * @param stream
-	 *            the stream object
-	 */
-	void onBroadcastStreamStart(IStream stream);
-
-	/**
-	 * Called when a recording starts
-	 * 
-	 * @param stream
-	 *            the stream object
-	 */
-	void onRecordStreamStart(IStream stream);
-
-	/**
-	 * Called when a recording stops
-	 * 
-	 * @param stream
-	 *            the stream object
-	 */
-	void onRecordStreamStop(IStream stream);
-
-	/**
-	 * Called when a client subscribes to a broadcast
-	 * 
-	 * @param stream
-	 *            the stream object
-	 */
-	void onBroadcastStreamSubscribe(IBroadcastStream stream);
-
-	/**
-	 * Called when a client unsubscribes from a broadcast
-	 * 
-	 * @param stream
-	 *            the stream object
-	 */
-	void onBroadcastStreamUnsubscribe(IBroadcastStream stream);
-
-	/**
-	 * Called when a client connects to an on demand stream
-	 * 
-	 * @param stream
-	 *            the stream object
-	 */
-	void onOnDemandStreamConnect(IOnDemandStream stream);
-
-	/**
-	 * Called when a client disconnects from an on demand stream
-	 * 
-	 * @param stream
-	 *            the stream object
-	 */
-	void onOnDemandStreamDisconnect(IOnDemandStream stream);
-
-	/**
-	 * Called when a client connects to a shared object
-	 * 
-	 * @param so
-	 *            the shared object
-	 */
-	void onSharedObjectConnect(ISharedObject so);
-
-	/**
-	 * Called when a shared object attribute is updated
-	 * 
-	 * @param so
-	 *            the shared object
-	 * @param key
-	 *            the name of the attribute
-	 * @param value
-	 *            the value of the attribute
-	 */
-	void onSharedObjectUpdate(ISharedObject so, String key, Object value);
-
-	/**
-	 * Called when an attribute is deleted from the shared object
-	 * 
-	 * @param so
-	 *            the shared object
-	 * @param key
-	 *            the name of the attribute to delete
-	 */
-	void onSharedObjectDelete(ISharedObject so, String key);
-
-	/**
-	 * Called when a shared object method call is sent
-	 * 
-	 * @param so
-	 *            the shared object
-	 * @param method
-	 *            the method name to call
-	 * @param params
-	 *            the arguments
-	 */
-	void onSharedObjectSend(ISharedObject so, String method, Object[] params);
-
-	/**
-	 * Get the auth object for this scope handler
-	 */
-	IScopeAuth getScopeAuth(IScope scope); 
-	
 }

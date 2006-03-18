@@ -77,7 +77,7 @@ public interface ISharedObject extends IAttributeStore {
 	 * 
 	 * @return a map containing all attributes of the shared object
 	 */
-	public Map getData();
+	public Map<String,Object> getData();
 
 	/**
 	 * Send a message to a handler of the shared object.

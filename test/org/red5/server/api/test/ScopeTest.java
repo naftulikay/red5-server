@@ -12,6 +12,7 @@ import org.red5.server.api.IClientRegistry;
 import org.red5.server.api.IContext;
 import org.red5.server.api.IScope;
 import org.red5.server.api.ScopeUtils;
+import org.red5.server.core.Scope;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.FileSystemXmlApplicationContext;
 
@@ -85,6 +86,52 @@ public class ScopeTest {
 		IClientRegistry reg = context.getClientRegistry();
 		IClient client = reg.newClient();
 		assertTrue("client should not be null", client!=null);
+	}
+	
+	@Test public void handler(){
+		
+		Scope testApp = (Scope) context.resolveScope(host,path_app);
+		assertTrue("should have a handler",testApp.hasHandler());
+		
+		IClientRegistry reg = context.getClientRegistry();
+		IClient client = reg.newClient();
+		
+		TestConnection conn = new TestConnection(host,path_app,client.getId());
+		conn.initialize(client);
+		
+		assertTrue("client should not be null", client!=null);
+		log.debug(client);
+		
+		String key = "key";
+		String value = "value";
+		client.setAttribute(key,value);
+		assertTrue("attributes not working", client.getAttribute(key) == value);
+		
+		conn.connect(testApp);
+		
+		assertTrue("app should have 1 client", testApp.getClients().size() == 1);
+		assertTrue("host should have 1 client", testApp.getParent().getClients().size() == 1);
+		
+		conn.close();
+		
+		assertTrue("app should have 0 client", testApp.getClients().size() == 0);
+		assertTrue("host should have 0 client", testApp.getParent().getClients().size() == 0);
+		
+		//client.disconnect();
+		
+	}
+	
+	@Test public void connectionHandler(){
+		
+		TestConnection conn = new TestConnection(host,path_app,null);
+		IScope scope = context.resolveScope(host, path_app);
+		if(!conn.connect(scope)){
+			assertTrue("didnt connect", false);
+		} else {
+			assertTrue("should have a scope", conn.getScope()!=null);
+			conn.close();
+			assertTrue("should not be connected", !conn.isConnected());
+		}
 	}
 	
 	public static junit.framework.Test suite(){

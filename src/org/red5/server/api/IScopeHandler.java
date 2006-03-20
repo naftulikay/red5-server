@@ -93,7 +93,7 @@ public interface IScopeHandler {
 	 *            the call object
 	 * @return same or modified call object
 	 */
-	ICall preProcessServiceCall(ICall call);
+	IServiceCall preProcessServiceCall(IConnection conn, IServiceCall call);
 
 	/**
 	 * Called when a service is called
@@ -101,7 +101,7 @@ public interface IScopeHandler {
 	 * @param call
 	 *            the call object
 	 */
-	boolean serviceCall(ICall call);
+	boolean serviceCall(IConnection conn, IServiceCall call);
 
 	/**
 	 * Called just after a service call This is a chance to modify the result
@@ -110,7 +110,7 @@ public interface IScopeHandler {
 	 * @param call
 	 * @return same or modified call object
 	 */
-	ICall postProcessServiceCall(ICall call);
+	IServiceCall postProcessServiceCall(IConnection conn, IServiceCall call);
 
 	/**
 	 * Called when an event is broadcast
@@ -118,6 +118,6 @@ public interface IScopeHandler {
 	 * @param event
 	 *            the event object
 	 */
-	boolean eventBroadcast(Object event);
+	boolean handleEvent(IConnection conn, Object event);
 
 }

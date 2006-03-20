@@ -1,6 +1,6 @@
 package org.red5.server.api;
 
-public interface IApplication {
+public interface IApplication  {
 
 	public boolean appStart(IScope app);
 
@@ -8,9 +8,9 @@ public interface IApplication {
 	
 	public boolean appJoin(IClient client, IScope app);
 
-	public void appLeave(IClient client, IScope app);
-
 	public void appDisconnect(IConnection conn);
+
+	public void appLeave(IClient client, IScope app);
 
 	public void appStop(IScope app);
 
@@ -20,9 +20,9 @@ public interface IApplication {
 
 	public boolean roomJoin(IClient client, IScope room);
 
-	public void roomLeave(IClient client, IScope room);
-
 	public void roomDisconnect(IConnection conn);
+
+	public void roomLeave(IClient client, IScope room);
 
 	public void roomStop(IScope room);
 	

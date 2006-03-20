@@ -12,7 +12,7 @@ import org.apache.mina.common.ByteBuffer;
 import org.red5.io.amf.Input;
 import org.red5.io.amf.Output;
 import org.red5.io.object.Deserializer;
-import org.red5.server.context.AppContext;
+import org.red5.server.zcontext.AppContext;
 import org.springframework.core.io.Resource;
 
 

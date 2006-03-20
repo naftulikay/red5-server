@@ -62,8 +62,11 @@ public class Standalone {
 		
 		// Spring Loads the xml config file which initializes 
 		// beans and loads the server
+		long time = System.currentTimeMillis();
 		FileSystemXmlApplicationContext appCtx = new FileSystemXmlApplicationContext(red5ConfigPath);
 		if(log.isDebugEnabled()) {
+			long startupIn = System.currentTimeMillis() - time;
+			log.debug("Startup in: "+startupIn+" ms");
 			log.debug("Startup date: "+appCtx.getStartupDate());
 		}
 

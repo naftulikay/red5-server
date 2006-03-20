@@ -22,7 +22,7 @@ package org.red5.server.persistence;
 import java.io.IOException;
 import java.util.Iterator;
 
-import org.red5.server.context.AppContext;
+import org.red5.server.zcontext.AppContext;
 
 /**
  * Storage for persistent objects. 

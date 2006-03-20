@@ -10,10 +10,10 @@ import org.apache.mina.common.IoSession;
 import org.apache.mina.filter.LoggingFilter;
 import org.apache.mina.filter.codec.ProtocolCodecFactory;
 import org.apache.mina.filter.codec.ProtocolCodecFilter;
-import org.red5.server.context.GlobalContext;
 import org.red5.server.net.remoting.message.RemotingCall;
 import org.red5.server.net.remoting.message.RemotingPacket;
 import org.red5.server.service.ServiceInvoker;
+import org.red5.server.zcontext.GlobalContext;
 //import org.red5.server.net.remoting.message.RemotingResponse;
 
 public class RemotingHandler extends IoHandlerAdapter {

@@ -27,7 +27,7 @@ import java.util.List;
 import java.util.LinkedList;
 import org.red5.server.api.IClient;
 import org.red5.server.example.UserListManager;
-import org.red5.server.context.ZBaseApplication;
+import org.red5.server.zcontext.ZBaseApplication;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 

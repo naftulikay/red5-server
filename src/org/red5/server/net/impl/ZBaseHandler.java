@@ -8,17 +8,16 @@ import org.red5.server.api.IClient;
 import org.red5.server.api.IClientRegistry;
 import org.red5.server.api.IConnection;
 import org.red5.server.api.IScope;
-import org.red5.server.context.AppContext;
-import org.red5.server.context.GlobalContext;
-import org.red5.server.context.HostContext;
 import org.red5.server.net.AccessDeniedException;
 import org.red5.server.net.ClientNotFoundException;
 import org.red5.server.net.HostNotFoundException;
-import org.red5.server.net.IConnectionHandler;
 import org.red5.server.net.ScopeNotFoundException;
 import org.red5.server.service.ServiceInvoker;
+import org.red5.server.zcontext.AppContext;
+import org.red5.server.zcontext.GlobalContext;
+import org.red5.server.zcontext.HostContext;
 
-public class ZBaseHandler implements IConnectionHandler {
+public class ZBaseHandler {
 
 	protected static Log log =
         LogFactory.getLog(ZBaseHandler.class.getName());
@@ -34,9 +33,7 @@ public class ZBaseHandler implements IConnectionHandler {
 		this.serviceInvoker = serviceInvoker;
 	}
 
-	protected String getHostname(String url) {
-		return url.split("/")[2];
-	}
+
 
 	protected HostContext lookupHostContext(String hostname) {
 		log.debug("Hostname: "+hostname);
@@ -49,7 +46,7 @@ public class ZBaseHandler implements IConnectionHandler {
 	
 	protected HostContext lookupHostContext(IConnection conn) {
 		final Map params = conn.getParams();
-		final String hostname = getHostname((String) params.get("tcUrl"));
+		final String hostname = "" ; //getHostname((String) params.get("tcUrl"));
 		return lookupHostContext(hostname);
 	}
 	

@@ -110,7 +110,7 @@ public final class Red5 {
 	 * @return application context
 	 */
 	public IContext getContext() {
-		return conn.getContext();
+		return conn.getScope().getContext();
 	}
 
 }

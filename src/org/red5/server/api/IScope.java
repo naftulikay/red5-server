@@ -55,18 +55,25 @@ public interface IScope extends IAttributeStore, ResourcePatternResolver {
 	public IScope getParent();
 
 	/**
-	 * Get the full absolute path. eg. host/myapp/someroom
+	 * Get the scopes depth, how far down the scope tree is it
 	 * 
-	 * @return path
+	 * @return depth
 	 */
-	public String getPath();
-	
+	public int getDepth();
+
 	/**
 	 * Get the name of this scope. eg. someroom
 	 * 
 	 * @return name
 	 */
 	public String getName();
+
+	/**
+	 * Get the full absolute path. eg. host/myapp/someroom
+	 * 
+	 * @return path
+	 */
+	public String getPath();
 	
 	/**
 	 * Get the context
@@ -83,6 +90,16 @@ public interface IScope extends IAttributeStore, ResourcePatternResolver {
 	 * @return true if a child scope exists, otherwise false
 	 */
 	public boolean hasChildScope(String name);
+
+	/**
+	 * Dispatch an event to all connected clients
+	 * 
+	 * @param event
+	 *            any simple object, which can be serialized and sent to clients
+	 */
+	//public void dispatchEvent(Object event);
+	
+	public boolean createChildScope(String name);
 
 	/**
 	 * Get a set of the child scope names
@@ -109,11 +126,11 @@ public interface IScope extends IAttributeStore, ResourcePatternResolver {
 	public Set<IClient> getClients();
 		
 	/**
-	 * Get the scopes depth, how far down the scope tree is it
-	 * 
-	 * @return depth
+	 * Get a connection iterator, you can call remove, and the connection will be closed.
+	 * @return iterator holding all connections
 	 */
-	public int getDepth();
+	public Iterator<IConnection> getConnections();
+	
 	
 	/**
 	 * Lookup connections
@@ -122,22 +139,9 @@ public interface IScope extends IAttributeStore, ResourcePatternResolver {
 	 * @return set of connection objects (readonly)
 	 */
 	public Set<IConnection> lookupConnections(IClient client);
+
+	public IScopeHandler getHandler();
 	
-	/**
-	 * Get a connection iterator, you can call remove, and the connection will be closed.
-	 * @return iterator holding all connections
-	 */
-	public Iterator<IConnection> getConnections();
-	
-	
-	/**
-	 * Dispatch an event to all connected clients
-	 * 
-	 * @param event
-	 *            any simple object, which can be serialized and sent to clients
-	 */
-	//public void dispatchEvent(Object event);
-	
-	public boolean createChildScope(String name);
+	public void dispatchEvent(Object event);
 	
 }

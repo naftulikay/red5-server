@@ -68,7 +68,7 @@ public class Channel {
 		packet.setMessage(message);
 		
 		// should use RTMPConnection specific method.. 
-		//connection.dispatchEvent(packet);
+		connection.write(packet);
 		
 	}
 

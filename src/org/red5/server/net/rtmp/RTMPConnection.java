@@ -4,10 +4,9 @@ import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.red5.server.api.IClient;
-import org.red5.server.api.IConnection;
-import org.red5.server.api.impl.BaseConnection;
-import org.red5.server.context.AppContext;
+import org.apache.mina.common.ByteBuffer;
+import org.red5.server.core.BaseConnection;
+import org.red5.server.net.rtmp.message.OutPacket;
 import org.red5.server.net.rtmp.message.Ping;
 import org.red5.server.stream.DownStreamSink;
 import org.red5.server.stream.Stream;
@@ -22,32 +21,21 @@ public abstract class RTMPConnection extends BaseConnection {
 	//private Context context;
 	private Channel[] channels = new Channel[64];
 	private Stream[] streams = new Stream[MAX_STREAMS];
-	private AppContext appCtx = null;
-	private Map params = null;
 
-	public RTMPConnection() {
+	public RTMPConnection(String type) {
 		// We start with an anonymous connection without a scope.
 		// These parameters will be set during the call of "connect" later.
 		//super(null, "");	temp fix to get things to compile
-		super(IConnection.PERSISTENT,null,null,null,null);
-	}
-
-	public void setClient(IClient client) {
-		this.client = client;
+		super(type,null,null,null,null);
 	}
 	
-	public AppContext getAppContext() {
-		return appCtx;
+	public void setup(String host, String path, String sessionId, Map<String, String> params){
+		this.host = host;
+		this.path = path;
+		this.sessionId = sessionId;
+		this.params = params;
 	}
-	
-	public void setAppContext(AppContext appCtx) {
-		this.appCtx = appCtx;
-	}
-
-	public String getType() {
-		return IConnection.PERSISTENT;
-	}
-	
+		
 	public int getNextAvailableChannelId(){
 		int result = -1;
 		for(byte i=4; i<channels.length; i++){
@@ -73,13 +61,6 @@ public abstract class RTMPConnection extends BaseConnection {
 		channels[channelId] = null;
 	}
 
-	public void setParameters(Map params){
-		this.params = params;
-	}
-	
-	public Map getParams() {
-		return this.params;
-	}
 	
 	/* Returns a stream for the next available stream id or null if all slots are in use. */
 	public Stream createNewStream() {
@@ -122,6 +103,7 @@ public abstract class RTMPConnection extends BaseConnection {
 				}
 			}
 		}
+		super.close();
 	}
 	
 	protected Stream createStream(int streamId){
@@ -146,5 +128,8 @@ public abstract class RTMPConnection extends BaseConnection {
 	public void ping(Ping ping){
 		getChannel((byte)2).write(ping);
 	}
+	
+	public abstract void rawWrite(ByteBuffer out);
+	public abstract void write(OutPacket out);
 	
 }

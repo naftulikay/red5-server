@@ -17,6 +17,7 @@ public interface IContext extends ResourcePatternResolver {
 	public Object lookupService(String serviceName);
 	public IScopeHandler lookupScopeHandler(String path);
 	public IScope resolveScope(String host, String path);
+	public IScope getRootScope();
 	public ApplicationContext getApplicationContext();
 	
 }

@@ -7,6 +7,7 @@ package org.red5.server.api;
  */
 public interface IServiceInvoker {
 
-	public ICall invoke(ICall call, IContext context); // note no scope involved.
+	public IServiceCall invoke(IServiceCall call, IContext context); // note no scope involved.
+	public IServiceCall invoke(IServiceCall call, Object service); // the service to use
 	
 }

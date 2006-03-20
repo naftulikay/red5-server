@@ -2,9 +2,9 @@ package org.red5.server.stream;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.red5.io.flv.FLV;
-import org.red5.io.flv.Reader;
-import org.red5.io.flv.Tag;
+import org.red5.io.flv.IReader;
+import org.red5.io.flv.ITag;
+import org.red5.io.flv.impl.Reader;
 import org.red5.server.net.rtmp.message.AudioData;
 import org.red5.server.net.rtmp.message.Constants;
 import org.red5.server.net.rtmp.message.Invoke;
@@ -18,9 +18,9 @@ public class FileStreamSource implements IStreamSource, Constants {
 	protected static Log log =
         LogFactory.getLog(FileStreamSource.class.getName());
 	
-	private Reader reader = null;
+	private IReader reader = null;
 	
-	public FileStreamSource(Reader reader){
+	public FileStreamSource(IReader reader){
 		this.reader = reader;
 	}
 	
@@ -31,7 +31,7 @@ public class FileStreamSource implements IStreamSource, Constants {
 	public Message dequeue() {
 		
 		if(!reader.hasMoreTags()) return null;
-		Tag tag = reader.readTag();
+		ITag tag = reader.readTag();
 		
 		Message msg = null;
 		switch(tag.getDataType()){

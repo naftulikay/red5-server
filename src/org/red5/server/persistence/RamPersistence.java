@@ -4,7 +4,7 @@ import java.io.IOException;
 import java.util.Iterator;
 import java.util.HashMap;
 
-import org.red5.server.context.AppContext;
+import org.red5.server.zcontext.AppContext;
 
 /**
  * Persistence implementation that stores the objects in memory.

@@ -59,6 +59,16 @@ public interface IConnection extends IAttributeStore {
 	public String getType(); // PERSISTENT | POLLING | TRANSIENT
 
 	/**
+	 * Initialize the connection
+	 */
+	public void initialize(IClient client);
+
+	/**
+	 * Try to connect to the scope
+	 */
+	public boolean connect(IScope scope);
+
+	/**
 	 * Is the client connected to the scope
 	 * 
 	 * @return true if the connection is persistent or polling, otherwise false
@@ -102,13 +112,6 @@ public interface IConnection extends IAttributeStore {
 	public String getSessionId();
 	
 	/**
-	 * Get the context this connection is within
-	 * 
-	 * @return context object
-	 */
-	public IContext getContext();
-	
-	/**
 	 * Get the scope object associated with this connection
 	 * 
 	 * @return scope object
@@ -137,15 +140,7 @@ public interface IConnection extends IAttributeStore {
 	 * @return readonly map of connect params
 	 */
 	public Map getParams();
-
-	/**
-	 * Try to connect to the scope
-	 */
-	public boolean connect(IScope scope);
 	
-	/**
-	 * Initialize the connection
-	 */
-	public void initialize(IClient client, IContext context);
+	public void dispatchEvent(Object event);
 	
 }

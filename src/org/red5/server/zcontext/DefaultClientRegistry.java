@@ -4,14 +4,8 @@ import java.util.HashMap;
 
 import org.red5.server.api.IClient;
 import org.red5.server.api.IClientRegistry;
-import org.red5.server.api.IConnection;
-import org.red5.server.api.IScope;
 import org.red5.server.core.Client;
-import org.red5.server.net.AccessDeniedException;
-import org.red5.server.net.ClientNotFoundException;
-import org.red5.server.net.HostNotFoundException;
-import org.red5.server.net.ScopeNotFoundException;
-import org.springframework.context.ApplicationContext;
+import org.red5.server.ex.ClientNotFoundException;
 
 public class DefaultClientRegistry implements IClientRegistry {
 
@@ -30,7 +24,7 @@ public class DefaultClientRegistry implements IClientRegistry {
 		return clients.containsKey(id);
 	}
 
-	public IClient newClient() throws HostNotFoundException {
+	public IClient newClient()  {
 		Integer sid;
 		synchronized (sessionIdCounter) {
 			sid = sessionIdCounter;

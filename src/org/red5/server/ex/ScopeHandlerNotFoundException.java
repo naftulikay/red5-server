@@ -1,4 +1,4 @@
-package org.red5.server.core;
+package org.red5.server.ex;
 
 public class ScopeHandlerNotFoundException extends RuntimeException {
 

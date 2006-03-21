@@ -3,6 +3,7 @@ package org.red5.server.core;
 import org.red5.server.api.IScope;
 import org.red5.server.api.IScopeResolver;
 import org.red5.server.api.ScopeUtils;
+import org.red5.server.ex.ScopeNotFoundException;
 
 public class ScopeResolver implements IScopeResolver {
 

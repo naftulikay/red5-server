@@ -8,10 +8,9 @@ import org.red5.server.api.IClient;
 import org.red5.server.api.IClientRegistry;
 import org.red5.server.api.IConnection;
 import org.red5.server.api.IScope;
-import org.red5.server.net.AccessDeniedException;
-import org.red5.server.net.ClientNotFoundException;
-import org.red5.server.net.HostNotFoundException;
-import org.red5.server.net.ScopeNotFoundException;
+import org.red5.server.ex.AccessDeniedException;
+import org.red5.server.ex.ClientNotFoundException;
+import org.red5.server.ex.ScopeNotFoundException;
 import org.red5.server.service.ServiceInvoker;
 import org.red5.server.zcontext.AppContext;
 import org.red5.server.zcontext.GlobalContext;
@@ -64,12 +63,10 @@ public class ZBaseHandler {
 		return host.getAppContext(app);
 	}
 	
-	public IClient newClient(String host) throws HostNotFoundException {
+	public IClient newClient(String host)  {
 		// TODO Auto-generated method stub
 		HostContext hostCtx = lookupHostContext(host);
-		if (hostCtx == null)
-			throw new HostNotFoundException();
-
+		
 		IClientRegistry registry;
 		if (hostCtx.hasClientRegistry())
 			registry = hostCtx.getClientRegistry();

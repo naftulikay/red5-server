@@ -1,8 +1,8 @@
 package org.red5.server.net.rtmp;
 
+import org.red5.server.ex.StreamControlException;
+import org.red5.server.ex.StreamDataException;
 import org.red5.server.net.IStreamHandler;
-import org.red5.server.net.StreamControlException;
-import org.red5.server.net.StreamDataException;
 import org.red5.server.net.message.IStreamControl;
 import org.red5.server.net.message.IStreamData;
 

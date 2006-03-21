@@ -1,5 +1,7 @@
 package org.red5.server.net;
 
+import org.red5.server.ex.StreamControlException;
+import org.red5.server.ex.StreamDataException;
 import org.red5.server.net.message.IStreamControl;
 import org.red5.server.net.message.IStreamData;
 

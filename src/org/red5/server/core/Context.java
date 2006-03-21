@@ -9,12 +9,13 @@ import org.red5.server.api.IScope;
 import org.red5.server.api.IScopeHandler;
 import org.red5.server.api.IScopeResolver;
 import org.red5.server.api.IServiceInvoker;
+import org.red5.server.ex.ScopeHandlerNotFoundException;
 import org.red5.server.service.ServiceNotFoundException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.core.io.Resource;
 
-public class DefaultContext implements IContext, ApplicationContextAware {
+public class Context implements IContext, ApplicationContextAware {
 	
 	private ApplicationContext applicationContext; 
 	private String contextPath = "";
@@ -24,11 +25,11 @@ public class DefaultContext implements IContext, ApplicationContextAware {
 	private IServiceInvoker serviceInvoker;
 	private IMappingStrategy mappingStrategy;
 	
-	public DefaultContext(){
+	public Context(){
 		
 	}
 	
-	public DefaultContext(ApplicationContext context, String contextPath){
+	public Context(ApplicationContext context, String contextPath){
 		this.applicationContext = context;
 		this.contextPath = contextPath;
 	}

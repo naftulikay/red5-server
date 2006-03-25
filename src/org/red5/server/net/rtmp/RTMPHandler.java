@@ -7,10 +7,8 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.mina.common.ByteBuffer;
 import org.red5.server.api.IContext;
 import org.red5.server.api.IScope;
-import org.red5.server.api.IScopeHandler;
 import org.red5.server.api.Red5;
-import org.red5.server.net.ISharedObjectHandler;
-import org.red5.server.net.IStreamHandler;
+import org.red5.server.api.stream.IStreamHandler;
 import org.red5.server.net.protocol.ProtocolState;
 import org.red5.server.net.rtmp.codec.RTMP;
 import org.red5.server.net.rtmp.message.Constants;
@@ -34,22 +32,12 @@ public class RTMPHandler
         LogFactory.getLog(RTMPHandler.class.getName());
 	
 	protected StatusObjectService statusObjectService;
-	protected IStreamHandler streamHandler;
-	protected ISharedObjectHandler sharedObjectHandler;
 	protected IContext context;
 	
 	public void setStatusObjectService(StatusObjectService statusObjectService) {
 		this.statusObjectService = statusObjectService;
 	}
 
-	public void setSharedObjectHandler(ISharedObjectHandler sharedObjectHandler) {
-		this.sharedObjectHandler = sharedObjectHandler;
-	}
-
-	public void setStreamHandler(IStreamHandler streamHandler) {
-		this.streamHandler = streamHandler;
-	}
-	
 	public void messageReceived(RTMPConnection conn, ProtocolState state, Object in) throws Exception {
 			
 		try {

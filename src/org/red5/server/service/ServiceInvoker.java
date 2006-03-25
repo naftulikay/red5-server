@@ -31,8 +31,8 @@ import java.util.List;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.red5.server.api.IContext;
-import org.red5.server.api.IServiceCall;
-import org.red5.server.api.IServiceInvoker;
+import org.red5.server.api.service.IServiceCall;
+import org.red5.server.api.service.IServiceInvoker;
 
 public class ServiceInvoker  implements IServiceInvoker {
 

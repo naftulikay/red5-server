@@ -4,7 +4,7 @@ import org.red5.server.api.IClient;
 import org.red5.server.api.IConnection;
 import org.red5.server.api.IScope;
 import org.red5.server.api.IScopeHandler;
-import org.red5.server.api.IServiceCall;
+import org.red5.server.api.service.IServiceCall;
 
 public abstract class AbstractScopeAdapter implements IScopeHandler {
 

@@ -6,12 +6,12 @@ import java.util.Map;
 import java.util.Set;
 
 import org.red5.server.api.IAttributeStore;
+import org.red5.server.api.IBasicScope;
 import org.red5.server.api.IClient;
 import org.red5.server.api.IConnection;
 import org.red5.server.api.IContext;
 import org.red5.server.api.IScope;
 import org.red5.server.api.IScopeAware;
-import org.red5.server.api.IScopeHandler;
 import org.springframework.core.io.Resource;
 
 public class StatefulScopeWrappingAdapter extends AbstractScopeAdapter 
@@ -60,11 +60,11 @@ public class StatefulScopeWrappingAdapter extends AbstractScopeAdapter
 	}
 
 	public IScope getChildScope(String name) {
-		return scope.getChildScope(name);
+		return scope.getScope(name);
 	}
 
-	public Set<String> getChildScopeNames() {
-		return scope.getChildScopeNames();
+	public Iterator<String> getChildScopeNames() {
+		return scope.getScopeNames();
 	}
 
 	public Set<IClient> getClients() {

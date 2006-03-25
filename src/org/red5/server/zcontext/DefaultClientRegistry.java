@@ -2,10 +2,10 @@ package org.red5.server.zcontext;
 
 import java.util.HashMap;
 
+import org.red5.server.Client;
 import org.red5.server.api.IClient;
 import org.red5.server.api.IClientRegistry;
-import org.red5.server.core.Client;
-import org.red5.server.ex.ClientNotFoundException;
+import org.red5.server.exception.ClientNotFoundException;
 
 public class DefaultClientRegistry implements IClientRegistry {
 

@@ -31,7 +31,7 @@ public class ScopeUtils {
 				continue;
 			}
 			if(!current.hasChildScope(part)) return null;
-			current = current.getChildScope(part);
+			current = current.getScope(part);
 		}
 		return current;
 	}

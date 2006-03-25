@@ -22,7 +22,7 @@ package org.red5.server.service;
  * @author Luke Hubbard, Codegent Ltd (luke@codegent.com)
  */
 
-import org.red5.server.api.IServiceCall;
+import org.red5.server.api.service.IServiceCall;
 
 public class Call implements IServiceCall {
 

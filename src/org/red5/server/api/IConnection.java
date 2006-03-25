@@ -1,6 +1,11 @@
 package org.red5.server.api;
 
 import java.util.Map;
+import java.util.Set;
+
+import org.red5.server.api.event.IEventListener;
+import org.red5.server.api.so.ISharedObject;
+import org.red5.server.api.stream.IStream;
 
 /*
  * RED5 Open Source Flash Server - http://www.osflash.org/red5
@@ -34,7 +39,7 @@ import java.util.Map;
  * @author The Red5 Project (red5@osflash.org)
  * @author Luke Hubbard (luke@codegent.com)
  */
-public interface IConnection extends IAttributeStore {
+public interface IConnection extends ICoreObject {
 
 	/**
 	 * Persistent connection type, eg RTMP
@@ -118,29 +123,22 @@ public interface IConnection extends IAttributeStore {
 	 */
 	public IScope getScope();
 
-	/**
-	 * Dispatch an event down this connection You should call isConnected first
-	 * to check its possible
-	 * 
-	 * @param object
-	 *            any kind of simple object
-	 */
-	/*public void dispatchEvent(Object object);*/
-
+	public Set<IStream>getStreams();
+	
+	public Set<ISharedObject>getSharedObjects();
+	
 	/**
 	 * Get a list of the stream object associated with this connection
 	 * 
 	 * @return set of stream objects
 	 */
 	/*public Set getStreams();*/
-
+	
 	/**
 	 * Get the connection params
 	 * 
 	 * @return readonly map of connect params
 	 */
 	public Map getParams();
-	
-	public void dispatchEvent(Object event);
 	
 }

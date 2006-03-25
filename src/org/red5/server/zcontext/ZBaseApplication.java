@@ -9,9 +9,8 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.red5.server.api.IClient;
 import org.red5.server.api.IConnection;
-import org.red5.server.api.ISharedObject;
 import org.red5.server.api.Red5;
-import org.red5.server.core.SharedObject;
+import org.red5.server.api.so.ISharedObject;
 import org.red5.server.net.rtmp.RTMPConnection;
 import org.red5.server.net.rtmp.message.Ping;
 import org.red5.server.net.rtmp.status.StatusObject;
@@ -19,6 +18,7 @@ import org.red5.server.net.rtmp.status.StatusObjectService;
 import org.red5.server.persistence.IPersistable;
 import org.red5.server.persistence.IPersistentStorage;
 import org.red5.server.persistence.RamPersistence;
+import org.red5.server.so.SharedObject;
 import org.red5.server.stream.IStreamSource;
 import org.red5.server.stream.Stream;
 import org.red5.server.stream.StreamManager;
@@ -106,7 +106,7 @@ public class ZBaseApplication
 			Iterator it = this.soPersistence.getObjects();
 			while (it.hasNext()) {
 				ISharedObject so = (ISharedObject) it.next();
-				so.unregister(connection);
+				//so.unregister(connection);
 			}
 		}
 
@@ -304,7 +304,7 @@ public class ZBaseApplication
 			
 		if (persistence == null) {
 			// XXX: maybe we should thow an exception here as a non-persistent SO doesn't make any sense...
-			return new SharedObject(name, false, null);
+			return null; //new SharedObject(name, false, null);
 		}
 		
 		ISharedObject result;
@@ -317,7 +317,7 @@ public class ZBaseApplication
 		if (result == null) {
 			// Create new shared object with given name
 			log.info("Creating new shared object " + name);
-			result = new SharedObject(name, persistent, persistence);
+			result = null;//new SharedObject(name, persistent, persistence);
 			try {
 				persistence.storeObject((IPersistable) result);
 			} catch (IOException e) {

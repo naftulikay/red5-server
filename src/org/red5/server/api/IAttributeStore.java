@@ -99,4 +99,5 @@ public interface IAttributeStore  {
 	 * Remove all attributes
 	 */
 	public void removeAttributes();
+	
 }

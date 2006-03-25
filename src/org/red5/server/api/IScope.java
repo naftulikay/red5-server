@@ -3,6 +3,8 @@ package org.red5.server.api;
 import java.util.Iterator;
 import java.util.Set;
 
+import org.red5.server.api.so.ISharedObjectListener;
+import org.red5.server.api.stream.IStreamHandler;
 import org.springframework.core.io.support.ResourcePatternResolver;
 
 /*
@@ -38,49 +40,10 @@ import org.springframework.core.io.support.ResourcePatternResolver;
  * @author The Red5 Project (red5@osflash.org)
  * @author Luke Hubbard (luke@codegent.com)
  */
-public interface IScope extends IAttributeStore, ResourcePatternResolver {
+public interface IScope extends IBasicScope, ResourcePatternResolver {
 
-	/**
-	 * Does this scope have a parent
-	 * 
-	 * @return true if this scope has a parent
-	 */
-	public boolean hasParent();
-
-	/**
-	 * Get this scopes parent
-	 * 
-	 * @return parent scope, or null if this scope doesn't have a parent
-	 */
-	public IScope getParent();
-
-	/**
-	 * Get the scopes depth, how far down the scope tree is it
-	 * 
-	 * @return depth
-	 */
-	public int getDepth();
-
-	/**
-	 * Get the name of this scope. eg. someroom
-	 * 
-	 * @return name
-	 */
-	public String getName();
-
-	/**
-	 * Get the full absolute path. eg. host/myapp/someroom
-	 * 
-	 * @return path
-	 */
-	public String getPath();
-	
-	/**
-	 * Get the context
-	 * 
-	 * @return context object
-	 */
-	public IContext getContext();
+	public static final String TYPE = "scope";
+	public static final String SEPARATOR = ":";
 	
 	/**
 	 * Check to see if this scope has a child scope matching a given name
@@ -106,7 +69,9 @@ public interface IScope extends IAttributeStore, ResourcePatternResolver {
 	 * 
 	 * @return set containing child scope names
 	 */
-	public Set<String> getChildScopeNames();
+	public Iterator<String> getScopeNames();
+	
+	public Iterator<String> getBasicScopeNames(String type);
 
 	/**
 	 * Get a child scope by name
@@ -115,8 +80,12 @@ public interface IScope extends IAttributeStore, ResourcePatternResolver {
 	 *            name of the child scope
 	 * @return the child scope, or null if no scope is found
 	 */
-	public IScope getChildScope(String name);
+	public IBasicScope getBasicScope(String type, String name);
 
+	
+	public IScope getScope(String name);
+	
+	
 	/**
 	 * Get a set of connected clients You can get the connections by passing the
 	 * scope to the clients lookupConnection method
@@ -130,8 +99,7 @@ public interface IScope extends IAttributeStore, ResourcePatternResolver {
 	 * @return iterator holding all connections
 	 */
 	public Iterator<IConnection> getConnections();
-	
-	
+		
 	/**
 	 * Lookup connections
 	 * 
@@ -140,8 +108,17 @@ public interface IScope extends IAttributeStore, ResourcePatternResolver {
 	 */
 	public Set<IConnection> lookupConnections(IClient client);
 
-	public IScopeHandler getHandler();
+	public IContext getContext();
 	
-	public void dispatchEvent(Object event);
+	/* ----------------------------------------------- */ 
+	
+	public boolean hasHandler(); 
+	public IScopeHandler getHandler(); 
+	
+	public boolean hasSharedObjectHandler();
+	public ISharedObjectListener getSharedObjectHandler();
+	
+	public boolean hasStreamHandler();
+	public IStreamHandler getStreamHandler();
 	
 }

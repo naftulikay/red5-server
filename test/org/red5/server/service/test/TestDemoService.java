@@ -4,7 +4,7 @@ import java.util.Map;
 
 import junit.framework.TestCase;
 
-import org.red5.server.example.IDemoService;
+import org.red5.server.zexample.IDemoService;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.FileSystemXmlApplicationContext;
 

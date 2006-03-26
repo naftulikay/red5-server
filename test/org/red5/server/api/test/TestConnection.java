@@ -1,6 +1,6 @@
 package org.red5.server.api.test;
 
-import org.red5.server.core.BaseConnection;
+import org.red5.server.BaseConnection;
 
 public class TestConnection extends BaseConnection {
 

@@ -2,12 +2,14 @@ package org.red5.server;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.red5.server.api.IBasicScope;
 import org.red5.server.api.IClient;
 import org.red5.server.api.IClientRegistry;
 import org.red5.server.api.IConnection;
 import org.red5.server.api.IContext;
 import org.red5.server.api.IScope;
 import org.red5.server.api.IScopeHandler;
+import org.red5.server.api.event.IEvent;
 import org.red5.server.api.service.IServiceCall;
 
 public class CoreHandler implements IScopeHandler {
@@ -17,7 +19,7 @@ public class CoreHandler implements IScopeHandler {
 	
 	protected IClientRegistry clientRegistry;
 	
-	public boolean addChildScope(IScope scope) {
+	public boolean addChildScope(IBasicScope scope) {
 		return true;
 	}
 
@@ -39,11 +41,6 @@ public class CoreHandler implements IScopeHandler {
 		
 	}
 
-	public boolean handleEvent(Object event) {
-		
-		return false;
-	}
-
 	public boolean join(IClient client, IScope scope) {
 		// TODO Auto-generated method stub
 		return false;
@@ -51,7 +48,6 @@ public class CoreHandler implements IScopeHandler {
 
 	public void leave(IClient client, IScope scope) {
 		// TODO Auto-generated method stub
-		
 	}
 
 	public IServiceCall postProcessServiceCall(IConnection conn, IServiceCall call) {
@@ -64,9 +60,8 @@ public class CoreHandler implements IScopeHandler {
 		return null;
 	}
 
-	public void removeChildScope(IScope scope) {
+	public void removeChildScope(IBasicScope scope) {
 		// TODO Auto-generated method stub
-		
 	}
 
 	public boolean serviceCall(IConnection conn, IServiceCall call) {
@@ -87,10 +82,8 @@ public class CoreHandler implements IScopeHandler {
 		// TODO Auto-generated method stub
 	}
 
-	public boolean handleEvent(IConnection conn, Object event) {
-		// TODO Auto-generated method stub
-		return true;
+	public boolean handleEvent(IEvent event) {
+		return false;
 	}
-
 	
 }

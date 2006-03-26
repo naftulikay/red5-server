@@ -1,6 +1,5 @@
 package org.red5.server.api;
 
-import org.red5.server.api.event.IEventDispatcher;
 import org.red5.server.api.event.IEventObservable;
 
 public interface IBasicScope extends ICoreObject, IEventObservable {
@@ -43,5 +42,7 @@ public interface IBasicScope extends ICoreObject, IEventObservable {
 	public boolean isPersistent();
 	
 	public void setPersistent(boolean persistent);
-		
+	
+	public String getType();
+	
 }

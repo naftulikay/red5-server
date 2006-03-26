@@ -3,8 +3,6 @@ package org.red5.server.api;
 import java.util.Iterator;
 import java.util.Set;
 
-import org.red5.server.api.so.ISharedObjectListener;
-import org.red5.server.api.stream.IStreamHandler;
 import org.springframework.core.io.support.ResourcePatternResolver;
 
 /*
@@ -53,17 +51,13 @@ public interface IScope extends IBasicScope, ResourcePatternResolver {
 	 * @return true if a child scope exists, otherwise false
 	 */
 	public boolean hasChildScope(String name);
-
-	/**
-	 * Dispatch an event to all connected clients
-	 * 
-	 * @param event
-	 *            any simple object, which can be serialized and sent to clients
-	 */
-	//public void dispatchEvent(Object event);
 	
 	public boolean createChildScope(String name);
 
+	public boolean addChildScope(IBasicScope scope);
+	
+	public void removeChildScope(IBasicScope scope);
+	
 	/**
 	 * Get a set of the child scope names
 	 * 
@@ -115,10 +109,9 @@ public interface IScope extends IBasicScope, ResourcePatternResolver {
 	public boolean hasHandler(); 
 	public IScopeHandler getHandler(); 
 	
-	public boolean hasSharedObjectHandler();
-	public ISharedObjectListener getSharedObjectHandler();
+	public String getContextPath();
 	
-	public boolean hasStreamHandler();
-	public IStreamHandler getStreamHandler();
+	public boolean connect(IConnection conn);
+	public void disconnect(IConnection conn);
 	
 }

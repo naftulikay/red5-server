@@ -1,9 +1,11 @@
 package org.red5.server.adapter;
 
+import org.red5.server.api.IBasicScope;
 import org.red5.server.api.IClient;
 import org.red5.server.api.IConnection;
 import org.red5.server.api.IScope;
 import org.red5.server.api.IScopeHandler;
+import org.red5.server.api.event.IEvent;
 import org.red5.server.api.service.IServiceCall;
 
 public abstract class AbstractScopeAdapter implements IScopeHandler {
@@ -67,15 +69,15 @@ public abstract class AbstractScopeAdapter implements IScopeHandler {
 		return call;
 	}
 
-	public boolean addChildScope(IScope scope) {
+	public boolean addChildScope(IBasicScope scope) {
 		return canAddChildScope;
 	}
 
-	public void removeChildScope(IScope scope) {
+	public void removeChildScope(IBasicScope scope) {
 		// TODO Auto-generated method stub	
 	}
 	
-	public boolean handleEvent(IConnection conn, Object event){
+	public boolean handleEvent(IEvent event){
 		return canHandleEvent;
 	}
 	

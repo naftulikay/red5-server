@@ -16,8 +16,6 @@ import org.red5.server.api.IScope;
 import org.red5.server.api.IScopeAware;
 import org.red5.server.api.IScopeHandler;
 import org.red5.server.api.event.IEvent;
-import org.red5.server.api.so.ISharedObjectListener;
-import org.red5.server.api.stream.IStreamHandler;
 import org.springframework.core.io.Resource;
 import org.springframework.core.style.ToStringCreator;
 
@@ -27,14 +25,12 @@ public class Scope extends BasicScope implements IScope {
         LogFactory.getLog(Scope.class.getName());
 	
 	private static final int UNSET = -1;
+	private static final String TYPE = "scope";
 	
 	private int depth = UNSET; 
-	private Scope parent;
-	private String name = "";
 	private IContext context;
 	private IScopeHandler handler;
-	private ISharedObjectListener sharedObjectHandler;
-	private IStreamHandler streamHandler;
+	private String childLoadPath = "./*/context.xml";
 	
 	private boolean autoStart = true;
 	private boolean enabled = true;
@@ -42,9 +38,13 @@ public class Scope extends BasicScope implements IScope {
 	
 	private HashMap<String,IBasicScope> children = new HashMap<String,IBasicScope>();
 	private HashMap<IClient,Set<IConnection>> clients = new HashMap<IClient,Set<IConnection>>();
-		
+	
 	public Scope(){
-		super(null, null, false);
+		this(null);
+	}
+	
+	public Scope(String name){
+		super(null,TYPE,name,false);
 	}
 
 	public boolean isEnabled() {
@@ -72,14 +72,6 @@ public class Scope extends BasicScope implements IScope {
 		if(handler instanceof IScopeAware){
 			((IScopeAware) handler).setScope(this);
 		} 
-	}
-
-	public void setName(String name) {
-		this.name = name;
-	}
-	
-	public void setParent(IScope parent) {
-		this.parent = (Scope) parent;
 	}
 
 	public void init(){
@@ -111,25 +103,36 @@ public class Scope extends BasicScope implements IScope {
 	}
 
 	
-	public boolean addChildScope(Scope scope){
-		if(hasHandler() && !handler.addChildScope(scope)) return false;
-		children.put(scope.getName(),scope);
+	public boolean addChildScope(IBasicScope scope){
+		if(hasHandler() && !handler.addChildScope(scope)) {
+			log.debug("Failed to add child scope: "+scope+" to "+this);
+			return false;
+		}
+		log.debug("Add child scope: "+scope+" to "+this);
+		children.put(scope.getType() + SEPARATOR + scope.getName(),scope);
+		if(scope instanceof IScope){
+			// start the scope
+		}
 		return true;
-	}
+	} 
 	
+	public void setChildLoadPath(String pattern){
+		
+	}
 	
 	public void removeChildScope(IBasicScope scope){
 		children.remove(scope);
 	}
 	
 	public boolean hasChildScope(String name){
-		return children.containsKey(name);
+		log.debug("Has child scope? "+name+" in "+this);
+		return children.containsKey(TYPE + SEPARATOR + name);
 	}
 	
-	public IScope getBasicScope(String name) {
-		return (IScope) children.get(name);
+	public boolean hasChildScope(String type, String name){
+		return children.containsKey(type + SEPARATOR + name);
 	}
-
+	
 	public Iterator<String> getScopeNames() {
 		return new PrefixFilteringStringIterator(children.keySet().iterator(),"scope");
 	}
@@ -143,8 +146,14 @@ public class Scope extends BasicScope implements IScope {
 	}
 	
 	public IContext getContext() {
-		if( ! hasContext() && hasParent()) return parent.getContext();
-		return context;
+		if( ! hasContext() && hasParent()) {
+			log.debug("returning parent context");
+			return parent.getContext();
+		}
+		else {
+			log.debug("returning context");
+			return context;
+		}
 	}
 
 	public String getContextPath(){
@@ -153,8 +162,8 @@ public class Scope extends BasicScope implements IScope {
 		else return null;
 	}
 	
-	public String getName() {
-		return name;
+	public void setName(String name){
+		this.name = name;
 	}
 	
 	public String getPath() {
@@ -162,6 +171,10 @@ public class Scope extends BasicScope implements IScope {
 		else return name;
 	}
 
+	public void setParent(IScope parent){
+		this.parent = parent;
+	}
+	
 	public boolean hasHandler() {
 		return (handler != null);
 	}
@@ -169,23 +182,7 @@ public class Scope extends BasicScope implements IScope {
 	public IScopeHandler getHandler() {
 		return handler;
 	}
-	
-	public boolean hasSharedObjectHandler(){
-		return (sharedObjectHandler != null);
-	}
-	
-	public ISharedObjectListener getSharedObjectHandler(){
-		return sharedObjectHandler;
-	}
-
-	public boolean hasStreamHandler(){
-		return (streamHandler != null);
-	}
-	
-	public IStreamHandler getStreamHandler(){
-		return streamHandler;
-	}
-	
+		
 	public IScope getParent(){
 		return parent;
 	}
@@ -275,7 +272,7 @@ public class Scope extends BasicScope implements IScope {
 	}
 	
 	public void dispatchEvent(Object event){
-		
+		// wrap then forward
 	}
 	
 	class PrefixFilteringStringIterator implements Iterator<String>{
@@ -345,8 +342,7 @@ public class Scope extends BasicScope implements IScope {
 	}
 
 	public boolean createChildScope(String name){
-		final Scope scope = new Scope();
-		scope.setName(name);
+		final Scope scope = new Scope(name);
 		scope.setParent(this);
 		return addChildScope(scope);
 	}

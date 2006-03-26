@@ -15,6 +15,8 @@ import org.red5.server.api.so.ISharedObject;
 public class SharedObjectScope extends BasicScope 
 	implements ISharedObject {
 
+	private static final String TYPE = "so";
+	
 	protected int updateCounter = 0;
 	protected boolean modified = false;
 	protected int version = 0;
@@ -26,7 +28,7 @@ public class SharedObjectScope extends BasicScope
 	protected IEventListener source;
 	
 	public SharedObjectScope(IScope parent, String name, boolean persistent){
-		super(parent,name, persistent);
+		super(parent,TYPE, name, persistent);
 	}
 	
 	public void beginUpdate(IEventListener source){

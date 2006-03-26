@@ -1,5 +1,6 @@
 package org.red5.server.api;
 
+import org.red5.server.api.event.IEventHandler;
 import org.red5.server.api.service.IServiceCall;
 
 /*
@@ -36,12 +37,41 @@ import org.red5.server.api.service.IServiceCall;
  * @author The Red5 Project (red5@osflash.org)
  * @author Luke Hubbard (luke@codegent.com)
  */
-public interface IScopeHandler extends IBasicScopeHandler {
+public interface IScopeHandler extends IEventHandler {
 
+	/**
+	 * Called when a scope is created for the first time
+	 * 
+	 * @param scope
+	 *            the new scope object
+	 */
+	boolean start(IScope scope);
+
+	/**
+	 * Called just before a scope is disposed
+	 */
+	void stop(IScope scope);
 	
-	boolean addChildScope(IScope scope);
+	/**
+	 * Called just before every connection to a scope
+	 * 
+	 * @param conn
+	 *            connection object
+	 */
+	boolean connect(IConnection conn);
+
+	/**
+	 * Called just after the a connection is disconnected
+	 * 
+	 * @param conn
+	 *            connection object
+	 */
+	void disconnect(IConnection conn);
 	
-	void removeChildScope(IScope scope);
+	
+	boolean addChildScope(IBasicScope scope);
+	
+	void removeChildScope(IBasicScope scope);
 
 	/**
 	 * Called just before a client enters the scope
@@ -86,4 +116,6 @@ public interface IScopeHandler extends IBasicScopeHandler {
 	 */
 	IServiceCall postProcessServiceCall(IConnection conn, IServiceCall call);
 
+	
+	
 }

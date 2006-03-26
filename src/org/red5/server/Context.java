@@ -117,4 +117,6 @@ public class Context implements IContext, ApplicationContextAware {
 		return scopeResolver.resolveScope(host,path);
 	}
 
+	
+	
 }

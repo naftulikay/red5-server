@@ -16,12 +16,18 @@ public class BasicScope extends AttributeStore implements IBasicScope {
 	protected String name;
 	protected Set<IEventListener> listeners;
 	protected boolean persistent = false; 
+	protected String type;
 	
-	public BasicScope(IScope parent, String name, boolean persistent){
+	public BasicScope(IScope parent, String type,  String name, boolean persistent){
 		this.parent = parent;
+		this.type=type;
 		this.name = name;
-		this.listeners = new HashSet<IEventListener>();
 		this.persistent = persistent;
+		this.listeners = new HashSet<IEventListener>();
+	}
+	
+	public String getType(){
+		return type;
 	}
 	
 	public boolean hasParent() {
@@ -87,5 +93,6 @@ public class BasicScope extends AttributeStore implements IBasicScope {
 				listener.notifyEvent(event);
 		}
 	}
-		
+	
+	
 }

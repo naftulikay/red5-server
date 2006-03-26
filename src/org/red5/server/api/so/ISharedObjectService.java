@@ -1,6 +1,6 @@
 package org.red5.server.api.so;
 
-import java.util.Set;
+import java.util.Iterator;
 
 public interface ISharedObjectService {
 
@@ -9,7 +9,7 @@ public interface ISharedObjectService {
 	 * 
 	 * @return set containing the shared object names
 	 */
-	public Set<String> getSharedObjectNames();
+	public Iterator<String> getSharedObjectNames();
 
 	/**
 	 * Create a new shared object
@@ -30,5 +30,8 @@ public interface ISharedObjectService {
 	 * @return shared object, or null if not found
 	 */
 	public ISharedObject getSharedObject(String name);
+
+	public boolean hasSharedObject(String name);
+
 	
 }

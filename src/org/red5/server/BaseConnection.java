@@ -1,20 +1,17 @@
 package org.red5.server;
 
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.red5.server.AttributeStore;
-import org.red5.server.Scope;
+import org.red5.server.api.IBasicScope;
 import org.red5.server.api.IClient;
 import org.red5.server.api.IConnection;
-import org.red5.server.api.IContext;
 import org.red5.server.api.IScope;
-import org.red5.server.api.ScopeUtils;
 import org.red5.server.api.event.IEvent;
-import org.red5.server.api.so.ISharedObject;
-import org.red5.server.api.stream.IStream;
 
 public class BaseConnection extends AttributeStore 
 	implements IConnection {
@@ -30,6 +27,7 @@ public class BaseConnection extends AttributeStore
 	
 	protected IClient client = null;
 	protected Scope scope = null;
+	protected Set<IBasicScope> basicScopes;
 	
 	public BaseConnection(String type, String host, String path, String sessionId, Map<String,String> params){
 		this.type = type;
@@ -37,6 +35,7 @@ public class BaseConnection extends AttributeStore
 		this.path = path;
 		this.sessionId = sessionId;
 		this.params = params;
+		this.basicScopes = new HashSet<IBasicScope>();
 	}
 	
 	public void initialize(IClient client){
@@ -98,25 +97,12 @@ public class BaseConnection extends AttributeStore
 		}
 	}
 
-	
-	
 	public void notifyEvent(IEvent event) {
-		// TODO Auto-generated method stub
-		
+		// TODO Auto-generated method stub		
 	}
 
 	public void dispatchEvent(Object event){
 		// wrap as IEvent and forward
-	}
-
-	public Set<IStream> getStreams() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	public Set<ISharedObject> getSharedObjects() {
-		// TODO Auto-generated method stub
-		return null;
 	}
 
 	public void dispatchEvent(IEvent event) {
@@ -126,6 +112,11 @@ public class BaseConnection extends AttributeStore
 	public boolean handleEvent(IEvent event) {
 		return getScope().handleEvent(event);
 	}
+
+	public Iterator<IBasicScope> getBasicScopes() {
+		return basicScopes.iterator();
+	}
+	
 	
 	/* This is really a utility
 	public boolean switchScope(String contextPath) {

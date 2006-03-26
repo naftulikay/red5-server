@@ -52,6 +52,8 @@ public interface IScope extends IBasicScope, ResourcePatternResolver {
 	 */
 	public boolean hasChildScope(String name);
 	
+	public boolean hasChildScope(String type, String name);
+	
 	public boolean createChildScope(String name);
 
 	public boolean addChildScope(IBasicScope scope);

@@ -1,11 +1,6 @@
 package org.red5.server.api;
 
-import java.util.Map;
-import java.util.Set;
-
-import org.red5.server.api.event.IEventListener;
-import org.red5.server.api.so.ISharedObject;
-import org.red5.server.api.stream.IStream;
+import java.util.Iterator;
 
 /*
  * RED5 Open Source Flash Server - http://www.osflash.org/red5
@@ -115,30 +110,9 @@ public interface IConnection extends ICoreObject {
 	 * @return session id
 	 */
 	public String getSessionId();
-	
-	/**
-	 * Get the scope object associated with this connection
-	 * 
-	 * @return scope object
-	 */
-	public IScope getScope();
 
-	public Set<IStream>getStreams();
+	public IScope getScope();
 	
-	public Set<ISharedObject>getSharedObjects();
-	
-	/**
-	 * Get a list of the stream object associated with this connection
-	 * 
-	 * @return set of stream objects
-	 */
-	/*public Set getStreams();*/
-	
-	/**
-	 * Get the connection params
-	 * 
-	 * @return readonly map of connect params
-	 */
-	public Map getParams();
+	public Iterator<IBasicScope> getBasicScopes();
 	
 }

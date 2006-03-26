@@ -14,8 +14,6 @@ import org.red5.server.api.so.ISharedObject;
 
 public class SharedObjectScope extends BasicScope 
 	implements ISharedObject {
-
-	private static final String TYPE = "so";
 	
 	protected int updateCounter = 0;
 	protected boolean modified = false;

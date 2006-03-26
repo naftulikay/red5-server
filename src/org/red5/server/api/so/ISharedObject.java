@@ -49,6 +49,8 @@ import org.red5.server.api.IBasicScope;
 
 public interface ISharedObject extends IBasicScope {
 
+	public static final String TYPE = "so";
+	
 	/**
 	 * Returns the version of the shared object. The version is incremented
 	 * automatically on each modification.

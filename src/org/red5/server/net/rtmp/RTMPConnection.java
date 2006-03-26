@@ -1,17 +1,25 @@
 package org.red5.server.net.rtmp;
 
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.mina.common.ByteBuffer;
 import org.red5.server.BaseConnection;
+import org.red5.server.api.IScope;
+import org.red5.server.api.so.ISharedObject;
+import org.red5.server.api.so.ISharedObjectCapableConnection;
+import org.red5.server.api.so.ISharedObjectService;
 import org.red5.server.net.rtmp.message.OutPacket;
 import org.red5.server.net.rtmp.message.Ping;
+import org.red5.server.so.ScopeWrappingSharedObjectService;
 import org.red5.server.stream.DownStreamSink;
 import org.red5.server.stream.Stream;
 
-public abstract class RTMPConnection extends BaseConnection {
+public abstract class RTMPConnection extends BaseConnection 
+	implements ISharedObjectCapableConnection {
 
 	protected static Log log =
         LogFactory.getLog(RTMPConnection.class.getName());
@@ -21,12 +29,15 @@ public abstract class RTMPConnection extends BaseConnection {
 	//private Context context;
 	private Channel[] channels = new Channel[64];
 	private Stream[] streams = new Stream[MAX_STREAMS];
+	protected ISharedObjectService sharedObjectService;
+	protected HashMap<String,ISharedObject> sharedObjects;
 
 	public RTMPConnection(String type) {
 		// We start with an anonymous connection without a scope.
 		// These parameters will be set during the call of "connect" later.
 		//super(null, "");	temp fix to get things to compile
 		super(type,null,null,null,null);
+		sharedObjects = new HashMap();
 	}
 	
 	public void setup(String host, String path, String sessionId, Map<String, String> params){
@@ -131,5 +142,43 @@ public abstract class RTMPConnection extends BaseConnection {
 	
 	public abstract void rawWrite(ByteBuffer out);
 	public abstract void write(OutPacket out);
+
+	public boolean connectSharedObject(String name, boolean persistent) {
+		if(!sharedObjectService.hasSharedObject(name)){
+			if(!sharedObjectService.createSharedObject(name, persistent)){
+				return false;
+			}
+		}
+		final ISharedObject so = sharedObjectService.getSharedObject(name);
+		so.addEventListener(this);
+		sharedObjects.put(name, so);
+		return true;
+	}
+
+	public void disconnectSharedObject(String name) {
+		sharedObjects.get(name).removeEventListener(this);
+	}
+
+	public ISharedObject getConnectedSharedObject(String name) {
+		return sharedObjects.get(name);
+	}
+
+	public Iterator<String> getConnectedSharedObjectNames() {
+		return sharedObjects.keySet().iterator();
+	}
+	
+	public boolean isConnectedToSharedObject(String name) {
+		return sharedObjects.containsKey(name);
+	}
+
+	@Override
+	public boolean connect(IScope newScope) {
+		if(super.connect(newScope)){
+			sharedObjectService = new ScopeWrappingSharedObjectService(newScope);
+			return true;
+		} else {
+			return false;
+		}
+	}
 	
 }

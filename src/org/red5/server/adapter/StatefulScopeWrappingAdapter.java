@@ -17,7 +17,7 @@ import org.springframework.core.io.Resource;
 public class StatefulScopeWrappingAdapter extends AbstractScopeAdapter 
 	implements IScopeAware {
 	
-	protected IScope scope;
+	protected IScope scope; 
 	
 	public void setScope(IScope scope) {
 		this.scope = scope;	

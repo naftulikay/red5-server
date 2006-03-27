@@ -61,14 +61,6 @@ public abstract class AbstractScopeAdapter implements IScopeHandler {
 		return canCallService;
 	}
 
-	public IServiceCall postProcessServiceCall(IConnection conn, IServiceCall call) {
-		return call;
-	}
-
-	public IServiceCall preProcessServiceCall(IConnection conn, IServiceCall call) {
-		return call;
-	}
-
 	public boolean addChildScope(IBasicScope scope) {
 		return canAddChildScope;
 	}
@@ -80,16 +72,5 @@ public abstract class AbstractScopeAdapter implements IScopeHandler {
 	public boolean handleEvent(IEvent event){
 		return canHandleEvent;
 	}
-	
-	/*
-	private boolean canConnectSharedObject = true;
-	private boolean canDeleteSharedObject = true;
-	private boolean canUpdateSharedObject = true;
-	private boolean canSendSharedObject = true;
-	private boolean canPublishStream = true;
-	private boolean canRecordStream = true;
-	private boolean canBroadcastStream = true;
-	private boolean canSubscribeToBroadcastStream = true;
-	private boolean canConnectToOnDemandStream = true;
-	*/
+
 }

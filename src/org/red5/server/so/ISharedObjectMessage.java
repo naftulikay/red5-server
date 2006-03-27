@@ -2,7 +2,9 @@ package org.red5.server.so;
 
 import java.util.List;
 
-public interface ISharedObjectMessage extends org.red5.server.api.event.IEvent {
+import org.red5.server.api.event.IEvent;
+
+public interface ISharedObjectMessage extends IEvent {
 
 	/**
 	 * Returns the name of the shared object this message belongs to.
@@ -38,6 +40,6 @@ public interface ISharedObjectMessage extends org.red5.server.api.event.IEvent {
 	
 	public void clear();
 	
-	public boolean isEmpty();
+	public boolean isEmpty(); 
 	
 }

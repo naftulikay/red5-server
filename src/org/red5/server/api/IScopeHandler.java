@@ -45,7 +45,7 @@ public interface IScopeHandler extends IEventHandler {
 	 * @param scope
 	 *            the new scope object
 	 */
-	boolean start(IScope scope);
+	boolean start(IScope scope); 
 
 	/**
 	 * Called just before a scope is disposed
@@ -90,31 +90,12 @@ public interface IScopeHandler extends IEventHandler {
 	void leave(IClient client, IScope scope);
 
 	/**
-	 * Called just before a service call This is a chance to modify the call
-	 * object
-	 * 
-	 * @param call
-	 *            the call object
-	 * @return same or modified call object
-	 */
-	IServiceCall preProcessServiceCall(IConnection conn, IServiceCall call);
-
-	/**
 	 * Called when a service is called
 	 * 
 	 * @param call
 	 *            the call object
 	 */
 	boolean serviceCall(IConnection conn, IServiceCall call);
-
-	/**
-	 * Called just after a service call This is a chance to modify the result
-	 * object
-	 * 
-	 * @param call
-	 * @return same or modified call object
-	 */
-	IServiceCall postProcessServiceCall(IConnection conn, IServiceCall call);
 
 	
 	

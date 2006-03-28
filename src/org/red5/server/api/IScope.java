@@ -116,4 +116,5 @@ public interface IScope extends IBasicScope, ResourcePatternResolver {
 	public boolean connect(IConnection conn);
 	public void disconnect(IConnection conn);
 	
+	
 }

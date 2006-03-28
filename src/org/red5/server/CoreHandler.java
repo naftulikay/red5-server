@@ -38,30 +38,19 @@ public class CoreHandler implements IScopeHandler {
 	}
 
 	public void disconnect(IConnection conn) {
-		
+		// do nothing here
 	}
 
 	public boolean join(IClient client, IScope scope) {
-		// TODO Auto-generated method stub
-		return false;
+		return true;
 	}
 
 	public void leave(IClient client, IScope scope) {
-		// TODO Auto-generated method stub
-	}
-
-	public IServiceCall postProcessServiceCall(IConnection conn, IServiceCall call) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	public IServiceCall preProcessServiceCall(IConnection conn, IServiceCall call) {
-		// TODO Auto-generated method stub
-		return null;
+		// do nothing here
 	}
 
 	public void removeChildScope(IBasicScope scope) {
-		// TODO Auto-generated method stub
+		// do nothing here
 	}
 
 	public boolean serviceCall(IConnection conn, IServiceCall call) {
@@ -79,7 +68,7 @@ public class CoreHandler implements IScopeHandler {
 	}
 
 	public void stop(IScope scope) {
-		// TODO Auto-generated method stub
+		// do nothing here
 	}
 
 	public boolean handleEvent(IEvent event) {

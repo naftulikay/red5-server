@@ -167,8 +167,8 @@ public class Scope extends BasicScope implements IScope {
 	}
 	
 	public String getPath() {
-		if(hasParent()) return parent.getPath() + "/" + name;
-		else return name;
+		if(hasParent()) return parent.getPath() + "/" + parent.getName();
+		else return "";
 	}
 
 	public void setParent(IScope parent){
@@ -364,6 +364,11 @@ public class Scope extends BasicScope implements IScope {
 
 	public IScope getScope(String name){
 		return (IScope) children.get(TYPE+SEPARATOR+name);
+	}
+
+	@Override
+	public Iterator<IBasicScope> iterator() {
+		return children.values().iterator();
 	}
 
 	public String toString(){

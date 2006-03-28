@@ -1,41 +1,18 @@
 package org.red5.server;
 
-import java.io.InputStream;
-import java.io.IOException;
-import java.io.OutputStream;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.mina.common.ByteBuffer;
-import org.red5.io.amf.Input;
-import org.red5.io.amf.Output;
-import org.red5.io.object.Deserializer;
-import org.red5.io.object.Serializer;
-
 import org.red5.server.api.IAttributeStore;
 
-import org.red5.server.net.servlet.ServletUtils;
-import org.red5.server.persistence.IPersistable;
-import org.red5.server.persistence.IPersistentStorage;
+public class AttributeStore implements IAttributeStore {
 
-public class AttributeStore implements IAttributeStore, IPersistable {
-
-	private HashMap<String,Object> attributes = new HashMap<String,Object>();
-	private IPersistentStorage storage = null;
-	private String persistentId = null;
+	protected HashMap<String,Object> attributes = new HashMap<String,Object>();
 	
 	public AttributeStore() {
 		// Object is not associated with a persistence storage
-	}
-	
-	public AttributeStore(IPersistentStorage storage) {
-		this.storage = storage;
-	}
-	
-	public void setStorage(IPersistentStorage storage) {
-		this.storage = storage;
 	}
 	
 	public Set<String> getAttributeNames(){
@@ -88,47 +65,6 @@ public class AttributeStore implements IAttributeStore, IPersistable {
 	synchronized public void removeAttributes() {
 		attributes.clear();
 	}	
-	
-	public String getPersistentId() {
-		if (persistentId == null && storage != null) {
-			persistentId = storage.newPersistentId(); 
-		}
+
 		
-		return persistentId;
-	}
-	
-	public void serialize(OutputStream output) throws IOException {
-		ByteBuffer buf = ByteBuffer.allocate(1024);
-		buf.setAutoExpand(true);
-		serialize(buf);
-		buf.flip();
-		ServletUtils.copy(buf.asInputStream(), output);
-	}
-	
-	public void serialize(ByteBuffer output) throws IOException {
-		Output out = new Output(output);
-		Serializer serializer = new Serializer();
-		serializer.writeMap(out, attributes);
-	}
-	
-	public void deserialize(InputStream input) throws IOException {
-		ByteBuffer buf = ByteBuffer.allocate(1024);
-		buf.setAutoExpand(true);
-		ServletUtils.copy(input, buf.asOutputStream());
-		buf.flip();
-		deserialize(buf);
-	}
-	
-	public void deserialize(ByteBuffer input) throws IOException {
-		Input in = new Input(input);
-		Deserializer deserializer = new Deserializer();
-		Map<String,Object> data = (Map<String,Object>) deserializer.deserialize(in);
-		attributes.clear();
-		attributes.putAll(data);
-	}
-	
-	public IPersistentStorage getStorage() {
-		return storage;
-	}
-	
 }

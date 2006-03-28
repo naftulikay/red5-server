@@ -1,4 +1,4 @@
-package org.red5.server.persistence;
+package org.red5.server.persistence2;
 
 import java.io.IOException;
 import java.util.Iterator;

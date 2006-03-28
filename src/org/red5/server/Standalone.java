@@ -67,7 +67,6 @@ public class Standalone {
 		if(log.isDebugEnabled()) {
 			long startupIn = System.currentTimeMillis() - time;
 			log.debug("Startup in: "+startupIn+" ms");
-			log.debug("Startup date: "+appCtx.getStartupDate());
 		}
 
 	}

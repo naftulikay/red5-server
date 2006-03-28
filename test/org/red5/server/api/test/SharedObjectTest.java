@@ -25,7 +25,7 @@ public class SharedObjectTest extends BaseTest
 		ISharedObject so = service.getSharedObject(name);
 		assertTrue("so not null",so!=null);
 		assertTrue("name same",so.getName().equals(name));
-		assertTrue("persistent",!so.isPersistent());
+		assertTrue("persistent",!so.isPersistant());
 		so.addEventListener(this);
 		so.setAttribute("this","that");
 	}

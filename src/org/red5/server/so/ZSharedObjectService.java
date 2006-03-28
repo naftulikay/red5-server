@@ -5,9 +5,9 @@ import java.io.IOException;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.red5.server.api.so.ISharedObject;
-import org.red5.server.persistence.IPersistable;
-import org.red5.server.persistence.IPersistentStorage;
-import org.red5.server.persistence.RamPersistence;
+import org.red5.server.persistence2.IPersistable;
+import org.red5.server.persistence2.IPersistentStorage;
+import org.red5.server.persistence2.RamPersistence;
 
 public class ZSharedObjectService {
 

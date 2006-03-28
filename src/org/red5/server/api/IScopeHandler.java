@@ -45,7 +45,7 @@ public interface IScopeHandler extends IEventHandler {
 	 * @param scope
 	 *            the new scope object
 	 */
-	boolean start(IScope scope); 
+	boolean start(IScope scope);
 
 	/**
 	 * Called just before a scope is disposed
@@ -96,7 +96,5 @@ public interface IScopeHandler extends IEventHandler {
 	 *            the call object
 	 */
 	boolean serviceCall(IConnection conn, IServiceCall call);
-
-	
 	
 }

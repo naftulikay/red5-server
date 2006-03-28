@@ -8,6 +8,7 @@ import org.red5.server.api.IMappingStrategy;
 import org.red5.server.api.IScope;
 import org.red5.server.api.IScopeHandler;
 import org.red5.server.api.IScopeResolver;
+import org.red5.server.api.persistance.IPersistanceStore;
 import org.red5.server.api.service.IServiceInvoker;
 import org.red5.server.exception.ScopeHandlerNotFoundException;
 import org.red5.server.service.ServiceNotFoundException;
@@ -24,6 +25,7 @@ public class Context implements IContext, ApplicationContextAware {
 	private IClientRegistry clientRegistry;
 	private IServiceInvoker serviceInvoker;
 	private IMappingStrategy mappingStrategy;
+	private IPersistanceStore persistanceStore;
 	
 	public Context(){
 		
@@ -48,6 +50,14 @@ public class Context implements IContext, ApplicationContextAware {
 
 	public void setServiceInvoker(IServiceInvoker serviceInvoker) {
 		this.serviceInvoker = serviceInvoker;
+	}
+
+	public IPersistanceStore getPersistanceStore() {
+		return persistanceStore; 
+	}
+
+	public void setPersistanceStore(IPersistanceStore persistanceStore) {
+		this.persistanceStore = persistanceStore;
 	}
 
 	public void setApplicationContext(ApplicationContext context) {

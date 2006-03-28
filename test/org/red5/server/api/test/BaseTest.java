@@ -1,11 +1,14 @@
 package org.red5.server.api.test;
 
+import junit.framework.JUnit4TestAdapter;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.junit.BeforeClass;
 import org.red5.server.api.IContext;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.FileSystemXmlApplicationContext;
+import static junit.framework.Assert.assertTrue;
 
 public class BaseTest {
 
@@ -24,5 +27,7 @@ public class BaseTest {
 		spring = new FileSystemXmlApplicationContext(config);
 		context = (IContext) spring.getBean("red5.context");
 	}
+	
+
 	
 }

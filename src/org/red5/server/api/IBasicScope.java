@@ -1,8 +1,13 @@
 package org.red5.server.api;
 
 import org.red5.server.api.event.IEventObservable;
+import org.red5.server.api.persistance.IPersistable;
 
-public interface IBasicScope extends ICoreObject, IEventObservable {
+public interface IBasicScope 
+	extends ICoreObject, 
+		IEventObservable, 
+		Iterable<IBasicScope>,
+		IPersistable {
 	
 	/**
 	 * Does this scope have a parent
@@ -39,9 +44,9 @@ public interface IBasicScope extends ICoreObject, IEventObservable {
 	 */
 	public String getPath();
 	
-	public boolean isPersistent();
+	public boolean isPersistant();
 	
-	public void setPersistent(boolean persistent);
+	public void setPersistant(boolean persistant);
 	
 	public String getType();
 	

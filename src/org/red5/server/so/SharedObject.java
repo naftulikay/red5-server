@@ -25,8 +25,8 @@ import org.red5.server.net.rtmp.RTMPConnection;
 import org.red5.server.net.rtmp.message.Constants;
 import org.red5.server.net.rtmp.message.SharedObjectEvent;
 import org.red5.server.net.servlet.ServletUtils;
-import org.red5.server.persistence.IPersistable;
-import org.red5.server.persistence.IPersistentStorage;
+import org.red5.server.persistence2.IPersistable;
+import org.red5.server.persistence2.IPersistentStorage;
 
 public class SharedObject implements IPersistable, Constants {
 
@@ -334,7 +334,7 @@ public class SharedObject implements IPersistable, Constants {
 	public void serialize(ByteBuffer output) throws IOException {
 		Output out = new Output(output);
 		out.writeString(getName());
-		data.serialize(output);
+		//data.serialize(output);
 	}
 
 	public void deserialize(InputStream input) throws IOException {
@@ -350,7 +350,7 @@ public class SharedObject implements IPersistable, Constants {
 		Deserializer deserializer = new Deserializer();
 		name = (String) deserializer.deserialize(in);
 		persistent = true;
-		data.deserialize(input);
+		//data.deserialize(input);
 		ownerMessage.setName(name);
 		ownerMessage.setType(2);
 		syncMessage.setName(name);

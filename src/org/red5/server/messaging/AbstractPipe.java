@@ -39,9 +39,9 @@ public abstract class AbstractPipe implements IPipe {
 	protected List providers = new ArrayList();
 	protected List listeners = new ArrayList();
 	
-	public void subscribe(IConsumer consumer) {
+	public boolean subscribe(IConsumer consumer) {
 		synchronized (consumers) {
-			if (consumers.contains(consumer)) return;
+			if (consumers.contains(consumer)) return false;
 			consumers.add(consumer);
 		}
 		if (consumer instanceof IPipeConnectionListener) {
@@ -49,12 +49,12 @@ public abstract class AbstractPipe implements IPipe {
 				listeners.add(consumer);
 			}
 		}
-		fireConsumerConnectionEvent(consumer, PipeConnectionEvent.CONSUMER_CONNECT_PUSH);
+		return true;
 	}
 
-	public void subscribe(IProvider provider) {
+	public boolean subscribe(IProvider provider) {
 		synchronized (providers) {
-			if (providers.contains(provider)) return;
+			if (providers.contains(provider)) return false;
 			providers.add(provider);
 		}
 		if (provider instanceof IPipeConnectionListener) {
@@ -62,12 +62,12 @@ public abstract class AbstractPipe implements IPipe {
 				listeners.add(provider);
 			}
 		}
-		fireProviderConnectionEvent(provider, PipeConnectionEvent.PROVIDER_CONNECT_PUSH);
+		return true;
 	}
 
-	public void unsubscribe(IProvider provider) {
+	public boolean unsubscribe(IProvider provider) {
 		synchronized (providers) {
-			if (!providers.contains(provider)) return;
+			if (!providers.contains(provider)) return false;
 			providers.remove(provider);
 		}
 		fireProviderConnectionEvent(provider, PipeConnectionEvent.PROVIDER_DISCONNECT);
@@ -76,11 +76,12 @@ public abstract class AbstractPipe implements IPipe {
 				listeners.remove(provider);
 			}
 		}
+		return true;
 	}
 
-	public void unsubscribe(IConsumer consumer) {
+	public boolean unsubscribe(IConsumer consumer) {
 		synchronized (consumers) {
-			if (!consumers.contains(consumer)) return;
+			if (!consumers.contains(consumer)) return false;
 			consumers.remove(consumer);
 		}
 		fireConsumerConnectionEvent(consumer, PipeConnectionEvent.CONSUMER_DISCONNECT);
@@ -89,6 +90,7 @@ public abstract class AbstractPipe implements IPipe {
 				listeners.remove(consumer);
 			}
 		}
+		return true;
 	}
 	
 	protected void fireConsumerConnectionEvent(IConsumer consumer, int type) {

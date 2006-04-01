@@ -35,11 +35,19 @@ import org.apache.commons.logging.LogFactory;
 public class InMemoryPushPushPipe extends AbstractPipe {
 	private static final Log log = LogFactory.getLog(InMemoryPushPushPipe.class);
 	
-	public void subscribe(IConsumer consumer) {
+	public boolean subscribe(IConsumer consumer) {
 		if (!(consumer instanceof IPushableConsumer)) {
 			throw new IllegalArgumentException("Non-pushable consumer not supported by PushPushPipe");
 		}
-		super.subscribe(consumer);
+		boolean success = super.subscribe(consumer);
+		if (success) fireConsumerConnectionEvent(consumer, PipeConnectionEvent.CONSUMER_CONNECT_PUSH);
+		return success;
+	}
+
+	public boolean subscribe(IProvider provider) {
+		boolean success = super.subscribe(provider);
+		if (success) fireProviderConnectionEvent(provider, PipeConnectionEvent.PROVIDER_CONNECT_PUSH);
+		return success;
 	}
 
 	public IMessage pullMessage() {

@@ -35,6 +35,21 @@ import org.apache.commons.logging.LogFactory;
 public class InMemoryPullPullPipe extends AbstractPipe {
 	private static final Log log = LogFactory.getLog(InMemoryPullPullPipe.class);
 	
+	public boolean subscribe(IConsumer consumer) {
+		boolean success = super.subscribe(consumer);
+		if (success) fireConsumerConnectionEvent(consumer, PipeConnectionEvent.CONSUMER_CONNECT_PULL);
+		return success;
+	}
+
+	public boolean subscribe(IProvider provider) {
+		if (!(provider instanceof IPullableProvider)) {
+			throw new IllegalArgumentException("Non-pullable provider not supported by PullPullPipe");
+		}
+		boolean success = super.subscribe(provider);
+		if (success) fireProviderConnectionEvent(provider, PipeConnectionEvent.PROVIDER_CONNECT_PULL);
+		return success;
+	}
+
 	public IMessage pullMessage() {
 		IMessage message = null;
 		synchronized (providers) {

@@ -46,12 +46,16 @@ public interface IMessageInput {
 	/**
 	 * Connect to a consumer.
 	 * @param consumer
+	 * @return <tt>true</tt> when successfully subscribed,
+	 * <tt>false</tt> otherwise.
 	 */
-	void subscribe(IConsumer consumer);
+	boolean subscribe(IConsumer consumer);
 	
 	/**
 	 * Disconnect from a consumer.
 	 * @param consumer
+	 * @return <tt>true</tt> when successfully unsubscribed,
+	 * <tt>false</tt> otherwise.
 	 */
-	void unsubscribe(IConsumer consumer);
+	boolean unsubscribe(IConsumer consumer);
 }

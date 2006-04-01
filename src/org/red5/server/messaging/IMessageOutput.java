@@ -36,12 +36,16 @@ public interface IMessageOutput {
 	/**
 	 * Connect to a provider.
 	 * @param provider
+	 * @return <tt>true</tt> when successfully subscribed,
+	 * <tt>false</tt> otherwise.
 	 */
-	void subscribe(IProvider provider);
+	boolean subscribe(IProvider provider);
 	
 	/**
 	 * Disconnect from a provider.
 	 * @param provider
+	 * @return <tt>true</tt> when successfully unsubscribed,
+	 * <tt>false</tt> otherwise.
 	 */
-	void unsubscribe(IProvider provider);
+	boolean unsubscribe(IProvider provider);
 }

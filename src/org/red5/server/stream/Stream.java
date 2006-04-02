@@ -3,6 +3,8 @@ package org.red5.server.stream;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.mina.common.ByteBuffer;
+import org.red5.server.messaging.InMemoryPullPullPipe;
+import org.red5.server.messaging.PipeUtils;
 import org.red5.server.net.rtmp.BaseConnection;
 import org.red5.server.net.rtmp.Channel;
 import org.red5.server.net.rtmp.message.AudioData;
@@ -12,6 +14,8 @@ import org.red5.server.net.rtmp.message.Ping;
 import org.red5.server.net.rtmp.message.Status;
 import org.red5.server.net.rtmp.message.StreamBytesRead;
 import org.red5.server.net.rtmp.message.VideoData;
+import org.red5.server.streaming.DownStreamAdapter;
+import org.red5.server.streaming.FileStreamSourceAdapter;
 
 public class Stream extends BaseStreamSink implements Constants, IStream, IStreamSink {
 	
@@ -42,6 +46,9 @@ public class Stream extends BaseStreamSink implements Constants, IStream, IStrea
 	private boolean initialMessage = true;
 	
 	private BaseConnection conn;
+	
+	private DownStreamAdapter downStreamAdapter;
+	private FileStreamSourceAdapter fileStreamAdapter;
 	
 	public Stream(BaseConnection conn){
 		this.conn = conn;
@@ -198,6 +205,21 @@ public class Stream extends BaseStreamSink implements Constants, IStream, IStrea
 	}
 	
 	public void start(int startTS, int length) {
+		if (source instanceof FileStreamSource) {
+			// connect the pipe
+			fileStreamAdapter =
+				new FileStreamSourceAdapter((FileStreamSource) source);
+			downStreamAdapter =
+				new DownStreamAdapter(this);
+			InMemoryPullPullPipe pipe = new InMemoryPullPullPipe();
+			PipeUtils.connect(fileStreamAdapter, pipe, downStreamAdapter);
+			fileStreamAdapter.seek(startTS);
+			fileStreamAdapter.setLength(length);
+		}
+		if (downStreamAdapter != null) {
+			downStreamAdapter.start();
+			return;
+		}
 		startTime = System.currentTimeMillis();
 		playLength = length;
 		
@@ -310,6 +332,10 @@ public class Stream extends BaseStreamSink implements Constants, IStream, IStrea
 	}
 	
 	public void written(Message message){
+		if (downStreamAdapter != null) {
+			downStreamAdapter.messageSent(message);
+			return;
+		}
 		if(paused) return;
 		writeQueue--;
 		synchronized (this) {
@@ -320,10 +346,18 @@ public class Stream extends BaseStreamSink implements Constants, IStream, IStrea
 	}
 	
 	public void close(){
+		if (downStreamAdapter != null) {
+			downStreamAdapter.close();
+			fileStreamAdapter.close();
+			return;
+		}
 		if(upstream!=null) upstream.close();
 		if(downstream!=null) downstream.close();
 		if(source!=null) source.close();
 		super.close();
 	}
 	
+	public void setDownStreamAdapter(DownStreamAdapter downStreamAdapter) {
+		this.downStreamAdapter = downStreamAdapter;
+	}
 }

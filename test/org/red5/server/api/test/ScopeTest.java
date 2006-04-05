@@ -15,36 +15,25 @@ public class ScopeTest extends BaseTest {
 	
 	@Test public void scopeResolver(){
 		
-		// Root 
-		IScope root = context.resolveScope(null,null);
-		assertTrue("global scope not null", root != null);
-		assertTrue("should be global", ScopeUtils.isRoot(root));
-		log.debug(root);
-		
-		// Default Host
-		IScope defaultHost = context.resolveScope("",null);
-		assertTrue("defaultHost scope not null", defaultHost != null);
-		assertTrue("should be host", ScopeUtils.isHost(defaultHost));
-		log.debug(defaultHost);
-		
-		
-		// Local Host
-		IScope localHost = context.resolveScope(host,null);
-		assertTrue("localHost scope not null", localHost != null);
-		log.debug(localHost);
+		// Global 
+		IScope global = context.getGlobalScope();
+		assertTrue("global scope not null", global != null);
+		assertTrue("should be global", ScopeUtils.isGlobal(global));
+		log.debug(global);
+				
 		
 		// Test App
-		IScope testApp = context.resolveScope(host,path_app);
+		IScope testApp = context.resolveScope(path_app); 
 		assertTrue("testApp scope not null", testApp != null);
 		log.debug(testApp);
 		
 		// Test Room
-		IScope testRoom = context.resolveScope(host,path_room);
+		IScope testRoom = context.resolveScope(path_room);
 		log.debug(testRoom);
 
 		// Test App Not Found
 		try {
-			IScope notFoundApp = context.resolveScope(host,path_app+"notfound");
+			IScope notFoundApp = context.resolveScope(path_app+"notfound");
 			log.debug(notFoundApp);
 			assertTrue("should have thrown an exception", false);
 		} catch (RuntimeException e) {
@@ -53,7 +42,7 @@ public class ScopeTest extends BaseTest {
 	}
 	
 	@Test public void context(){
-		IScope testRoom = context.resolveScope(host,path_room);
+		IScope testRoom = context.resolveScope(path_room);
 		IContext context = testRoom.getContext();
 		assertTrue("context should not be null",context!=null);
 		log.debug(testRoom.getContext().getResource(""));
@@ -69,7 +58,7 @@ public class ScopeTest extends BaseTest {
 	
 	@Test public void handler(){
 		
-		Scope testApp = (Scope) context.resolveScope(host,path_app);
+		Scope testApp = (Scope) context.resolveScope(path_app);
 		assertTrue("should have a handler",testApp.hasHandler());
 		
 		IClientRegistry reg = context.getClientRegistry();
@@ -103,7 +92,7 @@ public class ScopeTest extends BaseTest {
 	@Test public void connectionHandler(){
 		
 		TestConnection conn = new TestConnection(host,path_app,null);
-		IScope scope = context.resolveScope(host, path_app);
+		IScope scope = context.resolveScope(path_app);
 		if(!conn.connect(scope)){
 			assertTrue("didnt connect", false);
 		} else {

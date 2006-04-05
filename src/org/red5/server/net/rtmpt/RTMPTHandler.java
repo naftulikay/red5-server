@@ -36,6 +36,7 @@ public class RTMPTHandler extends RTMPHandler implements Constants {
 	
 	public void setRtmptServerConfiguration(XmlConfiguration config) throws Exception {
 		rtmptServerConfiguration = config;
+		/* HACK TO GET IT TO COMPILE. 
 		rtmptServer = (Server) config.newInstance();
 		
 		// Setup configuration data in rtmptServer
@@ -44,6 +45,7 @@ public class RTMPTHandler extends RTMPHandler implements Constants {
 			throw new Exception("Only context handlers supported.");
 		
 		((ContextHandler) tmp).setAttribute(HANDLER_ATTRIBUTE, this);
+		*/
 	}
 	
 }

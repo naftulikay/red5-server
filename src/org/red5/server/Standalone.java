@@ -2,6 +2,11 @@ package org.red5.server;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.mortbay.jetty.Handler;
+import org.mortbay.jetty.Server;
+import org.mortbay.jetty.webapp.WebAppContext;
+import org.mortbay.xml.XmlConfiguration;
+import org.springframework.context.access.ContextSingletonBeanFactoryLocator;
 import org.springframework.context.support.FileSystemXmlApplicationContext;
 
 /*
@@ -41,7 +46,7 @@ public class Standalone {
 	protected static Log log =
         LogFactory.getLog(Standalone.class.getName());
 	
-	protected static String red5ConfigPath = "./conf/red5.xml";
+	protected static String red5Config = "red5.xml";
 	
 	/**
 	 * Main entry point for the Red5 Server 
@@ -52,22 +57,18 @@ public class Standalone {
 	public static void main(String[] args) throws Exception {
 		
 		if(args.length == 1) {
-			red5ConfigPath = args[0];
-		}
+			red5Config = args[0];
+		} 
 		
-		if(log.isInfoEnabled()){ 
-			log.info("RED5 Server (http://www.osflash.org/red5)");
-			log.info("Loading Spring Application Context: "+red5ConfigPath);
-		}
-		
-		// Spring Loads the xml config file which initializes 
-		// beans and loads the server
 		long time = System.currentTimeMillis();
-		FileSystemXmlApplicationContext appCtx = new FileSystemXmlApplicationContext(red5ConfigPath);
-		if(log.isDebugEnabled()) {
-			long startupIn = System.currentTimeMillis() - time;
-			log.debug("Startup in: "+startupIn+" ms");
-		}
+		
+		log.info("RED5 Server (http://www.osflash.org/red5)");
+		log.info("Loading red5 global context from: "+red5Config);
+		
+		ContextSingletonBeanFactoryLocator.getInstance(red5Config).useBeanFactory("red5.global");
+
+		long startupIn = System.currentTimeMillis() - time;
+		log.debug("Startup done in: "+startupIn+" ms");
 
 	}
 

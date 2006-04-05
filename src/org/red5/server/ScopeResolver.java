@@ -1,6 +1,6 @@
 package org.red5.server;
 
-import org.red5.server.api.IBasicScope;
+import org.red5.server.api.IGlobalScope;
 import org.red5.server.api.IScope;
 import org.red5.server.api.IScopeResolver;
 import org.red5.server.api.ScopeUtils;
@@ -8,28 +8,20 @@ import org.red5.server.exception.ScopeNotFoundException;
 
 public class ScopeResolver implements IScopeResolver {
 
-	public static final String DEFAULT_HOST = "default";
+	public static final String DEFAULT_HOST = "";
 	
-	public IScope root;
+	protected IGlobalScope globalScope;
 
-	public IScope getRoot() {
-		return root;
+	public IGlobalScope getGlobalScope() {
+		return globalScope;
 	}
 
-	public void setRoot(IScope root) {
-		this.root = root;
+	public void setGlobalScope(IGlobalScope root) {
+		this.globalScope = root;
 	}
 
-	public IScope resolveScope(String host, String path){
-		IScope scope = root;
-		if(ScopeUtils.isGlobal(scope)){
-			if(host==null) return scope;
-			else if(scope.hasChildScope(host))
-				scope = scope.getScope(host);
-			else if(scope.hasChildScope(DEFAULT_HOST))
-				scope = scope.getScope(DEFAULT_HOST);
-			else throw new ScopeNotFoundException(scope,host);
-		} 
+	public IScope resolveScope(String path){
+		IScope scope = globalScope;
 		if(path == null) return scope;
 		final String[] parts = path.split("/");
 		if(parts.length > 0 && ScopeUtils.isHost(scope)){

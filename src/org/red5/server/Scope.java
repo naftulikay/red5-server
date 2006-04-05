@@ -30,7 +30,6 @@ public class Scope extends BasicScope implements IScope {
 	private int depth = UNSET; 
 	private IContext context;
 	private IScopeHandler handler;
-	private String childLoadPath = "./*/context.xml";
 	
 	private boolean autoStart = true;
 	private boolean enabled = true;

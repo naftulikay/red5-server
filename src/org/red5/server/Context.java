@@ -35,6 +35,14 @@ public class Context implements IContext, ApplicationContextAware {
 		this.applicationContext = context;
 		this.contextPath = contextPath;
 	}
+	
+	public IScope getGlobalScope(){
+		return scopeResolver.getGlobalScope();
+	}
+	
+	public IScope resolveScope(String path) {
+		return scopeResolver.resolveScope(path);
+	}
 
 	public void setClientRegistry(IClientRegistry clientRegistry) {
 		this.clientRegistry = clientRegistry;
@@ -118,15 +126,9 @@ public class Context implements IContext, ApplicationContextAware {
 	public Resource getResource(String path) {
 		return applicationContext.getResource(contextPath + path);
 	}
-	
-	public IScope getRootScope() {
-		return scopeResolver.resolveScope(null,null);
-	}
 
 	public IScope resolveScope(String host, String path) {
-		return scopeResolver.resolveScope(host,path);
+		return scopeResolver.resolveScope(path);
 	}
-
-	
 	
 }

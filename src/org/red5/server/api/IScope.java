@@ -40,6 +40,8 @@ import org.springframework.core.io.support.ResourcePatternResolver;
  */
 public interface IScope extends IBasicScope, ResourcePatternResolver {
 
+	public static final String ID = "red5.scope";
+	
 	public static final String TYPE = "scope";
 	public static final String SEPARATOR = ":";
 	

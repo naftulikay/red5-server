@@ -12,15 +12,18 @@ import org.springframework.core.io.support.ResourcePatternResolver;
  */
 public interface IContext extends ResourcePatternResolver {
 
+	public static final String ID = "red5.context";
+	
+	public ApplicationContext getApplicationContext();
+	
 	// public IScopeResolver getScopeResolver();
 	public IClientRegistry getClientRegistry();
 	public IServiceInvoker getServiceInvoker();
-	public IMappingStrategy getMappingStrategy();
 	public IPersistanceStore getPersistanceStore();
 	public Object lookupService(String serviceName);
 	public IScopeHandler lookupScopeHandler(String path);
-	public IScope resolveScope(String host, String path);
-	public IScope getRootScope();
-	public ApplicationContext getApplicationContext();
-	
+	public IScope resolveScope(String path);
+	public IScope getGlobalScope();
+
+	public IMappingStrategy getMappingStrategy();
 }

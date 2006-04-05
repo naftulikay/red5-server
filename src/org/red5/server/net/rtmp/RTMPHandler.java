@@ -7,8 +7,8 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.mina.common.ByteBuffer;
 import org.red5.server.api.IContext;
 import org.red5.server.api.IScope;
+import org.red5.server.api.IServer;
 import org.red5.server.api.Red5;
-import org.red5.server.api.stream.IStreamHandler;
 import org.red5.server.net.protocol.ProtocolState;
 import org.red5.server.net.rtmp.codec.RTMP;
 import org.red5.server.net.rtmp.message.Constants;
@@ -32,8 +32,12 @@ public class RTMPHandler
         LogFactory.getLog(RTMPHandler.class.getName());
 	
 	protected StatusObjectService statusObjectService;
-	protected IContext context;
+	protected IServer server;
 	
+	public void setServer(IServer server) {
+		this.server = server;
+	}
+
 	public void setStatusObjectService(StatusObjectService statusObjectService) {
 		this.statusObjectService = statusObjectService;
 	}
@@ -132,8 +136,11 @@ public class RTMPHandler
 		final Call call = invoke.getCall();
 		
 		if(call.getServiceName() == null){
+			log.info("call: "+call);
 			final String action = call.getServiceMethodName();
+			log.info("--"+action);
 			if(!conn.isConnected()){
+				
 				if(action.equals(ACTION_CONNECT)){
 					log.debug("connect");
 					final Map params = invoke.getConnectionParams();
@@ -142,7 +149,8 @@ public class RTMPHandler
 					final String sessionId = null;
 					conn.setup(host, path, sessionId, params);
 					try {
-						final IScope scope = context.resolveScope(host,path);
+						final IContext context = server.lookupGlobal(host,path).getContext();
+						final IScope scope = context.resolveScope(path);
 						if(conn.connect(scope)){
 							log.debug("connected");
 							call.setStatus(Call.STATUS_SUCCESS_RESULT);
@@ -155,6 +163,7 @@ public class RTMPHandler
 					} catch (RuntimeException e) {
 						call.setStatus(Call.STATUS_GENERAL_EXCEPTION);
 						call.setResult(getStatus(NC_CONNECT_FAILED));
+						log.error("Error connecting",e);
 					}
 				}
 			} else if(action.equals(ACTION_DISCONNECT)){

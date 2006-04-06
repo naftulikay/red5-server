@@ -57,7 +57,7 @@ public class InMemoryPullPullPipe extends AbstractPipe {
 			for (Iterator iter = providers.iterator(); iter.hasNext(); ) {
 				IPullableProvider provider = (IPullableProvider) iter.next();
 				try {
-					message = provider.pullMessage();
+					message = provider.pullMessage(this);
 					if (message != null) break;
 				} catch (Throwable t) {
 					log.error("exception when pulling message from provider", t);
@@ -76,7 +76,7 @@ public class InMemoryPullPullPipe extends AbstractPipe {
 			for (Iterator iter = providers.iterator(); iter.hasNext(); ) {
 				IPullableProvider provider = (IPullableProvider) iter.next();
 				try {
-					message = provider.pullMessage(averageWait);
+					message = provider.pullMessage(this, averageWait);
 					if (message != null) break;
 				} catch (Throwable t) {
 					log.error("exception when pulling message from provider", t);

@@ -63,7 +63,7 @@ public class InMemoryPushPushPipe extends AbstractPipe {
 			for (Iterator iter = consumers.iterator(); iter.hasNext(); ) {
 				IPushableConsumer consumer = (IPushableConsumer) iter.next();
 				try {
-					consumer.pushMessage(message);
+					consumer.pushMessage(this, message);
 				} catch (Throwable t) {
 					log.error("exception when pushing message to consumer", t);
 				}

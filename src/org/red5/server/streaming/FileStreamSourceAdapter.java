@@ -23,6 +23,7 @@ import org.red5.server.messaging.IPipe;
 import org.red5.server.messaging.IPipeConnectionListener;
 import org.red5.server.messaging.IPullableProvider;
 import org.red5.server.messaging.PipeConnectionEvent;
+import org.red5.server.net.rtmp.message.Message;
 import org.red5.server.stream.FileStreamSource;
 
 /**
@@ -34,24 +35,42 @@ public class FileStreamSourceAdapter implements IPullableProvider, IPipeConnecti
 	private IPipe pipe;
 	private FileStreamSource source;
 	private int length;
+	private NotifyMessage notify;
+	private int lastTS = 0;
 	
 	public FileStreamSourceAdapter(FileStreamSource source) {
 		this.source = source;
 	}
 	
-	public IMessage pullMessage() {
-		if (!source.hasMore()) return null;
-		RTMPMessage msg = new RTMPMessage();
-		msg.setBody(source.dequeue());
-		return msg;
+	public IMessage pullMessage(IPipe pipe) {
+		synchronized (source) {
+			if (notify != null) {
+				IMessage rst = notify;
+				notify = null;
+				return rst;
+			}
+			if (!source.hasMore() || (length >= 0 && lastTS >= length)) return null;
+			RTMPMessage msg = new RTMPMessage();
+			Message streamMsg = source.dequeue();
+			lastTS = streamMsg.getTimestamp();
+			msg.setBody(streamMsg);
+			return msg;
+		}
 	}
 
-	public IMessage pullMessage(long wait) {
-		return pullMessage();
+	public IMessage pullMessage(IPipe pipe, long wait) {
+		return pullMessage(pipe);
 	}
 	
-	public void seek(int ts) {
-		source.seek(ts);
+	public void seek(int ts, boolean needPing) {
+		synchronized (source) {
+			int seekTS = source.seek(ts);
+			notify = new SeekNotifyMessage();
+			notify.setNotifyType("seek");
+			((SeekNotifyMessage) notify).setSeekTS(seekTS);
+			((SeekNotifyMessage) notify).setNeedPing(needPing);
+			lastTS = seekTS - 1;
+		}
 	}
 
 	public void setLength(int length) {

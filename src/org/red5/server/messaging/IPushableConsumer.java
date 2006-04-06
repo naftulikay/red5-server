@@ -26,5 +26,5 @@ package org.red5.server.messaging;
  * @author Steven Gong (steven.gong@gmail.com)
  */
 public interface IPushableConsumer extends IConsumer {
-	void pushMessage(IMessage message);
+	void pushMessage(IPipe pipe, IMessage message);
 }

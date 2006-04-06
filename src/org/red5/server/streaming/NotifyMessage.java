@@ -16,16 +16,19 @@
  * with this library; if not, write to the Free Software Foundation, Inc., 
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA 
  */
+package org.red5.server.streaming;
 
-package org.red5.server.messaging;
+import org.red5.server.messaging.AbstractMessage;
 
-/**
- * A provider that supports passive pulling of messages.
- * 
- * @author The Red5 Project (red5@osflash.org)
- * @author Steven Gong (steven.gong@gmail.com)
- */
-public interface IPullableProvider extends IProvider {
-	IMessage pullMessage(IPipe pipe);
-	IMessage pullMessage(IPipe pipe, long wait);
+public class NotifyMessage extends AbstractMessage {
+	private String notifyType;
+
+	public String getNotifyType() {
+		return notifyType;
+	}
+
+	public void setNotifyType(String notifyType) {
+		this.notifyType = notifyType;
+	}
+	
 }

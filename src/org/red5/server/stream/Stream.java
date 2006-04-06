@@ -59,6 +59,10 @@ public class Stream extends BaseStreamSink implements Constants, IStream, IStrea
 		this.mode = type;
 	}
 	
+	public BaseConnection getConnection() {
+		return conn;
+	}
+	
 	public int getStreamId() {
 		return streamId;
 	}
@@ -127,6 +131,10 @@ public class Stream extends BaseStreamSink implements Constants, IStream, IStrea
 	}
 	
 	public void pause(){
+		if (downStreamAdapter != null) {
+			downStreamAdapter.pause();
+			return;
+		}
 		paused = true;
 		Status pause  = new Status("NetStream.Pause.Notify");
 		pause.setClientid(1);
@@ -135,6 +143,11 @@ public class Stream extends BaseStreamSink implements Constants, IStream, IStrea
 	}
 	
 	public void resume(int resumeTS){
+		if (downStreamAdapter != null) {
+			fileStreamAdapter.seek(resumeTS, false);
+			downStreamAdapter.resume();
+			return;
+		}
 		if (!paused) return;
 		paused = false;
 		if (!(source instanceof ISeekableStreamSource)) return;
@@ -165,6 +178,12 @@ public class Stream extends BaseStreamSink implements Constants, IStream, IStrea
 	
 	public void seek(int time) {
 		if (!(source instanceof ISeekableStreamSource)) return;
+		if (downStreamAdapter != null) {
+			fileStreamAdapter.seek(time, true);
+			// XXX dirty hack
+			downStreamAdapter.messageSent(null);
+			return;
+		}
 		ISeekableStreamSource sss = (ISeekableStreamSource) source;
 		int ts = sss.seek(time);
 		
@@ -213,7 +232,7 @@ public class Stream extends BaseStreamSink implements Constants, IStream, IStrea
 				new DownStreamAdapter(this);
 			InMemoryPullPullPipe pipe = new InMemoryPullPullPipe();
 			PipeUtils.connect(fileStreamAdapter, pipe, downStreamAdapter);
-			fileStreamAdapter.seek(startTS);
+			fileStreamAdapter.seek(startTS, false);
 			fileStreamAdapter.setLength(length);
 		}
 		if (downStreamAdapter != null) {
@@ -355,9 +374,5 @@ public class Stream extends BaseStreamSink implements Constants, IStream, IStrea
 		if(downstream!=null) downstream.close();
 		if(source!=null) source.close();
 		super.close();
-	}
-	
-	public void setDownStreamAdapter(DownStreamAdapter downStreamAdapter) {
-		this.downStreamAdapter = downStreamAdapter;
 	}
 }

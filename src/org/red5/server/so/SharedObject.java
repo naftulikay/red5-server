@@ -290,10 +290,12 @@ public class SharedObject implements IPersistable, Constants {
 			log.info("Deleting shared object " + name
 					+ " because all clients disconnected.");
 			data.clear();
-			try {
-				storage.removeObject(getPersistentId());
-			} catch (IOException e) {
-				log.error("Could not remove shared object.", e);
+			if (storage != null) {
+				try {
+					storage.removeObject(getPersistentId());
+				} catch (IOException e) {
+					log.error("Could not remove shared object.", e);
+				}
 			}
 		}
 	}

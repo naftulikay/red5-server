@@ -6,6 +6,7 @@ import java.io.OutputStream;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -51,7 +52,7 @@ public class SharedObject implements IPersistable, Constants {
 
 	private org.red5.server.net.rtmp.message.SharedObject ownerMessage;
 
-	private org.red5.server.net.rtmp.message.SharedObject syncMessage;
+	private LinkedList<SharedObjectEvent> syncEvents = new LinkedList<SharedObjectEvent>();
 
 	private IEventListener source = null;
 	
@@ -64,11 +65,6 @@ public class SharedObject implements IPersistable, Constants {
 		ownerMessage.setName(name);
 		ownerMessage.setTimestamp(0);
 		ownerMessage.setType(persistent ? 2 : 0);
-
-		syncMessage = new org.red5.server.net.rtmp.message.SharedObject();
-		syncMessage.setName(name);
-		syncMessage.setTimestamp(0);
-		syncMessage.setType(persistent ? 2 : 0);
 	}
 
 	public SharedObject(HashMap<String, Object> data, String name, boolean persistent,
@@ -82,11 +78,6 @@ public class SharedObject implements IPersistable, Constants {
 		ownerMessage.setName(name);
 		ownerMessage.setTimestamp(0);
 		ownerMessage.setType(persistent ? 2 : 0);
-
-		syncMessage = new org.red5.server.net.rtmp.message.SharedObject();
-		syncMessage.setName(name);
-		syncMessage.setTimestamp(0);
-		syncMessage.setType(persistent ? 2 : 0);
 	}
 
 	public String getName() {
@@ -114,13 +105,8 @@ public class SharedObject implements IPersistable, Constants {
 			ownerMessage.getEvents().clear();
 		}
 
-		if (!syncMessage.getEvents().isEmpty()) {
+		if (!syncEvents.isEmpty()) {
 			// Synchronize updates with all registered clients of this shared
-			// object
-			syncMessage.setSoId(version);
-			syncMessage.setSealed(false);
-			// Acquire the packet, this will stop the data inside being released
-			syncMessage.acquire();
 			
 			for(IEventListener listener : listeners) {
 				
@@ -136,16 +122,22 @@ public class SharedObject implements IPersistable, Constants {
 					continue;
 				}
 
+				// Create a new sync message for every client to avoid
+				// concurrent access through multiple threads
+				// TODO: perhaps we could cache the generated message
+				org.red5.server.net.rtmp.message.SharedObject syncMessage = new org.red5.server.net.rtmp.message.SharedObject();
+				syncMessage.setName(name);
+				syncMessage.setSoId(version);
+				syncMessage.setTimestamp(0);
+				syncMessage.setType(persistent ? 2 : 0);
+				syncMessage.addEvents(syncEvents);
+				
 				Channel c = ((RTMPConnection) listener).getChannel((byte) 3);
 				log.debug("Send to " + c);
 				c.write(syncMessage);
-				syncMessage.setSealed(false);
 			}
-			// After sending the packet down all the channels we can release the
-			// packet,
-			// which in turn will allow the data buffer to be released
-			syncMessage.release();
-			syncMessage.getEvents().clear();
+			// Clear list of sync events
+			syncEvents.clear();
 		}
 	}
 
@@ -188,7 +180,7 @@ public class SharedObject implements IPersistable, Constants {
 		if (old == null || !old.equals(value)) {
 			modified = true;
 			// only sync if the attribute changed
-			syncMessage.addEvent(new SharedObjectEvent(
+			syncEvents.add(new SharedObjectEvent(
 					SO_CLIENT_UPDATE_DATA, name, value));
 			notifyModified();
 			return true;
@@ -227,7 +219,7 @@ public class SharedObject implements IPersistable, Constants {
 				name, null));
 		if (result) {
 			modified = true;
-			syncMessage.addEvent(new SharedObjectEvent(
+			syncEvents.add(new SharedObjectEvent(
 					SO_CLIENT_DELETE_DATA, name, null));
 		}
 		notifyModified();
@@ -237,8 +229,8 @@ public class SharedObject implements IPersistable, Constants {
 	public void sendMessage(String handler, List arguments) {
 		ownerMessage.addEvent(new SharedObjectEvent(
 				SO_CLIENT_SEND_MESSAGE, handler, arguments));
-		syncMessage.addEvent(new SharedObjectEvent(SO_CLIENT_SEND_MESSAGE,
-				handler, arguments));
+		syncEvents.add(new SharedObjectEvent(
+				SO_CLIENT_SEND_MESSAGE, handler, arguments));
 	}
 
 	public Map<String, Object> getData() {
@@ -268,7 +260,7 @@ public class SharedObject implements IPersistable, Constants {
 			String key = (String) keys.next();
 			ownerMessage.addEvent(new SharedObjectEvent(
 					SO_CLIENT_DELETE_DATA, key, null));
-			syncMessage.addEvent(new SharedObjectEvent(
+			syncEvents.add(new SharedObjectEvent(
 					SO_CLIENT_DELETE_DATA, key, null));
 		}
 
@@ -360,8 +352,6 @@ public class SharedObject implements IPersistable, Constants {
 		//data.deserialize(input);
 		ownerMessage.setName(name);
 		ownerMessage.setType(2);
-		syncMessage.setName(name);
-		syncMessage.setType(2);
 	}
 
 	public IPersistentStorage getStorage() {

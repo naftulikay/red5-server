@@ -2,6 +2,7 @@ package org.red5.server.net.rtmp.message;
 
 import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.List;
 
 import org.red5.server.so.ISharedObjectEvent;
 
@@ -50,7 +51,11 @@ public class SharedObject extends Unknown {
 	public void addEvent(SharedObjectEvent event){
 		events.add(event);
 	}
-	
+
+	public void addEvents(List<SharedObjectEvent> events){
+		this.events.addAll(events);
+	}
+
 	public LinkedList<SharedObjectEvent> getEvents(){
 		return events;
 	}

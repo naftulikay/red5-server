@@ -76,6 +76,16 @@ public class SharedObjectScope extends BasicScope
 		so.register(listener);
 	}
 
+	@Override
+	public void removeEventListener(IEventListener listener) {
+		so.unregister(listener);
+		super.removeEventListener(listener);
+	}
+
+	public Map<String, Object> getData() {
+		return so.getData();
+	}
+
 	public boolean handleEvent(IEvent e){
 		if(! (e instanceof ISharedObjectEvent)) return false;
 		ISharedObjectMessage msg = (ISharedObjectMessage) e;

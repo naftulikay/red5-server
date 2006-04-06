@@ -74,7 +74,7 @@ public interface ISharedObject extends IBasicScope {
 	 * 
 	 * @return a map containing all attributes of the shared object
 	 */
-	/*public Map<String,Object> getData();*/
+	public Map<String,Object> getData();
 
 	/**
 	 * Send a message to a handler of the shared object.

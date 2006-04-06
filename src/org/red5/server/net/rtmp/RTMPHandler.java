@@ -6,7 +6,9 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.mina.common.ByteBuffer;
 import org.red5.server.api.IContext;
+import org.red5.server.api.IGlobalScope;
 import org.red5.server.api.IScope;
+import org.red5.server.api.IScopeHandler;
 import org.red5.server.api.IServer;
 import org.red5.server.api.Red5;
 import org.red5.server.net.protocol.ProtocolState;
@@ -120,7 +122,18 @@ public class RTMPHandler
 	
 	
 	public void invokeCall(RTMPConnection conn, Call call){
-		conn.getScope().getHandler().serviceCall(conn,call);
+		final IScope scope = conn.getScope();
+		final IScopeHandler handler = scope.getHandler();
+		log.debug("Scope: " + scope);
+		log.debug("Handler: " + handler);
+		if (!handler.serviceCall(conn, call)) {
+			// XXX: What do do here? Return an error?
+			return;
+		}
+		
+		final IContext context = scope.getContext();
+		log.debug("Context: " + context);
+		context.getServiceInvoker().invoke(call, handler);
 	}
 	
 	// ------------------------------------------------------------------------------
@@ -149,18 +162,26 @@ public class RTMPHandler
 					final String sessionId = null;
 					conn.setup(host, path, sessionId, params);
 					try {
-						final IContext context = server.lookupGlobal(host,path).getContext();
-						final IScope scope = context.resolveScope(path);
-						log.info("Connecting to: "+scope);
-						if(conn.connect(scope)){
-							log.debug("connected");
-							log.debug("client: "+conn.getClient());
-							call.setStatus(Call.STATUS_SUCCESS_RESULT);
-							call.setResult(getStatus(NC_CONNECT_SUCCESS));
+						final IGlobalScope global = server.lookupGlobal(host,path);
+						if (global == null) {
+							call.setStatus(Call.STATUS_SERVICE_NOT_FOUND);
+							call.setResult(getStatus(NC_CONNECT_FAILED));
+							log.info("No global scope found for " + path + " on " + host);
+							conn.close();
 						} else {
-							log.debug("connect failed");
-							call.setStatus(Call.STATUS_ACCESS_DENIED);
-							call.setResult(getStatus(NC_CONNECT_REJECTED));
+							final IContext context = global.getContext();
+							final IScope scope = context.resolveScope(path);
+							log.info("Connecting to: "+scope);
+							if(conn.connect(scope)){
+								log.debug("connected");
+								log.debug("client: "+conn.getClient());
+								call.setStatus(Call.STATUS_SUCCESS_RESULT);
+								call.setResult(getStatus(NC_CONNECT_SUCCESS));
+							} else {
+								log.debug("connect failed");
+								call.setStatus(Call.STATUS_ACCESS_DENIED);
+								call.setResult(getStatus(NC_CONNECT_REJECTED));
+							}
 						}
 					} catch (RuntimeException e) {
 						call.setStatus(Call.STATUS_GENERAL_EXCEPTION);
@@ -171,13 +192,11 @@ public class RTMPHandler
 			} else if(action.equals(ACTION_DISCONNECT)){
 				conn.close();
 			} else {
-				log.debug(conn.getScope());
-				log.debug(conn.getScope().getHandler());
-				conn.getScope().getHandler().serviceCall(conn, call);
+				invokeCall(conn, call);
 			}
 		} else if(conn.isConnected()){
 			// Service calls, must be connected.
-			conn.getScope().getHandler().serviceCall(conn, call);
+			invokeCall(conn, call);
 		} else {
 			// Warn user attemps to call service without being connected
 			log.warn("Not connected, closing connection");

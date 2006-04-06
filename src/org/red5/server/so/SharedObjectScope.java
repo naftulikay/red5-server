@@ -21,7 +21,8 @@ public class SharedObjectScope extends BasicScope
 		super(parent,TYPE, name, persistent);
 		
 		// Create shared object wrapper around the attributes
-		so = new SharedObject(attributes, name, persistent, null);
+		// TODO: add support for true persistent SOs
+		so = new SharedObject(attributes, name, persistent);
 	}
 	
 	public void beginUpdate() {

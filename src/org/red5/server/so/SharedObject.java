@@ -55,8 +55,11 @@ public class SharedObject implements IPersistable, Constants {
 
 	private IEventListener source = null;
 	
-	public SharedObject(HashMap<String, Object> data) {
-		this.data = data; 
+	public SharedObject(HashMap<String, Object> data, String name, boolean persistent) {
+		this.data = data;
+		this.name = name;
+		this.persistent = persistent;
+		
 		ownerMessage = new org.red5.server.net.rtmp.message.SharedObject();
 		ownerMessage.setName(name);
 		ownerMessage.setTimestamp(0);

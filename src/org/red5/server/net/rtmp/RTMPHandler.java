@@ -1,5 +1,7 @@
 package org.red5.server.net.rtmp;
 
+import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.logging.Log;
@@ -10,6 +12,7 @@ import org.red5.server.api.IGlobalScope;
 import org.red5.server.api.IScope;
 import org.red5.server.api.IScopeHandler;
 import org.red5.server.api.IServer;
+import org.red5.server.api.so.ISharedObject;
 import org.red5.server.api.Red5;
 import org.red5.server.net.protocol.ProtocolState;
 import org.red5.server.net.rtmp.codec.RTMP;
@@ -20,6 +23,8 @@ import org.red5.server.net.rtmp.message.Message;
 import org.red5.server.net.rtmp.message.OutPacket;
 import org.red5.server.net.rtmp.message.PacketHeader;
 import org.red5.server.net.rtmp.message.Ping;
+import org.red5.server.net.rtmp.message.SharedObject;
+import org.red5.server.net.rtmp.message.SharedObjectEvent;
 import org.red5.server.net.rtmp.message.StreamBytesRead;
 import org.red5.server.net.rtmp.message.Unknown;
 import org.red5.server.net.rtmp.status.StatusCodes;
@@ -84,11 +89,11 @@ public class RTMPHandler
 				log.info("in packet: "+source.getSize()+" ts:"+source.getTimer());
 				stream.publish(message);
 				break;
+			*/
 			case TYPE_SHARED_OBJECT:
 				SharedObject so = (SharedObject) message;
-				// DISABLED :: onSharedObject(conn, channel, source, so);
+				onSharedObject(conn, channel, source, so);
 				break;
-			*/
 			}
 			if(message instanceof Unknown){
 				log.info(message);
@@ -239,6 +244,62 @@ public class RTMPHandler
 	public void onStreamBytesRead(RTMPConnection conn, Channel channel, PacketHeader source, StreamBytesRead streamBytesRead){
 		log.info("Stream Bytes Read: "+streamBytesRead.getBytesRead());
 		// pass to stream handler
+	}
+	
+	public void onSharedObject(RTMPConnection conn, Channel channel, PacketHeader source, SharedObject object) {
+		log.debug("SO Service: " + conn.sharedObjectService);
+		final ISharedObject so;
+		final String name = object.getName();
+		if (!conn.sharedObjectService.hasSharedObject(name)) {
+			if (!conn.sharedObjectService.createSharedObject(name, object.isPersistent())) {
+				// TODO: return error to client.
+				return;
+			}
+		}
+		so = conn.sharedObjectService.getSharedObject(name);
+		
+		so.beginUpdate();
+		Iterator it = object.getEvents().iterator();
+		while (it.hasNext()) {
+			SharedObjectEvent event = (SharedObjectEvent) it.next();
+			switch (event.getType()) {
+			case SO_CONNECT:
+				// Register client for this shared object and send initial state
+				so.addEventListener(conn);
+				break;
+			
+			case SO_CLEAR:
+				// Clear the shared object
+				if (!object.isPersistent())
+					so.removeEventListener(conn);
+				
+				/* XXX: should we really clear the SO here?  I think this is rather
+				 *      a "disconnect" - the same event is sent for the "clear" method
+				 *      as well as the disconnect of a client.
+				 */
+				so.removeAttributes();
+				break;
+			
+			case SO_SET_ATTRIBUTE:
+				// The client wants to update an attribute
+				so.setAttribute(event.getKey(), event.getValue());
+				break;
+			
+			case SO_DELETE_ATTRIBUTE:
+				// The client wants to remove an attribute
+				so.removeAttribute(event.getKey());
+				break;
+				
+			case SO_SEND_MESSAGE:
+				// The client wants to send a message
+				so.sendMessage(event.getKey(), (List) event.getValue());
+				break;
+				
+			default:
+				log.error("Unknown shared object update event " + event.getType());
+			}
+		}
+		so.endUpdate();
 	}
 	
 }

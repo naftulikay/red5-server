@@ -16,10 +16,9 @@ import org.apache.mina.common.ByteBuffer;
 import org.red5.io.amf.Input;
 import org.red5.io.amf.Output;
 import org.red5.io.object.Deserializer;
-import org.red5.server.AttributeStore;
 import org.red5.server.api.Red5;
 import org.red5.server.api.IConnection;
-import org.red5.server.api.so.ISharedObject;
+import org.red5.server.api.event.IEventListener;
 import org.red5.server.net.rtmp.Channel;
 import org.red5.server.net.rtmp.RTMPConnection;
 import org.red5.server.net.rtmp.message.Constants;
@@ -42,9 +41,9 @@ public class SharedObject implements IPersistable, Constants {
 
 	protected boolean persistent = false;
 
-	protected AttributeStore data = new AttributeStore();
+	protected HashMap<String, Object> data = null;
 
-	protected HashSet<IConnection> connections = new HashSet<IConnection>();
+	protected HashSet<IEventListener> listeners = new HashSet<IEventListener>();
 
 	protected int updateCounter = 0;
 
@@ -54,7 +53,10 @@ public class SharedObject implements IPersistable, Constants {
 
 	private org.red5.server.net.rtmp.message.SharedObject syncMessage;
 
-	public SharedObject() {
+	private IEventListener source = null;
+	
+	public SharedObject(HashMap<String, Object> data) {
+		this.data = data; 
 		ownerMessage = new org.red5.server.net.rtmp.message.SharedObject();
 		ownerMessage.setName(name);
 		ownerMessage.setTimestamp(0);
@@ -66,11 +68,12 @@ public class SharedObject implements IPersistable, Constants {
 		syncMessage.setType(persistent ? 2 : 0);
 	}
 
-	public SharedObject(String name, boolean persistent,
+	public SharedObject(HashMap<String, Object> data, String name, boolean persistent,
 			IPersistentStorage storage) {
-		name = name;
-		persistent = persistent;
-		storage = storage;
+		this.data = data;
+		this.name = name;
+		this.persistent = persistent;
+		this.storage = storage;
 
 		ownerMessage = new org.red5.server.net.rtmp.message.SharedObject();
 		ownerMessage.setName(name);
@@ -111,27 +114,26 @@ public class SharedObject implements IPersistable, Constants {
 		if (!syncMessage.getEvents().isEmpty()) {
 			// Synchronize updates with all registered clients of this shared
 			// object
-			IConnection conn = Red5.getConnectionLocal();
 			syncMessage.setSoId(version);
 			syncMessage.setSealed(false);
 			// Acquire the packet, this will stop the data inside being released
 			syncMessage.acquire();
 			
-			for(IConnection connection : connections) {
+			for(IEventListener listener : listeners) {
 				
-				if (connection == conn) {
+				if (listener == source) {
 					// Don't re-send update to active client
-					log.debug("Skipped " + connection);
+					log.debug("Skipped " + source);
 					continue;
 				}
 
-				if (!(connection instanceof RTMPConnection)) {
+				if (!(listener instanceof RTMPConnection)) {
 					log.warn("Can't send sync message to unknown connection "
-							+ connection);
+							+ listener);
 					continue;
 				}
 
-				Channel c = ((RTMPConnection) connection).getChannel((byte) 3);
+				Channel c = ((RTMPConnection) listener).getChannel((byte) 3);
 				log.debug("Send to " + c);
 				c.write(syncMessage);
 				syncMessage.setSealed(false);
@@ -165,21 +167,22 @@ public class SharedObject implements IPersistable, Constants {
 	}
 
 	public boolean hasAttribute(String name) {
-		return data.hasAttribute(name);
+		return data.containsKey(name);
 	}
 
 	public Set getAttributeNames() {
-		return data.getAttributeNames();
+		return data.keySet();
 	}
 
 	public Object getAttribute(String name) {
-		return data.getAttribute(name);
+		return data.get(name);
 	}
 
 	public boolean setAttribute(String name, Object value) {
 		ownerMessage.addEvent(new SharedObjectEvent(
 				SO_CLIENT_UPDATE_ATTRIBUTE, name, null));
-		if (data.setAttribute(name, value)) {
+		Object old = data.get(name);
+		if (old == null || !old.equals(value)) {
 			modified = true;
 			// only sync if the attribute changed
 			syncMessage.addEvent(new SharedObjectEvent(
@@ -213,7 +216,9 @@ public class SharedObject implements IPersistable, Constants {
 	}
 
 	public boolean removeAttribute(String name) {
-		boolean result = data.removeAttribute(name);
+		boolean result = data.containsKey(name);
+		if (result)
+			data.remove(name);
 		// Send confirmation to client
 		ownerMessage.addEvent(new SharedObjectEvent(SO_CLIENT_DELETE_DATA,
 				name, null));
@@ -233,18 +238,12 @@ public class SharedObject implements IPersistable, Constants {
 				handler, arguments));
 	}
 
-	public void setData(Map data) {
-		this.data.removeAttributes();
-		this.data.setAttributes(data);
-		modified = false;
-	}
-
 	public Map<String, Object> getData() {
 		Map<String, Object> result = new HashMap<String, Object>();
-		Iterator<String> it = data.getAttributeNames().iterator();
+		Iterator<String> it = data.keySet().iterator();
 		while (it.hasNext()) {
 			String name = it.next();
-			Object value = data.getAttribute(name);
+			Object value = data.get(name);
 			result.put(name, value);
 		}
 		return result;
@@ -261,7 +260,7 @@ public class SharedObject implements IPersistable, Constants {
 	public void removeAttributes() {
 		// TODO: there must be a direct way to clear the SO on the client
 		// side...
-		Iterator keys = data.getAttributeNames().iterator();
+		Iterator keys = data.keySet().iterator();
 		while (keys.hasNext()) {
 			String key = (String) keys.next();
 			ownerMessage.addEvent(new SharedObjectEvent(
@@ -270,18 +269,18 @@ public class SharedObject implements IPersistable, Constants {
 					SO_CLIENT_DELETE_DATA, key, null));
 		}
 
-		data.removeAttributes();
+		data.clear();
 		modified = true;
 		notifyModified();
 	}
 
-	public void register(IConnection connection) {
-		connections.add(connection);
+	public void register(IEventListener listener) {
+		listeners.add(listener);
 
 		// prepare response for new client
 		ownerMessage.addEvent(new SharedObjectEvent(
 				SO_CLIENT_INITIAL_DATA, null, null));
-		if (!data.getAttributeNames().isEmpty())
+		if (!data.isEmpty())
 			ownerMessage.addEvent(new SharedObjectEvent(
 					SO_CLIENT_UPDATE_DATA, null, getData()));
 
@@ -290,12 +289,12 @@ public class SharedObject implements IPersistable, Constants {
 		notifyModified();
 	}
 
-	public void unregister(IConnection connection) {
-		connections.remove(connection);
-		if (!persistent && connections.isEmpty()) {
+	public void unregister(IEventListener listener) {
+		listeners.remove(listener);
+		if (!persistent && listeners.isEmpty()) {
 			log.info("Deleting shared object " + name
 					+ " because all clients disconnected.");
-			data.removeAttributes();
+			data.clear();
 			try {
 				storage.removeObject(getPersistentId());
 			} catch (IOException e) {
@@ -304,11 +303,16 @@ public class SharedObject implements IPersistable, Constants {
 		}
 	}
 
-	public HashSet getConnections() {
-		return connections;
+	public HashSet getListeners() {
+		return listeners;
 	}
 
 	public void beginUpdate() {
+		beginUpdate(Red5.getConnectionLocal());
+	}
+
+	public void beginUpdate(IEventListener listener) {
+		source = listener;
 		updateCounter += 1;
 	}
 
@@ -362,6 +366,6 @@ public class SharedObject implements IPersistable, Constants {
 	}
 
 	public void setStorage(IPersistentStorage storage) {
-		storage = storage;
+		this.storage = storage;
 	}
 }

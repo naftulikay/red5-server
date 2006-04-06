@@ -1,6 +1,5 @@
 package org.red5.server.so;
 
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.locks.ReentrantLock;
@@ -15,84 +14,71 @@ import org.red5.server.api.so.ISharedObject;
 public class SharedObjectScope extends BasicScope 
 	implements ISharedObject {
 	
-	protected int updateCounter = 0;
-	protected boolean modified = false;
-	protected int version = 0;
 	private final ReentrantLock lock = new ReentrantLock();
-	private final LinkedList updates = new LinkedList();
-	protected boolean persistent = false;
-	protected ISharedObjectMessage syncMessage;
-	protected ISharedObjectMessage sourceMessage;
-	protected IEventListener source;
+	protected SharedObject so;
 	
 	public SharedObjectScope(IScope parent, String name, boolean persistent){
 		super(parent,TYPE, name, persistent);
-	}
-	
-	public void beginUpdate(IEventListener source){
-		beginUpdate();
-		this.source = source;
+		
+		// Create shared object wrapper around the attributes
+		so = new SharedObject(attributes, name, persistent, null);
 	}
 	
 	public void beginUpdate() {
-		if(!lock.isHeldByCurrentThread()) lock.lock();
-		updateCounter++;
+		if (!lock.isHeldByCurrentThread())
+			lock.lock();
+		
+		so.beginUpdate();
+	}
+
+	public void beginUpdate(IEventListener listener) {
+		if (!lock.isHeldByCurrentThread())
+			lock.lock();
+		
+		so.beginUpdate(listener);
 	}
 
 	public void endUpdate() {
-		updateCounter--;
-		if(updateCounter == 0){
-			// send messages
-			if(source != null) 
-				source.notifyEvent(sourceMessage);
-			source = null;
-			if(!syncMessage.isEmpty()) 
-				dispatchEvent(syncMessage);
+		so.endUpdate();
+		if (so.updateCounter == 0)
 			lock.unlock();
-		}
 	}
 
 	public int getVersion() {
-		return version;
+		return so.getVersion();
 	}
 
 	public void sendMessage(String handler, List arguments) {
 		beginUpdate();
-		syncMessage.addEvent(ISharedObjectEvent.Type.SEND_MESSAGE,handler,arguments);
-		sourceMessage.addEvent(ISharedObjectEvent.Type.SEND_MESSAGE,handler,arguments);
+		so.sendMessage(handler, arguments);
 		endUpdate();
 	}
 	
 	@Override
 	public synchronized boolean removeAttribute(String name) {
 		beginUpdate();
-		sourceMessage.addEvent(ISharedObjectEvent.Type.CLIENT_DELETE_ATTRIBUTE,name,null);
-		final boolean success = super.removeAttribute(name);
-		if(success) {
-			syncMessage.addEvent(ISharedObjectEvent.Type.CLIENT_DELETE_ATTRIBUTE,name,null);
-			version++;
-		}
+		boolean success = so.removeAttribute(name);
 		endUpdate();
 		return success;
 	}
-	
+
+	@Override
+	public synchronized void removeAttributes() {
+		beginUpdate();
+		so.removeAttributes();
+		endUpdate();
+	}
+
 	@Override
 	public void addEventListener(IEventListener listener) {
-		// TODO Auto-generated method stub
-		// prepare response for new client
-		
 		super.addEventListener(listener);
-		
-		sourceMessage.addEvent(ISharedObjectEvent.Type.CLIENT_INITIAL_DATA, null, null);
-		if (!getAttributeNames().isEmpty())
-			syncMessage.addEvent(ISharedObjectEvent.Type.CLIENT_UPDATE_DATA, null, this);
-
+		so.register(listener);
 	}
 
 	public boolean handleEvent(IEvent e){
 		if(! (e instanceof ISharedObjectEvent)) return false;
 		ISharedObjectMessage msg = (ISharedObjectMessage) e;
-		if(msg.hasSource()) beginUpdate(msg.getSource());
+		if (msg.hasSource()) beginUpdate(msg.getSource());
 		else beginUpdate();
 		for(ISharedObjectEvent event : msg.getEvents()){
 			switch(event.getType()){
@@ -118,14 +104,10 @@ public class SharedObjectScope extends BasicScope
 		return true;
 	}
 	
-
 	@Override
 	public synchronized boolean setAttribute(String name, Object value) {
 		beginUpdate();
-		final boolean success = super.setAttribute(name, value);
-		if(success) {
-			version++;
-		}
+		boolean success = so.setAttribute(name, value);
 		endUpdate();
 		return success;
 	}
@@ -133,14 +115,14 @@ public class SharedObjectScope extends BasicScope
 	@Override
 	public synchronized void setAttributes(IAttributeStore values) {
 		beginUpdate();
-		super.setAttributes(values);
+		so.setAttributes(values);
 		endUpdate();
 	}
 
 	@Override
 	public synchronized void setAttributes(Map<String, Object> values) {
 		beginUpdate();
-		super.setAttributes(values);
+		so.setAttributes(values);
 		endUpdate();
 	}
 	

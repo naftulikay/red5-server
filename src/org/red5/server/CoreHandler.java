@@ -18,12 +18,18 @@ public class CoreHandler implements IScopeHandler {
         LogFactory.getLog(CoreHandler.class.getName());
 	
 	protected IClientRegistry clientRegistry;
-	
+		
+	public void setClientRegistry(IClientRegistry clientRegistry) {
+		this.clientRegistry = clientRegistry;
+	}
+
 	public boolean addChildScope(IBasicScope scope) {
 		return true;
 	}
 
 	public boolean connect(IConnection conn) {
+		
+		log.debug("Connect to core handler ?");
 		
 		String id = conn.getSessionId();
 		

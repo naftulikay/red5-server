@@ -6,9 +6,8 @@ package org.red5.server.api;
 public class ScopeUtils {
 	
 	private static final int GLOBAL = 0x00;
-	private static final int HOST = 0x01;
-	private static final int APPLICATION = 0x02;
-	private static final int ROOM = 0x04;
+	private static final int APPLICATION = 0x01;
+	private static final int ROOM = 0x02;
 	
 	private static final String SLASH = "/";
 	
@@ -59,10 +58,6 @@ public class ScopeUtils {
 
 	public static boolean isGlobal(IScope scope){
 		return scope.getDepth() == GLOBAL;	
-	}
-	
-	public static boolean isHost(IScope scope){
-		return scope.getDepth() == HOST;
 	}
 	
 	public static boolean isApp(IScope scope){

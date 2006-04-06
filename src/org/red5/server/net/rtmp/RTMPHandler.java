@@ -151,8 +151,10 @@ public class RTMPHandler
 					try {
 						final IContext context = server.lookupGlobal(host,path).getContext();
 						final IScope scope = context.resolveScope(path);
+						log.info("Connecting to: "+scope);
 						if(conn.connect(scope)){
 							log.debug("connected");
+							log.debug("client: "+conn.getClient());
 							call.setStatus(Call.STATUS_SUCCESS_RESULT);
 							call.setResult(getStatus(NC_CONNECT_SUCCESS));
 						} else {
@@ -169,6 +171,8 @@ public class RTMPHandler
 			} else if(action.equals(ACTION_DISCONNECT)){
 				conn.close();
 			} else {
+				log.debug(conn.getScope());
+				log.debug(conn.getScope().getHandler());
 				conn.getScope().getHandler().serviceCall(conn, call);
 			}
 		} else if(conn.isConnected()){

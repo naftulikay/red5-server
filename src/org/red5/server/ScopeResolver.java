@@ -24,13 +24,7 @@ public class ScopeResolver implements IScopeResolver {
 		IScope scope = globalScope;
 		if(path == null) return scope;
 		final String[] parts = path.split("/");
-		if(parts.length > 0 && ScopeUtils.isHost(scope)){
-			final String app = parts[0];
-			if(scope.hasChildScope(app))
-				scope = scope.getScope(app);
-			else throw new ScopeNotFoundException(scope,app);
-		}
-		for(int i=1; i < parts.length; i++){
+		for(int i=0; i < parts.length; i++){
 			final String room = parts[i];
 			if(scope.hasChildScope(room)){
 				scope = scope.getScope(room);

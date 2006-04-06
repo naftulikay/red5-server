@@ -179,7 +179,9 @@ public class Scope extends BasicScope implements IScope {
 	}
 	
 	public IScopeHandler getHandler() {
-		return handler;
+		if(hasHandler()) return handler;
+		else if(hasParent()) return getParent().getHandler();
+		else return null;
 	}
 		
 	public IScope getParent(){
@@ -372,7 +374,10 @@ public class Scope extends BasicScope implements IScope {
 
 	public String toString(){
 		final ToStringCreator tsc = new ToStringCreator(this);
-		return tsc.append("Name",getName()).append("Path",getPath()).toString();
+		return tsc.append("Depth",getDepth())
+			.append("Path",getPath())
+			.append("Name",getName())
+			.toString();
 	}
 	
 }

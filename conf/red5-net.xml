@@ -7,11 +7,7 @@
 	<!--<bean id="red5.server" class="org.red5.server.Server" init-method="init" />-->
 	<!--<bean id="jetty6.server" class="org.red5.server.JettyLoader" init-method="init" />-->
 	
-	<bean id="statusObjectService" class="org.red5.server.net.rtmp.status.StatusObjectService" 
-		autowire="byType" init-method="initialize" />
-	
-	<bean id="rtmpCodecFactory" class="org.red5.server.net.rtmp.codec.RTMPMinaCodecFactory" 
-		autowire="byType" init-method="init" />
+
 		
 	<bean id="threadPoolFilter" class="org.apache.mina.filter.ThreadPoolFilter">
      <constructor-arg value="mina"/>
@@ -45,7 +41,9 @@
     </bean>
 
 	<bean id="rtmptHandler" class="org.red5.server.net.rtmpt.RTMPTHandler"
-		autowire="byType" />
+		autowire="byType">
+		<property name="codecFactory" ref="rtmpCodecFactory" />
+	</bean>
 		
 	<bean id="jetty6.server" class="org.red5.server.JettyLoader" init-method="init" autowire="byType" />
 	

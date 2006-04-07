@@ -182,6 +182,7 @@ public class ServiceInvoker  implements IServiceInvoker {
 				call.setStatus(Call.STATUS_SUCCESS_VOID);
 			} else {
 				result = method.invoke(service, params);
+				log.debug("result: "+result);
 				call.setResult(result);
 				call.setStatus( result==null ? Call.STATUS_SUCCESS_NULL : Call.STATUS_SUCCESS_RESULT );
 			}

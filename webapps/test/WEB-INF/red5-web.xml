@@ -22,5 +22,9 @@
 	<bean id="web.handler" 
 	    class="org.red5.server.webapp.test.Application" 
 		singleton="true" />
+		
+	<bean id="test.service" 
+	    class="org.red5.server.webapp.test.TestService" 
+		singleton="true" />	
 
 </beans>

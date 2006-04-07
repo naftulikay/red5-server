@@ -7,7 +7,7 @@ public class MappingStrategy implements IMappingStrategy {
 	private static final String ROOT = "";
 	private static final String HANDLER = "Handler";
 	private static final String DIR = "/";
-	private static final String SERVICE = "service.";
+	private static final String SERVICE = ".service";
 	private String defaultApp = "default";
 	
 	public void setDefaultApp(String defaultApp) {
@@ -25,7 +25,7 @@ public class MappingStrategy implements IMappingStrategy {
 	}
 
 	public String mapServiceName(String name) {
-		return SERVICE + name;
+		return  name + SERVICE;
 	}
 	
 }

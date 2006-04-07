@@ -10,8 +10,6 @@
     This file is applied to a Web application before it's own WEB_INF/web.xml file
   </description>
 
-
-
   <!-- ==================================================================== -->
   <!-- Context params to control Session Cookies                            -->
   <!-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  -->
@@ -84,8 +82,15 @@
     </init-param>
     <load-on-startup>0</load-on-startup>
   </servlet> 
+  
+  <servlet>
+    <servlet-name>gateway</servlet-name>
+    <servlet-class>org.red5.server.net.servlet.AMFGatewayServlet</servlet-class>
+    <load-on-startup>1</load-on-startup>
+  </servlet> 
 
   <servlet-mapping> <servlet-name>default</servlet-name> <url-pattern>/</url-pattern> </servlet-mapping>
+  <servlet-mapping> <servlet-name>gateway</servlet-name> <url-pattern>/gateway</url-pattern> </servlet-mapping>
   
 
   <!-- ==================================================================== -->

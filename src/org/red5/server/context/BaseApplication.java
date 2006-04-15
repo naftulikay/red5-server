@@ -201,6 +201,7 @@ public class BaseApplication
 		
 		switch (decision) {
 		case 0:
+		case 2:
 			streamManager.connectToPublishedStream(stream);
 			stream.start(0, length);
 			break;
@@ -214,11 +215,11 @@ public class BaseApplication
 			// TODO: Seek to requested start
 			stream.start(num, length);
 			break;
-		case 2:
-			streamManager.publishStream(new TemporaryStream(name, Stream.MODE_LIVE));
-			streamManager.connectToPublishedStream(stream);
-			stream.start(0, length);
-			break;
+//		case 2:
+//			streamManager.publishStream(new TemporaryStream(name, Stream.MODE_LIVE));
+//			streamManager.connectToPublishedStream(stream);
+//			stream.start(0, length);
+//			break;
 		default:
 			break;
 		}

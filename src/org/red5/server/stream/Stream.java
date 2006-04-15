@@ -16,6 +16,7 @@ import org.red5.server.net.rtmp.message.StreamBytesRead;
 import org.red5.server.net.rtmp.message.VideoData;
 import org.red5.server.streaming.DownStreamAdapter;
 import org.red5.server.streaming.FileStreamSourceAdapter;
+import org.red5.server.streaming.LiveStreamSourceAdapter;
 
 public class Stream extends BaseStreamSink implements Constants, IStream, IStreamSink {
 	
@@ -49,6 +50,7 @@ public class Stream extends BaseStreamSink implements Constants, IStream, IStrea
 	
 	private DownStreamAdapter downStreamAdapter;
 	private FileStreamSourceAdapter fileStreamAdapter;
+	private LiveStreamSourceAdapter liveStreamAdapter;
 	
 	public Stream(BaseConnection conn){
 		this.conn = conn;
@@ -119,6 +121,10 @@ public class Stream extends BaseStreamSink implements Constants, IStream, IStrea
 	protected int bytesRead = 0;
 	
 	public void publish(){
+		if (liveStreamAdapter != null) {
+			liveStreamAdapter.start();
+			return;
+		}
 		Status publish = new Status(Status.NS_PUBLISH_START);
 		publish.setClientid(streamId);
 		publish.setDetails(name);
@@ -319,6 +325,10 @@ public class Stream extends BaseStreamSink implements Constants, IStream, IStrea
 	private int bytesReadPacketCount = 0;
 	
 	public void publish(Message message){
+		if (liveStreamAdapter != null) {
+			liveStreamAdapter.onIncomingMessage(message);
+			return;
+		}
 		ByteBuffer data = message.getData();
 		if (this.initialMessage && (message instanceof VideoData)) {
 			this.initialMessage = false;
@@ -367,7 +377,11 @@ public class Stream extends BaseStreamSink implements Constants, IStream, IStrea
 	public void close(){
 		if (downStreamAdapter != null) {
 			downStreamAdapter.close();
-			fileStreamAdapter.close();
+			if (fileStreamAdapter != null) fileStreamAdapter.close();
+			return;
+		}
+		if (liveStreamAdapter != null) {
+			liveStreamAdapter.close();
 			return;
 		}
 		if(upstream!=null) upstream.close();
@@ -375,4 +389,21 @@ public class Stream extends BaseStreamSink implements Constants, IStream, IStrea
 		if(source!=null) source.close();
 		super.close();
 	}
+
+	public void setDownStreamAdapter(DownStreamAdapter downStreamAdapter) {
+		this.downStreamAdapter = downStreamAdapter;
+	}
+
+	public DownStreamAdapter getDownStreamAdapter() {
+		return downStreamAdapter;
+	}
+
+	public LiveStreamSourceAdapter getLiveStreamAdapter() {
+		return liveStreamAdapter;
+	}
+
+	public void setLiveStreamAdapter(LiveStreamSourceAdapter liveStreamAdapter) {
+		this.liveStreamAdapter = liveStreamAdapter;
+	}
+	
 }

@@ -28,5 +28,6 @@ package org.red5.server.messaging;
  * @author Steven Gong (steven.gong@gmail.com)
  */
 public interface IPipe extends IMessageInput, IMessageOutput {
-
+	void addPipeConnectionListener(IPipeConnectionListener listener);
+	void removePipeConnectionListener(IPipeConnectionListener listener);
 }

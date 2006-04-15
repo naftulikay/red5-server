@@ -18,10 +18,12 @@
  */
 package org.red5.server.streaming;
 
-import org.red5.server.messaging.IConsumer;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.red5.server.messaging.IMessage;
 import org.red5.server.messaging.IPipe;
 import org.red5.server.messaging.IPipeConnectionListener;
+import org.red5.server.messaging.IPushableConsumer;
 import org.red5.server.messaging.PipeConnectionEvent;
 import org.red5.server.net.rtmp.BaseConnection;
 import org.red5.server.net.rtmp.message.AudioData;
@@ -33,10 +35,13 @@ import org.red5.server.stream.Stream;
 
 /**
  * Adapter to wrap a DownStreamSink.
+ * This consumer can be connected with both pull mode and push mode.
  * @author The Red5 Project (red5@osflash.org)
  * @author Steven Gong (steven.gong@gmail.com)
  */
-public class DownStreamAdapter implements IConsumer, IPipeConnectionListener {
+public class DownStreamAdapter implements IPushableConsumer, IPipeConnectionListener {
+	private static final Log log = LogFactory.getLog(DownStreamAdapter.class);
+	
 	private Stream stream;
 	private IPipe pipe;
 	private boolean paused = false;
@@ -67,7 +72,7 @@ public class DownStreamAdapter implements IConsumer, IPipeConnectionListener {
 	public void pause() {
 		if (paused) return;
 		Status pause  = new Status("NetStream.Pause.Notify");
-		pause.setClientid(1);
+		pause.setClientid(stream.getStreamId());
 		pause.setDetails(stream.getName());
 		stream.getDownstream().getData().sendStatus(pause);
 		paused = true;
@@ -94,7 +99,7 @@ public class DownStreamAdapter implements IConsumer, IPipeConnectionListener {
 		conn.ping(ping2);
 		
 		Status play  = new Status("NetStream.Unpause.Notify");
-		play.setClientid(1);
+		play.setClientid(streamId);
 		play.setDetails(name);
 		downstream.getData().sendStatus(play);
 		
@@ -151,9 +156,20 @@ public class DownStreamAdapter implements IConsumer, IPipeConnectionListener {
 		}
 	}
 
+	public void pushMessage(IPipe pipe, IMessage message) {
+		if (message instanceof RTMPMessage) {
+			RTMPMessage rtmpMsg = (RTMPMessage) message;
+			if (stream.getDownstream().canAccept()) {
+//				log.debug("live message ts: " + rtmpMsg.getBody().getTimestamp());
+				stream.getDownstream().enqueue(rtmpMsg.getBody());
+			}
+		}
+	}
+
 	public void onPipeConnectionEvent(PipeConnectionEvent event) {
 		switch (event.getType()) {
 		case PipeConnectionEvent.CONSUMER_CONNECT_PULL:
+		case PipeConnectionEvent.CONSUMER_CONNECT_PUSH:
 			if (this.pipe != null || event.getConsumer() != this) return;
 			this.pipe = (IPipe) event.getSource();
 			break;

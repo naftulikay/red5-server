@@ -93,6 +93,19 @@ public abstract class AbstractPipe implements IPipe {
 		return true;
 	}
 	
+	public void addPipeConnectionListener(IPipeConnectionListener listener) {
+		synchronized (listeners) {
+			listeners.add(listener);
+		}
+	}
+
+	public void removePipeConnectionListener(IPipeConnectionListener listener) {
+		synchronized (listeners) {
+			listeners.remove(listener);
+		}
+		
+	}
+
 	protected void fireConsumerConnectionEvent(IConsumer consumer, int type) {
 		PipeConnectionEvent event = new PipeConnectionEvent(this);
 		event.setConsumer(consumer);

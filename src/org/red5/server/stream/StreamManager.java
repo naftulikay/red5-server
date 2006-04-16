@@ -16,6 +16,7 @@ import org.red5.server.messaging.InMemoryPushPushPipe;
 import org.red5.server.messaging.PipeConnectionEvent;
 import org.red5.server.net.rtmp.message.Status;
 import org.red5.server.streaming.DownStreamAdapter;
+import org.red5.server.streaming.FileStreamSinkAdapter;
 import org.red5.server.streaming.LiveStreamSourceAdapter;
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
@@ -57,6 +58,30 @@ public class StreamManager implements ApplicationContextAware {
 		LiveStreamSourceAdapter liveStream = new LiveStreamSourceAdapter(stream);
 		stream.setLiveStreamAdapter(liveStream);
 		bookkeeper.getPipe().subscribe(liveStream);
+		
+		// If the mode is live, we dont need to do anything else
+		if (stream.getMode().equals(Stream.MODE_LIVE)) return;
+		
+		// The mode must be record or append
+		try {				
+			Resource res = appCtx.getResource("streams/" + stream.getName()+".flv");
+			if(stream.getMode().equals(Stream.MODE_RECORD) && res.exists()) 
+				res.getFile().delete();
+			if(!res.exists()) res = appCtx.getResource("streams/").createRelative(stream.getName()+".flv");
+			if(!res.exists()) res.getFile().createNewFile(); 
+			File file = res.getFile();
+			IFLV flv = flvService.getFLV(file);
+			IWriter writer = null; 
+			if(stream.getMode().equals(Stream.MODE_RECORD)) 
+				writer = flv.writer();
+			else if(stream.getMode().equals(Stream.MODE_APPEND))
+				writer = flv.append();
+			FileStreamSinkAdapter fssa = new FileStreamSinkAdapter(
+					new FileStreamSink(writer));
+			bookkeeper.getPipe().subscribe(fssa);
+		} catch (IOException e) {
+			log.error("Error recording stream: "+stream, e);
+		}
 //		
 //		MultiStreamSink multi = (MultiStreamSink) published.get(stream.getName());
 //		if (multi == null)

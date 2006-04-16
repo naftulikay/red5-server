@@ -269,6 +269,7 @@ public class RTMPProtocolDecoder implements Constants, org.apache.mina.filter.co
 				final Message message = packet.getMessage();
 				decodeMessage(message);
 				message.setTimestamp(packet.getSource().getTimer());
+				message.setRelativeTimer(packet.getSource().isRelativeTimer());
 
 				if(ioLog.isDebugEnabled()){
 					ioLog.debug(packet.getSource());
@@ -311,6 +312,7 @@ public class RTMPProtocolDecoder implements Constants, org.apache.mina.filter.co
 		
 		PacketHeader header = new PacketHeader();
 		header.setChannelId(channelId);
+		header.setRelativeTimer(true);
 		
 		switch(headerSize){
 		
@@ -319,6 +321,7 @@ public class RTMPProtocolDecoder implements Constants, org.apache.mina.filter.co
 			header.setSize(RTMPUtils.readMediumInt(in));
 			header.setDataType(in.get());
 			header.setStreamId(RTMPUtils.readReverseInt(in));
+			header.setRelativeTimer(false);
 			break;
 			
 		case HEADER_SAME_SOURCE:			

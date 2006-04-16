@@ -8,6 +8,7 @@ public class PacketHeader implements Constants {
 	private int size = 0;
 	private byte dataType = 0;
 	private int streamId = 0;
+	private boolean relativeTimer = true;
 	
 	public byte getChannelId() {
 		return channelId;
@@ -47,6 +48,14 @@ public class PacketHeader implements Constants {
 	
 	public void setTimer(int timer) {
 		this.timer = timer;
+	}
+
+	public boolean isRelativeTimer() {
+		return relativeTimer;
+	}
+
+	public void setRelativeTimer(boolean relativeTimer) {
+		this.relativeTimer = relativeTimer;
 	}
 
 	public boolean equals(Object other) {

@@ -9,6 +9,7 @@ public class Message implements Constants {
 	private ByteBuffer data;
 	private boolean sealed = false;
 	private int timestamp = 0;
+	private boolean relativeTimer = true;
 	
 	public Message(byte dataType, int initialCapacity){
 		this.dataType = dataType;
@@ -64,6 +65,14 @@ public class Message implements Constants {
 
 	public void setData(ByteBuffer data) {
 		this.data = data;
+	}
+
+	public boolean isRelativeTimer() {
+		return relativeTimer;
+	}
+
+	public void setRelativeTimer(boolean relativeTimer) {
+		this.relativeTimer = relativeTimer;
 	}
 	
 }

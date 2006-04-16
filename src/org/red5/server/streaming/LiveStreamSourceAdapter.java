@@ -91,20 +91,27 @@ public class LiveStreamSourceAdapter implements IProvider, IPipeConnectionListen
 				log.debug(streamBytesRead);
 				stream.getConnection().getChannel((byte)2).write(streamBytesRead);
 			}
+			
 			if (message instanceof VideoData) {
-				videoTS += message.getTimestamp();
-//				log.debug("video ts " + videoTS);
+				if (message.isRelativeTimer()) {
+					videoTS += message.getTimestamp();
+				} else {
+					videoTS = message.getTimestamp();
+				}
 				message.setTimestamp(videoTS);
 			} else if (message instanceof AudioData) {
-				audioTS += message.getTimestamp();
-//				log.debug("audio ts " + audioTS);
+				if (message.isRelativeTimer()) {
+					audioTS += message.getTimestamp();
+				} else {
+					audioTS = message.getTimestamp();
+				}
 				message.setTimestamp(audioTS);
 			} else {
-				dataTS += message.getTimestamp();
-//				log.debug("data ts " + dataTS);
+				if (message.isRelativeTimer()) {
+					dataTS += message.getTimestamp();
+				} else dataTS = message.getTimestamp();
 				message.setTimestamp(dataTS);
 			}
-			
 			RTMPMessage rtmpMsg = new RTMPMessage();
 			rtmpMsg.setBody(message);
 			this.pipe.pushMessage(rtmpMsg);

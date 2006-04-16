@@ -160,7 +160,6 @@ public class DownStreamAdapter implements IPushableConsumer, IPipeConnectionList
 		if (message instanceof RTMPMessage) {
 			RTMPMessage rtmpMsg = (RTMPMessage) message;
 			if (stream.getDownstream().canAccept()) {
-//				log.debug("live message ts: " + rtmpMsg.getBody().getTimestamp());
 				stream.getDownstream().enqueue(rtmpMsg.getBody());
 			}
 		}

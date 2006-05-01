@@ -7,7 +7,6 @@ import java.util.Properties;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.mina.common.ByteBuffer;
-import org.springframework.beans.factory.access.BootstrapException;
 import org.springframework.context.access.ContextSingletonBeanFactoryLocator;
 import org.apache.mina.common.ByteBuffer;
 import org.apache.mina.common.ByteBufferAllocator;

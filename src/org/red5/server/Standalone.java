@@ -7,6 +7,7 @@ import java.util.Properties;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.mina.common.ByteBuffer;
+import org.springframework.beans.factory.access.BootstrapException;
 import org.springframework.context.access.ContextSingletonBeanFactoryLocator;
 import org.apache.mina.common.ByteBuffer;
 import org.apache.mina.common.ByteBufferAllocator;
@@ -50,13 +51,21 @@ public class Standalone {
 	
 	protected static String red5Config = "red5.xml";
 	
+	public static void raiseOriginalException(Throwable e) throws Throwable {
+		// Search for root exception
+		while (e.getCause() != null)
+			e = e.getCause();
+		
+		throw e;
+	}
+	
 	/**
 	 * Main entry point for the Red5 Server 
 	 * usage java Standalone
 	 * @param args String passed in that points to a red5.xml config file
 	 * @return void
 	 */
-	public static void main(String[] args) throws Exception {
+	public static void main(String[] args) throws Exception, Throwable {
 		
 		if(false) ByteBuffer.setAllocator(new DebugPooledByteBufferAllocator());
 		
@@ -114,7 +123,12 @@ public class Standalone {
 		System.setProperty("red5.root", root);
 		log.info("Setting Red5 root to " + root);
 		
-		ContextSingletonBeanFactoryLocator.getInstance(red5Config).useBeanFactory("red5.common");
+		try {
+			ContextSingletonBeanFactoryLocator.getInstance(red5Config).useBeanFactory("red5.common");
+		} catch (Exception e) {
+			// Don't raise wrapped exceptions as their stacktraces may confuse people...
+			raiseOriginalException(e);
+		}
 
 		long startupIn = System.currentTimeMillis() - time;
 		log.debug("Startup done in: "+startupIn+" ms");

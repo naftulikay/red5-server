@@ -3,12 +3,13 @@ package org.red5.server.net.rtmp;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.red5.server.api.stream.IClientStream;
-import org.red5.server.net.rtmp.message.Invoke;
-import org.red5.server.net.rtmp.message.Message;
-import org.red5.server.net.rtmp.message.Notify;
-import org.red5.server.net.rtmp.message.OutPacket;
-import org.red5.server.net.rtmp.message.PacketHeader;
-import org.red5.server.net.rtmp.message.Status;
+import org.red5.server.net.rtmp.event.Invoke;
+import org.red5.server.net.rtmp.event.IHeaderAware;
+import org.red5.server.net.rtmp.event.ITimestampAware;
+import org.red5.server.net.rtmp.event.Notify;
+import org.red5.server.net.rtmp.message.Header;
+import org.red5.server.net.rtmp.message.Packet;
+import org.red5.server.net.rtmp.status.Status;
 import org.red5.server.service.Call;
 import org.red5.server.service.PendingCall;
 
@@ -40,7 +41,7 @@ public class Channel {
 	}
 	*/
 
-	public void write(Message message){
+	public void write(Object message){
 		final IClientStream stream = connection.getStreamByChannelId(id);
 		/*
 		final int streamId = (
@@ -50,21 +51,21 @@ public class Channel {
 				) ? 0 : stream.getStreamId();
 				*/
 		final int streamId = ( stream==null ) ? 0 : stream.getStreamId();
-		write(message, message.getTimestamp(), streamId);
+		int timestamp = 0;
+		if (message instanceof ITimestampAware)
+			timestamp = ((ITimestampAware) message).getTimestamp();
+		write(message, timestamp, streamId);
 	}
 	
-	private void write(Message message, int timer, int streamId){
+	private void write(Object message, int timer, int streamId){
 		
-		final OutPacket packet = new OutPacket();
-		final PacketHeader header = new PacketHeader();
+		final Header header = new Header();
+		final Packet packet = new Packet(header, message);
 		
 		header.setChannelId(id);
 		header.setTimer(timer);
 		header.setStreamId(streamId);
 		header.setDataType(message.getDataType());
-		
-		packet.setDestination(header);
-		packet.setMessage(message);
 		
 		// should use RTMPConnection specific method.. 
 		connection.write(packet);

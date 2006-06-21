@@ -25,10 +25,11 @@ import org.red5.server.messaging.IPipeConnectionListener;
 import org.red5.server.messaging.IPushableConsumer;
 import org.red5.server.messaging.OOBControlMessage;
 import org.red5.server.messaging.PipeConnectionEvent;
-import org.red5.server.net.rtmp.message.AudioData;
-import org.red5.server.net.rtmp.message.Message;
-import org.red5.server.net.rtmp.message.Ping;
-import org.red5.server.net.rtmp.message.Status;
+import org.red5.server.net.rtmp.event.AudioData;
+import org.red5.server.net.rtmp.event.BaseEvent;
+import org.red5.server.net.rtmp.event.ITimestampAware;
+import org.red5.server.net.rtmp.event.Ping;
+import org.red5.server.net.rtmp.status.Status;
 import org.red5.server.stream.message.RTMPMessage;
 import org.red5.server.stream.message.StatusMessage;
 
@@ -262,7 +263,7 @@ implements IPlaylistSubscriberStream {
 	 * Glue for old code base.
 	 * @param message
 	 */
-	public void written(Message message) {
+	public void written(Object message) {
 		engine.pullAndPush();
 	}
 	
@@ -479,13 +480,19 @@ implements IPlaylistSubscriberStream {
 				IMessage msg = msgIn.pullMessage();
 				if (vodStartTS == -1) {
 					if (msg instanceof RTMPMessage) {
-						vodStartTS = ((RTMPMessage) msg).getBody().getTimestamp();
+						BaseEvent body = ((RTMPMessage) msg).getBody();
+						if (body instanceof ITimestampAware)
+							vodStartTS = ((ITimestampAware) body).getTimestamp();
 						System.out.println("Init vodStartTS" + vodStartTS);
 					}
 				} else {
 					if (msg instanceof RTMPMessage) {
 						if (currentItem.getLength() >= 0) {
-							int diff = ((RTMPMessage) msg).getBody().getTimestamp() - vodStartTS;
+							int ts = 0;
+							BaseEvent body = ((RTMPMessage) msg).getBody();
+							if (body instanceof ITimestampAware)
+								ts = ((ITimestampAware) body).getTimestamp();
+							int diff = ts - vodStartTS;
 							System.out.println("vod length, " + currentItem.getLength() + " vod diff " + diff);
 							if (diff > currentItem.getLength()) {
 								// stop this item
@@ -518,7 +525,7 @@ implements IPlaylistSubscriberStream {
 		}
 		
 		private void sendBlankAudio() {
-			AudioData blankAudio = new AudioData();
+			AudioData blankAudio = new AudioData(null);
 			blankAudio.setTimestamp(0);
 			
 			RTMPMessage blankAudioMsg = new RTMPMessage();

@@ -23,11 +23,12 @@ import org.red5.server.messaging.IProvider;
 import org.red5.server.messaging.IPushableConsumer;
 import org.red5.server.messaging.OOBControlMessage;
 import org.red5.server.messaging.PipeConnectionEvent;
-import org.red5.server.net.rtmp.message.AudioData;
-import org.red5.server.net.rtmp.message.Message;
-import org.red5.server.net.rtmp.message.Notify;
-import org.red5.server.net.rtmp.message.Status;
-import org.red5.server.net.rtmp.message.VideoData;
+import org.red5.server.net.rtmp.event.BaseEvent;
+import org.red5.server.net.rtmp.event.AudioData;
+import org.red5.server.net.rtmp.event.ITimestampAware;
+import org.red5.server.net.rtmp.event.Notify;
+import org.red5.server.net.rtmp.event.VideoData;
+import org.red5.server.net.rtmp.status.Status;
 import org.red5.server.stream.consumer.FileConsumer;
 import org.red5.server.stream.message.RTMPMessage;
 import org.red5.server.stream.message.StatusMessage;
@@ -129,18 +130,13 @@ public class ClientBroadcastStream extends AbstractClientStream implements
 	}
 
 	public void dispatchEvent(Object obj) {
-		if (!(obj instanceof Message))
+		if (!(obj instanceof BaseEvent))
 			return;
 		
-		final Message message = (Message) obj;
 		long runTime = System.currentTimeMillis() - startTime;
-		if (message instanceof AudioData) {
-			message.setTimestamp((int)runTime);
-		} else if (message instanceof VideoData) {
-			message.setTimestamp((int)runTime);
-		} else if (message instanceof Notify) {
-			message.setTimestamp((int)runTime);
-		}
+		BaseEvent message = ((BaseEvent) obj);
+		if (message instanceof ITimestampAware)
+			((ITimestampAware) message).setTimestamp((int) runTime);
 		RTMPMessage msg = new RTMPMessage();
 		msg.setBody(message);
 		if (livePipe != null) {

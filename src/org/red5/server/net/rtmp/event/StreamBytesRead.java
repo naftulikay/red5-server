@@ -2,8 +2,6 @@ package org.red5.server.net.rtmp.event;
 
 public class StreamBytesRead extends BaseEvent {
 	
-	private static final int INITIAL_CAPACITY = 4;
-	
 	private int bytesRead = 0;
 
 	public StreamBytesRead(int bytesRead){

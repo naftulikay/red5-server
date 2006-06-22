@@ -1,10 +1,8 @@
 package org.red5.server.net.rtmp.event;
 
-import java.util.EventObject;
 import java.util.Map;
 
 import org.apache.mina.common.ByteBuffer;
-import org.red5.server.api.event.IEvent.Type;
 import org.red5.server.api.service.IServiceCall;
 import org.red5.server.stream.IStreamData;
 
@@ -85,4 +83,9 @@ public class Notify extends BaseEvent implements IStreamData {
 		return true;
 	}
 	
+	public void release() {
+		if (data != null)
+			data.release();
+		super.release();
+	}
 }

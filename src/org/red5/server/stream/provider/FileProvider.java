@@ -85,7 +85,6 @@ implements IPassive, ISeekableProvider, IPullableProvider, IPipeConnectionListen
 			break;
 		}
 		msg.setTimestamp(tag.getTimestamp());
-		//msg.setSealed(true);
 		RTMPMessage rtmpMsg = new RTMPMessage();
 		rtmpMsg.setBody(msg);
 		return rtmpMsg;

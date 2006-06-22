@@ -13,4 +13,9 @@ public interface IRTMPEvent extends IEvent {
 	
 	public void setTimestamp(int timestamp);
 	
+	/**
+	 * Hook to free buffers allocated by the event.
+	 */
+	public void release();
+	
 }

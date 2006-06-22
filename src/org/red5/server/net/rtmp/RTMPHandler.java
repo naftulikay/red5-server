@@ -80,10 +80,11 @@ public class RTMPHandler
 	
 	public void messageReceived(RTMPConnection conn, ProtocolState state, Object in) throws Exception {
 			
+		IRTMPEvent message = null;
 		try {
 			
 			final Packet packet = (Packet) in;
-			final IRTMPEvent message = packet.getMessage();
+			message = packet.getMessage();
 			final Header header = packet.getHeader();
 			final Channel channel = conn.getChannel(header.getChannelId());
 			final IClientStream stream = conn.getStreamById(header.getStreamId());
@@ -143,6 +144,8 @@ public class RTMPHandler
 			// TODO Auto-generated catch block
 			log.error("Exception",e);
 		}
+		if (message != null)
+			message.release();
 	}
 
 	public void messageSent(RTMPConnection conn, Object message) {

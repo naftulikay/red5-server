@@ -29,5 +29,10 @@ public class Unknown extends BaseEvent {
 		sb.append("Data:\n\n" + HexDump.formatHexDump(buf.getHexDump()));
 		return sb.toString();
 	}
-	
+
+	public void release() {
+		if (data != null)
+			data.release();
+		super.release();
+	}
 }

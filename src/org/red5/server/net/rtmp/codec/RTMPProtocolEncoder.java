@@ -58,8 +58,15 @@ public class RTMPProtocolEncoder implements SimpleProtocolEncoder, Constants, IE
 
 		final Header header = packet.getHeader();
 		final byte channelId = header.getChannelId();
+		final IRTMPEvent message = packet.getMessage();
+		ByteBuffer data;
 		
-		final ByteBuffer data = encodeMessage(header, packet.getMessage());
+		try {
+			data = encodeMessage(header, message);
+		} finally {
+			message.release();
+		}
+		
 		if (data.position() != 0)
 			data.flip();
 		else

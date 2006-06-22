@@ -2,7 +2,6 @@ package org.red5.server.net.rtmp.event;
 
 public class Ping extends BaseEvent {
 	
-	private static final int INITIAL_CAPACITY = 6;
 	public static final int UNDEFINED = -1;
 	
 	private short value1 = 0; // XXX: can someone suggest better names? 

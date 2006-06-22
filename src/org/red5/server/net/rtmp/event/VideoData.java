@@ -2,7 +2,6 @@ package org.red5.server.net.rtmp.event;
 
 import org.apache.mina.common.ByteBuffer;
 import org.red5.server.stream.IStreamData;
-import org.red5.server.net.rtmp.message.Header;
 
 public class VideoData extends BaseEvent implements IStreamData {
 
@@ -25,4 +24,9 @@ public class VideoData extends BaseEvent implements IStreamData {
 		return "Audio  ts: "+getTimestamp();
 	}
 	
+	public void release() {
+		if (data != null)
+			data.release();
+		super.release();
+	}
 }

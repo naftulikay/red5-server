@@ -55,4 +55,7 @@ public abstract class BaseEvent implements Constants, IRTMPEvent {
 		this.timestamp = timestamp;
 	}
 	
+	public void release() {
+		
+	}
 }

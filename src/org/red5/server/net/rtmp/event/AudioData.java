@@ -29,4 +29,9 @@ public class AudioData extends BaseEvent implements IStreamData {
 		return "Audio  ts: "+getTimestamp();
 	}
 	
+	public void release() {
+		if (data != null)
+			data.release();
+		super.release();
+	}
 }

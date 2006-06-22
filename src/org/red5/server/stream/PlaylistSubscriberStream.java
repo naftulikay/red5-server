@@ -30,6 +30,7 @@ import org.red5.server.net.rtmp.event.BaseEvent;
 import org.red5.server.net.rtmp.event.ITimestampAware;
 import org.red5.server.net.rtmp.event.Ping;
 import org.red5.server.net.rtmp.status.Status;
+import org.red5.server.stream.ITokenBucket.ITokenBucketCallback;
 import org.red5.server.stream.message.RTMPMessage;
 import org.red5.server.stream.message.StatusMessage;
 
@@ -300,7 +301,7 @@ implements IPlaylistSubscriberStream {
 	 * A play engine for playing an IPlayItem.
 	 */
 	private class PlayEngine extends TimerTask
-	implements IFilter, IPushableConsumer, IPipeConnectionListener {
+	implements IFilter, IPushableConsumer, IPipeConnectionListener, ITokenBucketCallback {
 		// XXX shall we make this as a configurable property?
 		private static final long LIVE_WAIT_TIMEOUT = 5000;
 		
@@ -320,6 +321,9 @@ implements IPlaylistSubscriberStream {
 		private int currentAudioTS = 0;
 		private int currentDataTS = 0;
 		
+		private ITokenBucket bucket;
+		private RTMPMessage pendingMessage;
+		
 		public PlayEngine() {
 			state = State.UNINIT;
 		}
@@ -332,6 +336,10 @@ implements IPlaylistSubscriberStream {
 			msgOut = consumerManager.getConsumerOutput(PlaylistSubscriberStream.this);
 			msgOut.subscribe(this, null);
 			timer = new Timer(true);
+			ITokenBucketService bucketService =
+				(ITokenBucketService) getScope().getContext().getBean(ITokenBucketService.KEY);
+			// TODO make this configurable via API
+			bucket = bucketService.createTokenBucket(100 * 1024, 100);
 		}
 		
 		synchronized public void play(IPlayItem item)
@@ -415,6 +423,7 @@ implements IPlaylistSubscriberStream {
 			}
 			state = State.PLAYING;
 			if (decision == 1) {
+				pendingMessage = null;
 				sendVODInitCM(msgIn, item);
 				vodStartTS = -1;
 				pullAndPush();
@@ -462,6 +471,7 @@ implements IPlaylistSubscriberStream {
 				msgIn = null;
 			}
 			timer.purge();
+			bucket.reset();
 		}
 		
 		synchronized public void close() {
@@ -473,37 +483,60 @@ implements IPlaylistSubscriberStream {
 			}
 			state = State.CLOSED;
 			timer.cancel();
+			ITokenBucketService tbs =
+				(ITokenBucketService) getScope().getContext().getBean(ITokenBucketService.KEY);
+			tbs.removeTokenBucket(bucket);
 		}
 		
 		synchronized private void pullAndPush() {
 			if (state == State.PLAYING && isPullMode) {
-				IMessage msg = msgIn.pullMessage();
-				if (vodStartTS == -1) {
-					if (msg instanceof RTMPMessage) {
-						BaseEvent body = ((RTMPMessage) msg).getBody();
-						if (body instanceof ITimestampAware)
-							vodStartTS = ((ITimestampAware) body).getTimestamp();
-						System.out.println("Init vodStartTS" + vodStartTS);
+				int size;
+				if (pendingMessage != null) {
+					size = pendingMessage.getBody().getData().limit();
+					if (bucket.acquireTokenNonblocking(size, this)) {
+						sendMessage(pendingMessage);
+						pendingMessage = null;
 					}
 				} else {
-					if (msg instanceof RTMPMessage) {
-						if (currentItem.getLength() >= 0) {
-							int ts = 0;
-							BaseEvent body = ((RTMPMessage) msg).getBody();
-							if (body instanceof ITimestampAware)
-								ts = ((ITimestampAware) body).getTimestamp();
-							int diff = ts - vodStartTS;
-							System.out.println("vod length, " + currentItem.getLength() + " vod diff " + diff);
-							if (diff > currentItem.getLength()) {
-								// stop this item
-								state = State.STOPPED;
-								onItemEnd();
+					while (true) {
+						IMessage msg = msgIn.pullMessage();
+						if (msg == null) {
+							// end of the VOD
+							stop();
+							onItemEnd();
+							break;
+						} else {
+							if (msg instanceof RTMPMessage) {
+								RTMPMessage rtmpMessage = (RTMPMessage) msg;
+								size = rtmpMessage.getBody().getData().limit();
+								if (bucket.acquireTokenNonblocking(size, this)) {
+									sendMessage(rtmpMessage);
+								} else {
+									pendingMessage = rtmpMessage;
+								}
+								break;
 							}
 						}
 					}
 				}
-				if (msg != null) msgOut.pushMessage(msg);
 			}
+		}
+		
+		private void sendMessage(RTMPMessage message) {
+			if (vodStartTS == -1) {
+				vodStartTS = message.getBody().getTimestamp();
+			} else {
+				if (currentItem.getLength() >= 0) {
+					int diff = message.getBody().getTimestamp() - vodStartTS;
+					if (diff > currentItem.getLength()) {
+						// stop this item
+						stop();
+						onItemEnd();
+						return;
+					}
+				}
+			}
+			msgOut.pushMessage(message);
 		}
 		
 		private void sendResetPing() {
@@ -665,6 +698,14 @@ implements IPlaylistSubscriberStream {
 		}
 
 		synchronized public void pushMessage(IPipe pipe, IMessage message) {
+			if (message instanceof RTMPMessage) {
+				RTMPMessage rtmpMessage = (RTMPMessage) message;
+				int size = rtmpMessage.getBody().getData().limit();
+				if (!bucket.acquireToken(size, 0)) {
+					// drop the message
+					return;
+				}
+			}
 			msgOut.pushMessage(message);
 		}
 
@@ -678,6 +719,10 @@ implements IPlaylistSubscriberStream {
 				state = State.STOPPED;
 			}
 			onItemEnd();
+		}
+
+		public void run(ITokenBucket bucket, long tokenCount) {
+			pullAndPush();
 		}
 		
 	}

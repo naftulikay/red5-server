@@ -2,6 +2,7 @@ package org.red5.server.net.rtmp.event;
 
 public class Ping extends BaseEvent {
 	
+	protected byte EVENT_DATATYPE = TYPE_PING;
 	private static final int INITIAL_CAPACITY = 6;
 	public static final int UNDEFINED = -1;
 	
@@ -10,7 +11,7 @@ public class Ping extends BaseEvent {
 	private int value3 = UNDEFINED;
 	
 	public Ping(){
-		super();
+		super(Type.SYSTEM);
 	}
 
 	public short getValue1() {

@@ -27,7 +27,7 @@ import org.red5.server.messaging.OOBControlMessage;
 import org.red5.server.messaging.PipeConnectionEvent;
 import org.red5.server.net.rtmp.event.AudioData;
 import org.red5.server.net.rtmp.event.BaseEvent;
-import org.red5.server.net.rtmp.event.ITimestampAware;
+import org.red5.server.net.rtmp.event.IRTMPEvent;
 import org.red5.server.net.rtmp.event.Ping;
 import org.red5.server.net.rtmp.status.Status;
 import org.red5.server.stream.ITokenBucket.ITokenBucketCallback;
@@ -492,7 +492,11 @@ implements IPlaylistSubscriberStream {
 			if (state == State.PLAYING && isPullMode) {
 				int size;
 				if (pendingMessage != null) {
-					size = pendingMessage.getBody().getData().limit();
+					IRTMPEvent body = pendingMessage.getBody();
+					if (!(body instanceof IStreamData))
+						throw new RuntimeException("expected IStreamData but got " + body);
+					
+					size = ((IStreamData) body).getData().limit();
 					if (bucket.acquireTokenNonblocking(size, this)) {
 						sendMessage(pendingMessage);
 						pendingMessage = null;
@@ -508,7 +512,11 @@ implements IPlaylistSubscriberStream {
 						} else {
 							if (msg instanceof RTMPMessage) {
 								RTMPMessage rtmpMessage = (RTMPMessage) msg;
-								size = rtmpMessage.getBody().getData().limit();
+								IRTMPEvent body = rtmpMessage.getBody();
+								if (!(body instanceof IStreamData))
+									throw new RuntimeException("expected IStreamData but got " + body);
+								
+								size = ((IStreamData) body).getData().limit();
 								if (bucket.acquireTokenNonblocking(size, this)) {
 									sendMessage(rtmpMessage);
 								} else {
@@ -700,7 +708,11 @@ implements IPlaylistSubscriberStream {
 		synchronized public void pushMessage(IPipe pipe, IMessage message) {
 			if (message instanceof RTMPMessage) {
 				RTMPMessage rtmpMessage = (RTMPMessage) message;
-				int size = rtmpMessage.getBody().getData().limit();
+				IRTMPEvent body = rtmpMessage.getBody();
+				if (!(body instanceof IStreamData))
+					throw new RuntimeException("expected IStreamData but got " + body);
+				
+				int size = ((IStreamData) body).getData().limit();
 				if (!bucket.acquireToken(size, 0)) {
 					// drop the message
 					return;

@@ -5,17 +5,22 @@ import java.util.LinkedList;
 import java.util.List;
 
 import org.red5.server.api.event.IEventListener;
+import org.red5.server.net.rtmp.event.BaseEvent;
 
-public class SharedObjectMessage implements ISharedObjectMessage {
+public class SharedObjectMessage extends BaseEvent implements ISharedObjectMessage {
 
-	private IEventListener source;
+	protected static byte EVENT_DATATYPE = TYPE_SHARED_OBJECT; 
 	private String name;
 	private LinkedList<ISharedObjectEvent> events = new LinkedList<ISharedObjectEvent>();
 	private int version = 0;
 	private boolean persistent = false;
 	
+	public SharedObjectMessage(String name, int version, boolean persistent) {
+		this(null, name, version, persistent);
+	}
+	
 	public SharedObjectMessage(IEventListener source, String name, int version, boolean persistent){
-		this.source = source;
+		super(Type.SHARED_OBJECT, source);
 		this.name = name;
 		this.version = version;
 		this.persistent = persistent;

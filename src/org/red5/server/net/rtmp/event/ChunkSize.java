@@ -2,10 +2,11 @@ package org.red5.server.net.rtmp.event;
 
 public class ChunkSize extends BaseEvent {
 		
+	protected byte EVENT_DATATYPE = TYPE_CHUNK_SIZE;
 	private int size = 0;
 	
 	public ChunkSize(int size){
-		super();
+		super(Type.SYSTEM);
 		this.size = size;
 	}
 

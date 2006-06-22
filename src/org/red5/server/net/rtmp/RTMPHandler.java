@@ -31,6 +31,7 @@ import org.red5.server.exception.ClientRejectedException;
 import org.red5.server.net.protocol.ProtocolState;
 import org.red5.server.net.rtmp.codec.RTMP;
 import org.red5.server.net.rtmp.event.Invoke;
+import org.red5.server.net.rtmp.event.IRTMPEvent;
 import org.red5.server.net.rtmp.event.Notify;
 import org.red5.server.net.rtmp.event.Ping;
 import org.red5.server.net.rtmp.event.StreamBytesRead;
@@ -82,7 +83,7 @@ public class RTMPHandler
 		try {
 			
 			final Packet packet = (Packet) in;
-			final Object message = packet.getMessage();
+			final IRTMPEvent message = packet.getMessage();
 			final Header header = packet.getHeader();
 			final Channel channel = conn.getChannel(header.getChannelId());
 			final IClientStream stream = conn.getStreamById(header.getStreamId());

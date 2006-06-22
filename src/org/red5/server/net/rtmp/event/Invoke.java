@@ -1,11 +1,18 @@
 package org.red5.server.net.rtmp.event;
 
+import org.apache.mina.common.ByteBuffer;
 import org.red5.server.api.service.IPendingServiceCall;
 
 public class Invoke extends Notify {
 	
+	protected byte EVENT_DATATYPE = TYPE_INVOKE;
+	
 	public Invoke(){
 		super();
+	}
+	
+	public Invoke(ByteBuffer data) {
+		super(data);
 	}
 	
 	public Invoke(IPendingServiceCall call){

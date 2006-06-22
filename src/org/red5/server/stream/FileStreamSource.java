@@ -7,9 +7,8 @@ import org.red5.io.ITagReader;
 import org.red5.io.flv.IKeyFrameDataAnalyzer;
 import org.red5.io.flv.IKeyFrameDataAnalyzer.KeyFrameMeta;
 import org.red5.server.net.rtmp.event.AudioData;
-import org.red5.server.net.rtmp.event.BaseEvent;
 import org.red5.server.net.rtmp.event.Invoke;
-import org.red5.server.net.rtmp.event.ITimestampAware;
+import org.red5.server.net.rtmp.event.IRTMPEvent;
 import org.red5.server.net.rtmp.event.Notify;
 import org.red5.server.net.rtmp.event.Unknown;
 import org.red5.server.net.rtmp.event.VideoData;
@@ -31,12 +30,12 @@ public class FileStreamSource implements ISeekableStreamSource, Constants {
 		reader.close();
 	}
 
-	public BaseEvent dequeue() {
+	public IRTMPEvent dequeue() {
 		
 		if(!reader.hasMoreTags()) return null;
 		ITag tag = reader.readTag();
 		
-		BaseEvent msg = null;
+		IRTMPEvent msg = null;
 		switch(tag.getDataType()){
 		case TYPE_AUDIO_DATA:
 			msg = new AudioData(tag.getBody());
@@ -52,12 +51,11 @@ public class FileStreamSource implements ISeekableStreamSource, Constants {
 			break;
 		default:
 			log.warn("Unexpected type? "+tag.getDataType());
-			msg = new Unknown(tag.getDataType());
+			msg = new Unknown(tag.getDataType(), tag.getBody());
 			break;
 		}
-		if (msg instanceof ITimestampAware)
-			((ITimestampAware) msg).setTimestamp(tag.getTimestamp());
-		msg.setSealed(true);
+		msg.setTimestamp(tag.getTimestamp());
+		//msg.setSealed(true);
 		return msg;
 	}
 

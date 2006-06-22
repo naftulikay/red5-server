@@ -8,6 +8,12 @@ public class Unknown extends BaseEvent {
 	protected ByteBuffer data = null;
 	
 	public Unknown(ByteBuffer data){
+		this((byte) 0x00, data);
+	}
+	
+	public Unknown(byte dataType, ByteBuffer data) {
+		super(Type.SYSTEM);
+		EVENT_DATATYPE = dataType;
 		this.data = data;
 	}
 	

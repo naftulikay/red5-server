@@ -4,8 +4,8 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.red5.server.api.stream.IClientStream;
 import org.red5.server.net.rtmp.event.Invoke;
+import org.red5.server.net.rtmp.event.IRTMPEvent;
 import org.red5.server.net.rtmp.event.IHeaderAware;
-import org.red5.server.net.rtmp.event.ITimestampAware;
 import org.red5.server.net.rtmp.event.Notify;
 import org.red5.server.net.rtmp.message.Header;
 import org.red5.server.net.rtmp.message.Packet;
@@ -41,7 +41,7 @@ public class Channel {
 	}
 	*/
 
-	public void write(Object message){
+	public void write(IRTMPEvent event){
 		final IClientStream stream = connection.getStreamByChannelId(id);
 		/*
 		final int streamId = (
@@ -51,21 +51,18 @@ public class Channel {
 				) ? 0 : stream.getStreamId();
 				*/
 		final int streamId = ( stream==null ) ? 0 : stream.getStreamId();
-		int timestamp = 0;
-		if (message instanceof ITimestampAware)
-			timestamp = ((ITimestampAware) message).getTimestamp();
-		write(message, timestamp, streamId);
+		write(event, event.getTimestamp(), streamId);
 	}
 	
-	private void write(Object message, int timer, int streamId){
+	private void write(IRTMPEvent event, int timer, int streamId){
 		
 		final Header header = new Header();
-		final Packet packet = new Packet(header, message);
+		final Packet packet = new Packet(header, event);
 		
 		header.setChannelId(id);
 		header.setTimer(timer);
 		header.setStreamId(streamId);
-		header.setDataType(message.getDataType());
+		header.setDataType(event.getDataType());
 		
 		// should use RTMPConnection specific method.. 
 		connection.write(packet);

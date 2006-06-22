@@ -3,28 +3,31 @@ package org.red5.server.net.rtmp.event;
 import java.util.EventObject;
 import java.util.Map;
 
+import org.apache.mina.common.ByteBuffer;
+import org.red5.server.api.event.IEvent.Type;
 import org.red5.server.api.service.IServiceCall;
+import org.red5.server.stream.IStreamData;
 
-public class Notify extends BaseEvent implements ITimestampAware {
+public class Notify extends BaseEvent implements IStreamData {
 	
+	protected byte EVENT_DATATYPE = TYPE_NOTIFY;
 	protected IServiceCall call = null;
+	protected ByteBuffer data = null;
 	private int invokeId = 0;
 	private Map connectionParams = null;
-	private int timestamp = 0;
 	
-	public Notify(){
+	public Notify() {
+		super(Type.SERVICE_CALL);
 	}
 
+	public Notify(ByteBuffer data){
+		super(Type.STREAM_DATA);
+		this.data = data;
+	}
+	
 	public Notify(IServiceCall call){
+		super(Type.SERVICE_CALL);
 		this.call = call;
-	}
-	
-	public void setTimestamp(int ts) {
-		timestamp = ts;
-	}
-	
-	public int getTimestamp(){
-		return timestamp;
 	}
 	
 	public void setCall(IServiceCall call) {
@@ -33,6 +36,10 @@ public class Notify extends BaseEvent implements ITimestampAware {
 	
 	public IServiceCall getCall() {
 		return this.call;
+	}
+	
+	public ByteBuffer getData() {
+		return data;
 	}
 	
 	public int getInvokeId() {

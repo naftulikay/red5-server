@@ -23,11 +23,7 @@ import org.red5.server.messaging.IProvider;
 import org.red5.server.messaging.IPushableConsumer;
 import org.red5.server.messaging.OOBControlMessage;
 import org.red5.server.messaging.PipeConnectionEvent;
-import org.red5.server.net.rtmp.event.BaseEvent;
-import org.red5.server.net.rtmp.event.AudioData;
-import org.red5.server.net.rtmp.event.ITimestampAware;
-import org.red5.server.net.rtmp.event.Notify;
-import org.red5.server.net.rtmp.event.VideoData;
+import org.red5.server.net.rtmp.event.IRTMPEvent;
 import org.red5.server.net.rtmp.status.Status;
 import org.red5.server.stream.consumer.FileConsumer;
 import org.red5.server.stream.message.RTMPMessage;
@@ -122,29 +118,19 @@ public class ClientBroadcastStream extends AbstractClientStream implements
 	}
 
 	public void dispatchEvent(IEvent event) {
-		if ((event.getType() != IEvent.Type.STREAM_CONTROL) &&
-				(event.getType() != IEvent.Type.STREAM_DATA))
-				return;
-			
-		dispatchEvent(event.getObject());
-	}
-
-	public void dispatchEvent(Object obj) {
-		if (!(obj instanceof BaseEvent))
+		if (!(event instanceof IRTMPEvent) && (event.getType() != IEvent.Type.STREAM_CONTROL) && (event.getType() != IEvent.Type.STREAM_DATA))
 			return;
 		
 		long runTime = System.currentTimeMillis() - startTime;
-		BaseEvent message = ((BaseEvent) obj);
-		if (message instanceof ITimestampAware)
-			((ITimestampAware) message).setTimestamp((int) runTime);
+		IRTMPEvent rtmpEvent = (IRTMPEvent) event;
+		rtmpEvent.setTimestamp((int) runTime);
 		RTMPMessage msg = new RTMPMessage();
-		msg.setBody(message);
+		msg.setBody(rtmpEvent);
 		if (livePipe != null) {
 			// XXX probable race condition here
 			livePipe.pushMessage(msg);
 		}
 		recordPipe.pushMessage(msg);
-		message.release();
 	}
 
 	public void onPipeConnectionEvent(PipeConnectionEvent event) {

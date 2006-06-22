@@ -1,12 +1,12 @@
 package org.red5.server.net.rtmp.message;
 
 import org.apache.mina.common.ByteBuffer;
-import org.red5.server.api.event.IEvent;
+import org.red5.server.net.rtmp.event.IRTMPEvent;
 
 public class Packet {
 
 	protected Header header;
-	protected Object message;
+	protected IRTMPEvent message;
 	protected ByteBuffer data;
 
 	public Packet(Header header){
@@ -14,7 +14,7 @@ public class Packet {
 		data = ByteBuffer.allocate(header.getSize());
 	}
 	
-	public Packet(Header header, Object event){
+	public Packet(Header header, IRTMPEvent event){
 		this.header = header;
 		this.message = event;
 	}
@@ -23,11 +23,11 @@ public class Packet {
 		return header;
 	}
 	
-	public void setMessage(Object message){
+	public void setMessage(IRTMPEvent message){
 		this.message = message;
 	}
 	
-	public Object getMessage() {
+	public IRTMPEvent getMessage() {
 		return message;
 	}
 	

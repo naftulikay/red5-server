@@ -1,25 +1,25 @@
 package org.red5.server.stream.message;
 
 import org.red5.server.messaging.AbstractMessage;
-import org.red5.server.net.rtmp.event.BaseEvent;
+import org.red5.server.net.rtmp.event.IRTMPEvent;
 
 public class RTMPMessage extends AbstractMessage {
-	private BaseEvent body;
+	private IRTMPEvent body;
 
-	public BaseEvent getBody() {
+	public IRTMPEvent getBody() {
 		return body;
 	}
 
-	public void setBody(BaseEvent body) {
+	public void setBody(IRTMPEvent body) {
 		this.body = body;
 	}
 	
 	public void acquire() {
-		if (body != null) body.acquire();
+		// TODO: is this still needed?
 	}
 	
 	public void release() {
-		if (body != null) body.release();
+		// TODO: is this still needed?
 	}
 	
 }

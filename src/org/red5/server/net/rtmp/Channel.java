@@ -50,16 +50,16 @@ public class Channel {
 				) ? 0 : stream.getStreamId();
 				*/
 		final int streamId = ( stream==null ) ? 0 : stream.getStreamId();
-		write(event, event.getTimestamp(), streamId);
+		write(event, streamId);
 	}
 	
-	private void write(IRTMPEvent event, int timer, int streamId){
+	private void write(IRTMPEvent event, int streamId){
 		
 		final Header header = new Header();
 		final Packet packet = new Packet(header, event);
 		
 		header.setChannelId(id);
-		header.setTimer(timer);
+		header.setTimer(event.getTimestamp());
 		header.setStreamId(streamId);
 		header.setDataType(event.getDataType());
 		

@@ -8,6 +8,10 @@ public class AudioData extends BaseEvent implements IStreamData {
 
 	protected ByteBuffer data = null;
 	
+	public AudioData(){
+		this(ByteBuffer.allocate(0));
+	}
+	
 	public AudioData(ByteBuffer data){
 		super(Type.STREAM_DATA);
 		this.data = data;

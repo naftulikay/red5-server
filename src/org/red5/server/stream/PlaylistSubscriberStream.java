@@ -566,7 +566,7 @@ implements IPlaylistSubscriberStream {
 		}
 		
 		private void sendBlankAudio() {
-			AudioData blankAudio = new AudioData(null);
+			AudioData blankAudio = new AudioData();
 			blankAudio.setTimestamp(0);
 			
 			RTMPMessage blankAudioMsg = new RTMPMessage();

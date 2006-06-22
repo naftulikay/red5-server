@@ -102,13 +102,12 @@ public class RTMPProtocolEncoder implements SimpleProtocolEncoder, Constants, IE
 		byte headerType = 0;
 		if(lastHeader==null || header.getStreamId() != lastHeader.getStreamId()){
 			headerType = HEADER_NEW;
-		} else if(header.getSize() != lastHeader.getSize()){
+		} else if(header.getSize() != lastHeader.getSize() || header.getDataType() != lastHeader.getDataType()){
 			headerType = HEADER_SAME_SOURCE;
 		} else if(header.getTimer() != lastHeader.getTimer()){
 			headerType = HEADER_TIMER_CHANGE;
-		} else if(header.getDataType() == lastHeader.getDataType() ){
+		} else
 			headerType = HEADER_CONTINUE;
-		} else headerType = HEADER_NEW;
 		
 		final ByteBuffer buf = ByteBuffer.allocate(RTMPUtils.getHeaderLength(headerType));
 		final byte headerByte = RTMPUtils.encodeHeaderByte(headerType, header.getChannelId());

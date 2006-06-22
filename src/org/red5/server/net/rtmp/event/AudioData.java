@@ -9,7 +9,7 @@ public class AudioData extends BaseEvent implements IStreamData {
 	protected ByteBuffer data = null;
 	
 	public AudioData(){
-		this(ByteBuffer.allocate(0));
+		this(ByteBuffer.allocate(0).flip());
 	}
 	
 	public AudioData(ByteBuffer data){

@@ -2,7 +2,6 @@ package org.red5.server.net.rtmp.event;
 
 public class StreamBytesRead extends BaseEvent {
 	
-	protected byte EVENT_DATATYPE = TYPE_STREAM_BYTES_READ;
 	private static final int INITIAL_CAPACITY = 4;
 	
 	private int bytesRead = 0;
@@ -10,6 +9,10 @@ public class StreamBytesRead extends BaseEvent {
 	public StreamBytesRead(int bytesRead){
 		super(Type.STREAM_CONTROL);
 		this.bytesRead = bytesRead;
+	}
+	
+	public byte getDataType() {
+		return TYPE_STREAM_BYTES_READ;
 	}
 	
 	public int getBytesRead(){

@@ -5,10 +5,12 @@ import org.red5.server.api.service.IPendingServiceCall;
 
 public class Invoke extends Notify {
 	
-	protected byte EVENT_DATATYPE = TYPE_INVOKE;
-	
 	public Invoke(){
 		super();
+	}
+	
+	public byte getDataType() {
+		return TYPE_INVOKE;
 	}
 	
 	public Invoke(ByteBuffer data) {

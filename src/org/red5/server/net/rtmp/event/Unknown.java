@@ -6,15 +6,16 @@ import org.red5.io.utils.HexDump;
 public class Unknown extends BaseEvent {
 	
 	protected ByteBuffer data = null;
-	
-	public Unknown(ByteBuffer data){
-		this((byte) 0x00, data);
-	}
+	protected byte dataType;
 	
 	public Unknown(byte dataType, ByteBuffer data) {
 		super(Type.SYSTEM);
-		EVENT_DATATYPE = dataType;
+		this.dataType = dataType;
 		this.data = data;
+	}
+	
+	public byte getDataType() {
+		return dataType;
 	}
 	
 	public ByteBuffer getData(){

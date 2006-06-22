@@ -226,7 +226,7 @@ public class SharedObject implements IPersistable, Constants {
 			data.put(name, value);
 			// only sync if the attribute changed
 			syncEvents.add(new SharedObjectEvent(
-					Type.CLIENT_UPDATE_ATTRIBUTE, name, value));
+					Type.CLIENT_UPDATE_DATA, name, value));
 			notifyModified();
 			return true;
 		} else {

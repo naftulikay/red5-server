@@ -5,7 +5,6 @@ import org.apache.commons.logging.LogFactory;
 import org.red5.server.api.stream.IClientStream;
 import org.red5.server.net.rtmp.event.Invoke;
 import org.red5.server.net.rtmp.event.IRTMPEvent;
-import org.red5.server.net.rtmp.event.IHeaderAware;
 import org.red5.server.net.rtmp.event.Notify;
 import org.red5.server.net.rtmp.message.Header;
 import org.red5.server.net.rtmp.message.Packet;

@@ -9,7 +9,6 @@ import org.red5.server.net.rtmp.event.BaseEvent;
 
 public class SharedObjectMessage extends BaseEvent implements ISharedObjectMessage {
 
-	protected static byte EVENT_DATATYPE = TYPE_SHARED_OBJECT; 
 	private String name;
 	private LinkedList<ISharedObjectEvent> events = new LinkedList<ISharedObjectEvent>();
 	private int version = 0;
@@ -24,6 +23,10 @@ public class SharedObjectMessage extends BaseEvent implements ISharedObjectMessa
 		this.name = name;
 		this.version = version;
 		this.persistent = persistent;
+	}
+
+	public byte getDataType() {
+		return TYPE_SHARED_OBJECT; 
 	}
 	
 	public int getVersion() {

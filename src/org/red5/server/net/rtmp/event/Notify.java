@@ -10,7 +10,6 @@ import org.red5.server.stream.IStreamData;
 
 public class Notify extends BaseEvent implements IStreamData {
 	
-	protected byte EVENT_DATATYPE = TYPE_NOTIFY;
 	protected IServiceCall call = null;
 	protected ByteBuffer data = null;
 	private int invokeId = 0;
@@ -28,6 +27,10 @@ public class Notify extends BaseEvent implements IStreamData {
 	public Notify(IServiceCall call){
 		super(Type.SERVICE_CALL);
 		this.call = call;
+	}
+	
+	public byte getDataType() {
+		return TYPE_NOTIFY;
 	}
 	
 	public void setCall(IServiceCall call) {

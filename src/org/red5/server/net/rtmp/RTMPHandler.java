@@ -118,11 +118,11 @@ public class RTMPHandler
 			case TYPE_PING:
 				onPing(conn, channel, header, (Ping) message);
 				break;
-			/*
+			
 			case TYPE_STREAM_BYTES_READ:
-				onStreamBytesRead(conn, channel, source, (StreamBytesRead) message);
+				onStreamBytesRead(conn, channel, header, (StreamBytesRead) message);
 				break;
-			*/
+			
 			case TYPE_AUDIO_DATA:
 			case TYPE_VIDEO_DATA:
 				//log.info("in packet: "+source.getSize()+" ts:"+source.getTimer());
@@ -367,14 +367,14 @@ public class RTMPHandler
 		
 		final Ping pong = new Ping();
 		pong.setValue1((short) 4);
-		pong.setValue2(RTMPHandler.getStreamId());
+		pong.setValue2(source.getStreamId());
 		channel.write(pong);
 		log.info(ping);
 		// No idea why this is needed, 
 		// but it was the thing stopping the new rtmp code streaming
 		final Ping pong2 = new Ping();
 		pong2.setValue1((short) 0);
-		pong2.setValue2(RTMPHandler.getStreamId());
+		pong2.setValue2(source.getStreamId());
 		channel.write(pong2);
 	}
 	

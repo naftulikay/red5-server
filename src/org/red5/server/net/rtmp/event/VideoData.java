@@ -4,9 +4,8 @@ import org.apache.mina.common.ByteBuffer;
 import org.red5.server.stream.IStreamData;
 import org.red5.server.net.rtmp.message.Header;
 
-public class VideoData extends BaseEvent implements IHeaderAware, IStreamData {
+public class VideoData extends BaseEvent implements IStreamData {
 
-	protected byte EVENT_DATATYPE = TYPE_VIDEO_DATA;
 	protected ByteBuffer data = null;
 	
 	public VideoData(ByteBuffer data){
@@ -14,8 +13,8 @@ public class VideoData extends BaseEvent implements IHeaderAware, IStreamData {
 		this.data = data;
 	}
 
-	public void setHeader(Header header){
-		
+	public byte getDataType() {
+		return TYPE_VIDEO_DATA;
 	}
 	
 	public ByteBuffer getData(){

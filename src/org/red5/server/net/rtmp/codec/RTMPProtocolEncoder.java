@@ -19,6 +19,7 @@ import org.red5.server.net.rtmp.RTMPUtils;
 import org.red5.server.net.rtmp.event.AudioData;
 import org.red5.server.net.rtmp.event.ChunkSize;
 import org.red5.server.net.rtmp.event.Invoke;
+import org.red5.server.net.rtmp.event.IRTMPEvent;
 import org.red5.server.net.rtmp.event.Notify;
 import org.red5.server.net.rtmp.event.Ping;
 import org.red5.server.net.rtmp.event.StreamBytesRead;
@@ -58,13 +59,17 @@ public class RTMPProtocolEncoder implements SimpleProtocolEncoder, Constants, IE
 		final Header header = packet.getHeader();
 		final byte channelId = header.getChannelId();
 		
-		rtmp.setLastWriteHeader(channelId, header);
-		rtmp.setLastWritePacket(channelId, packet);
-		
 		final ByteBuffer data = encodeMessage(header, packet.getMessage());
+		if (data.position() != 0)
+			data.flip();
+		else
+			data.rewind();
 		header.setSize(data.limit());
 		
 		final ByteBuffer headers = encodeHeader(header,rtmp.getLastWriteHeader(channelId));
+		
+		rtmp.setLastWriteHeader(channelId, header);
+		rtmp.setLastWritePacket(channelId, packet);
 		
 		final int chunkSize = rtmp.getWriteChunkSize();
 		final int numChunks = (int) Math.ceil(header.getSize() / (float) chunkSize);
@@ -97,9 +102,9 @@ public class RTMPProtocolEncoder implements SimpleProtocolEncoder, Constants, IE
 		byte headerType = 0;
 		if(lastHeader==null || header.getStreamId() != lastHeader.getStreamId()){
 			headerType = HEADER_NEW;
-		} else if(header.getTimer() != lastHeader.getTimer()){
-			headerType = HEADER_SAME_SOURCE;
 		} else if(header.getSize() != lastHeader.getSize()){
+			headerType = HEADER_SAME_SOURCE;
+		} else if(header.getTimer() != lastHeader.getTimer()){
 			headerType = HEADER_TIMER_CHANGE;
 		} else if(header.getDataType() == lastHeader.getDataType() ){
 			headerType = HEADER_CONTINUE;
@@ -136,17 +141,17 @@ public class RTMPProtocolEncoder implements SimpleProtocolEncoder, Constants, IE
 		return buf;
 	}
 	
-	public ByteBuffer encodeMessage(Header header, Object message){
+	public ByteBuffer encodeMessage(Header header, IRTMPEvent message){
 		switch(header.getDataType()){
 		case TYPE_CHUNK_SIZE:
 			return encodeChunkSize((ChunkSize) message);
 		case TYPE_INVOKE:
 			return encodeInvoke((Invoke) message);
 		case TYPE_NOTIFY:
-			//if (((Notify) event).getCall() == null)
-			//	return encodeStreamMetadata((Notify) event);
-			//else 
-			return encodeNotify((Notify) message);
+			if (((Notify) message).getCall() == null)
+				return encodeStreamMetadata((Notify) message);
+			else 
+				return encodeNotify((Notify) message);
 		case TYPE_PING:
 			return encodePing((Ping) message);
 		case TYPE_STREAM_BYTES_READ:
@@ -189,7 +194,8 @@ public class RTMPProtocolEncoder implements SimpleProtocolEncoder, Constants, IE
 			byte type = SharedObjectTypeMapping.toByte(event.getType());
 
 			switch (event.getType()) {
-			case CLIENT_INITIAL_DATA:				
+			case CLIENT_INITIAL_DATA:
+			case CLIENT_CLEAR_DATA:
 				out.put(type);
 				out.putInt(0);
 				break;
@@ -373,13 +379,9 @@ public class RTMPProtocolEncoder implements SimpleProtocolEncoder, Constants, IE
 		return unknown.getData().asReadOnlyBuffer();
 	}
 	
-/*
 	public ByteBuffer encodeStreamMetadata(Notify metaData){
-		// Just seek to end of stream, we pass the published data to the clients
-		final ByteBuffer out = metaData.getData(); 
-		out.position(out.limit());
+		return metaData.getData().asReadOnlyBuffer();
 	}
-*/
 
 	public void setSerializer(org.red5.io.object.Serializer serializer) {
 		this.serializer = serializer;

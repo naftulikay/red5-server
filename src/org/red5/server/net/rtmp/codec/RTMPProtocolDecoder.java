@@ -11,15 +11,14 @@ import org.apache.mina.common.ByteBuffer;
 import org.red5.io.amf.Input;
 import org.red5.io.object.Deserializer;
 import org.red5.io.utils.BufferUtils;
-import org.red5.server.api.event.IEvent;
 import org.red5.server.net.protocol.ProtocolException;
 import org.red5.server.net.protocol.ProtocolState;
 import org.red5.server.net.protocol.SimpleProtocolDecoder;
 import org.red5.server.net.rtmp.RTMPUtils;
 import org.red5.server.net.rtmp.event.AudioData;
 import org.red5.server.net.rtmp.event.ChunkSize;
-import org.red5.server.net.rtmp.event.IHeaderAware;
 import org.red5.server.net.rtmp.event.Invoke;
+import org.red5.server.net.rtmp.event.IRTMPEvent;
 import org.red5.server.net.rtmp.event.Notify;
 import org.red5.server.net.rtmp.event.Ping;
 import org.red5.server.net.rtmp.event.StreamBytesRead;
@@ -231,7 +230,8 @@ public class RTMPProtocolDecoder implements Constants, SimpleProtocolDecoder, IE
 		
 		buf.flip();	
 		
-		final Object message = decodeMessage(header, buf);
+		final IRTMPEvent message = decodeMessage(header, buf);
+		packet.setMessage(message);
 		
 		if(message instanceof ChunkSize){
 			ChunkSize chunkSizeMsg = (ChunkSize) message;
@@ -285,8 +285,8 @@ public class RTMPProtocolDecoder implements Constants, SimpleProtocolDecoder, IE
 		return header;
 	}
 	
-	public Object decodeMessage(Header header, ByteBuffer in) {
-		Object message = null;
+	public IRTMPEvent decodeMessage(Header header, ByteBuffer in) {
+		IRTMPEvent message = null;
 		switch(header.getDataType()){
 		case TYPE_CHUNK_SIZE: 
 			message = decodeChunkSize(in);
@@ -313,20 +313,18 @@ public class RTMPProtocolDecoder implements Constants, SimpleProtocolDecoder, IE
 			message = decodeSharedObject(in);
 			break;
 		default: 
-			message = decodeUnknown(in);
+			message = decodeUnknown(header.getDataType(), in);
 			break;
 		}
-		if(message instanceof IHeaderAware){
-			((IHeaderAware) message).setHeader(header);
-		}
+		message.setHeader(header);
 		return message;
 	}
 	
 	/* (non-Javadoc)
 	 * @see org.red5.server.net.rtmp.codec.IEventDecoder#decodeUnknown(org.apache.mina.common.ByteBuffer)
 	 */
-	public Unknown decodeUnknown(ByteBuffer in){
-		return new Unknown(in.asReadOnlyBuffer());
+	public Unknown decodeUnknown(byte dataType, ByteBuffer in){
+		return new Unknown(dataType, in.asReadOnlyBuffer());
 	}
 	
 	/* (non-Javadoc)

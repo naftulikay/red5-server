@@ -2,7 +2,6 @@ package org.red5.server.net.rtmp.event;
 
 public class ChunkSize extends BaseEvent {
 		
-	protected byte EVENT_DATATYPE = TYPE_CHUNK_SIZE;
 	private int size = 0;
 	
 	public ChunkSize(int size){
@@ -10,6 +9,10 @@ public class ChunkSize extends BaseEvent {
 		this.size = size;
 	}
 
+	public byte getDataType() {
+		return TYPE_CHUNK_SIZE;
+	}
+	
 	public int getSize() {
 		return size;
 	}

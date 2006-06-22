@@ -2,16 +2,15 @@ package org.red5.server.net.rtmp.event;
 
 import org.red5.server.api.event.IEventListener;
 import org.red5.server.net.rtmp.message.Constants;
+import org.red5.server.net.rtmp.message.Header;
 
 public abstract class BaseEvent implements Constants, IRTMPEvent {
-
-	// override this
-	protected byte EVENT_DATATYPE = 0x00; 
 	
 	private Type type;
 	protected Object object;
 	protected IEventListener source;
 	protected int timestamp;
+	protected Header header = null;
 	
 	public BaseEvent(Type type) {
 		this(type, null);
@@ -30,6 +29,14 @@ public abstract class BaseEvent implements Constants, IRTMPEvent {
 		return object;
 	}
 	
+	public Header getHeader() {
+		return header;
+	}
+	
+	public void setHeader(Header header) {
+		this.header = header;
+	}
+	
 	public boolean hasSource() {
 		return source != null;
 	}
@@ -38,9 +45,7 @@ public abstract class BaseEvent implements Constants, IRTMPEvent {
 		return source;
 	}
 
-	public byte getDataType() {
-		return EVENT_DATATYPE;
-	}
+	public abstract byte getDataType();
 	
 	public int getTimestamp() {
 		return timestamp;

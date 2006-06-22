@@ -13,7 +13,7 @@ import org.red5.server.so.ISharedObjectMessage;
 
 public interface IEventDecoder {
 
-	public abstract Unknown decodeUnknown(ByteBuffer in);
+	public abstract Unknown decodeUnknown(byte dataType, ByteBuffer in);
 
 	public abstract ChunkSize decodeChunkSize(ByteBuffer in);
 

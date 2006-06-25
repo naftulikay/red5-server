@@ -68,6 +68,10 @@ public class RTMP extends ProtocolState {
 	}
 
 	public void setLastReadPacket(byte channelId, Packet packet){
+		Packet prevPacket = readPackets[channelId];
+		if (prevPacket != null && prevPacket.getData() != null)
+			prevPacket.getData().release();
+
 		readPackets[channelId] = packet;
 	}
 	
@@ -76,6 +80,10 @@ public class RTMP extends ProtocolState {
 	}
 	
 	public void setLastWritePacket(byte channelId, Packet packet){
+		Packet prevPacket = writePackets[channelId];
+		if (prevPacket != null && prevPacket.getData() != null)
+			prevPacket.getData().release();
+
 		writePackets[channelId] = packet;
 	}
 	

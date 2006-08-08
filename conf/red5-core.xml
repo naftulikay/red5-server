@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE beans PUBLIC "-//SPRING//DTD BEAN//EN" "http://www.springframework.org/dtd/spring-beans.dtd">
+<beans>
+
+	<!-- This context holds all the networking: mina -->
+
+	<bean id="customEditorConfigurer" 
+	    class="org.springframework.beans.factory.config.CustomEditorConfigurer">
+	  <property name="customEditors">
+	    <map>
+	      <entry key="java.net.SocketAddress">
+	        <bean class="org.apache.mina.integration.spring.InetSocketAddressEditor" />
+	      </entry>
+	    </map>
+	  </property>
+	</bean>
+	
+	<bean id="placeholderConfig" class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+	    <property name="location" value="classpath:/red5.properties" />
+	</bean>
+	
+	<bean id="filterChainBuilder" 
+        class="org.apache.mina.integration.spring.DefaultIoFilterChainBuilderFactoryBean">
+	  <property name="filters">
+	    <list>
+	      <bean class="org.apache.mina.filter.ThreadPoolFilter">
+	        <!-- Threads will be named IoWorker-1, IoWorker-2, etc -->
+	        <constructor-arg value="IoWorker"/>
+	        <property name="maximumPoolSize" value="128"/>
+	      </bean>
+	    </list>
+	  </property>
+	</bean>
+	
+	<bean id="socketAcceptor" class="org.apache.mina.integration.spring.IoAcceptorFactoryBean">
+     <property name="target">
+       <bean class="org.apache.mina.transport.socket.nio.SocketAcceptor"/>
+     </property>
+     <property name="bindings">
+       <list>
+         
+         <!-- RTMP -->
+         <bean class="org.apache.mina.integration.spring.Binding">
+           <property name="address" value="${rtmp.host_port}"/>
+           <property name="handler" ref="rtmpMinaIoHandler"/>
+           <property name="serviceConfig">
+             <bean class="org.apache.mina.transport.socket.nio.SocketAcceptorConfig">
+               <property name="filterChainBuilder" ref="filterChainBuilder"/>
+               <property name="reuseAddress" value="true"/>
+               <property name="sessionConfig.reuseAddress" value="true"/>
+             </bean>
+           </property>
+         </bean>
+         
+         <!-- DEBUG PROXY -->
+         <bean class="org.apache.mina.integration.spring.Binding">
+           <property name="address" value="${debug_proxy.host_port}"/>
+           <property name="handler" ref="debugProxyIoHandler"/>
+           <property name="serviceConfig">
+             <bean class="org.apache.mina.transport.socket.nio.SocketAcceptorConfig">
+               <property name="filterChainBuilder" ref="filterChainBuilder"/>
+               <property name="reuseAddress" value="true"/>
+               <property name="sessionConfig.reuseAddress" value="true"/>
+             </bean>
+           </property>
+         </bean>
+       
+       </list>
+     </property>
+   </bean> 	
+      
+	<bean id="rtmpHandler" class="org.red5.server.net.rtmp.RTMPHandler"
+		autowire="byType" />
+		
+	<bean id="rtmpMinaIoHandler" class="org.red5.server.net.rtmp.RTMPMinaIoHandler">
+        <property name="handler" ref="rtmpHandler"/>
+        <property name="codecFactory" ref="rtmpCodecFactory"/>
+    </bean>
+
+	<bean id="rtmptHandler" class="org.red5.server.net.rtmpt.RTMPTHandler"
+		autowire="byType">
+		<property name="codecFactory" ref="rtmpCodecFactory" />
+	</bean>
+			
+	<bean id="rtmpt.server" class="org.red5.server.net.rtmpt.RTMPTLoader" init-method="init" autowire="byType" />
+	
+	<bean id="debugProxyIoHandler" class="org.red5.server.net.proxy.DebugProxyHandler">
+        <property name="codecFactory" ref="rtmpCodecFactory" />
+        <property name="forward" value="${proxy_forward.host_port}" />
+        <property name="dumpTo" value="./webapps/dump/" />
+    </bean>
+	
+	
+</beans>

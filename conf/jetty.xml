@@ -1,0 +1,158 @@
+<?xml version="1.0"?>
+<!DOCTYPE Configure PUBLIC "-//Mort Bay Consulting//DTD Configure//EN" "http://jetty.mortbay.org/configure.dtd">
+<Configure id="Server" class="org.mortbay.jetty.Server">
+
+    <!-- =========================================================== -->
+    <!-- Initialize management framework                             -->
+    <!-- =========================================================== -->
+    <!--
+    <Call id="MBeanServer" class="javax.management.MBeanServerFactory" name="createMBeanServer">
+       <Arg>org.mortbay.jetty</Arg>
+    </Call>
+    <Get id="Container" name="container"/>
+    <New class="org.mortbay.management.MBeanContainer">
+      <Arg><Ref id="MBeanServer" /></Arg>
+      <Arg><Ref id="Container"/></Arg>
+      <Set name="managementPort">8082</Set>
+      <Call name="start" />
+    </New>
+    -->
+
+    <!-- =========================================================== -->
+    <!-- Server Thread Pool                                          -->
+    <!-- =========================================================== -->
+    <Set name="ThreadPool">
+      <New class="org.mortbay.thread.BoundedThreadPool">
+        <Set name="minThreads">10</Set>
+        <Set name="maxThreads">100</Set>
+      </New>
+    </Set>
+
+    <!-- =========================================================== -->
+    <!-- Set connectors                                              -->
+    <!-- =========================================================== -->
+    <!-- One of each type!                                           -->
+    <!-- =========================================================== -->
+    <Set name="connectors">
+      <Array type="org.mortbay.jetty.Connector">
+
+        <!-- Use this connector if NIO is not available.
+        <Item>
+          <New class="org.mortbay.jetty.bio.SocketConnector">
+            <Set name="port">8080</Set>
+            <Set name="maxIdleTime">50000</Set>
+          </New>
+        </Item>
+        -->
+
+        <!-- Use this connector for few very active connections.
+        <Item>
+          <New class="org.mortbay.jetty.nio.BlockingChannelConnector">
+            <Set name="port">8080</Set>
+          </New>
+        </Item>
+        -->
+
+        <!-- Use this connector for many frequently idle connections
+             and for threadless continuations.
+        -->
+        <Item>
+          <New class="org.mortbay.jetty.nio.SelectChannelConnector">
+            <Set name="port"><SystemProperty name="http.port" default="5080" /></Set>
+            <Set name="host"><SystemProperty name="http.host" default="0.0.0.0" /></Set>
+            <Set name="maxIdleTime">50000</Set>
+            <Set name="Acceptors">1</Set>
+          </New>
+        </Item>
+
+        <!-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+        <!-- Add a HTTPS SSL listener on port 8443                           -->
+        <!-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+        <!--
+        <Item>
+          <New class="org.mortbay.jetty.security.SslSocketConnector">
+            <Set name="Port">8443</Set>
+            <Set name="maxIdleTime">30000</Set>
+            <Set name="Keystore"><SystemProperty name="jetty.home" default="." />/conf/keystore</Set>
+            <Set name="Password">OBF:1vny1zlo1x8e1vnw1vn61x8g1zlu1vn4</Set>
+            <Set name="KeyPassword">OBF:1u2u1wml1z7s1z7a1wnl1u2g</Set>
+          </New>
+        </Item>
+        -->
+      </Array>
+    </Set>
+
+    <!-- =========================================================== -->
+    <!-- Set handler Collection Structure                            --> 
+    <!-- =========================================================== -->
+    <Set name="handler">
+      <New id="handlers" class="org.mortbay.jetty.handler.HandlerCollection">
+        <Set name="handlers">
+         <Array type="org.mortbay.jetty.Handler">
+           <Item>
+             <New id="contexts" class="org.mortbay.jetty.handler.ContextHandlerCollection"/>
+           </Item>
+           <Item>
+             <New id="defaultHandler" class="org.mortbay.jetty.handler.DefaultHandler"/>
+           </Item>
+           <!--
+           <Item>
+             <New id="requestLog" class="org.mortbay.jetty.handler.RequestLogHandler"/>
+           </Item>
+           -->
+         </Array>
+        </Set>
+      </New>
+    </Set>
+    
+
+    <!-- =========================================================== -->
+    <!-- Additional contexts not defined above                       -->
+    <!-- =========================================================== -->
+    <Call class="org.mortbay.jetty.webapp.WebAppContext" name="addWebApplications">
+      <Arg><Ref id="Server"/></Arg>
+      <Arg><SystemProperty name="red5.root" default="." />/webapps/</Arg>
+      <Arg>web-default.xml</Arg>
+      <Arg><Array type="java.lang.String">
+            <Item>org.mortbay.jetty.webapp.WebInfConfiguration</Item>
+			<Item>org.mortbay.jetty.webapp.WebXmlConfiguration</Item>
+			<Item>org.mortbay.jetty.webapp.JettyWebXmlConfiguration</Item>
+            <Item>org.mortbay.jetty.webapp.TagLibConfiguration</Item>
+			<Item>org.red5.server.jetty.Red5WebPropertiesConfiguration</Item>
+	  </Array></Arg>
+      <Arg type="boolean">True</Arg>
+      <Arg type="boolean">True</Arg>
+    </Call>
+    <!--
+    addWebApplications(
+	    Server server, 
+	    java.lang.String webapps, 
+	    java.lang.String defaults, 
+	    java.lang.String[] configurations, 
+	    boolean extract, 
+	    boolean java2CompliantClassLoader
+    ) 
+    -->
+    
+
+    <!-- =========================================================== -->
+    <!-- Configure Realms                                            -->
+    <!-- =========================================================== -->
+    <Set name="UserRealms">
+      <Array type="org.mortbay.jetty.security.UserRealm">
+        <Item>
+          <New class="org.mortbay.jetty.security.HashUserRealm">
+            <Set name="name">Test Realm</Set>
+            <Set name="config"><SystemProperty name="red5.config_root" default="conf" />/realm.properties</Set>
+          </New>
+        </Item>
+      </Array>
+    </Set>
+
+    <!-- =========================================================== -->
+    <!-- Do NOT start the server, red5 will do this                                            -->
+    <!-- =========================================================== -->
+    <Set name="stopAtShutdown">true</Set>
+    <!-- <Call name="start"/> -->
+
+</Configure>

@@ -65,6 +65,8 @@ public class TomcatLoader implements ApplicationContextAware {
 	public void init() {
 		log.info("Loading tomcat context");
 
+		getApplicationContext().getResource(tomcatConfig).getInputStream()		
+		
         ShutdownHook shutdownHook = new ShutdownHook();
         Runtime.getRuntime().addShutdownHook(shutdownHook);
         

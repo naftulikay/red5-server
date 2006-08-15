@@ -77,6 +77,6 @@ public interface IStreamService {
 	 * 
 	 * @param call
 	 */
-	public void send(IServiceCall call);
+	//public void send(IServiceCall call);
 	
 }

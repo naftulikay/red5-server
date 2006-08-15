@@ -1,7 +1,5 @@
 package org.red5.server.net.rtmp.event;
 
-import org.red5.server.api.event.IEvent.Type;
-
 public class ClientBW extends BaseEvent {
 	
 	private int bandwidth = 0;

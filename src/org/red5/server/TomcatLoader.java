@@ -19,6 +19,8 @@ package org.red5.server;
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA 
  */
 
+import java.io.File;
+
 import org.apache.catalina.Engine;
 import org.apache.catalina.Host;
 import org.apache.catalina.connector.Connector;
@@ -65,8 +67,12 @@ public class TomcatLoader implements ApplicationContextAware {
 	public void init() {
 		log.info("Loading tomcat context");
 
-		getApplicationContext().getResource(tomcatConfig).getInputStream()		
-		
+		try {
+			getApplicationContext().getResource(tomcatConfig).getInputStream();
+		} catch (Exception e) {
+			log.error("Error loading tomcat configuration", e);
+		}
+	
         ShutdownHook shutdownHook = new ShutdownHook();
         Runtime.getRuntime().addShutdownHook(shutdownHook);
         
@@ -80,8 +86,10 @@ public class TomcatLoader implements ApplicationContextAware {
 		String hostName;
 		//root location for servlet container 
 		String serverRoot = System.getProperty("red5.root");
+		log.info("Server root: " + serverRoot);
 		//root location for servlet container 
 		String appRoot = serverRoot + "/webapps";
+		log.info("Application root: " + appRoot);
 		//set in the system for tomcat classes
 		System.setProperty("catalina.home", serverRoot);
 		//instance embedded
@@ -94,6 +102,8 @@ public class TomcatLoader implements ApplicationContextAware {
 
 		// set default realm
 		realm = new MemoryRealm();
+		//realm.setPathname(System.getProperty("red5.config_root") + File.separatorChar);
+		//realm.setPathname("C:/servers/tomcat/conf/tomcat-users.xml");
 		embedded.setRealm(realm);
 
 		// create an Engine

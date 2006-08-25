@@ -2,182 +2,143 @@
 <!DOCTYPE beans PUBLIC "-//SPRING//DTD BEAN//EN" "http://www.springframework.org/dtd/spring-beans.dtd">
 <beans>
 
-	<!-- Use this to configure Tomcat via Spring -->
-	
-	<bean id="videoCodecFactory" class="org.red5.server.stream.VideoCodecFactory">
-		<property name="codecs">
-			<list>
-				<bean id="screenVideoCodec" class="org.red5.server.stream.codec.ScreenVideo"/>
-				<!--
-				<bean id="sorensonVideoCodec" class="org.red5.server.stream.codec.SorensonVideo"/>
-				-->
-			</list>
-		</property>
-	</bean>
+    <!-- Use this to configure Tomcat via Spring -->
     
-	<bean id="streamableFileFactory" class="org.red5.io.StreamableFileFactory">
-		<property name="services">
-			<list>
-				<bean id="flvFileService" class="org.red5.io.flv.impl.FLVService">
-					<property name="generateMetadata" value="true" />
-				</bean>
-				<bean id="mp3FileService" class="org.red5.io.mp3.impl.MP3Service"/>
-			</list>
-		</property>
-	</bean>
-    
-    <!-- handles creation / lookup of shared objects -->
-    <bean id="sharedObjectService" class="org.red5.server.so.SharedObjectService">
-        <property name="persistenceClassName">
-            <value>org.red5.server.persistence.FilePersistence</value>
+    <!-- This Realm uses the UserDatabase configured in the global JNDI
+        resources under the key "UserDatabase". Any edits that are performed
+        against this UserDatabase are immediately available for use by the Realm. -->
+    <bean id="realm" class="org.apache.catalina.realm.UserDatabaseRealm">
+        <property name="resourceName">
+            <bean id="UserDatabase" class="org.apache.catalina.UserDatabase">
+                <!-- User database that can be updated and saved -->
+                <property name="auth" value="Container" />
+                <property name="factory" value="org.apache.catalina.users.MemoryUserDatabaseFactory" />
+                <property name="pathname" value="conf/tomcat-users.xml" />             
+            </bean>
         </property>
-    </bean>
-    
-      <!-- This Realm uses the UserDatabase configured in the global JNDI
-           resources under the key "UserDatabase".  Any edits
-           that are performed against this UserDatabase are immediately
-           available for use by the Realm.  -->
-      <Realm className="org.apache.catalina.realm.UserDatabaseRealm"
-             resourceName="UserDatabase"/>
-    <Resource name="UserDatabase" auth="Container"
-              type="org.apache.catalina.UserDatabase"
-       description="User database that can be updated and saved"
-           factory="org.apache.catalina.users.MemoryUserDatabaseFactory"
-          pathname="conf/tomcat-users.xml" />             
-             
+    </bean>            
 
-      <!-- Comment out the old realm but leave here for now in case we
-           need to go back quickly -->
-      <!--
-      <Realm className="org.apache.catalina.realm.MemoryRealm" />
-      -->
+    <!-- Comment out the old realm but leave here for now in case we
+       need to go back quickly -->
+    <!--
+    <bean id="realm" class="org.apache.catalina.realm.MemoryRealm" />
+    -->
       
-      <!-- Replace the above Realm with one of the following to get a Realm
-           stored in a database and accessed via JDBC -->
-      <!--
-      <Realm  className="org.apache.catalina.realm.JDBCRealm"
-             driverName="org.gjt.mm.mysql.Driver"
-          connectionURL="jdbc:mysql://localhost/authority"
-         connectionName="test" connectionPassword="test"
-              userTable="users" userNameCol="user_name" userCredCol="user_pass"
-          userRoleTable="user_roles" roleNameCol="role_name" />
-      -->      
+    <!-- Replace the above Realm with one of the following to get a Realm
+       stored in a database and accessed via JDBC -->
+    <!--
+    <bean id="realm" class="org.apache.catalina.realm.JDBCRealm">
+        <property name="driverName">
+            <bean id="UserDatabase" class="org.gjt.mm.mysql.Driver">
+                <property name="connectionURL" value="jdbc:mysql://localhost/authority" />
+                <property name="connectionName" value="test" />
+                <property name="connectionPassword" value="test" />
+                <property name="userTable" value="users" />
+                <property name="userNameCol" value="user_name" />
+                <property name="userCredCol" value="user_pass" />             
+                <property name="userRoleTable" value="user_roles" />             
+                <property name="roleNameCol" value="role_name" />             
+			</bean>
+        </property>
+    </bean>  
+    -->      
       
 	<!-- ================ Connectors ================ -->      
     <!-- Define a non-SSL HTTP/1.1 Connector on port 8080 -->
-    <Connector
-port="80"               maxHttpHeaderSize="8192"
-               maxThreads="150" minSpareThreads="25" maxSpareThreads="75"
-               enableLookups="false" redirectPort="8443" acceptCount="100"
-               connectionTimeout="20000" disableUploadTimeout="true" />
-    <!-- Note : To disable connection timeouts, set connectionTimeout value
-     to 0 -->
-	
-	<!-- Note : To use gzip compression you could set the following properties :
-	
-			   compression="on" 
-			   compressionMinSize="2048" 
-			   noCompressionUserAgents="gozilla, traviata" 
-			   compressableMimeType="text/html,text/xml"
+	<bean id="connector.http" class="org.apache.catalina.connector.http.HttpConnector">
+        <property name="port"><value>${http.port}</value></property>
+        <property name="maxHttpHeaderSize" value="8192" />
+        <property name="maxThreads" value="150" />
+        <property name="minSpareThreads" value="25" />
+        <property name="maxSpareThreads" value="75" />
+        <property name="enableLookups" value="false" />
+        <property name="redirectPort" value="8443" />
+        <property name="acceptCount" value="100" />
+        <!-- Note : To disable connection timeouts, set connectionTimeout value to 0 -->
+        <property name="connectionTimeout" value="20000" />
+        <property name="disableUploadTimeout" value="true" />
+        <!-- Note : To use gzip compression you could set the following properties :
+            <property name="compression" value="on" />
+            <property name="compressionMinSize" value="2048" />
+			<property name="noCompressionUserAgents"><value>gozilla, traviata</value></property> 
+			 <property name="compressableMimeType"><value>text/html,text/xml</value></property>
+	    -->
+	</bean>
+
+    <!-- Define a SSL HTTP/1.1 Connector on port 8443 -- >
+	<bean id="connector.https" class="org.apache.catalina.connector.http.HttpConnector">
+        <property name="port"><value>${https.port}</value></property>
+        <property name="maxHttpHeaderSize"><value>8192</value></property>
+        <property name="maxThreads"><value>150</value></property>
+        <property name="minSpareThreads"><value>25</value></property>
+        <property name="maxSpareThreads"><value>75</value></property>
+        <property name="enableLookups"><value>false</value></property>
+        <property name="acceptCount"><value>100</value></property>
+        <property name="scheme"><value>https</value></property>
+        <property name="secure"><value>true</value></property>
+        <property name="clientAuth"><value>false</value></property>
+        <property name="sslProtocol"><value>TLS</value></property>
+        <!-- Note : To disable connection timeouts, set connectionTimeout value to 0 -- >
+        <property name="connectionTimeout"><value>20000</value></property>
+        <property name="disableUploadTimeout"><value>true</value></property>
+        <!-- Note : To use gzip compression you could set the following properties :
+            <property name="compression"><value>on</value></property>
+            <property name="compressionMinSize"><value>2048"/value></property>
+			<property name="noCompressionUserAgents"><value>gozilla, traviata</value></property> 
+			 <property name="compressableMimeType"><value>text/html,text/xml</value></property>
+	    -- >
+	</bean>	    
 	-->
 
-    <!-- Define a SSL HTTP/1.1 Connector on port 8443 -->
-    <!--
-    <Connector port="8443" maxHttpHeaderSize="8192"
-               maxThreads="150" minSpareThreads="25" maxSpareThreads="75"
-               enableLookups="false" disableUploadTimeout="true"
-               acceptCount="100" scheme="https" secure="true"
-               clientAuth="false" sslProtocol="TLS" />
-    -->
-
     <!-- Define an AJP 1.3 Connector on port 8009 -->
-    <Connector port="8009" 
-               enableLookups="false" redirectPort="8443" protocol="AJP/1.3" />
-
-    <!-- Define a Proxied HTTP/1.1 Connector on port 8082 -->
-    <!-- See proxy documentation for more information about using this. -->
     <!--
-    <Connector port="8082" 
-               maxThreads="150" minSpareThreads="25" maxSpareThreads="75"
-               enableLookups="false" acceptCount="100" connectionTimeout="20000"
-               proxyPort="80" disableUploadTimeout="true" />
+	<bean id="connector.ajp" class="org.apache.coyote.tomcat5.CoyoteConnector">
+        <property name="port"><value>${ajp.port}</value></property>
+        <property name="maxHttpHeaderSize" value="8192" />
+        <property name="maxThreads" value="150" />
+        <property name="minSpareThreads" value="25" />
+        <property name="maxSpareThreads" value="75" />
+        <property name="enableLookups" value="false" />
+        <property name="redirectPort" value="8443" />
+        <property name="acceptCount" value="100" />
+        <property name="protocol"><value>AJP/1.3</value></property>
+        <property name="protocolHandlerClassName">
+            <bean class="org.apache.jk.server.JkCoyoteHandler" />
+        </property>
+        <!-- Note : To disable connection timeouts, set connectionTimeout value to 0 -- >
+        <property name="connectionTimeout" value="20000" />
+        <property name="disableUploadTimeout" value="true" />
+	</bean>	   
     -->
-
+    
     <!-- ================ Engines ================ -->
     <!-- You should set jvmRoute to support load-balancing via AJP ie :
-    <Engine name="Standalone" defaultHost="localhost" jvmRoute="jvm1">         
+	<bean id="engine.standalone" class="org.apache.catalina.core.StandardEngine">
+        <property name="defaultHost" value="localhost" />
+        <property name="jvmRoute" value="jvm1" />
+	</bean>	   
     --> 
   
     <!-- Define the top level container in our container hierarchy -->
-    <Engine name="Catalina" defaultHost="localhost">      
-
-    
-    <!-- ================ Hosts ================ -->
-
-      <Host name="localhost" appBase="webapps"
-       unpackWARs="true" autoDeploy="true"
-       xmlValidation="false" xmlNamespaceAware="false">
-
-        <!-- Normally, users must authenticate themselves to each web app
-             individually.  Uncomment the following entry if you would like
-             a user to be authenticated the first time they encounter a
-             resource protected by a security constraint, and then have that
-             user identity maintained across *all* web applications contained
-             in this virtual host. -->
+	<bean id="engine.default" class="org.apache.catalina.core.StandardEngine">
+        <property name="defaultHost" value="localhost" />
+        <bean id="localhost" class="org.apache.catalina.core.StandardHost">
+            <property name="name" value="${http.host}" />
+            <property name="appBase" value="${red5.root}/webapps" />
+            <property name="unpackWARs" value="true" />
+            <property name="autoDeploy" value="true" />
+            <property name="xmlValidation" value="false" />
+            <property name="xmlNamespaceAware" value="false" />
         <!--
-        <Valve className="org.apache.catalina.authenticator.SingleSignOn" />
+            <bean id="valve.access" class="org.apache.catalina.valves.AccessLogValve">
+                 <property name="directory" value="logs" />
+                 <property name="prefix" value="localhost_access_log." />
+                 <property name="suffix" value=".txt" />
+                 <property name="pattern" value="common"" />
+                 <property name="resolveHosts" value="false"/>
+            </bean>
         -->
-
-        <!-- Access log processes all requests for this virtual host.  By
-             default, log files are created in the "logs" directory relative to
-             $CATALINA_HOME.  If you wish, you can specify a different
-             directory with the "directory" attribute.  Specify either a relative
-             (to $CATALINA_HOME) or absolute path to the desired directory.
-        -->
-        <!--
-        <Valve className="org.apache.catalina.valves.AccessLogValve"
-                 directory="logs"  prefix="localhost_access_log." suffix=".txt"
-                 pattern="common" resolveHosts="false"/>
-        -->
-
-        <!-- Access log processes all requests for this virtual host.  By
-             default, log files are created in the "logs" directory relative to
-             $CATALINA_HOME.  If you wish, you can specify a different
-             directory with the "directory" attribute.  Specify either a relative
-             (to $CATALINA_HOME) or absolute path to the desired directory.
-             This access log implementation is optimized for maximum performance,
-             but is hardcoded to support only the "common" and "combined" patterns.
-        -->
-        <!--
-        <Valve className="org.apache.catalina.valves.FastCommonAccessLogValve"
-                 directory="logs"  prefix="localhost_access_log." suffix=".txt"
-                 pattern="common" resolveHosts="false"/>
-        -->
-
-      </Host>
-    
+        </bean>	   
+	</bean>	   
    
-	<!-- Now we can load the cache engine -->
-
-	
-	<bean id="object.cache" class="org.red5.server.cache.WhirlyCacheImpl" init-method="init" autowire="byType">
-		<property name="maxEntries" value="5" />
-		<property name="cacheConfig">
-			<bean class="com.whirlycott.cache.CacheConfiguration">
-				<property name="name" value="flv.cache" />
-				<property name="maxSize" value="5" />
-				<!-- This policy removes cached items, biased towards least frequently used (LFU) Items -->
-				<property name="policy"><value>com.whirlycott.cache.policy.LFUMaintenancePolicy</value></property>
-				<!-- This policy removes cached items, biased towards least recently used (LRU) Items -->
-				<!-- property name="policy"><value>com.whirlycott.cache.policy.LRUMaintenancePolicy</value></property -->
-				<!-- This policy removes cache items in the order in which they were added -->
-				<!-- property name="policy"><value>com.whirlycott.cache.policy.FIFOMaintenancePolicy</value></property -->
-				<!-- A predicate for filtering Collections of Items based on their expiration time -->
-				<!-- property name="policy"><value>com.whirlycott.cache.policy.ExpirationTimePredicate</value></property -->		
-				<!-- property name="backend"><value>com.whirlycott.cache.impl.ConcurrentHashMapImpl</value></property -->
-				<property name="backend"><value>com.whirlycott.cache.impl.FastHashMapImpl</value></property>
-			</bean>
-		</property>
-	</bean>  
-    
 </beans>

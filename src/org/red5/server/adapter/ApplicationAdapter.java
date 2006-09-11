@@ -65,7 +65,7 @@ public class ApplicationAdapter extends StatefulScopeWrappingAdapter
 
 	protected static Log log =
         LogFactory.getLog(ApplicationAdapter.class.getName());
-
+	
 	/**
 	 * Reject the currently connecting client without a special error message.
 	 *

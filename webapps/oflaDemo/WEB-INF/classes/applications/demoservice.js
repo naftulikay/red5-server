@@ -21,7 +21,7 @@ function DemoService() {
 			var flvs = scope.getResources("streams/*.flv"); //Resource[]
 			for (var flv in flvs) {
 				var file = flv.getFile();
-				var lastModified = formatDate(new Date(file.lastModified()));
+				var lastModified = this.formatDate(new Date(file.lastModified()));
 				var flvName = file.getName();
 				var flvBytes = file.length();
 	
@@ -39,8 +39,8 @@ function DemoService() {
 			print('Getting the MP3 files');
 			var mp3s = scope.getResources("streams/*.mp3");
 			for (var mp3 in mp3s) {
-				var file = mp3.getFile();
-				var lastModified = formatDate(new Date(file.lastModified()));
+				file = mp3.getFile();
+				lastModified = this.formatDate(new Date(file.lastModified()));
 				var mpName = file.getName();
 				var mpBytes = file.length();
 	
@@ -62,7 +62,7 @@ function DemoService() {
 	}
 
 	function formatDate(date) {
-		return new String(date.getDate() + '/' + date.getMonth() + '/' + date.getFullYear() + ' ' + date.getHours() + ':' + date.getMinutes() + ':' + date.getSeconds());
+		return date.getDate() + '/' + date.getMonth() + '/' + date.getFullYear() + ' ' + date.getHours() + ':' + date.getMinutes() + ':' + date.getSeconds();
 	}
 	
 }

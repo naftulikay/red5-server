@@ -19,12 +19,10 @@ package org.red5.server;
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA 
  */
 
-import java.io.File;
-
 import org.apache.catalina.Engine;
 import org.apache.catalina.Host;
+import org.apache.catalina.Realm;
 import org.apache.catalina.connector.Connector;
-import org.apache.catalina.realm.MemoryRealm;
 import org.apache.catalina.startup.Embedded;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -36,24 +34,27 @@ public class TomcatLoader implements ApplicationContextAware {
 	// Initialize Logging
 	protected static Log log = LogFactory.getLog(TomcatLoader.class.getName());
 
-	protected String tomcatConfig = "classpath:/tomcat.xml";
-
 	// Instance variables:
 	private String name = "red5";
 
 	private int portNumber = 8080;
 
 	private Embedded embedded;
-
-	private Engine baseEngine;
+	private Realm realm;
+	private Engine engine;
 
 	private Host baseHost;
 
-	private Connector httpConnector;
+	private Connector connector;
 
 	// We store the application context in a ThreadLocal so we can access it
 	// from "org.red5.server.tomcat.Red5WebPropertiesConfiguration" later.
 	private static ThreadLocal<ApplicationContext> applicationContext = new ThreadLocal<ApplicationContext>();
+	
+	{
+		//shutdown in case of untimely death
+    Runtime.getRuntime().addShutdownHook(new ShutdownHook());
+	}
 	
 	public void setApplicationContext(ApplicationContext context)
 			throws BeansException {
@@ -68,19 +69,15 @@ public class TomcatLoader implements ApplicationContextAware {
 		log.info("Loading tomcat context");
 
 		try {
-			getApplicationContext().getResource(tomcatConfig).getInputStream();
+			getApplicationContext();
 		} catch (Exception e) {
 			log.error("Error loading tomcat configuration", e);
 		}
 	
-        ShutdownHook shutdownHook = new ShutdownHook();
-        Runtime.getRuntime().addShutdownHook(shutdownHook);
-        
 		String prt = null;
 		this.portNumber = (null == (prt = System.getProperty("http.port")) ? 8080
 				: Integer.parseInt(prt));
 
-		MemoryRealm realm;
 		org.apache.catalina.Context context;
 		String baseEngineName;
 		String hostName;
@@ -92,33 +89,29 @@ public class TomcatLoader implements ApplicationContextAware {
 		log.info("Application root: " + appRoot);
 		//set in the system for tomcat classes
 		System.setProperty("catalina.home", serverRoot);
-		//instance embedded
-		embedded = new Embedded();
 
 		// set default logger
 		//FileLogger fileLog = new FileLogger(); fileLog.setDirectory(".");
 		//fileLog.setPrefix(name); fileLog.setSuffix(".log");
 		//fileLog.setTimestamp(true); embedded.setLogger(fileLog);
 
-		// set default realm
-		realm = new MemoryRealm();
 		//realm.setPathname(System.getProperty("red5.config_root") + File.separatorChar);
 		//realm.setPathname("C:/servers/tomcat/conf/tomcat-users.xml");
 		embedded.setRealm(realm);
 
 		// create an Engine
-		baseEngine = embedded.createEngine();
+		////engine = embedded.createEngine();
 
 		// set Engine properties
 		baseEngineName = name + "Engine";
 		//hostName = name + "Host";
 		hostName = "localhost";
 
-		baseEngine.setName(baseEngineName);
-		baseEngine.setDefaultHost(hostName);
+		engine.setName(baseEngineName);
+		engine.setDefaultHost(hostName);
 
 		baseHost = embedded.createHost(hostName, appRoot);
-		baseEngine.addChild(baseHost);
+		engine.addChild(baseHost);
 
 		// RootContext
 		context = addContext("", appRoot + "/root");
@@ -128,18 +121,12 @@ public class TomcatLoader implements ApplicationContextAware {
 		// set any props on the catalina context
 		log.debug("----> Context: " + context.toString());
 		
-		
-		
 		// add new Engine to set of Engine for embedded server
-		embedded.addEngine(baseEngine);
-
-		// create Connector
-		httpConnector = embedded.createConnector((java.net.InetAddress) null,
-				portNumber, false);
+		embedded.addEngine(engine);
 
 		// add new Connector to set of Connectors for embedded server,
 		// associated with Engine
-		embedded.addConnector(httpConnector);
+		embedded.addConnector(connector);
 
 		// start server
 		try {
@@ -153,12 +140,75 @@ public class TomcatLoader implements ApplicationContextAware {
 		}
 	}
 
+	public Realm getRealm()
+	{
+		return realm;
+	}
+
+	public void setRealm(Realm realm)
+	{
+		log.info("Setting realm: " + realm.getClass().getName());
+		this.realm = realm;
+	}
+
+	public Engine getEngine()
+	{
+		return engine;
+	}
+
+	public void setEngine(Engine engine)
+	{
+		log.info("Setting engine: " + engine.getClass().getName());
+		this.engine = engine;
+	}
+
+	public Host getBaseHost()
+	{
+		return baseHost;
+	}
+
+	public void setBaseHost(Host baseHost)
+	{
+		this.baseHost = baseHost;
+	}
+
+	public Embedded getEmbedded()
+	{
+		return embedded;
+	}
+
+	public void setEmbedded(Embedded embedded)
+	{
+		log.info("Setting embedded: " + embedded.getClass().getName());
+		this.embedded = embedded;
+	}
+
+	public Connector getConnector()
+	{
+		return connector;
+	}
+
+	public void setConnector(Connector connector)
+	{
+		log.info("Setting connector: " + connector.getClass().getName());		
+		this.connector = connector;
+	}
+
 	public org.apache.catalina.Context addContext(String path, String docBase) {
 		org.apache.catalina.Context c = embedded.createContext(path, docBase);
 		baseHost.addChild(c);
 		return c;
 	}
 
+	public void shutdown() {
+		log.info("Shutting down tomcat context");
+    try {
+    	embedded.stop();
+    } catch (Exception e) {
+    	log.warn("Tomcat could not be stopped", e);
+    }		
+	}
+	
     /**
      * Catches an abrupt exit of the application and completes given
      * tasks prior to the actual exit.
@@ -166,11 +216,7 @@ public class TomcatLoader implements ApplicationContextAware {
     class ShutdownHook extends Thread {
         public void run() {
             log.info("Shutdown hook called");
-            try {
-            	embedded.stop();
-            } catch (Exception e) {
-            	log.warn("Tomcat could not be stopped", e);
-            }
+            shutdown();
         }
     }
 }

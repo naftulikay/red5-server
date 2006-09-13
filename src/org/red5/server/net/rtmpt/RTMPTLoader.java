@@ -47,7 +47,7 @@ public class RTMPTLoader implements ApplicationContextAware {
 	protected Server rtmptServer;
 	protected IServer server;
 	protected RTMPTHandler handler;
-
+ 
 	public void setServer(IServer server){
 		this.server = server;
 	}

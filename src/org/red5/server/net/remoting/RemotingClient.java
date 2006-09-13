@@ -30,7 +30,6 @@ import org.apache.commons.httpclient.methods.PostMethod;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.mina.common.ByteBuffer;
-import org.mortbay.thread.ThreadPool;
 import org.red5.io.amf.Input;
 import org.red5.io.amf.Output;
 import org.red5.io.object.Deserializer;
@@ -39,6 +38,8 @@ import org.red5.io.object.Serializer;
 import org.red5.server.api.IScope;
 import org.red5.server.api.Red5;
 import org.red5.server.net.servlet.ServletUtils;
+import org.red5.server.pooling.ThreadPool;
+import org.red5.server.pooling.WorkerThread;
 
 /**
  * Client interface for remoting calls.
@@ -305,37 +306,30 @@ public class RemotingClient {
 	 * @param params
 	 * @param callback
 	 */
-	public void invokeMethod(String method, Object[] params, IRemotingCallback callback) {
+	public void invokeMethod(String method, Object[] methodParams, IRemotingCallback callback) {
 		IScope scope = Red5.getConnectionLocal().getScope();
-		RemotingWorker worker = new RemotingWorker(this, method, params, callback);
-		
 		ThreadPool pool = (ThreadPool) scope.getContext().getBean(POOL_BEAN_ID);
-		pool.dispatch(worker);
+		try {
+			WorkerThread wt = (WorkerThread) pool.borrowObject();	
+	    Object[] params = new Object[] { this, method, methodParams, callback };
+	    Class[] paramTypes = new Class[] { RemotingClient.class, String.class, Object.class, IRemotingCallback.class };
+			wt.execute("org.red5.server.net.remoting.RemotingClient$RemotingWorker", "executeTask", params, paramTypes, null);
+		} catch (Exception err) {
+			log.warn("Exception invoking method: " + method);
+		}
 	}
 	
 	/**
 	 * Worker class that is used for asynchronous remoting calls.
 	 */
-	protected class RemotingWorker implements Runnable {
+	protected class RemotingWorker {
 		
-		protected RemotingClient client;
-		protected String method;
-		protected Object[] params;
-		protected IRemotingCallback callback;
-		
-		protected RemotingWorker(RemotingClient client, String method, Object[] params, IRemotingCallback callback) {
-			this.client = client;
-			this.method = method;
-			this.params = params;
-			this.callback = callback;
-		}
-		
-		public void run() {
+		public void executeTask(RemotingClient client, String method, Object[] params, IRemotingCallback callback) {
 			try {
-				Object result = this.client.invokeMethod(method, params);
-				this.callback.resultReceived(this.client, method, params, result);
+				Object result = client.invokeMethod(method, params);
+				callback.resultReceived(client, method, params, result);
 			} catch (Exception err) {
-				this.callback.errorReceived(this.client, method, params, err);
+				callback.errorReceived(client, method, params, err);
 			}
 		}
 	}

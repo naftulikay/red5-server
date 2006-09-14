@@ -110,7 +110,7 @@ public class TomcatLoader implements ApplicationContextAware {
 		engine.setName(baseEngineName);
 		engine.setDefaultHost(hostName);
 
-		baseHost = embedded.createHost(hostName, appRoot);
+		//baseHost = embedded.createHost(hostName, appRoot);
 		engine.addChild(baseHost);
 
 		// RootContext
@@ -127,11 +127,14 @@ public class TomcatLoader implements ApplicationContextAware {
 		// add new Connector to set of Connectors for embedded server,
 		// associated with Engine
 		embedded.addConnector(connector);
-
+		
 		// start server
 		try {
 			log.info("Starting tomcat servlet engine");
 			embedded.start();
+
+			//org.apache.catalina.connector.Connector ct = new org.apache.catalina.connector.Connector("http");
+			
 		} catch (org.apache.catalina.LifecycleException e) {
 			log.error("Error loading tomcat", e);
 			// fileLog.log("Startup failed");

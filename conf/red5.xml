@@ -29,7 +29,7 @@
 	
 	<!-- Now we can load the servlet engine, this has to happen after the context are loaded -->
 	<!-- bean id="jetty6.server" class="org.red5.server.JettyLoader" init-method="init" autowire="byType" / -->
-	<bean id="tomcat.server" class="org.red5.server.TomcatLoader" init-method="init" autowire="byType">
+	<bean id="tomcat.server" class="org.red5.server.TomcatLoader" init-method="init" destroy-method="shutdown" autowire="byType">
 	    <!-- Use this to configure Tomcat via Spring -->
 	    <property name="embedded">
 	    	<bean class="org.apache.catalina.startup.Embedded" />
@@ -80,24 +80,18 @@
 		<!-- ================ Connectors ================     
 	    Define a non-SSL HTTP/1.1 Connector on port 8080 -->
 	    <property name="connector">
-			<bean class="org.apache.catalina.connector.http.HttpConnector">
-		        <property name="port"><value>${http.port}</value></property>
-		        <property name="maxHttpHeaderSize" value="8192" />
-		        <property name="maxThreads" value="150" />
-		        <property name="minSpareThreads" value="25" />
-		        <property name="maxSpareThreads" value="75" />
-		        <property name="enableLookups" value="false" />
-		        <property name="redirectPort" value="8443" />
-		        <property name="acceptCount" value="100" />
-		        <!-- Note : To disable connection timeouts, set connectionTimeout value to 0 -->
-		        <property name="connectionTimeout" value="20000" />
-		        <property name="disableUploadTimeout" value="true" />
-		        <!-- Note : To use gzip compression you could set the following properties :
-		            <property name="compression" value="on" />
-		            <property name="compressionMinSize" value="2048" />
-					<property name="noCompressionUserAgents"><value>gozilla, traviata</value></property> 
-					<property name="compressableMimeType"><value>text/html,text/xml</value></property>
-			    -->
+			<bean class="org.apache.catalina.connector.Connector">
+		        <property name="port"><value>5080</value></property>
+		        <property name="redirectPort"><value>8443</value></property>
+		        <property name="enableLookups"><value>false</value></property>
+		        <!-- 
+		        <property name="scheme"><value>http</value></property>
+		        <property name="secure" value="false" />
+		        <property name="proxyName" value="??" />
+		        <property name="proxyPort" value="8090" />
+		        <property name="maxPostSize" value="2048" />
+		        <property name="maxSavePostSize" value="4" />
+ 				-->
 			</bean>
 	    </property>
 	    	
@@ -105,19 +99,10 @@
 	    <property name="connector.https">
 			<bean class="org.apache.catalina.connector.http.HttpConnector">
 		        <property name="port"><value>${https.port}</value></property>
-		        <property name="maxHttpHeaderSize"><value>8192</value></property>
-		        <property name="maxThreads"><value>150</value></property>
-		        <property name="minSpareThreads"><value>25</value></property>
-		        <property name="maxSpareThreads"><value>75</value></property>
-		        <property name="enableLookups"><value>false</value></property>
-		        <property name="acceptCount"><value>100</value></property>
 		        <property name="scheme"><value>https</value></property>
 		        <property name="secure"><value>true</value></property>
 		        <property name="clientAuth"><value>false</value></property>
 		        <property name="sslProtocol"><value>TLS</value></property>
-		        <!- - Note : To disable connection timeouts, set connectionTimeout value to 0 - ->
-		        <property name="connectionTimeout"><value>20000</value></property>
-		        <property name="disableUploadTimeout"><value>true</value></property>
 			</bean>	  
 	    </property>		  
 		-->
@@ -126,23 +111,33 @@
 	    <property name="connector.ajp">
 			<bean class="org.apache.coyote.tomcat5.CoyoteConnector">
 		        <property name="port"><value>${ajp.port}</value></property>
-		        <property name="maxHttpHeaderSize" value="8192" />
-		        <property name="maxThreads" value="150" />
-		        <property name="minSpareThreads" value="25" />
-		        <property name="maxSpareThreads" value="75" />
-		        <property name="enableLookups" value="false" />
-		        <property name="redirectPort" value="8443" />
-		        <property name="acceptCount" value="100" />
 		        <property name="protocol"><value>AJP/1.3</value></property>
 		        <property name="protocolHandlerClassName">
 		            <bean class="org.apache.jk.server.JkCoyoteHandler" />
 		        </property>
-		        <!- - Note : To disable connection timeouts, set connectionTimeout value to 0 - - >
-		        <property name="connectionTimeout" value="20000" />
-		        <property name="disableUploadTimeout" value="true" />
 			</bean>	   
 	    </property>
 	    -->
+
+        <property name="baseHost">
+	       <bean class="org.apache.catalina.core.StandardHost">
+	           <property name="name" value="localhost" />
+	           <property name="appBase" value="${red5.root}/webapps" />
+	           <property name="unpackWARs" value="true" />
+	           <property name="autoDeploy" value="true" />
+	           <property name="xmlValidation" value="false" />
+	           <property name="xmlNamespaceAware" value="false" />
+	       <!--
+	           <bean id="valve.access" class="org.apache.catalina.valves.AccessLogValve">
+	                <property name="directory" value="logs" />
+	                <property name="prefix" value="localhost_access_log." />
+	                <property name="suffix" value=".txt" />
+	                <property name="pattern" value="common"" />
+	                <property name="resolveHosts" value="false"/>
+	           </bean>
+	       -->
+	       </bean>	   
+	    </property>		
 	    
 	    <!-- ================ Engines ================
 	    You should set jvmRoute to support load-balancing via AJP ie : - - >
@@ -157,25 +152,7 @@
 	    <!-- Define the top level container in our container hierarchy -->
 	    <property name="engine">
 			<bean class="org.apache.catalina.core.StandardEngine">
-		        <property name="defaultHost">
-			        <bean class="org.apache.catalina.core.StandardHost">
-			            <property name="name" value="${http.host}" />
-			            <property name="appBase" value="${red5.root}/webapps" />
-			            <property name="unpackWARs" value="true" />
-			            <property name="autoDeploy" value="true" />
-			            <property name="xmlValidation" value="false" />
-			            <property name="xmlNamespaceAware" value="false" />
-			        <!--
-			            <bean id="valve.access" class="org.apache.catalina.valves.AccessLogValve">
-			                 <property name="directory" value="logs" />
-			                 <property name="prefix" value="localhost_access_log." />
-			                 <property name="suffix" value=".txt" />
-			                 <property name="pattern" value="common"" />
-			                 <property name="resolveHosts" value="false"/>
-			            </bean>
-			        -->
-			        </bean>	   
-	    		</property>		
+		        <property name="defaultHost" value="localhost" />
 			</bean>	   	
 	    </property>	
 	</bean>

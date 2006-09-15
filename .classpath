@@ -34,5 +34,7 @@
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/Tomcat Embedded"/>
 	<classpathentry kind="lib" path="lib/whirlycache-1.0.1_lite.jar"/>
 	<classpathentry kind="lib" path="lib/commons-pool-1.3.jar"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/Jetty Embedded"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/red5_scripting"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

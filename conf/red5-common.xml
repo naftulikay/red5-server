@@ -117,5 +117,34 @@
 			</bean>
 		</property>
 	</bean>    
+	
+	
+	<!-- Then we load the scripting context, with the common as parent --> 
+	<bean id="script.context" class="org.red5.server.script.ScriptObjectContext"
+		singleton="true"
+		init-method="init">
+		<property name="scriptManager">
+			<bean class="javax.script.ScriptEngineManager" />
+		</property>
+	</bean>
+	
+	<bean id="jsApplication" class="org.red5.server.script.rhino.RhinoScriptFactory">
+		<constructor-arg value="classpath:applications/main.js" />
+	</bean>
+<!-- 
+	<bean id="groovyApplication" class="org.springframework.core.io.ClassPathResource">
+		<constructor-arg value="classpath:/applications/main.groovy" />
+	</bean>
+
+	<bean id="rubyApplication" class="org.springframework.core.io.ClassPathResource">
+		<constructor-arg value="classpath:/applications/main.rb" />
+	</bean>
+ 
+	<bean id="scriptApplication" class="org.red5.server.script.ResourceScriptSource">
+		<constructor-arg ref="jsApplication" />
+	</bean>
+	<bean class="org.red5.server.script.ScriptFactoryPostProcessor" />
+
+ -->	
     
 </beans>

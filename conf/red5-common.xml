@@ -118,7 +118,6 @@
 		</property>
 	</bean>    
 	
-	
 	<!-- Then we load the scripting context, with the common as parent --> 
 	<bean id="script.context" class="org.red5.server.script.ScriptObjectContext"
 		singleton="true"
@@ -130,6 +129,7 @@
 	
 	<bean id="jsApplication" class="org.red5.server.script.rhino.RhinoScriptFactory">
 		<constructor-arg value="classpath:applications/main.js" />
+		<property name="scriptContext" ref="script.context" />
 	</bean>
 <!-- 
 	<bean id="groovyApplication" class="org.springframework.core.io.ClassPathResource">

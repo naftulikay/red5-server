@@ -76,20 +76,83 @@
         <property name="handler" ref="rtmpHandler"/>
         <property name="codecFactory" ref="rtmpCodecFactory"/>
     </bean>
-<!-- 
+    
 	<bean id="rtmptHandler" class="org.red5.server.net.rtmpt.RTMPTHandler"
 		autowire="byType">
 		<property name="codecFactory" ref="rtmpCodecFactory" />
 	</bean>
 
+<!-- 
 	<bean id="rtmpt.server" class="org.red5.server.net.rtmpt.RTMPTLoader" init-method="init" autowire="byType" />
 -->	
+	<bean id="rtmpt.server" class="org.red5.server.net.rtmpt.TomcatRTMPTLoader" init-method="init" destroy-method="shutdown" autowire="byType">
+	    <property name="embedded">
+	    	<bean class="org.apache.catalina.startup.Embedded" />
+	    </property>
+
+	    <property name="engine">
+			<ref bean="baseEngine" />
+	    </property>
+	    
+		<!-- Non-SSL HTTP/1.1 Connector -->
+	    <property name="connector">
+			<bean class="org.apache.catalina.connector.Connector">
+		        <property name="port"><value>8080</value></property>
+		        <property name="enableLookups"><value>false</value></property>
+			</bean>
+	    </property>
+	    
+        <property name="host">
+	       <bean class="org.apache.catalina.core.StandardHost">
+	           <property name="name" value="0.0.0.0" />
+	           <property name="unpackWARs" value="false" />
+	           <property name="autoDeploy" value="false" />
+	           <property name="xmlValidation" value="false" />
+	           <property name="xmlNamespaceAware" value="false" />
+	       </bean>	   
+	    </property>		
+
+        <property name="context">
+			<bean class="org.apache.catalina.core.StandardContext">
+				<property name="name" value="rtmptContext" />
+				<property name="reloadable" value="false" />
+			</bean>
+  		</property>	    
+	    
+		<property name="wrapper">
+			<bean class="org.apache.catalina.core.StandardWrapper">
+				<property name="servletName" value="RTMPTServlet" />
+				<property name="servletClass" value="org.red5.server.net.servlet.RTMPTServlet" />
+			</bean>	    
+  		</property>	    
+
+        <property name="mappings">
+		    <map>
+		      <entry>
+		        <key><value>RTMPTServlet</value></key>
+		        <value>/open/*</value>
+		      </entry>
+		      <entry>
+		        <key><value>RTMPTServlet</value></key>
+		        <value>/close/*</value>
+		      </entry>
+		      <entry>
+		        <key><value>RTMPTServlet</value></key>
+		        <value>/send/*</value>
+		      </entry>
+		      <entry>
+		        <key><value>RTMPTServlet</value></key>
+		        <value>/idle/*</value>
+		      </entry>		      
+		    </map>
+  		</property>
+
+    </bean>
 	
 	<bean id="debugProxyIoHandler" class="org.red5.server.net.proxy.DebugProxyHandler">
         <property name="codecFactory" ref="rtmpCodecFactory" />
         <property name="forward" value="${proxy_forward.host_port}" />
         <property name="dumpTo" value="./webapps/dump/" />
     </bean>
-	
 	
 </beans>

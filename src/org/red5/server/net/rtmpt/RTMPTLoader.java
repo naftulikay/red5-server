@@ -67,7 +67,7 @@ public class RTMPTLoader implements ApplicationContextAware {
 		// So this class is left just starting jetty, we can probably use the old method 
 		
 		log.info("Loading RTMPT context from: "+rtmptConfig);
-/*
+
 		Server rtmptServer = new Server();
 		XmlConfiguration config = new XmlConfiguration(applicationContext.getResource(rtmptConfig).getInputStream());
 		config.configure(rtmptServer);
@@ -86,7 +86,7 @@ public class RTMPTLoader implements ApplicationContextAware {
 		contextHandler.setAttribute(RTMPTHandler.HANDLER_ATTRIBUTE, this.handler);
 		log.info("Starting RTMPT server");
 		rtmptServer.start();
-*/		
+
 	}
 
 }

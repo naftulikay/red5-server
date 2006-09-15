@@ -19,10 +19,16 @@ package org.red5.server;
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA 
  */
 
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
 import org.apache.catalina.Engine;
 import org.apache.catalina.Host;
 import org.apache.catalina.Realm;
+import org.apache.catalina.Valve;
 import org.apache.catalina.connector.Connector;
+import org.apache.catalina.core.StandardHost;
 import org.apache.catalina.startup.Embedded;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -34,26 +40,28 @@ public class TomcatLoader implements ApplicationContextAware {
 	// Initialize Logging
 	protected static Log log = LogFactory.getLog(TomcatLoader.class.getName());
 
-	// Instance variables:
-	private String name = "red5";
-
-	private int portNumber = 8080;
-
-	private Embedded embedded;
-	private Realm realm;
-	private Engine engine;
-
+	protected Embedded embedded;
+	protected Engine engine;
+	protected Realm realm;
+	protected Connector connector;
 	private Host baseHost;
 
-	private Connector connector;
-
-	// We store the application context in a ThreadLocal so we can access it
-	// from "org.red5.server.tomcat.Red5WebPropertiesConfiguration" later.
-	private static ThreadLocal<ApplicationContext> applicationContext = new ThreadLocal<ApplicationContext>();
+	// We store the application context in a ThreadLocal so we can access it later.
+	protected static ThreadLocal<ApplicationContext> applicationContext = new ThreadLocal<ApplicationContext>();
 	
-	{
-		//shutdown in case of untimely death
-    Runtime.getRuntime().addShutdownHook(new ShutdownHook());
+	//used during context creation
+	private static String appRoot;
+	
+	static {
+		log.info("Init tomcat");
+		//root location for servlet container 
+		String serverRoot = System.getProperty("red5.root");
+		log.info("Server root: " + serverRoot);
+		//root location for servlet container 
+		appRoot = serverRoot + "/webapps";
+		log.info("Application root: " + appRoot);
+		//set in the system for tomcat classes
+		System.setProperty("catalina.home", serverRoot);    
 	}
 	
 	public void setApplicationContext(ApplicationContext context)
@@ -74,52 +82,10 @@ public class TomcatLoader implements ApplicationContextAware {
 			log.error("Error loading tomcat configuration", e);
 		}
 	
-		String prt = null;
-		this.portNumber = (null == (prt = System.getProperty("http.port")) ? 8080
-				: Integer.parseInt(prt));
-
-		org.apache.catalina.Context context;
-		String baseEngineName;
-		String hostName;
-		//root location for servlet container 
-		String serverRoot = System.getProperty("red5.root");
-		log.info("Server root: " + serverRoot);
-		//root location for servlet container 
-		String appRoot = serverRoot + "/webapps";
-		log.info("Application root: " + appRoot);
-		//set in the system for tomcat classes
-		System.setProperty("catalina.home", serverRoot);
-
-		// set default logger
-		//FileLogger fileLog = new FileLogger(); fileLog.setDirectory(".");
-		//fileLog.setPrefix(name); fileLog.setSuffix(".log");
-		//fileLog.setTimestamp(true); embedded.setLogger(fileLog);
-
-		//realm.setPathname(System.getProperty("red5.config_root") + File.separatorChar);
-		//realm.setPathname("C:/servers/tomcat/conf/tomcat-users.xml");
 		embedded.setRealm(realm);
-
-		// create an Engine
-		////engine = embedded.createEngine();
-
-		// set Engine properties
-		baseEngineName = name + "Engine";
-		//hostName = name + "Host";
-		hostName = "localhost";
-
-		engine.setName(baseEngineName);
-		engine.setDefaultHost(hostName);
 
 		//baseHost = embedded.createHost(hostName, appRoot);
 		engine.addChild(baseHost);
-
-		// RootContext
-		context = addContext("", appRoot + "/root");
-		
-		//load up any additional contexts
-		context = addContext("oflaDemo", appRoot + "/oflaDemo");
-		// set any props on the catalina context
-		log.debug("----> Context: " + context.toString());
 		
 		// add new Engine to set of Engine for embedded server
 		embedded.addEngine(engine);
@@ -131,15 +97,9 @@ public class TomcatLoader implements ApplicationContextAware {
 		// start server
 		try {
 			log.info("Starting tomcat servlet engine");
-			embedded.start();
-
-			//org.apache.catalina.connector.Connector ct = new org.apache.catalina.connector.Connector("http");
-			
+			embedded.start();		
 		} catch (org.apache.catalina.LifecycleException e) {
 			log.error("Error loading tomcat", e);
-			// fileLog.log("Startup failed");
-			// fileLog.log(ex.getMessage());
-			//e.printStackTrace();
 		}
 	}
 
@@ -172,6 +132,7 @@ public class TomcatLoader implements ApplicationContextAware {
 
 	public void setBaseHost(Host baseHost)
 	{
+		log.debug("setBaseHost");
 		this.baseHost = baseHost;
 	}
 
@@ -185,7 +146,7 @@ public class TomcatLoader implements ApplicationContextAware {
 		log.info("Setting embedded: " + embedded.getClass().getName());
 		this.embedded = embedded;
 	}
-
+	
 	public Connector getConnector()
 	{
 		return connector;
@@ -197,6 +158,50 @@ public class TomcatLoader implements ApplicationContextAware {
 		this.connector = connector;
 	}
 
+	/**
+	 * Set additional connectors
+	 * @param connectors
+	 */
+	public void setConnectors(List<Connector> connectors) {
+		log.debug("setConnectors: " + connectors.size());
+		for (Connector ctr : connectors) {
+			embedded.addConnector(ctr);
+		}
+	}	
+	
+	/**
+	 * Set additional hosts
+	 * @param hosts
+	 */
+	public void setHosts(List<Host> hosts) {
+		log.debug("setHosts: " + hosts.size());
+		for (Host host : hosts) {
+			engine.addChild(host);
+		}
+	}
+	
+	/**
+	 * Set additional valves
+	 * @param valves
+	 */
+	public void setValves(List<Valve> valves) {
+		log.debug("setValves: " + valves.size());
+		for (Valve valve : valves) {
+			((StandardHost) baseHost).addValve(valve);
+		}
+	}
+	
+	/**
+	 * Set additional contexts
+	 * @param contexts
+	 */	
+	public void setContexts(Map<String,String> contexts) {
+		log.debug("setContexts: " + contexts.size());
+		for (String key : (Set<String>) contexts.keySet()) {
+			baseHost.addChild(embedded.createContext(key, appRoot + contexts.get(key)));
+		}
+	}
+	
 	public org.apache.catalina.Context addContext(String path, String docBase) {
 		org.apache.catalina.Context c = embedded.createContext(path, docBase);
 		baseHost.addChild(c);
@@ -212,14 +217,4 @@ public class TomcatLoader implements ApplicationContextAware {
     }		
 	}
 	
-    /**
-     * Catches an abrupt exit of the application and completes given
-     * tasks prior to the actual exit.
-     */
-    class ShutdownHook extends Thread {
-        public void run() {
-            log.info("Shutdown hook called");
-            shutdown();
-        }
-    }
 }

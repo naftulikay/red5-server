@@ -118,4 +118,10 @@
 		</property>
 	</bean>  
     
+    <!-- Top level container for use in tomcat -->
+	<bean id="baseEngine" class="org.apache.catalina.core.StandardEngine">
+        <property name="name" value="red5Engine" />
+        <property name="defaultHost" value="localhost" />
+	</bean>	    
+    
 </beans>

@@ -18,22 +18,37 @@
     	<constructor-arg><list><value>classpath:/red5-core.xml</value></list></constructor-arg>
     	<constructor-arg><ref bean="red5.common" /></constructor-arg>
 	</bean>
-	
+
 	<!-- Then we load the global contexts, note its important this happens before jetty loads -->
 	<bean id="context.loader" 
 		class="org.red5.server.ContextLoader"
 		init-method="init">
 		<property name="parentContext" ref="red5.common" />
 		<property name="contextsConfig" value="red5.globals" />
-	</bean>
+	</bean>	
 	
 	<!-- Now we can load the servlet engine, this has to happen after the context are loaded -->
 	<!-- bean id="jetty6.server" class="org.red5.server.JettyLoader" init-method="init" autowire="byType" / -->
+
 	<bean id="tomcat.server" class="org.red5.server.TomcatLoader" init-method="init" destroy-method="shutdown" autowire="byType">
 	    <!-- Use this to configure Tomcat via Spring -->
 	    <property name="embedded">
 	    	<bean class="org.apache.catalina.startup.Embedded" />
 	    </property>
+
+	    <!-- You should set jvmRoute to support load-balancing via AJP ie : - - >
+	    <property name="engine.standalone">
+			<bean class="org.apache.catalina.core.StandardEngine">
+		        <property name="defaultHost" value="localhost" />
+		        <property name="jvmRoute" value="jvm1" />
+			</bean>	   
+	    </property>		
+	    --> 
+	  
+	    <!-- Top level container in our container hierarchy -->
+	    <property name="engine">
+   			<ref bean="baseEngine" />
+	    </property>	
 	    
 	    <!-- This Realm uses the UserDatabase configured in the global JNDI
 	        resources under the key "UserDatabase". Any edits that are performed
@@ -77,8 +92,7 @@
 	    </property>
 	    -->      
 	      
-		<!-- ================ Connectors ================     
-	    Define a non-SSL HTTP/1.1 Connector on port 8080 -->
+		<!-- Non-SSL HTTP/1.1 Connector -->
 	    <property name="connector">
 			<bean class="org.apache.catalina.connector.Connector">
 		        <property name="port"><value>5080</value></property>
@@ -95,10 +109,10 @@
 			</bean>
 	    </property>
 	    	
-	    <!-- Define a SSL HTTP/1.1 Connector on port 8443 - - >
+	    <!-- SSL HTTP/1.1 Connector - - >
 	    <property name="connector.https">
-			<bean class="org.apache.catalina.connector.http.HttpConnector">
-		        <property name="port"><value>${https.port}</value></property>
+			<bean class="org.apache.catalina.connector.Connector">
+		        <property name="port"><value>8443</value></property>
 		        <property name="scheme"><value>https</value></property>
 		        <property name="secure"><value>true</value></property>
 		        <property name="clientAuth"><value>false</value></property>
@@ -107,10 +121,10 @@
 	    </property>		  
 		-->
 	
-	    <!-- Define an AJP 1.3 Connector on port 8009 - - >
+	    <!-- An AJP 1.3 Connector - - >
 	    <property name="connector.ajp">
 			<bean class="org.apache.coyote.tomcat5.CoyoteConnector">
-		        <property name="port"><value>${ajp.port}</value></property>
+		        <property name="port"><value>8009</value></property>
 		        <property name="protocol"><value>AJP/1.3</value></property>
 		        <property name="protocolHandlerClassName">
 		            <bean class="org.apache.jk.server.JkCoyoteHandler" />
@@ -122,40 +136,51 @@
         <property name="baseHost">
 	       <bean class="org.apache.catalina.core.StandardHost">
 	           <property name="name" value="localhost" />
-	           <property name="appBase" value="${red5.root}/webapps" />
 	           <property name="unpackWARs" value="true" />
 	           <property name="autoDeploy" value="true" />
 	           <property name="xmlValidation" value="false" />
 	           <property name="xmlNamespaceAware" value="false" />
-	       <!--
-	           <bean id="valve.access" class="org.apache.catalina.valves.AccessLogValve">
-	                <property name="directory" value="logs" />
-	                <property name="prefix" value="localhost_access_log." />
-	                <property name="suffix" value=".txt" />
-	                <property name="pattern" value="common"" />
-	                <property name="resolveHosts" value="false"/>
-	           </bean>
-	       -->
 	       </bean>	   
 	    </property>		
+
+		<property name="valves">
+      		<list>
+      			<!-- 
+	    		<bean id="valve.access" class="org.apache.catalina.valves.AccessLogValve">
+	                <property name="directory" value="." />
+	                <property name="prefix" value="localhost_access." />
+	                <property name="suffix" value=".log" />
+	                <property name="pattern" value="common" />
+	                <property name="resolveHosts" value="false" />
+	                <property name="rotatable" value="true" />
+	        	</bean>
+	    		<bean id="valve.extended" class="org.apache.catalina.valves.ExtendedAccessLogValve">
+	                <property name="directory" value="." />
+	                <property name="prefix" value="localhost_ext." />
+	                <property name="suffix" value=".log" />
+	                <property name="pattern" value="common" />
+	                <property name="rotatable" value="true" />
+	                <property name="fileDateFormat" value="[MM/dd/yyyy HH:mm:ss:SSS zz]" />
+	        	</bean>
+ 				-->
+	    		<bean id="valve.reqs" class="org.apache.catalina.valves.RequestDumperValve" />
+        	</list>
+        </property>
 	    
-	    <!-- ================ Engines ================
-	    You should set jvmRoute to support load-balancing via AJP ie : - - >
-	    <property name="engine.standalone">
-			<bean class="org.apache.catalina.core.StandardEngine">
-		        <property name="defaultHost" value="localhost" />
-		        <property name="jvmRoute" value="jvm1" />
-			</bean>	   
-	    </property>		
-	    --> 
-	  
-	    <!-- Define the top level container in our container hierarchy -->
-	    <property name="engine">
-			<bean class="org.apache.catalina.core.StandardEngine">
-		        <property name="defaultHost" value="localhost" />
-			</bean>	   	
-	    </property>	
-	</bean>
+        <property name="contexts">
+		    <map>
+		      <entry>
+		        <key><value></value></key>
+		        <value>/root</value>
+		      </entry>
+		      <entry>
+		        <key><value>oflaDemo</value></key>
+		        <value>/oflaDemo</value>
+		      </entry>
+		    </map>
+  		</property>
+
+	</bean>     	
 	
 	<!-- Default context. This can be shared between web app contexts -->
 	<!--
@@ -165,6 +190,6 @@
     	<constructor-arg><ref bean="red5.common" /></constructor-arg>
 	</bean>
 	-->
-	<!-- You can add further contexts here. This allows for multiple separate global scopes -->
+	<!-- You can add further contexts here. This allows for multiple separate global scopes --> 	
 	
 </beans>

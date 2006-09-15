@@ -47,8 +47,11 @@
 	  
 	    <!-- Top level container in our container hierarchy -->
 	    <property name="engine">
-   			<ref bean="baseEngine" />
-	    </property>	
+			<bean class="org.apache.catalina.core.StandardEngine">
+		        <property name="name" value="red5Engine" />
+		        <property name="defaultHost" value="localhost" />
+			</bean>	  
+	    </property>
 	    
 	    <!-- This Realm uses the UserDatabase configured in the global JNDI
 	        resources under the key "UserDatabase". Any edits that are performed

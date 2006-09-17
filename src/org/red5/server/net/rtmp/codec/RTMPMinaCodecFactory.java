@@ -28,20 +28,24 @@ import org.red5.server.net.protocol.SimpleProtocolCodecFactory;
 import org.red5.server.net.protocol.SimpleProtocolDecoder;
 import org.red5.server.net.protocol.SimpleProtocolEncoder;
 
-public class RTMPMinaCodecFactory implements ProtocolCodecFactory, SimpleProtocolCodecFactory {
+public class RTMPMinaCodecFactory implements ProtocolCodecFactory,
+		SimpleProtocolCodecFactory {
 
 	protected Deserializer deserializer = null;
+
 	protected Serializer serializer = null;
+
 	protected RTMPMinaProtocolDecoder decoder;
+
 	protected RTMPMinaProtocolEncoder encoder;
-	
-	public void init(){
+
+	public void init() {
 		decoder = new RTMPMinaProtocolDecoder();
 		decoder.setDeserializer(deserializer);
 		encoder = new RTMPMinaProtocolEncoder();
 		encoder.setSerializer(serializer);
-	}	
-	
+	}
+
 	public void setDeserializer(Deserializer deserializer) {
 		this.deserializer = deserializer;
 	}
@@ -58,12 +62,12 @@ public class RTMPMinaCodecFactory implements ProtocolCodecFactory, SimpleProtoco
 		return encoder;
 	}
 
-	public SimpleProtocolDecoder getSimpleDecoder(){
+	public SimpleProtocolDecoder getSimpleDecoder() {
 		return decoder;
 	}
 
-	public SimpleProtocolEncoder getSimpleEncoder(){
+	public SimpleProtocolEncoder getSimpleEncoder() {
 		return encoder;
 	}
-	
+
 }

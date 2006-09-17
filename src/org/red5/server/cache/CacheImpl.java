@@ -46,35 +46,40 @@ import org.springframework.context.access.ContextSingletonBeanFactoryLocator;
  */
 public class CacheImpl implements ICacheStore, ApplicationContextAware {
 
-	protected static Log log = LogFactory.getLog(CacheImpl.class.getName());		
-	
+	protected static Log log = LogFactory.getLog(CacheImpl.class.getName());
+
 	private static volatile CacheImpl instance;
+
 	private static final Map<String, SoftReference<? extends ICacheable>> CACHE;
-	//cache registry - keeps hard references to objects in the cache
+
+	// cache registry - keeps hard references to objects in the cache
 	private static Map<String, Integer> registry;
 
 	private static int capacity = 5;
+
 	private static volatile long cacheHit = 0;
+
 	private static volatile long cacheMiss = 0;
 
 	static {
-		//create an instance
+		// create an instance
 		instance = new CacheImpl();
-		//instance a static map with an initial small (prime) size
+		// instance a static map with an initial small (prime) size
 		CACHE = new HashMap<String, SoftReference<? extends ICacheable>>(3);
-		//instance a hard-ref registry
+		// instance a hard-ref registry
 		registry = new HashMap<String, Integer>(3);
 	}
-	
+
 	/*
 	 * This constructor helps to ensure that we are singleton.
 	 */
 	private CacheImpl() {
 	}
-	
-	// We store the application context in a ThreadLocal so we can access it later.
+
+	// We store the application context in a ThreadLocal so we can access it
+	// later.
 	private static ApplicationContext applicationContext = null;
-	
+
 	public void setApplicationContext(ApplicationContext context)
 			throws BeansException {
 		this.applicationContext = context;
@@ -82,8 +87,8 @@ public class CacheImpl implements ICacheStore, ApplicationContextAware {
 
 	public static ApplicationContext getApplicationContext() {
 		return applicationContext;
-	}	
-	
+	}
+
 	/**
 	 * Returns the instance of this class.
 	 * 
@@ -92,12 +97,12 @@ public class CacheImpl implements ICacheStore, ApplicationContextAware {
 	public static CacheImpl getInstance() {
 		return instance;
 	}
-	
+
 	public void init() {
 		log.info("Loading generic object cache");
 		log.debug("Appcontext: " + applicationContext.toString());
 	}
-	
+
 	public Iterator<String> getObjectNames() {
 		return Collections.unmodifiableSet(CACHE.keySet()).iterator();
 	}
@@ -109,32 +114,35 @@ public class CacheImpl implements ICacheStore, ApplicationContextAware {
 	public boolean offer(String key, ByteBuffer obj) {
 		return offer(key, new CacheableImpl(obj));
 	}
-	
+
 	public boolean offer(String name, ICacheable obj) {
 		boolean accepted = false;
-		//check map size
+		// check map size
 		if (CACHE.size() < capacity) {
 			SoftReference tmp = CACHE.get(name);
-			//because soft references can be garbage collected when a system is
-			//in need of memory, we will check that the cacheable object is valid
-			//log.debug("Softreference: " + (null == tmp)); 
-			//if (null != tmp) {
-			//	log.debug("Softreference value: " + (null == tmp.get()));
-			//}
+			// because soft references can be garbage collected when a system is
+			// in need of memory, we will check that the cacheable object is
+			// valid
+			// log.debug("Softreference: " + (null == tmp));
+			// if (null != tmp) {
+			// log.debug("Softreference value: " + (null == tmp.get()));
+			// }
 			if (null == tmp || null == tmp.get()) {
-				//set the objects name
+				// set the objects name
 				obj.setName(name);
-				//set a registry entry
+				// set a registry entry
 				registry.put(name, 1);
-				//create a soft reference
-				SoftReference<ICacheable> value = new SoftReference<ICacheable>(obj);
+				// create a soft reference
+				SoftReference<ICacheable> value = new SoftReference<ICacheable>(
+						obj);
 				CACHE.put(name, value);
-				//set acceptance
+				// set acceptance
 				accepted = true;
-				log.warn(name + " has been added to the cache. Current size: " + CACHE.size());
+				log.warn(name + " has been added to the cache. Current size: "
+						+ CACHE.size());
 			}
 		} else {
-			log.warn("Cache has reached max element size: " + capacity);	
+			log.warn("Cache has reached max element size: " + capacity);
 		}
 		return accepted;
 	}
@@ -142,42 +150,45 @@ public class CacheImpl implements ICacheStore, ApplicationContextAware {
 	public void put(String name, Object obj) {
 		put(name, new CacheableImpl(obj));
 	}
-	
+
 	public void put(String name, ICacheable obj) {
-		//set the objects name
+		// set the objects name
 		obj.setName(name);
-		//set a registry entry
+		// set a registry entry
 		registry.put(name, 1);
-		//create a soft reference
+		// create a soft reference
 		SoftReference<ICacheable> value = new SoftReference<ICacheable>(obj);
-		//put an object into the cache
+		// put an object into the cache
 		CACHE.put(name, value);
-		log.warn(name + " has been added to the cache. Current size: " + CACHE.size());
-	}	
-	
+		log.warn(name + " has been added to the cache. Current size: "
+				+ CACHE.size());
+	}
+
 	public ICacheable get(String name) {
-		log.debug("Looking up " + name + " in the cache. Current size: " + CACHE.size());
+		log.debug("Looking up " + name + " in the cache. Current size: "
+				+ CACHE.size());
 		ICacheable ic = null;
 		SoftReference sr = null;
 		if (!CACHE.isEmpty() && null != (sr = CACHE.get(name))) {
 			ic = (ICacheable) sr.get();
-			//add a request count to the registry
+			// add a request count to the registry
 			int requestCount = registry.get(name);
 			registry.put(name, (requestCount += 1));
-			//increment cache hits
+			// increment cache hits
 			cacheHit += 1;
 		} else {
-			//add a request count to the registry
+			// add a request count to the registry
 			registry.put(name, 1);
-			//increment cache misses
+			// increment cache misses
 			cacheMiss += 1;
 		}
 		log.debug("Registry on get: " + registry.toString());
 		return ic;
 	}
-	
+
 	public boolean remove(ICacheable obj) {
-		log.debug("Looking up " + obj.getName() + " in the cache. Current size: " + CACHE.size());
+		log.debug("Looking up " + obj.getName()
+				+ " in the cache. Current size: " + CACHE.size());
 		return remove(obj.getName());
 	}
 
@@ -192,12 +203,12 @@ public class CacheImpl implements ICacheStore, ApplicationContextAware {
 	public static long getCacheMiss() {
 		return cacheMiss;
 	}
-	
+
 	public void setMaxEntries(int max) {
 		log.debug("Setting max entries for this cache to " + max);
 		this.capacity = max;
 	}
-	
+
 	public void destroy() {
 		// Shut down the cache manager
 		try {

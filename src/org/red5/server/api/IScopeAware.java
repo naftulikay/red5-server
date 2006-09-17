@@ -20,20 +20,21 @@ package org.red5.server.api;
  */
 
 /**
- * Maker interface for all objects that are aware of the scope they are located in.
- *  
+ * Maker interface for all objects that are aware of the scope they are located
+ * in.
+ * 
  * @author The Red5 Project (red5@osflash.org)
  * @author Luke Hubbard (luke@codegent.com)
- *
+ * 
  */
 public interface IScopeAware {
-	
+
 	/**
 	 * Set the scope the object is located in.
 	 * 
 	 * @param scope
-	 * 			scope for this object
+	 *            scope for this object
 	 */
 	public void setScope(IScope scope);
-	
+
 }

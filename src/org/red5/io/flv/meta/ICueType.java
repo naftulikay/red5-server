@@ -26,6 +26,7 @@ package org.red5.io.flv.meta;
 public interface ICueType {
 
 	String EVENT = "event";
+
 	String NAVIGATION = "navigation";
 
 }

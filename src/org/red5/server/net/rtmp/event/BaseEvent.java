@@ -28,44 +28,50 @@ public abstract class BaseEvent implements Constants, IRTMPEvent {
 	// (1) make it configurable in xml
 	// (2) make it aspect oriented
 	private static final boolean allocationDebugging = false;
-	
+
 	private Type type;
+
 	protected Object object;
+
 	protected IEventListener source;
+
 	protected int timestamp;
+
 	protected Header header = null;
+
 	protected int refcount = 1;
-	
+
 	public BaseEvent(Type type) {
 		this(type, null);
 	}
-	
+
 	public BaseEvent(Type type, IEventListener source) {
 		this.type = type;
 		this.source = source;
-		if(allocationDebugging) AllocationDebugger.getInstance().create(this);
+		if (allocationDebugging)
+			AllocationDebugger.getInstance().create(this);
 	}
-	
+
 	public Type getType() {
 		return type;
 	}
-	
+
 	public Object getObject() {
 		return object;
 	}
-	
+
 	public Header getHeader() {
 		return header;
 	}
-	
+
 	public void setHeader(Header header) {
 		this.header = header;
 	}
-	
+
 	public boolean hasSource() {
 		return source != null;
 	}
-	
+
 	public IEventListener getSource() {
 		return source;
 	}
@@ -75,7 +81,7 @@ public abstract class BaseEvent implements Constants, IRTMPEvent {
 	}
 
 	public abstract byte getDataType();
-	
+
 	public int getTimestamp() {
 		return timestamp;
 	}
@@ -83,22 +89,25 @@ public abstract class BaseEvent implements Constants, IRTMPEvent {
 	public void setTimestamp(int timestamp) {
 		this.timestamp = timestamp;
 	}
-	
+
 	public synchronized void retain() {
-		if (allocationDebugging) AllocationDebugger.getInstance().retain(this);
+		if (allocationDebugging)
+			AllocationDebugger.getInstance().retain(this);
 		if (refcount > 0) {
 			refcount++;
 		}
 	}
-		
+
 	public synchronized void release() {
-		if (allocationDebugging) AllocationDebugger.getInstance().release(this);
+		if (allocationDebugging)
+			AllocationDebugger.getInstance().release(this);
 		if (refcount > 0) {
 			refcount--;
-			if (refcount == 0) releaseInternal();
+			if (refcount == 0)
+				releaseInternal();
 		}
 	}
-	
+
 	protected abstract void releaseInternal();
-	
+
 }

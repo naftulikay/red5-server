@@ -26,18 +26,23 @@ import java.util.List;
 import org.red5.server.api.event.IEventListener;
 import org.red5.server.net.rtmp.event.BaseEvent;
 
-public class SharedObjectMessage extends BaseEvent implements ISharedObjectMessage {
+public class SharedObjectMessage extends BaseEvent implements
+		ISharedObjectMessage {
 
 	private String name;
+
 	private LinkedList<ISharedObjectEvent> events = new LinkedList<ISharedObjectEvent>();
+
 	private int version = 0;
+
 	private boolean persistent = false;
-	
+
 	public SharedObjectMessage(String name, int version, boolean persistent) {
 		this(null, name, version, persistent);
 	}
-	
-	public SharedObjectMessage(IEventListener source, String name, int version, boolean persistent){
+
+	public SharedObjectMessage(IEventListener source, String name, int version,
+			boolean persistent) {
 		super(Type.SHARED_OBJECT, source);
 		this.name = name;
 		this.version = version;
@@ -45,13 +50,13 @@ public class SharedObjectMessage extends BaseEvent implements ISharedObjectMessa
 	}
 
 	public byte getDataType() {
-		return TYPE_SHARED_OBJECT; 
+		return TYPE_SHARED_OBJECT;
 	}
-	
+
 	public int getVersion() {
 		return version;
 	}
-	
+
 	protected void setVersion(int version) {
 		this.version = version;
 	}
@@ -59,28 +64,28 @@ public class SharedObjectMessage extends BaseEvent implements ISharedObjectMessa
 	public String getName() {
 		return name;
 	}
-	
+
 	protected void setName(String name) {
 		this.name = name;
 	}
-	
+
 	public boolean isPersistent() {
 		return persistent;
 	}
-	
+
 	protected void setIsPersistent(boolean persistent) {
 		this.persistent = persistent;
 	}
-	
-	public void addEvent(ISharedObjectEvent event){
+
+	public void addEvent(ISharedObjectEvent event) {
 		events.add(event);
 	}
-	
-	public void addEvents(List<ISharedObjectEvent> events){
+
+	public void addEvents(List<ISharedObjectEvent> events) {
 		this.events.addAll(events);
 	}
-	
-	public LinkedList<ISharedObjectEvent> getEvents(){
+
+	public LinkedList<ISharedObjectEvent> getEvents() {
 		return events;
 	}
 
@@ -106,19 +111,20 @@ public class SharedObjectMessage extends BaseEvent implements ISharedObjectMessa
 
 	@Override
 	protected void releaseInternal() {
-		
+
 	}
 
-	public String toString(){
+	public String toString() {
 		final StringBuffer sb = new StringBuffer();
 		sb.append("SharedObjectMessage: ").append(name).append(" { ");
 		final Iterator it = events.iterator();
-		while(it.hasNext()){
+		while (it.hasNext()) {
 			sb.append(it.next());
-			if(it.hasNext()) sb.append(" , ");
+			if (it.hasNext())
+				sb.append(" , ");
 		}
 		sb.append(" } ");
 		return sb.toString();
 	}
-	
+
 }

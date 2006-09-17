@@ -34,9 +34,8 @@ import org.red5.server.api.service.IServiceCall;
 
 public class CoreHandler implements IScopeHandler {
 
-	protected static Log log =
-        LogFactory.getLog(CoreHandler.class.getName());
-	
+	protected static Log log = LogFactory.getLog(CoreHandler.class.getName());
+
 	public boolean addChildScope(IBasicScope scope) {
 		return true;
 	}
@@ -44,23 +43,25 @@ public class CoreHandler implements IScopeHandler {
 	public boolean connect(IConnection conn, IScope scope) {
 		return connect(conn, scope, null);
 	}
-		
+
 	public boolean connect(IConnection conn, IScope scope, Object[] params) {
-		
+
 		log.debug("Connect to core handler ?");
-		
+
 		String id = conn.getSessionId();
-		
+
 		// Use client registry from scope the client connected to.
-		IScope connectionScope = Red5.getConnectionLocal().getScope(); 
-		IClientRegistry clientRegistry = connectionScope.getContext().getClientRegistry();
-		
-		IClient client = clientRegistry.hasClient(id) ? clientRegistry.lookupClient(id) : clientRegistry.newClient(params);
-		
+		IScope connectionScope = Red5.getConnectionLocal().getScope();
+		IClientRegistry clientRegistry = connectionScope.getContext()
+				.getClientRegistry();
+
+		IClient client = clientRegistry.hasClient(id) ? clientRegistry
+				.lookupClient(id) : clientRegistry.newClient(params);
+
 		// We have a context, and a client object.. time to init the conneciton.
 		conn.initialize(client);
-		
-		// we could checked for banned clients here 
+
+		// we could checked for banned clients here
 		return true;
 	}
 
@@ -82,10 +83,11 @@ public class CoreHandler implements IScopeHandler {
 
 	public boolean serviceCall(IConnection conn, IServiceCall call) {
 		final IContext context = conn.getScope().getContext();
-		if(call.getServiceName() != null){
+		if (call.getServiceName() != null) {
 			context.getServiceInvoker().invoke(call, context);
 		} else {
-			context.getServiceInvoker().invoke(call, conn.getScope().getHandler());
+			context.getServiceInvoker().invoke(call,
+					conn.getScope().getHandler());
 		}
 		return true;
 	}
@@ -101,5 +103,5 @@ public class CoreHandler implements IScopeHandler {
 	public boolean handleEvent(IEvent event) {
 		return false;
 	}
-	
+
 }

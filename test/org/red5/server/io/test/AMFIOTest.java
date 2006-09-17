@@ -30,7 +30,7 @@ import org.red5.io.utils.HexDump;
 public class AMFIOTest extends AbstractIOTest {
 
 	ByteBuffer buf;
-	
+
 	void setupIO() {
 		buf = ByteBuffer.allocate(0); // 1kb
 		buf.setAutoExpand(true);
@@ -44,7 +44,7 @@ public class AMFIOTest extends AbstractIOTest {
 	}
 
 	void resetOutput() {
-		 setupIO();
+		setupIO();
 	}
 
 }

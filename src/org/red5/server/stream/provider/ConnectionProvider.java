@@ -28,7 +28,7 @@ import org.red5.server.messaging.PipeConnectionEvent;
 
 public class ConnectionProvider implements IProvider, IPipeConnectionListener {
 	private IPipe pipe;
-	
+
 	public void onOOBControlMessage(IMessageComponent source, IPipe pipe,
 			OOBControlMessage oobCtrlMsg) {
 		// TODO Auto-generated method stub

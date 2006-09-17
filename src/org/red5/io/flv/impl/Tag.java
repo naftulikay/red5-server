@@ -32,11 +32,17 @@ import org.red5.io.ITag;
 public class Tag implements ITag {
 
 	private byte type;
+
 	private byte dataType;
+
 	private int timestamp;
+
 	private int bodySize;
+
 	private ByteBuffer body;
+
 	private int previuosTagSize;
+
 	private byte bitflags;
 
 	/**
@@ -47,48 +53,58 @@ public class Tag implements ITag {
 	 * @param bodySize
 	 * @param body
 	 */
-	public Tag(byte dataType, int timestamp, int bodySize, ByteBuffer body, int previousTagSize){
+	public Tag(byte dataType, int timestamp, int bodySize, ByteBuffer body,
+			int previousTagSize) {
 		this.dataType = dataType;
 		this.timestamp = timestamp;
 		this.bodySize = bodySize;
 		this.body = body;
 		this.previuosTagSize = previousTagSize;
 	}
-	
-	public Tag(){
-		
+
+	public Tag() {
+
 	}
-	
-	/* (non-Javadoc)
+
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see org.red5.io.flv.Tag#setBitflags()
 	 */
 	public byte getBitflags() {
 		return bitflags;
 	}
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see org.red5.io.flv.Tag#setBitflags()
 	 */
 	public void setBitflags(byte bitflags) {
 		this.bitflags = bitflags;
 	}
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see org.red5.io.flv.Tag#getPreviuosTagSize()
 	 */
 	public int getPreviuosTagSize() {
 		return previuosTagSize;
 	}
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see org.red5.io.flv.Tag#setPreviuosTagSize()
 	 */
 	public void setPreviuosTagSize(int previuosTagSize) {
 		this.previuosTagSize = previuosTagSize;
 	}
 
-
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see org.red5.io.flv.Tag#getData()
 	 */
 	public ByteBuffer getData() {
@@ -96,57 +112,62 @@ public class Tag implements ITag {
 		return null;
 	}
 
-	
 	/**
 	 * Return the body ByteBuffer
+	 * 
 	 * @return ByteBuffer
 	 */
 	public ByteBuffer getBody() {
 		return body;
 	}
-	
+
 	/**
 	 * Return the size of the body
+	 * 
 	 * @return int
 	 */
 	public int getBodySize() {
 		return bodySize;
 	}
-	
+
 	/**
 	 * Get the data type
+	 * 
 	 * @return byte
 	 */
 	public byte getDataType() {
 		return dataType;
 	}
-	
+
 	/**
 	 * Return the timestamp
+	 * 
 	 * @return int
 	 */
 	public int getTimestamp() {
 		return timestamp;
 	}
-	
+
 	/**
 	 * Return the timestamp
+	 * 
 	 * @return int
 	 */
 	public int getPreviousTagSize() {
 		return previuosTagSize;
 	}
-	
+
 	/**
 	 * Prints out the contents of the tag
+	 * 
 	 * @return tag contents
 	 */
 	public String toString() {
-		String ret 	 = "Data Type\t=" + dataType + "\n";
-		ret 		+= "Prev. Tag Size\t=" + previuosTagSize + "\n";
-		ret 		+= "Body size\t=" + bodySize + "\n";
-		ret			+= "timestamp\t=" + timestamp + "\n";
-		ret			+= "Body Data\t=" + body + "\n";
+		String ret = "Data Type\t=" + dataType + "\n";
+		ret += "Prev. Tag Size\t=" + previuosTagSize + "\n";
+		ret += "Body size\t=" + bodySize + "\n";
+		ret += "timestamp\t=" + timestamp + "\n";
+		ret += "Body Data\t=" + body + "\n";
 		return ret;
 	}
 
@@ -154,42 +175,34 @@ public class Tag implements ITag {
 		return type;
 	}
 
-
 	public void setType(byte type) {
 		this.type = type;
 	}
-
 
 	public void setBody(ByteBuffer body) {
 		this.body = body;
 	}
 
-
 	public void setBodySize(int bodySize) {
 		this.bodySize = bodySize;
 	}
-
 
 	public void setDataType(byte dataType) {
 		this.dataType = dataType;
 	}
 
-
 	public void setTimestamp(int timestamp) {
 		this.timestamp = timestamp;
 	}
 
-
 	public void setData() {
 		// TODO Auto-generated method stub
-		
-	}
 
+	}
 
 	public void setPreviousTagSize(int size) {
 		this.previuosTagSize = size;
-		
-	}
 
+	}
 
 }

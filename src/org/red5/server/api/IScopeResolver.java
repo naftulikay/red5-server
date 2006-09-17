@@ -32,15 +32,16 @@ public interface IScopeResolver {
 	 * @return global scope
 	 */
 	public IGlobalScope getGlobalScope();
-	
+
 	/**
 	 * Get the scope for a given path.
 	 * 
 	 * @param path
-	 * 			path to return the scope for
+	 *            path to return the scope for
 	 * @return scope for passed path
-	 * @throws ScopeNotFoundException if scope doesn't exist an can't be created
+	 * @throws ScopeNotFoundException
+	 *             if scope doesn't exist an can't be created
 	 */
 	public IScope resolveScope(String path);
-	
+
 }

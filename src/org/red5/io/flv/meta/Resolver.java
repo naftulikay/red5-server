@@ -32,13 +32,15 @@ public class Resolver implements IResolver {
 		super();
 	}
 
-	/* (non-Javadoc)
-	 * @see org.red5.io.flv.meta.IResolver#resolve(org.red5.io.flv.meta.IMeta, org.red5.io.flv.meta.IMeta)
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see org.red5.io.flv.meta.IResolver#resolve(org.red5.io.flv.meta.IMeta,
+	 *      org.red5.io.flv.meta.IMeta)
 	 */
 	public IMeta resolve(IMeta m1, IMeta m2) {
 
 		return m2;
 	}
-
 
 }

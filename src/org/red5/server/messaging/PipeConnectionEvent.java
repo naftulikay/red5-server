@@ -25,50 +25,60 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Event object corresponds to the connect/disconnect events
- * among providers/consumers and pipes.
- *  
+ * Event object corresponds to the connect/disconnect events among
+ * providers/consumers and pipes.
+ * 
  * @author The Red5 Project (red5@osflash.org)
  * @author Steven Gong (steven.gong@gmail.com)
  */
 public class PipeConnectionEvent extends EventObject {
 	private static final long serialVersionUID = 9078843765378168072L;
-	
+
 	private List<Runnable> taskList = new ArrayList<Runnable>();
+
 	/**
 	 * A provider connects as pull mode.
 	 */
 	public static final int PROVIDER_CONNECT_PULL = 0;
+
 	/**
 	 * A provider connects as push mode.
 	 */
 	public static final int PROVIDER_CONNECT_PUSH = 1;
+
 	/**
 	 * A provider disconnects.
 	 */
 	public static final int PROVIDER_DISCONNECT = 2;
+
 	/**
 	 * A consumer connects as pull mode.
 	 */
 	public static final int CONSUMER_CONNECT_PULL = 3;
+
 	/**
 	 * A consumer connects as push mode.
 	 */
 	public static final int CONSUMER_CONNECT_PUSH = 4;
+
 	/**
 	 * A consumer disconnects.
 	 */
 	public static final int CONSUMER_DISCONNECT = 5;
-	
+
 	private IProvider provider;
+
 	private IConsumer consumer;
+
 	private int type;
+
 	private Map paramMap;
-	
+
 	/**
-	 * Construct an object with the specific pipe as the
-	 * <tt>source</tt>
-	 * @param source A pipe that triggers this event.
+	 * Construct an object with the specific pipe as the <tt>source</tt>
+	 * 
+	 * @param source
+	 *            A pipe that triggers this event.
 	 */
 	public PipeConnectionEvent(Object source) {
 		super(source);
@@ -97,7 +107,7 @@ public class PipeConnectionEvent extends EventObject {
 	public void setType(int type) {
 		this.type = type;
 	}
-	
+
 	public Map getParamMap() {
 		return paramMap;
 	}
@@ -109,7 +119,7 @@ public class PipeConnectionEvent extends EventObject {
 	public void addTask(Runnable task) {
 		taskList.add(task);
 	}
-	
+
 	List<Runnable> getTaskList() {
 		return taskList;
 	}

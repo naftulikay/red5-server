@@ -22,19 +22,38 @@ package org.red5.server.api.stream.support;
 import org.red5.server.api.IBandwidthConfigure;
 import org.springframework.core.style.ToStringCreator;
 
+/**
+ * This class is the only IBandwidthConfigure implementation in 0.5. It's a kind
+ * of ValueObject (item with a set of values that just stores data) that is used
+ * to configure Red5 application bandwidth settings.
+ * 
+ * This class helps you to configure maximum burst amount, level of bandwidth
+ * from server to client and vice versa, set bandwidth amount for audio and
+ * video separately and so forth.
+ * 
+ * Say if you need to limit bandwidth for each connection of create a copy of a
+ * stream with lower quality you use instance of this class to set bandwidth
+ * parameters.
+ */
 public class SimpleBandwidthConfigure implements IBandwidthConfigure {
 	private long audioBandwidth;
+
 	private long videoBandwidth;
+
 	private long overallBandwidth = -1;
+
 	private long upstreamBandwidth = -1;
+
 	private long downstreamBandwidth = -1;
+
 	private long burst = 0;
+
 	private long maxBurst = 0;
-	
+
 	public SimpleBandwidthConfigure() {
-		
+
 	}
-	
+
 	public SimpleBandwidthConfigure(IBandwidthConfigure config) {
 		this.audioBandwidth = config.getAudioBandwidth();
 		this.videoBandwidth = config.getVideoBandwidth();
@@ -42,19 +61,19 @@ public class SimpleBandwidthConfigure implements IBandwidthConfigure {
 		this.upstreamBandwidth = config.getUpstreamBandwidth();
 		this.downstreamBandwidth = config.getDownstreamBandwidth();
 	}
-	
+
 	public long getAudioBandwidth() {
 		return audioBandwidth;
 	}
-	
+
 	public void setAudioBandwidth(long audioBandwidth) {
 		this.audioBandwidth = audioBandwidth;
 	}
-	
+
 	public long getVideoBandwidth() {
 		return videoBandwidth;
 	}
-	
+
 	public void setVideoBandwidth(long videoBandwidth) {
 		this.videoBandwidth = videoBandwidth;
 	}
@@ -97,17 +116,15 @@ public class SimpleBandwidthConfigure implements IBandwidthConfigure {
 
 	public void setMaxBurst(long maxBurst) {
 		this.maxBurst = maxBurst;
-	}	
-	
-	public String toString(){
-		return new ToStringCreator(this)
-			.append("ALL",getOverallBandwidth())
-			.append("BURST",getBurst())
-			.append("MAX",getMaxBurst())
-			.toString();
 	}
-	
-	public IBandwidthConfigure clone(){
+
+	public String toString() {
+		return new ToStringCreator(this).append("ALL", getOverallBandwidth())
+				.append("BURST", getBurst()).append("MAX", getMaxBurst())
+				.toString();
+	}
+
+	public IBandwidthConfigure clone() {
 		IBandwidthConfigure clone = new SimpleBandwidthConfigure();
 		clone.setOverallBandwidth(getOverallBandwidth());
 		clone.setAudioBandwidth(getAudioBandwidth());
@@ -116,5 +133,5 @@ public class SimpleBandwidthConfigure implements IBandwidthConfigure {
 		clone.setBurst(getBurst());
 		return clone;
 	}
-	
+
 }

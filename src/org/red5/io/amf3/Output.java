@@ -27,21 +27,22 @@ import org.apache.mina.common.ByteBuffer;
 
 /**
  * AMF3 output writer
- *
- * @see  org.red5.io.amf3.AMF3
- * @see  org.red5.io.amf3.Input
+ * 
+ * @see org.red5.io.amf3.AMF3
+ * @see org.red5.io.amf3.Input
  * @author The Red5 Project (red5@osflash.org)
  */
 public class Output implements org.red5.io.object.Output {
 
 	protected static Log log = LogFactory.getLog(Output.class.getName());
-	protected ByteBuffer buffer;
 
+	protected ByteBuffer buffer;
 
 	/**
 	 * Constructor of AMF3 output.
-	 *
-	 * @param buffer instance of ByteBuffer
+	 * 
+	 * @param buffer
+	 *            instance of ByteBuffer
 	 * @see ByteBuffer
 	 */
 	public Output(ByteBuffer buffer) {

@@ -91,7 +91,7 @@ public abstract class RTMPConnection extends BaseConnection implements
 	private IBandwidthConfigure bandwidthConfig;
 
 	private Map<Integer, Integer> pendingVideos = new HashMap<Integer, Integer>();
-	
+
 	private int usedStreams = 0;
 
 	public RTMPConnection(String type) {
@@ -137,7 +137,7 @@ public abstract class RTMPConnection extends BaseConnection implements
 	protected IClientStream[] getStreams() {
 		return streams;
 	}
-	
+
 	public int reserveStreamId() {
 		int result = -1;
 		synchronized (reservedStreams) {
@@ -180,13 +180,13 @@ public abstract class RTMPConnection extends BaseConnection implements
 			if (streams[streamId - 1] != null)
 				// Another stream already exists with this id
 				return null;
-	
+
 			ClientBroadcastStream cbs = new ClientBroadcastStream();
 			cbs.setStreamId(streamId);
 			cbs.setConnection(this);
 			cbs.setName(createStreamName());
 			cbs.setScope(this.getScope());
-	
+
 			streams[streamId - 1] = cbs;
 			usedStreams++;
 			return cbs;
@@ -208,7 +208,7 @@ public abstract class RTMPConnection extends BaseConnection implements
 			if (streams[streamId - 1] != null)
 				// Another stream already exists with this id
 				return null;
-	
+
 			PlaylistSubscriberStream pss = new PlaylistSubscriberStream();
 			pss.setName(createStreamName());
 			pss.setConnection(this);
@@ -223,7 +223,7 @@ public abstract class RTMPConnection extends BaseConnection implements
 	protected int getUsedStreamCount() {
 		return usedStreams;
 	}
-	
+
 	public IClientStream getStreamById(int id) {
 		if (id <= 0 || id > MAX_STREAMS - 1)
 			return null;
@@ -258,15 +258,16 @@ public abstract class RTMPConnection extends BaseConnection implements
 				}
 			}
 		}
-		
+
 		if (getScope() != null && getScope().getContext() != null) {
-			IFlowControlService fcs = (IFlowControlService) getScope().getContext()
-					.getBean(IFlowControlService.KEY);
+			IFlowControlService fcs = (IFlowControlService) getScope()
+					.getContext().getBean(IFlowControlService.KEY);
 			// XXX: Workaround for #54
 			try {
 				fcs.releaseFlowControllable(this);
 			} catch (Exception err) {
-				log.error("Could not release flowcontrollable connection " + this, err);
+				log.error("Could not release flowcontrollable connection "
+						+ this, err);
 			}
 		}
 		super.close();
@@ -286,11 +287,11 @@ public abstract class RTMPConnection extends BaseConnection implements
 					pendingVideos.remove(streamId);
 				}
 				usedStreams--;
-			streams[streamId - 1] = null;
+				streams[streamId - 1] = null;
+			}
 		}
 	}
-	}
-	
+
 	public void ping(Ping ping) {
 		getChannel((byte) 2).write(ping);
 	}
@@ -308,9 +309,11 @@ public abstract class RTMPConnection extends BaseConnection implements
 			nextBytesRead += bytesReadInterval;
 		}
 	}
-	
+
 	public void receivedBytesRead(int bytes) {
-		log.info("Client received " + bytes + " bytes, written " + getWrittenBytes() + " bytes, " + getPendingMessages() + " messages pending");
+		log.info("Client received " + bytes + " bytes, written "
+				+ getWrittenBytes() + " bytes, " + getPendingMessages()
+				+ " messages pending");
 	}
 
 	public void invoke(IServiceCall call) {
@@ -363,11 +366,11 @@ public abstract class RTMPConnection extends BaseConnection implements
 		notify.setCall(call);
 		getChannel(channel).write(notify);
 	}
-	
+
 	public void notify(String method) {
 		notify(method, null);
 	}
-	
+
 	public void notify(String method, Object[] params) {
 		IServiceCall call = new Call(method, params);
 		notify(call);
@@ -386,14 +389,16 @@ public abstract class RTMPConnection extends BaseConnection implements
 				.getBean(IFlowControlService.KEY);
 		this.bandwidthConfig = config;
 		fcs.updateBWConfigure(this);
-		
+
 		// Notify client about new bandwidth settings (in bytes per second)
 		if (config.getDownstreamBandwidth() > 0) {
-			ServerBW serverBW = new ServerBW((int) config.getDownstreamBandwidth() / 8);
+			ServerBW serverBW = new ServerBW((int) config
+					.getDownstreamBandwidth() / 8);
 			getChannel((byte) 2).write(serverBW);
 		}
 		if (config.getUpstreamBandwidth() > 0) {
-			ClientBW clientBW = new ClientBW((int) config.getUpstreamBandwidth() / 8, (byte) 0);
+			ClientBW clientBW = new ClientBW((int) config
+					.getUpstreamBandwidth() / 8, (byte) 0);
 			getChannel((byte) 2).write(clientBW);
 			// Update generation of BytesRead messages
 			// TODO: what are the correct values here?
@@ -440,11 +445,11 @@ public abstract class RTMPConnection extends BaseConnection implements
 				Integer old = pendingVideos.get(streamId);
 				if (old == null)
 					old = new Integer(0);
-				pendingVideos.put(streamId, old+1);
+				pendingVideos.put(streamId, old + 1);
 			}
 		}
 	}
-	
+
 	protected void messageReceived() {
 		readMessages++;
 
@@ -463,10 +468,10 @@ public abstract class RTMPConnection extends BaseConnection implements
 			synchronized (pendingVideos) {
 				Integer pending = pendingVideos.get(streamId);
 				if (pending != null)
-					pendingVideos.put(streamId, pending-1);
+					pendingVideos.put(streamId, pending - 1);
 			}
 		}
-		
+
 		writtenMessages++;
 	}
 
@@ -477,7 +482,8 @@ public abstract class RTMPConnection extends BaseConnection implements
 	public long getPendingVideoMessages(int streamId) {
 		synchronized (pendingVideos) {
 			Integer count = pendingVideos.get(streamId);
-			long result = (count != null ? count.intValue() - getUsedStreamCount() : 0);
+			long result = (count != null ? count.intValue()
+					- getUsedStreamCount() : 0);
 			return (result > 0 ? result : 0);
 		}
 	}
@@ -501,8 +507,9 @@ public abstract class RTMPConnection extends BaseConnection implements
 	}
 
 	public String toString() {
-		return getClass().getSimpleName() + " from " + getRemoteAddress() + ":" + getRemotePort() + 
-			" to " + getHost() + " (in: " + getReadBytes() + ", out: " + getWrittenBytes() + ")";
+		return getClass().getSimpleName() + " from " + getRemoteAddress() + ":"
+				+ getRemotePort() + " to " + getHost() + " (in: "
+				+ getReadBytes() + ", out: " + getWrittenBytes() + ")";
 	}
 
 }

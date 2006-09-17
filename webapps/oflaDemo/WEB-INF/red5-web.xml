@@ -18,15 +18,56 @@
 		<property name="contextPath" value="${webapp.contextPath}" />
 		<property name="virtualHosts" value="${webapp.virtualHosts}" />
 	</bean>
+	
 
 	<bean id="web.handler" 
 	    class="org.red5.server.webapp.oflaDemo.Application" 
 		singleton="true" />
-	
+
+<!-- 
+	<bean id="web.handler" class="org.red5.server.script.rhino.RhinoScriptFactory">
+		<constructor-arg value="classpath:applications/main.js" />
+		<constructor-arg><value>org.red5.server.adapter.IApplication</value></constructor-arg>
+		<property name="scriptContext" ref="script.context" />
+	</bean>
+ -->
+<!-- 
     <bean id="demoService.service" 
 	    class="org.red5.server.webapp.oflaDemo.DemoService" 
 		singleton="true" />
+ -->
+	
+	<bean id="demoService.service" class="org.red5.server.script.rhino.RhinoScriptFactory">
+		<constructor-arg value="classpath:applications/demoservice.js" />
+		<property name="scriptContext" ref="script.context" />
+	</bean>
+	
+	
+	<bean class="org.red5.server.script.ScriptFactoryPostProcessor"/>
 
+	<bean id="calculator" class="org.red5.server.script.jruby.JRubyScriptFactory">
+		<constructor-arg>
+			<value>inline:
+require 'java'
 
+include_class 'org.springframework.scripting.Calculator'
 
+class RubyCalculator &lt; Calculator
+
+ def add(x, y)
+    x + y
+ end
+
+end
+			</value>
+		</constructor-arg>
+		<constructor-arg value="org.springframework.scripting.Calculator"/>
+	</bean>
+
+	<bean id="messenger" class="org.red5.server.script.jruby.JRubyScriptFactory">
+		<constructor-arg value="classpath:org/springframework/scripting/jruby/Messenger.rb"/>
+		<constructor-arg value="org.springframework.scripting.Messenger"/>
+		<property name="message" value="Hello World!"/>
+	</bean>		
+		
 </beans>

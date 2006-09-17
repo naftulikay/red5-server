@@ -54,9 +54,10 @@ import org.red5.io.object.Serializer;
 public class MetaDataInjectionTest extends TestCase {
 
 	private IFLVService service;
-	
+
 	/**
 	 * SetUp is called before each test
+	 * 
 	 * @return void
 	 */
 	public void setUp() {
@@ -64,137 +65,143 @@ public class MetaDataInjectionTest extends TestCase {
 		service.setSerializer(new Serializer());
 		service.setDeserializer(new Deserializer());
 	}
-	
+
 	/**
 	 * Test MetaData injection
+	 * 
 	 * @throws IOException
 	 */
 	public void testMetaDataInjection() throws IOException {
 		File f = new File("dumps/test_cue1.flv");
-		
-		if(f.exists()) {			
+
+		if (f.exists()) {
 			f.delete();
 		}
-		
+
 		// Create new file
 		f.createNewFile();
-		
+
 		// Use service to grab FLV file
 		IFLV flv = (IFLV) service.getStreamableFile(f);
-		
+
 		// Grab a writer for writing a new FLV
 		FLVWriter writer = (FLVWriter) flv.getWriter();
-		
+
 		// Create a reader for testing
 		File readfile = new File("dumps/test_cue.flv");
 		IFLV readflv = (IFLV) service.getStreamableFile(readfile);
-		
+
 		// Grab a reader for reading a FLV in
 		FLVReader reader = (FLVReader) readflv.getReader();
-		
+
 		// Inject MetaData
-		writeTagsWithInjection(reader, writer);	
-		
+		writeTagsWithInjection(reader, writer);
+
 	}
 
 	/**
 	 * Write FLV tags and inject Cue Points
+	 * 
 	 * @param reader
 	 * @param writer
 	 * @throws IOException
 	 */
-	private void writeTagsWithInjection(ITagReader reader, ITagWriter writer) throws IOException {
-				
+	private void writeTagsWithInjection(ITagReader reader, ITagWriter writer)
+			throws IOException {
+
 		IMetaCue cp = new MetaCue();
 		cp.setName("cue_1");
 		cp.setTime(0.01);
 		cp.setType(ICueType.EVENT);
-		
+
 		IMetaCue cp1 = new MetaCue();
 		cp1.setName("cue_1");
 		cp1.setTime(2.01);
-		cp1.setType(ICueType.EVENT);	
+		cp1.setType(ICueType.EVENT);
 
 		// Place in TreeSet for sorting
 		TreeSet ts = new TreeSet();
 		ts.add(cp);
 		ts.add(cp1);
-		
-		int cuePointTimeStamp = getTimeInMilliseconds(ts.first());		
-		
+
+		int cuePointTimeStamp = getTimeInMilliseconds(ts.first());
+
 		ITag tag = null;
 		ITag injectedTag = null;
-		
-		while(reader.hasMoreTags()) {
+
+		while (reader.hasMoreTags()) {
 			tag = reader.readTag();
-			
-			if(tag.getDataType() != Tag.TYPE_METADATA) {
-				//injectNewMetaData();
+
+			if (tag.getDataType() != Tag.TYPE_METADATA) {
+				// injectNewMetaData();
 			} else {
-				//in
+				// in
 			}
-			
+
 			// if there are cuePoints in the TreeSet
-			if(!ts.isEmpty()) {
-	
+			if (!ts.isEmpty()) {
+
 				// If the tag has a greater timestamp than the
 				// cuePointTimeStamp, then inject the tag
-				while(tag.getTimestamp() > cuePointTimeStamp) {
-					
+				while (tag.getTimestamp() > cuePointTimeStamp) {
+
 					injectedTag = (ITag) injectMetaData(ts.first(), tag);
-					writer.writeTag(injectedTag);					
+					writer.writeTag(injectedTag);
 					tag.setPreviousTagSize((injectedTag.getBodySize() + 11));
-					
+
 					// Advance to the next CuePoint
 					ts.remove(ts.first());
-				
-					if(ts.isEmpty()) {
-						break;						
+
+					if (ts.isEmpty()) {
+						break;
 					}
-					
+
 					cuePointTimeStamp = getTimeInMilliseconds(ts.first());
-				}										
+				}
 			}
-			
+
 			writer.writeTag(tag);
-			
+
 		}
-	}		
+	}
 
 	/**
 	 * Injects metadata (Cue Points) into a tag
+	 * 
 	 * @param cue
 	 * @param writer
 	 * @param tag
 	 * @return ITag tag
 	 */
 	private ITag injectMetaData(Object cue, ITag tag) {
-		
+
 		IMetaCue cp = (MetaCue) cue;
 		Output out = new Output(ByteBuffer.allocate(1000));
-		Serializer ser = new Serializer();		
-		ser.serialize(out,"onCuePoint");
-		ser.serialize(out,cp);
-				
-		ByteBuffer tmpBody = out.buf().flip();		
-		int tmpBodySize = out.buf().limit();	
+		Serializer ser = new Serializer();
+		ser.serialize(out, "onCuePoint");
+		ser.serialize(out, cp);
+
+		ByteBuffer tmpBody = out.buf().flip();
+		int tmpBodySize = out.buf().limit();
 		int tmpPreviousTagSize = tag.getPreviousTagSize();
-		byte tmpDataType = ((byte)(ITag.TYPE_METADATA));
+		byte tmpDataType = ((byte) (ITag.TYPE_METADATA));
 		int tmpTimestamp = getTimeInMilliseconds(cp);
-								
-		return new Tag(tmpDataType, tmpTimestamp, tmpBodySize, tmpBody, tmpPreviousTagSize);
-		
+
+		return new Tag(tmpDataType, tmpTimestamp, tmpBodySize, tmpBody,
+				tmpPreviousTagSize);
+
 	}
-	
+
 	/**
 	 * Returns a timestamp in milliseconds
+	 * 
 	 * @param object
 	 * @return int time
 	 */
 	private int getTimeInMilliseconds(Object object) {
-		IMetaCue cp = (MetaCue) object;		
+		IMetaCue cp = (MetaCue) object;
 		return (int) (cp.getTime() * 1000.00);
-		
+
 	}
-	
+
 }

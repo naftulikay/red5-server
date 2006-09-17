@@ -20,55 +20,58 @@ package org.red5.io.flv.meta;
  */
 
 /**
- * ICuePoint defines contract methods for use with 
- * cuepoints
+ * ICuePoint defines contract methods for use with cuepoints
  * 
  * @author The Red5 Project (red5@osflash.org)
  * @author Dominick Accattato (daccattato@gmail.com)
  */
 public interface IMetaCue extends IMeta, Comparable {
-	
-	
+
 	/**
 	 * Sets the name
+	 * 
 	 * @param name
 	 * 
 	 */
 	public void setName(String name);
-	
+
 	/**
 	 * Gets the name
+	 * 
 	 * @return name
 	 * 
 	 */
 	public String getName();
-	
+
 	/**
-	 * Sets the type
-	 * type can be "event" or "navigation"
+	 * Sets the type type can be "event" or "navigation"
+	 * 
 	 * @param type
-	 *
+	 * 
 	 */
 	public void setType(String type);
-	
+
 	/**
 	 * Gets the type
-	 * @return type 
-	 *
+	 * 
+	 * @return type
+	 * 
 	 */
 	public String getType();
-	
+
 	/**
 	 * Sets the time
+	 * 
 	 * @param d
-	 *
+	 * 
 	 */
 	public void setTime(double d);
-	
+
 	/**
 	 * Gets the time
-	 * @return time 
-	 *
+	 * 
+	 * @return time
+	 * 
 	 */
 	public double getTime();
 }

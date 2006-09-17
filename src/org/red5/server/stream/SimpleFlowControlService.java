@@ -36,29 +36,31 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 
 /**
- * A simple implementation of IFlowControlService.
- * No fairly distribute tokens across child nodes and no elegantly
- * order the IFlowControllables for scheduling (won't give priority to buckets
- * that have threads waiting).
+ * A simple implementation of IFlowControlService. No fairly distribute tokens
+ * across child nodes and no elegantly order the IFlowControllables for
+ * scheduling (won't give priority to buckets that have threads waiting).
+ * 
  * @author The Red5 Project (red5@osflash.org)
  * @author Steven Gong (steven.gong@gmail.com)
  */
-public class SimpleFlowControlService extends TimerTask
-implements IFlowControlService, ApplicationContextAware {
-	private static final Log log = LogFactory.getLog(SimpleFlowControlService.class);
-	
+public class SimpleFlowControlService extends TimerTask implements
+		IFlowControlService, ApplicationContextAware {
+	private static final Log log = LogFactory
+			.getLog(SimpleFlowControlService.class);
+
 	private long interval = 10;
+
 	private long defaultCapacity = 1024 * 100;
+
 	private Timer timer;
-	
-	private Map <IFlowControllable, FCData> fcsMap =
-		new HashMap<IFlowControllable, FCData>();
+
+	private Map<IFlowControllable, FCData> fcsMap = new HashMap<IFlowControllable, FCData>();
 
 	public void init() {
 		timer = new Timer("FlowControlService", true);
 		timer.scheduleAtFixedRate(this, interval, interval);
 	}
-	
+
 	@Override
 	public void run() {
 		synchronized (fcsMap) {
@@ -69,13 +71,19 @@ implements IFlowControlService, ApplicationContextAware {
 					IFlowControllable parentFC = fc.getParentFlowControllable();
 					while (parentFC != null) {
 						FCData parentData = fcsMap.get(parentFC);
-						if (parentData != null && parentData.resources.length > 0) {
+						if (parentData != null
+								&& parentData.resources.length > 0) {
 							for (int i = 0; i < data.resources.length; i++) {
 								for (int j = i; j >= 0; j--) {
 									if (j < parentData.resources.length) {
-										double tokenCount = data.resources[i].getSpeed(fc) * interval;
-										double availableTokens = parentData.resources[j].acquireTokenBestEffort(fc, tokenCount);
-										data.resources[i].addToken(availableTokens);
+										double tokenCount = data.resources[i]
+												.getSpeed(fc)
+												* interval;
+										double availableTokens = parentData.resources[j]
+												.acquireTokenBestEffort(fc,
+														tokenCount);
+										data.resources[i]
+												.addToken(availableTokens);
 										break;
 									}
 								}
@@ -87,7 +95,9 @@ implements IFlowControlService, ApplicationContextAware {
 					if (parentFC == null) {
 						// no bw limit
 						for (int i = 0; i < data.resources.length; i++) {
-							data.resources[i].addToken(data.resources[i].getSpeed(fc) * interval);
+							data.resources[i].addToken(data.resources[i]
+									.getSpeed(fc)
+									* interval);
 						}
 					}
 				}
@@ -111,7 +121,8 @@ implements IFlowControlService, ApplicationContextAware {
 				IBandwidthConfigure newBC = fc.getBandwidthConfigure();
 				long capacity = 0;
 				if (newBC != null) {
-					capacity = newBC.getMaxBurst() <= 0 ? defaultCapacity : newBC.getMaxBurst();
+					capacity = newBC.getMaxBurst() <= 0 ? defaultCapacity
+							: newBC.getMaxBurst();
 				}
 				if (data.sbc == null && newBC == null) {
 					// nothing changes
@@ -126,21 +137,21 @@ implements IFlowControlService, ApplicationContextAware {
 					adoptAncestorResource(fc);
 				} else {
 					// configuration changes
-					if (data.sbc.getOverallBandwidth() >= 0 &&
-							newBC.getOverallBandwidth() < 0) {
+					if (data.sbc.getOverallBandwidth() >= 0
+							&& newBC.getOverallBandwidth() < 0) {
 						// change to a/v bw config
 						data.sbc = new SimpleBandwidthConfigure(newBC);
 						BandwidthResource[] old = data.resources;
 						data.resources = new BandwidthResource[2];
 						data.resources[0] = old[0];
 						data.resources[0].capacity = capacity;
-						data.resources[0].speed = bps2Bpms(data.sbc.getVideoBandwidth());
-						data.resources[1] = new BandwidthResource(
-								data.sbc.getMaxBurst(),
-								bps2Bpms(data.sbc.getAudioBandwidth()),
-								data.sbc.getBurst());
-					} else if (data.sbc.getOverallBandwidth() < 0 &&
-							newBC.getOverallBandwidth() >= 0) {
+						data.resources[0].speed = bps2Bpms(data.sbc
+								.getVideoBandwidth());
+						data.resources[1] = new BandwidthResource(data.sbc
+								.getMaxBurst(), bps2Bpms(data.sbc
+								.getAudioBandwidth()), data.sbc.getBurst());
+					} else if (data.sbc.getOverallBandwidth() < 0
+							&& newBC.getOverallBandwidth() >= 0) {
 						// change to overall bw config
 						data.sbc = new SimpleBandwidthConfigure(newBC);
 						BandwidthResource[] old = data.resources;
@@ -148,19 +159,23 @@ implements IFlowControlService, ApplicationContextAware {
 						old[0].adoptAll(old[1]);
 						data.resources[0] = old[0];
 						data.resources[0].capacity = capacity;
-						data.resources[0].speed = bps2Bpms(data.sbc.getOverallBandwidth());
+						data.resources[0].speed = bps2Bpms(data.sbc
+								.getOverallBandwidth());
 					} else if (data.sbc.getOverallBandwidth() < 0) {
 						// update a/v bw config
 						data.sbc = new SimpleBandwidthConfigure(newBC);
 						data.resources[0].capacity = capacity;
-						data.resources[0].speed = bps2Bpms(data.sbc.getVideoBandwidth());
+						data.resources[0].speed = bps2Bpms(data.sbc
+								.getVideoBandwidth());
 						data.resources[1].capacity = capacity;
-						data.resources[1].speed = bps2Bpms(data.sbc.getAudioBandwidth());
+						data.resources[1].speed = bps2Bpms(data.sbc
+								.getAudioBandwidth());
 					} else {
 						// update overall bw config
 						data.sbc = new SimpleBandwidthConfigure(newBC);
 						data.resources[0].capacity = capacity;
-						data.resources[0].speed = bps2Bpms(data.sbc.getOverallBandwidth());
+						data.resources[0].speed = bps2Bpms(data.sbc
+								.getOverallBandwidth());
 					}
 				}
 			}
@@ -195,7 +210,7 @@ implements IFlowControlService, ApplicationContextAware {
 	public void setApplicationContext(ApplicationContext arg0)
 			throws BeansException {
 	}
-	
+
 	private FCData registerFlowControllable(IFlowControllable fc) {
 		synchronized (fcsMap) {
 			FCData data = new FCData();
@@ -210,45 +225,43 @@ implements IFlowControlService, ApplicationContextAware {
 			return data;
 		}
 	}
-	
+
 	/**
 	 * Bit per second to Byte per millisecond.
-	 * @param bps Bit per second.
+	 * 
+	 * @param bps
+	 *            Bit per second.
 	 * @return Byte per millisecond.
 	 */
 	private long bps2Bpms(long bps) {
 		return bps / 1000 / 8;
 	}
-	
+
 	private void initFCDataByBWConfig(FCData data, IBandwidthConfigure bc) {
 		if (bc == null) {
 			data.resources = new BandwidthResource[0];
 		} else {
-			long capacity = bc.getMaxBurst() <= 0 ? defaultCapacity : bc.getMaxBurst();
+			long capacity = bc.getMaxBurst() <= 0 ? defaultCapacity : bc
+					.getMaxBurst();
 			if (bc.getOverallBandwidth() >= 0) {
 				// valid overall bandwidth
 				data.resources = new BandwidthResource[1];
-				data.resources[0] = new BandwidthResource(
-						capacity,
-						bps2Bpms(bc.getOverallBandwidth()),
-						bc.getBurst());
+				data.resources[0] = new BandwidthResource(capacity, bps2Bpms(bc
+						.getOverallBandwidth()), bc.getBurst());
 			} else {
 				// valid a/v bandwidth
 				data.resources = new BandwidthResource[2];
-				data.resources[0] = new BandwidthResource(
-						capacity,
-						bps2Bpms(bc.getVideoBandwidth()),
-						bc.getBurst());
-				data.resources[1] = new BandwidthResource(
-						capacity,
-						bps2Bpms(bc.getAudioBandwidth()),
-						bc.getBurst());
+				data.resources[0] = new BandwidthResource(capacity, bps2Bpms(bc
+						.getVideoBandwidth()), bc.getBurst());
+				data.resources[1] = new BandwidthResource(capacity, bps2Bpms(bc
+						.getAudioBandwidth()), bc.getBurst());
 			}
 		}
 	}
-	
+
 	/**
 	 * Move related resource from ancestor to this fc.
+	 * 
 	 * @param fc
 	 */
 	private void adoptAncestorResource(IFlowControllable fc) {
@@ -258,7 +271,8 @@ implements IFlowControlService, ApplicationContextAware {
 		currentFC = fc;
 		while (true) {
 			parentFC = currentFC.getParentFlowControllable();
-			if (parentFC == null) break;
+			if (parentFC == null)
+				break;
 			data = fcsMap.get(parentFC);
 			if (data != null) {
 				for (int i = 0; i < data.resources.length; i++) {
@@ -273,9 +287,10 @@ implements IFlowControlService, ApplicationContextAware {
 			currentFC = parentFC;
 		}
 	}
-	
+
 	/**
 	 * Give away resource to ancestor that has assigned bw resource.
+	 * 
 	 * @param fc
 	 */
 	private void yieldResourceToAncestor(IFlowControllable fc) {
@@ -285,7 +300,7 @@ implements IFlowControlService, ApplicationContextAware {
 			FCData data = fcsMap.get(parentFC);
 			if (data != null && data.resources.length > 0) {
 				for (int i = 0; i < thisData.resources.length; i++) {
-					for (int j = i; j >=0; j--) {
+					for (int j = i; j >= 0; j--) {
 						if (j < data.resources.length) {
 							data.resources[j].adopt(thisData.resources[i], fc);
 							break;
@@ -296,66 +311,80 @@ implements IFlowControlService, ApplicationContextAware {
 			parentFC = parentFC.getParentFlowControllable();
 		}
 	}
-	
+
 	public void setInterval(long interval) {
 		this.interval = interval;
 	}
-	
+
 	public void setDefaultCapacity(long defaultCapacity) {
 		this.defaultCapacity = defaultCapacity;
 	}
-	
+
 	private class FCData {
 		private Bucket audioBucket;
+
 		private Bucket videoBucket;
+
 		private BandwidthResource[] resources;
+
 		private SimpleBandwidthConfigure sbc;
 	}
 
 	private class Bucket implements ITokenBucket {
 		private int bucketNum; // video:0, audio:1
+
 		private IFlowControllable fc;
+
 		private boolean isReset = false;
-		
+
 		public Bucket(IFlowControllable fc, int bucketNum) {
 			this.bucketNum = bucketNum;
 			this.fc = fc;
 		}
 
 		synchronized public boolean acquireToken(double tokenCount, long wait) {
-			if (isReset) return false;
+			if (isReset)
+				return false;
 			if (wait != 0) {
 				// XXX not support waiting for now
 				return false;
 			}
 			BandwidthResource resource = getResource();
-			if (resource == null) return true;
+			if (resource == null)
+				return true;
 			return resource.acquireToken(fc, tokenCount);
 		}
 
 		synchronized public double acquireTokenBestEffort(double upperLimitCount) {
-			if (isReset) return 0;
+			if (isReset)
+				return 0;
 			BandwidthResource resource = getResource();
-			if (resource == null) return upperLimitCount;
+			if (resource == null)
+				return upperLimitCount;
 			return resource.acquireTokenBestEffort(fc, upperLimitCount);
 		}
 
-		synchronized public boolean acquireTokenNonblocking(double tokenCount, ITokenBucketCallback callback) {
-			if (isReset) return false;
+		synchronized public boolean acquireTokenNonblocking(double tokenCount,
+				ITokenBucketCallback callback) {
+			if (isReset)
+				return false;
 			BandwidthResource resource = getResource();
-			if (resource == null) return true;
+			if (resource == null)
+				return true;
 			return resource.acquireToken(fc, tokenCount, callback, this);
 		}
 
 		public long getCapacity() {
 			BandwidthResource resource = getResource();
-			if (resource == null) return -1; // infinite
+			if (resource == null)
+				return -1; // infinite
 			return resource.getCapacity(fc);
 		}
 
 		public double getSpeed() {
 			BandwidthResource resource = getResource();
-			if (resource == null) return -1; // infinite
+			if (resource == null)
+				return -1; // infinite
 			return resource.getSpeed(fc);
 		}
 
@@ -367,7 +396,7 @@ implements IFlowControlService, ApplicationContextAware {
 				isReset = false;
 			}
 		}
-		
+
 		private BandwidthResource getResource() {
 			synchronized (fcsMap) {
 				FCData data = fcsMap.get(fc);
@@ -390,31 +419,38 @@ implements IFlowControlService, ApplicationContextAware {
 			}
 		}
 	}
-	
+
 	private class BandwidthResource {
 		private double speed;
+
 		private long capacity;
+
 		private double tokens = 0;
-		private Map<IFlowControllable, Map<ITokenBucketCallback, RequestObject>> fcWaitingMap =
-			new HashMap<IFlowControllable, Map<ITokenBucketCallback, RequestObject>>();
-		
+
+		private Map<IFlowControllable, Map<ITokenBucketCallback, RequestObject>> fcWaitingMap = new HashMap<IFlowControllable, Map<ITokenBucketCallback, RequestObject>>();
+
 		public BandwidthResource(long capacity, double speed, double initial) {
 			this.capacity = capacity;
 			this.speed = speed;
-			if (initial < 0) this.tokens = 0;
-			else if (initial > capacity) this.tokens = capacity;
-			else this.tokens = initial;
+			if (initial < 0)
+				this.tokens = 0;
+			else if (initial > capacity)
+				this.tokens = capacity;
+			else
+				this.tokens = initial;
 		}
-		
+
 		synchronized public void addToken(double tokenCount) {
 			double tmp = tokens + tokenCount;
-			if (tmp > capacity) tokens = capacity;
-			else tokens = tmp;
+			if (tmp > capacity)
+				tokens = capacity;
+			else
+				tokens = tmp;
 			IFlowControllable toReleaseFC = null;
 			ITokenBucketCallback toReleaseCallback = null;
 			loop: for (IFlowControllable fc : fcWaitingMap.keySet()) {
-				Map<ITokenBucketCallback, RequestObject> callbackMap =
-					fcWaitingMap.get(fc);
+				Map<ITokenBucketCallback, RequestObject> callbackMap = fcWaitingMap
+						.get(fc);
 				for (ITokenBucketCallback callback : callbackMap.keySet()) {
 					RequestObject reqObj = callbackMap.get(callback);
 					if (reqObj.requestTokenCount <= tokens) {
@@ -425,26 +461,33 @@ implements IFlowControlService, ApplicationContextAware {
 				}
 			}
 			if (toReleaseFC != null) {
-				Map<ITokenBucketCallback, RequestObject> callbackMap =
-					fcWaitingMap.get(toReleaseFC);
+				Map<ITokenBucketCallback, RequestObject> callbackMap = fcWaitingMap
+						.get(toReleaseFC);
 				RequestObject reqObj = callbackMap.remove(toReleaseCallback);
 				if (callbackMap.size() == 0) {
 					fcWaitingMap.remove(toReleaseFC);
 				}
 				// finally call back
 				try {
-					log.debug("Token available and calling callback: request " + reqObj.requestTokenCount + ", available " + tokens);
-					toReleaseCallback.available(reqObj.requestBucket, reqObj.requestTokenCount);
+					log.debug("Token available and calling callback: request "
+							+ reqObj.requestTokenCount + ", available "
+							+ tokens);
+					toReleaseCallback.available(reqObj.requestBucket,
+							reqObj.requestTokenCount);
 				} catch (Throwable t) {
 					log.error("exception when calling callback", t);
 				}
 			}
 		}
-		
-		synchronized public boolean acquireToken(IFlowControllable fc, double tokenCount, ITokenBucketCallback callback, ITokenBucket requestBucket) {
+
+		synchronized public boolean acquireToken(IFlowControllable fc,
+				double tokenCount, ITokenBucketCallback callback,
+				ITokenBucket requestBucket) {
 			if (tokenCount > tokens) {
-				log.debug("Token not enough: request " + tokenCount + ", available " + tokens);
-				Map<ITokenBucketCallback, RequestObject> callbackMap = fcWaitingMap.get(fc);
+				log.debug("Token not enough: request " + tokenCount
+						+ ", available " + tokens);
+				Map<ITokenBucketCallback, RequestObject> callbackMap = fcWaitingMap
+						.get(fc);
 				if (callbackMap == null) {
 					callbackMap = new HashMap<ITokenBucketCallback, RequestObject>();
 					fcWaitingMap.put(fc, callbackMap);
@@ -461,14 +504,17 @@ implements IFlowControlService, ApplicationContextAware {
 				return true;
 			}
 		}
-		
-		synchronized public boolean acquireToken(IFlowControllable fc, double tokenCount) {
-			if (tokenCount > tokens) return false;
+
+		synchronized public boolean acquireToken(IFlowControllable fc,
+				double tokenCount) {
+			if (tokenCount > tokens)
+				return false;
 			tokens -= tokenCount;
 			return true;
 		}
-		
-		synchronized public double acquireTokenBestEffort(IFlowControllable fc, double upperLimitCount) {
+
+		synchronized public double acquireTokenBestEffort(IFlowControllable fc,
+				double upperLimitCount) {
 			double available;
 			if (tokens >= upperLimitCount) {
 				available = upperLimitCount;
@@ -478,35 +524,38 @@ implements IFlowControlService, ApplicationContextAware {
 			tokens -= available;
 			return available;
 		}
-		
+
 		public long getCapacity(IFlowControllable fc) {
 			return capacity;
 		}
-		
+
 		public double getSpeed(IFlowControllable fc) {
 			return speed;
 		}
-		
+
 		synchronized public void reset(IFlowControllable fc) {
-			Map<ITokenBucketCallback, RequestObject> callbackMap =
-				fcWaitingMap.get(fc);
+			Map<ITokenBucketCallback, RequestObject> callbackMap = fcWaitingMap
+					.get(fc);
 			if (callbackMap != null) {
 				for (ITokenBucketCallback callback : callbackMap.keySet()) {
 					RequestObject reqObj = callbackMap.get(callback);
 					try {
-						callback.reset(reqObj.requestBucket, reqObj.requestTokenCount);
-					} catch (Throwable t) {}
+						callback.reset(reqObj.requestBucket,
+								reqObj.requestTokenCount);
+					} catch (Throwable t) {
+					}
 				}
 				fcWaitingMap.remove(callbackMap);
 			}
 		}
-		
-		synchronized public void adopt(BandwidthResource source, IFlowControllable fc) {
-			Map<ITokenBucketCallback, RequestObject> srcMap =
-				source.fcWaitingMap.remove(fc);
+
+		synchronized public void adopt(BandwidthResource source,
+				IFlowControllable fc) {
+			Map<ITokenBucketCallback, RequestObject> srcMap = source.fcWaitingMap
+					.remove(fc);
 			if (srcMap != null) {
-				Map<ITokenBucketCallback, RequestObject> dstMap =
-					fcWaitingMap.get(fc);
+				Map<ITokenBucketCallback, RequestObject> dstMap = fcWaitingMap
+						.get(fc);
 				if (dstMap == null) {
 					dstMap = new HashMap<ITokenBucketCallback, RequestObject>();
 					fcWaitingMap.put(fc, dstMap);
@@ -514,7 +563,7 @@ implements IFlowControlService, ApplicationContextAware {
 				dstMap.putAll(srcMap);
 			}
 		}
-		
+
 		synchronized public void adoptAll(BandwidthResource source) {
 			ArrayList<IFlowControllable> list = new ArrayList<IFlowControllable>();
 			list.addAll(source.fcWaitingMap.keySet());
@@ -522,9 +571,10 @@ implements IFlowControlService, ApplicationContextAware {
 				adopt(source, fc);
 			}
 		}
-		
+
 		private class RequestObject {
 			private double requestTokenCount;
+
 			private ITokenBucket requestBucket;
 		}
 	}

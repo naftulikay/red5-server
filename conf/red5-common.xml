@@ -122,29 +122,36 @@
 	<bean id="script.context" class="org.red5.server.script.ScriptObjectContext"
 		singleton="true"
 		init-method="init">
+		<property name="scriptBeanFactory">
+			<bean class="org.red5.server.script.ScriptBeanFactory" />
+		</property>
 		<property name="scriptManager">
-			<bean class="javax.script.ScriptEngineManager" />
+			<bean class="javax.script.ScriptEngineManager" singleton="true" />
 		</property>
 	</bean>
-	
+
+<!-- Global script application defs
+
 	<bean id="jsApplication" class="org.red5.server.script.rhino.RhinoScriptFactory">
 		<constructor-arg value="classpath:applications/main.js" />
+		<constructor-arg><value>org.red5.server.adapter.IApplication</value></constructor-arg>
 		<property name="scriptContext" ref="script.context" />
 	</bean>
-<!-- 
-	<bean id="groovyApplication" class="org.springframework.core.io.ClassPathResource">
-		<constructor-arg value="classpath:/applications/main.groovy" />
+
+	<bean id="groovyApplication" class="org.red5.server.script.groovy.GroovyScriptFactory">
+		<constructor-arg value="classpath:applications/main.groovy" />
+		<constructor-arg><value>org.red5.server.adapter.IApplication</value></constructor-arg>
+		<property name="scriptContext" ref="script.context" />
 	</bean>
 
-	<bean id="rubyApplication" class="org.springframework.core.io.ClassPathResource">
-		<constructor-arg value="classpath:/applications/main.rb" />
+	<bean id="rubyApplication" class="org.red5.server.script.ruby.RubyScriptFactory">
+		<constructor-arg value="classpath:applications/main.rb" />
+		<constructor-arg><value>org.red5.server.adapter.IApplication</value></constructor-arg>
+		<property name="scriptContext" ref="script.context" />
 	</bean>
- 
-	<bean id="scriptApplication" class="org.red5.server.script.ResourceScriptSource">
-		<constructor-arg ref="jsApplication" />
-	</bean>
-	<bean class="org.red5.server.script.ScriptFactoryPostProcessor" />
+ --> 
 
- -->	
+
+	
     
 </beans>

@@ -19,6 +19,7 @@ package org.red5.server.stream;
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA 
  */
 
+import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.logging.Log;
@@ -33,13 +34,16 @@ import org.red5.server.messaging.InMemoryPushPushPipe;
 import org.red5.server.messaging.OOBControlMessage;
 import org.red5.server.messaging.PipeConnectionEvent;
 
-public class BroadcastScope extends BasicScope implements IBroadcastScope, IPipeConnectionListener {
+public class BroadcastScope extends BasicScope implements IBroadcastScope,
+		IPipeConnectionListener {
 	private static final Log log = LogFactory.getLog(BroadcastScope.class);
-	
+
 	private InMemoryPushPushPipe pipe;
+
 	private int compCounter;
+
 	private boolean hasRemoved;
-	
+
 	public BroadcastScope(IScope parent, String name) {
 		super(parent, TYPE, name, false);
 		pipe = new InMemoryPushPushPipe();
@@ -66,13 +70,18 @@ public class BroadcastScope extends BasicScope implements IBroadcastScope, IPipe
 
 	public boolean subscribe(IConsumer consumer, Map paramMap) {
 		synchronized (pipe) {
-			if (hasRemoved) return false;
+			if (hasRemoved)
+				return false;
 			return pipe.subscribe(consumer, paramMap);
 		}
 	}
-	
+
 	public boolean unsubscribe(IConsumer consumer) {
 		return pipe.unsubscribe(consumer);
+	}
+
+	public List<IConsumer> getConsumers() {
+		return pipe.getConsumers();
 	}
 
 	public void sendOOBControlMessage(IConsumer consumer,
@@ -86,7 +95,8 @@ public class BroadcastScope extends BasicScope implements IBroadcastScope, IPipe
 
 	synchronized public boolean subscribe(IProvider provider, Map paramMap) {
 		synchronized (pipe) {
-			if (hasRemoved) return false;
+			if (hasRemoved)
+				return false;
 			return pipe.subscribe(provider, paramMap);
 		}
 	}
@@ -95,31 +105,39 @@ public class BroadcastScope extends BasicScope implements IBroadcastScope, IPipe
 		return pipe.unsubscribe(provider);
 	}
 
+	public List<IProvider> getProviders() {
+		return pipe.getProviders();
+	}
+
 	public void sendOOBControlMessage(IProvider provider,
 			OOBControlMessage oobCtrlMsg) {
 		pipe.sendOOBControlMessage(provider, oobCtrlMsg);
 	}
 
 	public void onPipeConnectionEvent(PipeConnectionEvent event) {
-		switch(event.getType()) {
-			case PipeConnectionEvent.CONSUMER_CONNECT_PULL:
-			case PipeConnectionEvent.CONSUMER_CONNECT_PUSH:
-			case PipeConnectionEvent.PROVIDER_CONNECT_PULL:
-			case PipeConnectionEvent.PROVIDER_CONNECT_PUSH:
-				compCounter++;
-				break;
+		switch (event.getType()) {
+		case PipeConnectionEvent.CONSUMER_CONNECT_PULL:
+		case PipeConnectionEvent.CONSUMER_CONNECT_PUSH:
+		case PipeConnectionEvent.PROVIDER_CONNECT_PULL:
+		case PipeConnectionEvent.PROVIDER_CONNECT_PUSH:
+			compCounter++;
+			break;
 
-			case PipeConnectionEvent.CONSUMER_DISCONNECT:
-			case PipeConnectionEvent.PROVIDER_DISCONNECT:
-				compCounter--;
-				if (compCounter <= 0) {
-					// XXX should we synchronize parent before removing?
-					if (hasParent())
-						getParent().removeChildScope(this);
-					hasRemoved = true;
+		case PipeConnectionEvent.CONSUMER_DISCONNECT:
+		case PipeConnectionEvent.PROVIDER_DISCONNECT:
+			compCounter--;
+			if (compCounter <= 0) {
+				// XXX should we synchronize parent before removing?
+				if (hasParent()) {
+					IProviderService providerService = (IProviderService) getParent()
+							.getContext().getBean(IProviderService.KEY);
+					providerService.unregisterBroadcastStream(getParent(),
+							getName());
 				}
-				break;
+				hasRemoved = true;
+			}
+			break;
 		}
 	}
-	
+
 }

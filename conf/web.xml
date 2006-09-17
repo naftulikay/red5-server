@@ -108,12 +108,7 @@
     <servlet-class>org.red5.server.net.servlet.AMFGatewayServlet</servlet-class>
     <load-on-startup>1</load-on-startup>
   </servlet> 
-  <servlet-mapping> 
-    <servlet-name>gateway</servlet-name> 
-    <url-pattern>/gateway</url-pattern> 
-  </servlet-mapping>
 -->
-
 
   <!-- The JSP page compiler and execution servlet, which is the mechanism  -->
   <!-- used by Tomcat to support JSP pages.  Traditionally, this servlet    -->
@@ -339,7 +334,12 @@
         <servlet-name>default</servlet-name>
         <url-pattern>/</url-pattern>
     </servlet-mapping>
-
+<!--
+	<servlet-mapping> 
+    	<servlet-name>gateway</servlet-name> 
+    	<url-pattern>/gateway</url-pattern> 
+  	</servlet-mapping>
+-->
     <!-- The mapping for the invoker servlet -->
 <!--
     <servlet-mapping>

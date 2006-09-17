@@ -38,7 +38,7 @@ public class ContextServiceResolver implements IServiceResolver {
 		}
 		if (service != null)
 			return service;
-		
+
 		return null;
 	}
 

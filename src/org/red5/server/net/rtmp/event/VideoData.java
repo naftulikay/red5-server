@@ -26,20 +26,18 @@ import org.red5.server.stream.IStreamData;
 public class VideoData extends BaseEvent implements IoConstants, IStreamData {
 
 	public static enum FrameType {
-		UNKNOWN,
-		KEYFRAME,
-		INTERFRAME,
-		DISPOSABLE_INTERFRAME,
+		UNKNOWN, KEYFRAME, INTERFRAME, DISPOSABLE_INTERFRAME,
 	}
-	
+
 	protected ByteBuffer data = null;
+
 	private FrameType frameType = FrameType.UNKNOWN;
-	
+
 	public VideoData() {
 		this(ByteBuffer.allocate(0).flip());
 	}
-	
-	public VideoData(ByteBuffer data){
+
+	public VideoData(ByteBuffer data) {
 		super(Type.STREAM_DATA);
 		this.data = data;
 		if (data != null && data.limit() > 0) {
@@ -61,19 +59,19 @@ public class VideoData extends BaseEvent implements IoConstants, IStreamData {
 	public byte getDataType() {
 		return TYPE_VIDEO_DATA;
 	}
-	
-	public ByteBuffer getData(){
+
+	public ByteBuffer getData() {
 		return data;
 	}
-	
-	public String toString(){
-		return "Video  ts: "+getTimestamp();
+
+	public String toString() {
+		return "Video  ts: " + getTimestamp();
 	}
-	
+
 	public FrameType getFrameType() {
 		return frameType;
 	}
-	
+
 	@Override
 	protected void releaseInternal() {
 		if (data != null) {
@@ -81,5 +79,5 @@ public class VideoData extends BaseEvent implements IoConstants, IStreamData {
 			data = null;
 		}
 	}
-	
+
 }

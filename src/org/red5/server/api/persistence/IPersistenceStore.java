@@ -22,7 +22,7 @@ package org.red5.server.api.persistence;
 import java.util.Iterator;
 
 /**
- * Storage for persistent objects. 
+ * Storage for persistent objects.
  * 
  * @author The Red5 Project (red5@osflash.org)
  * @author Luke Hubbard (luke@codegent.com)
@@ -30,24 +30,24 @@ import java.util.Iterator;
  */
 
 public interface IPersistenceStore {
-	
+
 	/**
 	 * Make the passed object persistent.
-	 *  
+	 * 
 	 * @param obj
-	 * 		the object to store
+	 *            the object to store
 	 */
 	public boolean save(IPersistable obj);
-	
+
 	/**
-	 * Load a persistent object with the given name.  The object must provide
+	 * Load a persistent object with the given name. The object must provide
 	 * either a constructor that takes an input stream as only parameter or an
 	 * empty constructor so it can be loaded from the persistence store.
 	 * 
 	 * @param name
-	 * 		the name of the object to load
-	 * @return
-	 * 		the loaded object or <code>null</code> if no such object was found
+	 *            the name of the object to load
+	 * @return the loaded object or <code>null</code> if no such object was
+	 *         found
 	 */
 	public IPersistable load(String name);
 
@@ -55,41 +55,39 @@ public interface IPersistenceStore {
 	 * Load state of an already instantiated persistent object.
 	 * 
 	 * @param obj
-	 * 		the object to initializ
-	 * @return
-	 * 		true if the object was initialized, false otherwise
+	 *            the object to initializ
+	 * @return true if the object was initialized, false otherwise
 	 */
 	public boolean load(IPersistable obj);
 
 	/**
 	 * Delete the passed persistent object.
-	 *  
+	 * 
 	 * @param obj
-	 * 		the object to delete
+	 *            the object to delete
 	 */
 	public boolean remove(IPersistable obj);
-	
+
 	/**
 	 * Delete the persistent object with the given name.
-	 *  
+	 * 
 	 * @param name
-	 * 		the name of the object to delete
+	 *            the name of the object to delete
 	 */
 	public boolean remove(String name);
-	
+
 	/**
-	 * Return iterator over the names of all already loaded objects in the storage.
+	 * Return iterator over the names of all already loaded objects in the
+	 * storage.
 	 * 
-	 * @return
-	 * 		iterator over all objects
+	 * @return iterator over all objects
 	 */
 	public Iterator<String> getObjectNames();
-	
+
 	/**
 	 * Return iterator over the already loaded objects in the storage.
 	 * 
-	 * @return
-	 * 		iterator over all objects
+	 * @return iterator over all objects
 	 */
 	public Iterator<IPersistable> getObjects();
 

@@ -28,13 +28,12 @@ import org.red5.io.object.BaseOutput;
 import org.red5.io.object.DataTypes;
 
 public class Output extends BaseOutput implements org.red5.io.object.Output {
-	
-	protected static Log log =
-        LogFactory.getLog(Output.class.getName());
-	
+
+	protected static Log log = LogFactory.getLog(Output.class.getName());
+
 	protected List<Object> list;
-	
-	public Output(List<Object> list){
+
+	public Output(List<Object> list) {
 		super();
 		this.list = list;
 	}
@@ -54,11 +53,11 @@ public class Output extends BaseOutput implements org.red5.io.object.Output {
 		list.add(new Byte(Mock.TYPE_END_OF_ARRAY));
 	}
 
-	public void markEndObject(){
+	public void markEndObject() {
 		list.add(new Byte(Mock.TYPE_END_OF_OBJECT));
 	}
-	
-	public void markEndMap(){
+
+	public void markEndMap() {
 		list.add(new Byte(Mock.TYPE_END_OF_MAP));
 	}
 
@@ -67,14 +66,14 @@ public class Output extends BaseOutput implements org.red5.io.object.Output {
 		log.info("PROPERTY SEPARATOR");
 		list.add(new Byte(Mock.TYPE_PROPERTY_SEPARATOR));
 	}
-	
+
 	public void markItemSeparator() {
 		log.info("ITEM SEPARATOR");
 		list.add(new Byte(Mock.TYPE_ITEM_SEPARATOR));
 	}
 
 	public boolean supportsDataType(byte type) {
-		// does not yet support references 
+		// does not yet support references
 		return type <= DataTypes.OPT_REFERENCE;
 	}
 
@@ -107,7 +106,7 @@ public class Output extends BaseOutput implements org.red5.io.object.Output {
 	public void writePropertyName(String name) {
 		list.add(name);
 	}
-	
+
 	public void writeItemKey(String key) {
 		list.add(key);
 	}
@@ -121,7 +120,7 @@ public class Output extends BaseOutput implements org.red5.io.object.Output {
 		list.add(new Byte(DataTypes.CORE_ARRAY));
 		list.add(new Integer(length));
 	}
-	
+
 	public void writeStartMap(int highestIndex) {
 		list.add(new Byte(DataTypes.CORE_MAP));
 		list.add(new Integer(highestIndex));
@@ -131,7 +130,7 @@ public class Output extends BaseOutput implements org.red5.io.object.Output {
 		list.add(new Byte(DataTypes.CORE_OBJECT));
 		list.add(className == null ? null : className);
 	}
-	
+
 	public void writeString(String string) {
 		list.add(new Byte(DataTypes.CORE_STRING));
 		list.add(string);
@@ -141,5 +140,5 @@ public class Output extends BaseOutput implements org.red5.io.object.Output {
 		list.add(new Byte(DataTypes.CORE_XML));
 		list.add(xml);
 	}
-	
+
 }

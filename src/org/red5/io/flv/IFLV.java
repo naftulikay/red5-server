@@ -33,74 +33,85 @@ public interface IFLV extends IStreamableFile {
 
 	/**
 	 * Returns a boolean stating whether the flv has metadata
+	 * 
 	 * @return boolean
 	 */
 	public boolean hasMetaData();
-	
+
 	/**
 	 * Sets the metadata
+	 * 
 	 * @param metadata
-	 * @throws FileNotFoundException 
-	 * @throws IOException 
+	 * @throws FileNotFoundException
+	 * @throws IOException
 	 */
-	public void setMetaData(IMetaData metadata) throws FileNotFoundException, IOException;
-	
+	public void setMetaData(IMetaData metadata) throws FileNotFoundException,
+			IOException;
+
 	/**
 	 * Sets the MetaService through Spring
+	 * 
 	 * @param service
 	 */
 	public void setMetaService(IMetaService service);
-	
+
 	/**
 	 * Returns a map of the metadata
+	 * 
 	 * @return metadata
-	 * @throws FileNotFoundException 
+	 * @throws FileNotFoundException
 	 */
 	public IMetaData getMetaData() throws FileNotFoundException;
-	
+
 	/**
 	 * Returns a boolean stating whether a flv has keyframedata
+	 * 
 	 * @return boolean
 	 */
 	public boolean hasKeyFrameData();
-	
+
 	/**
 	 * Sets the keyframe data of a flv file
+	 * 
 	 * @param keyframedata
 	 */
 	public void setKeyFrameData(Map keyframedata);
-	
+
 	/**
 	 * Gets the keyframe data
+	 * 
 	 * @return keyframedata
 	 */
 	public Map getKeyFrameData();
-	
+
 	/**
-	 * Refreshes the headers.  Usually used after data is
-	 * added to the flv file
+	 * Refreshes the headers. Usually used after data is added to the flv file
+	 * 
 	 * @throws IOException
 	 */
 	public void refreshHeaders() throws IOException;
-	
+
 	/**
 	 * Flushes Header
+	 * 
 	 * @throws IOException
 	 */
 	public void flushHeaders() throws IOException;
-	
+
 	/**
 	 * Returns a Reader closest to the nearest keyframe
+	 * 
 	 * @param seekPoint
 	 * @return reader
 	 */
 	public ITagReader readerFromNearestKeyFrame(int seekPoint);
-	
+
 	/**
 	 * Returns a Writer based on the nearest key frame
+	 * 
 	 * @param seekPoint
 	 * @return writer
 	 */
 	public ITagWriter writerFromNearestKeyFrame(int seekPoint);
-	
+
 }

@@ -44,54 +44,54 @@ import org.red5.server.exception.ScopeNotFoundException;
 public class ScopeStatistics {
 
 	private IScope globalScope = null;
-	
+
 	public ScopeStatistics() {
-		
+
 	}
-	
+
 	public ScopeStatistics(IScope globalScope) {
 		this.globalScope = globalScope;
 	}
-	
+
 	public void setGlobalScope(IScope scope) {
 		globalScope = scope;
 	}
-	
+
 	/**
 	 * Resolve path to scope.
 	 * 
 	 * @param path
-	 * 			path to return scope for
+	 *            path to return scope for
 	 * @return the scope for the given path
 	 * @throws ScopeNotFoundException
 	 */
 	private IScope getScope(String path) throws ScopeNotFoundException {
 		IScope scope;
-		if (path != null && !path.equals("")) 
+		if (path != null && !path.equals(""))
 			scope = ScopeUtils.resolveScope(globalScope, path);
 		else
 			scope = globalScope;
-		
+
 		if (scope == null)
 			throw new ScopeNotFoundException(globalScope, path);
-		
+
 		return scope;
 	}
-	
+
 	/**
-	 * Return available applications. 
+	 * Return available applications.
 	 * 
 	 * @return list of application names
 	 */
 	public String[] getScopes() {
 		return getScopes(null);
 	}
-	
+
 	/**
 	 * Return subscopes of another scope.
 	 * 
 	 * @param path
-	 * 			path of scope to return subscopes of
+	 *            path of scope to return subscopes of
 	 * @return list of subscope names
 	 */
 	public String[] getScopes(String path) {
@@ -100,12 +100,12 @@ public class ScopeStatistics {
 		Iterator<String> iter = scope.getScopeNames();
 		while (iter.hasNext()) {
 			String name = iter.next();
-			result.add(name.substring(name.indexOf(IScope.SEPARATOR)+1));
+			result.add(name.substring(name.indexOf(IScope.SEPARATOR) + 1));
 		}
-		
+
 		return (String[]) result.toArray(new String[result.size()]);
 	}
-	
+
 	/**
 	 * Return attributes of the global scope.
 	 * 
@@ -114,10 +114,10 @@ public class ScopeStatistics {
 	public Map<String, Object> getScopeAttributes() {
 		return getScopeAttributes(null);
 	}
-	
+
 	/**
-	 * Return an object that can be serialized through XML-RPC.
-	 * Inspired by "Reflective XML-RPC" by "Stephan Maier".
+	 * Return an object that can be serialized through XML-RPC. Inspired by
+	 * "Reflective XML-RPC" by "Stephan Maier".
 	 * 
 	 * @param value
 	 * @return
@@ -126,16 +126,15 @@ public class ScopeStatistics {
 		if (value == null) {
 			return "<null>";
 		}
-		
+
 		Class type = value.getClass();
-		if (type.equals(Integer.class)
-			|| type.equals(Double.class)
-			|| type.equals(Boolean.class)
-			|| type.equals(String.class)
-			|| type.equals(Date.class)) {
+		if (type.equals(Integer.class) || type.equals(Double.class)
+				|| type.equals(Boolean.class) || type.equals(String.class)
+				|| type.equals(Date.class)) {
 			return value;
 		} else if (type.equals(Long.class)) {
-			// XXX: long values are not supported by XML-RPC, convert to string instead 
+			// XXX: long values are not supported by XML-RPC, convert to string
+			// instead
 			return ((Long) value).toString();
 		} else if (type.isArray() && type.getComponentType().equals(byte.class)) {
 			return value;
@@ -156,20 +155,20 @@ public class ScopeStatistics {
 		} else if (value instanceof Collection) {
 			Collection<Object> coll = (Collection<Object>) value;
 			Vector<Object> result = new Vector<Object>(coll.size());
-			for (Object item: coll) {
+			for (Object item : coll) {
 				result.add(getXMLRPCValue(item));
 			}
 			return result;
 		}
-		
+
 		throw new RuntimeException("Don't know how to convert " + value);
 	}
-	
+
 	/**
 	 * Return attributes of a given scope.
 	 * 
 	 * @param path
-	 * 			path of scope to return attributes of
+	 *            path of scope to return attributes of
 	 * @return the scope's attributes
 	 */
 	public Map<String, Object> getScopeAttributes(String path) {
@@ -190,23 +189,27 @@ public class ScopeStatistics {
 	 * Return informations about shared objects of a given scope.
 	 * 
 	 * @param path
-	 * 			path of scope to return shared objects for
+	 *            path of scope to return shared objects for
 	 * @return a mapping containing shared object name -> (persistent, data)
 	 */
 	public Map<String, Object> getSharedObjects(String path) {
 		IScope scope = getScope(path);
-		ISharedObjectService service = (ISharedObjectService) ScopeUtils.getScopeService(scope, ISharedObjectService.SHARED_OBJECT_SERVICE);
+		ISharedObjectService service = (ISharedObjectService) ScopeUtils
+				.getScopeService(scope,
+						ISharedObjectService.SHARED_OBJECT_SERVICE);
 		if (service == null)
 			return new Hashtable<String, Object>();
-		
+
 		Map<String, Object> result = new Hashtable<String, Object>();
 		for (String name : service.getSharedObjectNames(scope)) {
 			ISharedObject so = service.getSharedObject(scope, name);
 			try {
-				result.put(name, new Object[]{so.isPersistentObject(), getXMLRPCValue(so.getData())});
+				result.put(name, new Object[] { so.isPersistentObject(),
+						getXMLRPCValue(so.getData()) });
 			} catch (RuntimeException err) {
 				// Could not convert attribute for XML-RPC serialization.
-				result.put(name, "--- Error while serializing \"" + so.getData().toString() + "\" ---");
+				result.put(name, "--- Error while serializing \""
+						+ so.getData().toString() + "\" ---");
 			}
 		}
 		return result;

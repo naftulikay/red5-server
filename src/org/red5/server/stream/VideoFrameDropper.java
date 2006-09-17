@@ -38,7 +38,8 @@ import org.red5.server.stream.message.RTMPMessage;
  * iteration as well. If these frames all went through, disposable interframes
  * are sent again.
  * 
- * <p>So from highest to lowest bandwidth and back, the states go as follows:
+ * <p>
+ * So from highest to lowest bandwidth and back, the states go as follows:
  * <ul>
  * <li>all frames</li>
  * <li>keyframes and interframes</li>
@@ -52,39 +53,30 @@ import org.red5.server.stream.message.RTMPMessage;
  */
 public class VideoFrameDropper implements IFrameDropper {
 
-	protected static Log log =
-        LogFactory.getLog(VideoFrameDropper.class.getName());
+	protected static Log log = LogFactory.getLog(VideoFrameDropper.class
+			.getName());
 
 	/** Current state. */
 	private int state;
-	/** Timestamps of the dropped packets. */
-	private int droppedTimes;
-	/** Is the timestamp absolute? */
-	private boolean droppedAbsolute;
-	/** Should the timestamps of dropped packets be counted? */
-	private boolean countDroppedTimes;
-	
+
 	public VideoFrameDropper() {
 		reset();
 	}
-	
+
 	public void reset() {
 		reset(SEND_ALL);
 	}
-	
+
 	public void reset(int state) {
 		this.state = state;
-		droppedTimes = 0;
-		droppedAbsolute = false;
-		countDroppedTimes = (state != SEND_ALL);
 	}
-	
+
 	public boolean canSendPacket(RTMPMessage message, long pending) {
 		IRTMPEvent packet = message.getBody();
-		if (! (packet instanceof VideoData))
+		if (!(packet instanceof VideoData))
 			// We currently only drop video packets.
 			return true;
-		
+
 		VideoData video = (VideoData) packet;
 		FrameType type = video.getFrameType();
 		boolean result = false;
@@ -93,14 +85,13 @@ public class VideoFrameDropper implements IFrameDropper {
 			// All packets will be sent.
 			result = true;
 			break;
-			
+
 		case SEND_INTERFRAMES:
 			// Only keyframes and interframes will be sent.
 			if (type == FrameType.KEYFRAME) {
 				if (pending == 0) {
 					// Send all frames from now on.
 					state = SEND_ALL;
-					countDroppedTimes = true;
 				}
 				result = true;
 			} else if (type == FrameType.INTERFRAME)
@@ -114,7 +105,7 @@ public class VideoFrameDropper implements IFrameDropper {
 				// Maybe switch back to SEND_INTERFRAMES after the next keyframe
 				state = SEND_KEYFRAMES_CHECK;
 			break;
-			
+
 		case SEND_KEYFRAMES_CHECK:
 			// Only keyframes will be sent.
 			result = (type == FrameType.KEYFRAME);
@@ -123,39 +114,19 @@ public class VideoFrameDropper implements IFrameDropper {
 				state = SEND_INTERFRAMES;
 			break;
 		}
-		
-		// Store timestamp of dropped packet
-		if (!result && countDroppedTimes && type != FrameType.DISPOSABLE_INTERFRAME) {
-			if (message.isTimerRelative())
-				droppedTimes += packet.getTimestamp();
-			else {
-				droppedTimes = packet.getTimestamp();
-				droppedAbsolute = true;
-			}
-		}
-		
+
 		return result;
 	}
 
 	public void dropPacket(RTMPMessage message) {
 		IRTMPEvent packet = message.getBody();
-		if (! (packet instanceof VideoData))
+		if (!(packet instanceof VideoData))
 			// Only check video packets.
 			return;
-		
+
 		VideoData video = (VideoData) packet;
 		FrameType type = video.getFrameType();
-		
-		// Store timestamp of dropped packet
-		if (countDroppedTimes && type != FrameType.DISPOSABLE_INTERFRAME) {
-			if (message.isTimerRelative())
-				droppedTimes += packet.getTimestamp();
-			else {
-				droppedTimes = packet.getTimestamp();
-				droppedAbsolute = true;
-			}
-		}
-		
+
 		switch (state) {
 		case SEND_ALL:
 			if (type == FrameType.DISPOSABLE_INTERFRAME) {
@@ -171,7 +142,7 @@ public class VideoFrameDropper implements IFrameDropper {
 				return;
 			}
 			break;
-			
+
 		case SEND_INTERFRAMES:
 			if (type == FrameType.INTERFRAME) {
 				// Drop all frames until the next keyframe.
@@ -183,11 +154,11 @@ public class VideoFrameDropper implements IFrameDropper {
 				return;
 			}
 			break;
-			
+
 		case SEND_KEYFRAMES:
 			// Remain in state.
 			break;
-			
+
 		case SEND_KEYFRAMES_CHECK:
 			if (type == FrameType.KEYFRAME) {
 				// Switch back to sending keyframes, but don't move to
@@ -200,28 +171,7 @@ public class VideoFrameDropper implements IFrameDropper {
 	}
 
 	public void sendPacket(RTMPMessage message) {
-		IRTMPEvent packet = message.getBody();
-		if (! (packet instanceof VideoData))
-			// Only process video packets.
-			return;
-		
-		if (droppedTimes == 0)
-			return;
-		
-		// Modify packet to send to include dropped timestamps
-		VideoData video = (VideoData) packet;
-		if (droppedAbsolute) {
-			video.setTimestamp(droppedTimes);
-			message.setTimerRelative(true);
-			if (video.getHeader() != null) {
-			video.getHeader().setTimerRelative(true);
-			}
-			droppedAbsolute = true;
-		} else {
-			log.debug("Dropped " + droppedTimes + " ms packets");
-			video.setTimestamp(video.getTimestamp() + droppedTimes);
-		}
-		droppedTimes = 0;
+
 	}
 
 }

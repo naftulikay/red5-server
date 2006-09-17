@@ -28,7 +28,7 @@ import java.util.Set;
  * @author The Red5 Project (red5@osflash.org)
  * @author Luke Hubbard (luke@codegent.com)
  */
-public interface IAttributeStore  {
+public interface IAttributeStore {
 
 	/**
 	 * Get the attribute names.
@@ -54,8 +54,8 @@ public interface IAttributeStore  {
 	 * @param values
 	 *            the attributes to set
 	 */
-	public void setAttributes(Map<String,Object> values);
-	
+	public void setAttributes(Map<String, Object> values);
+
 	/**
 	 * Set multiple attributes on this object.
 	 * 
@@ -63,7 +63,7 @@ public interface IAttributeStore  {
 	 *            the attributes to set
 	 */
 	public void setAttributes(IAttributeStore values);
-	
+
 	/**
 	 * Return the value for a given attribute.
 	 * 
@@ -76,17 +76,21 @@ public interface IAttributeStore  {
 	/**
 	 * Return the value for a given attribute and set it if it doesn't exist.
 	 * 
-	 * <p>This is a utility function that internally performs the following code:
-	 * <p><code>
+	 * <p>
+	 * This is a utility function that internally performs the following code:
+	 * <p>
+	 * <code>
 	 * if (!hasAttribute(name)) setAttribute(name, defaultValue);<br>
 	 * return getAttribute(name);<br>
-	 * </code></p>
+	 * </code>
+	 * </p>
 	 * </p>
 	 * 
 	 * @param name
 	 *            the name of the attribute to get
 	 * @param defaultValue
-	 *            the value of the attribute to set if the attribute doesn't exist
+	 *            the value of the attribute to set if the attribute doesn't
+	 *            exist
 	 * @return the attribute value
 	 */
 	public Object getAttribute(String name, Object defaultValue);
@@ -113,5 +117,5 @@ public interface IAttributeStore  {
 	 * Remove all attributes.
 	 */
 	public void removeAttributes();
-	
+
 }

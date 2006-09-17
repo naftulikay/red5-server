@@ -43,7 +43,7 @@ public interface IScopeHandler extends IEventHandler {
 	 * Called when a scope is created for the first time.
 	 * 
 	 * @param scope
-	 * 			the new scope object
+	 *            the new scope object
 	 * @return <code>true</code> to allow, <code>false</code> to deny
 	 */
 	boolean start(IScope scope);
@@ -52,16 +52,19 @@ public interface IScopeHandler extends IEventHandler {
 	 * Called just before a scope is disposed.
 	 */
 	void stop(IScope scope);
-	
+
 	/**
-	 * Called just before every connection to a scope. You can pass additional params from client using 
-	 * <code>NetConnection.connect</code> method (see below).
+	 * Called just before every connection to a scope. You can pass additional
+	 * params from client using <code>NetConnection.connect</code> method (see
+	 * below).
 	 * 
 	 * @param conn
-	 * 			connection object
+	 *            connection object
 	 * @param params
-	 * 			list of params passed from client via <code>NetConnection.connect</code> method. All parameters but the first one passed
-	 * 			to <code>NetConnection.connect</code> method are available as params array.
+	 *            list of params passed from client via
+	 *            <code>NetConnection.connect</code> method. All parameters
+	 *            but the first one passed to <code>NetConnection.connect</code>
+	 *            method are available as params array.
 	 * 
 	 * 
 	 * @return <code>true</code> to allow, <code>false</code> to deny
@@ -72,26 +75,26 @@ public interface IScopeHandler extends IEventHandler {
 	 * Called just after the a connection is disconnected.
 	 * 
 	 * @param conn
-	 * 			connection object
+	 *            connection object
 	 * @param scope
-	 * 			scope object
+	 *            scope object
 	 */
 	void disconnect(IConnection conn, IScope scope);
-	
+
 	/**
 	 * Called just before a child scope is added.
 	 * 
 	 * @param scope
-	 * 			scope that will be added
+	 *            scope that will be added
 	 * @return <code>true</code> to allow, <code>false</code> to deny
 	 */
 	boolean addChildScope(IBasicScope scope);
-	
+
 	/**
 	 * Called just after a child scope has been removed.
 	 * 
 	 * @param scope
-	 * 			scope that has been removed
+	 *            scope that has been removed
 	 */
 	void removeChildScope(IBasicScope scope);
 
@@ -99,8 +102,9 @@ public interface IScopeHandler extends IEventHandler {
 	 * Called just before a client enters the scope.
 	 * 
 	 * @param client
-	 * 			client object
-	 * @return <code>true</code> to allow, <code>false</code> to deny connection
+	 *            client object
+	 * @return <code>true</code> to allow, <code>false</code> to deny
+	 *         connection
 	 */
 	boolean join(IClient client, IScope scope);
 
@@ -108,9 +112,9 @@ public interface IScopeHandler extends IEventHandler {
 	 * Called just after the client leaves the scope.
 	 * 
 	 * @param client
-	 * 			client object
+	 *            client object
 	 * @param scope
-	 * 			scope object
+	 *            scope object
 	 */
 	void leave(IClient client, IScope scope);
 
@@ -118,12 +122,12 @@ public interface IScopeHandler extends IEventHandler {
 	 * Called when a service is called.
 	 * 
 	 * @param conn
-	 * 			the connection object
+	 *            the connection object
 	 * @param call
-	 * 			the call object.
+	 *            the call object.
 	 * 
 	 * @return <code>true</code> to allow, <code>false</code> to deny
 	 */
 	boolean serviceCall(IConnection conn, IServiceCall call);
-	
+
 }

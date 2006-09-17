@@ -40,28 +40,40 @@ import org.red5.io.flv.impl.Tag;
 
 public class MP3Reader implements ITagReader, IKeyFrameDataAnalyzer {
 
-	protected static Log log =
-			LogFactory.getLog(MP3Reader.class.getName());
+	protected static Log log = LogFactory.getLog(MP3Reader.class.getName());
 
 	private FileInputStream fis = null;
+
 	private FileChannel channel = null;
+
 	private MappedByteBuffer mappedFile = null;
+
 	private ByteBuffer in = null;
+
 	private ITag tag = null;
+
 	private int prevSize = 0;
+
 	private double currentTime = 0;
+
 	private KeyFrameMeta frameMeta = null;
+
 	private HashMap<Integer, Double> posTimeMap = null;
+
 	private int dataRate = 0;
+
 	private boolean firstFrame;
+
 	private ITag fileMeta;
-    private long duration = 0;
+
+	private long duration = 0;
 
 	public MP3Reader(FileInputStream stream) {
 		fis = stream;
 		channel = fis.getChannel();
 		try {
-			mappedFile = channel.map(FileChannel.MapMode.READ_ONLY, 0, channel.size());
+			mappedFile = channel.map(FileChannel.MapMode.READ_ONLY, 0, channel
+					.size());
 		} catch (IOException e) {
 			log.error("MP3Reader :: MP3Reader ::>\n", e);
 		}
@@ -83,7 +95,8 @@ public class MP3Reader implements ITagReader, IKeyFrameDataAnalyzer {
 	}
 
 	/**
-	 * Check if the file can be played back with Flash. 
+	 * Check if the file can be played back with Flash.
+	 * 
 	 * @param header
 	 */
 	private void checkValidHeader(MP3Header header) {
@@ -94,12 +107,13 @@ public class MP3Reader implements ITagReader, IKeyFrameDataAnalyzer {
 		case 5513:
 			// Supported sample rate
 			break;
-			
+
 		default:
-			throw new RuntimeException("Unsupported sample rate: " + header.getSampleRate());
+			throw new RuntimeException("Unsupported sample rate: "
+					+ header.getSampleRate());
 		}
 	}
-	
+
 	private ITag createFileMeta() {
 		// Create tag for onMetaData event
 		ByteBuffer buf = ByteBuffer.allocate(1024);
@@ -108,7 +122,8 @@ public class MP3Reader implements ITagReader, IKeyFrameDataAnalyzer {
 		out.writeString("onMetaData");
 		out.writeStartMap(3);
 		out.writePropertyName("duration");
-		out.writeNumber(frameMeta.timestamps[frameMeta.timestamps.length - 1] / 1000.0);
+		out
+				.writeNumber(frameMeta.timestamps[frameMeta.timestamps.length - 1] / 1000.0);
 		out.writePropertyName("audiocodecid");
 		out.writeNumber(ITag.FLAG_FORMAT_MP3);
 		if (dataRate > 0) {
@@ -120,7 +135,8 @@ public class MP3Reader implements ITagReader, IKeyFrameDataAnalyzer {
 		out.markEndMap();
 		buf.flip();
 
-		ITag result = new Tag(ITag.TYPE_METADATA, 0, buf.limit(), null, prevSize);
+		ITag result = new Tag(ITag.TYPE_METADATA, 0, buf.limit(), null,
+				prevSize);
 		result.setBody(buf);
 		return result;
 	}
@@ -153,8 +169,8 @@ public class MP3Reader implements ITagReader, IKeyFrameDataAnalyzer {
 	public long getBytesRead() {
 		return in.position();
 	}
-	
-	public long getDuration(){
+
+	public long getDuration() {
 		return duration;
 	}
 
@@ -198,7 +214,7 @@ public class MP3Reader implements ITagReader, IKeyFrameDataAnalyzer {
 		}
 		return header;
 	}
-	
+
 	public synchronized ITag readTag() {
 		if (firstFrame) {
 			// Return file metadata as first tag.
@@ -217,25 +233,28 @@ public class MP3Reader implements ITagReader, IKeyFrameDataAnalyzer {
 			return null;
 		}
 
-		tag = new Tag(ITag.TYPE_AUDIO, (int) currentTime, frameSize + 1, null, prevSize);
+		tag = new Tag(ITag.TYPE_AUDIO, (int) currentTime, frameSize + 1, null,
+				prevSize);
 		prevSize = frameSize + 1;
 		currentTime += header.frameDuration();
 		ByteBuffer body = ByteBuffer.allocate(tag.getBodySize());
-		byte tagType = (ITag.FLAG_FORMAT_MP3 << 4) | (ITag.FLAG_SIZE_16_BIT << 1);
+		byte tagType = (ITag.FLAG_FORMAT_MP3 << 4)
+				| (ITag.FLAG_SIZE_16_BIT << 1);
 		switch (header.getSampleRate()) {
-			case 44100:
-				tagType |= ITag.FLAG_RATE_44_KHZ << 2;
-				break;
-			case 22050:
-				tagType |= ITag.FLAG_RATE_22_KHZ << 2;
-				break;
-			case 11025:
-				tagType |= ITag.FLAG_RATE_11_KHZ << 2;
-				break;
-			default:
-				tagType |= ITag.FLAG_RATE_5_5_KHZ << 2;
+		case 44100:
+			tagType |= ITag.FLAG_RATE_44_KHZ << 2;
+			break;
+		case 22050:
+			tagType |= ITag.FLAG_RATE_22_KHZ << 2;
+			break;
+		case 11025:
+			tagType |= ITag.FLAG_RATE_11_KHZ << 2;
+			break;
+		default:
+			tagType |= ITag.FLAG_RATE_5_5_KHZ << 2;
 		}
-		tagType |= (header.isStereo() ? ITag.FLAG_TYPE_STEREO : ITag.FLAG_TYPE_MONO);
+		tagType |= (header.isStereo() ? ITag.FLAG_TYPE_STEREO
+				: ITag.FLAG_TYPE_MONO);
 		body.put(tagType);
 		final int limit = in.limit();
 		body.putInt(header.getData());

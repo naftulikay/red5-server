@@ -28,44 +28,58 @@ package org.red5.io.mp3.impl;
  */
 
 public class MP3Header {
-	
+
 	private static final int[][] BITRATES = {
-		{0, 32, 64, 96, 128, 160, 192, 224, 256, 288, 320, 352, 384, 416, 448, -1}, 
-		{0, 32, 48, 56,  64,  80,  96, 112, 128, 160, 192, 224, 256, 320, 384, -1}, 
-		{0, 32, 40, 48,  56,  64,  80,  96, 112, 128, 160, 192, 224, 256, 320, -1}, 
-		{0, 32, 48, 56,  64,  80,  96, 112, 128, 144, 160, 176, 192, 224, 256, -1}, 
-		{0,  8, 16, 24,  32,  40,  48,  56,  64,  80,  96, 112, 128, 144, 160, -1}, 
-	};
-	
+			{ 0, 32, 64, 96, 128, 160, 192, 224, 256, 288, 320, 352, 384, 416,
+					448, -1 },
+			{ 0, 32, 48, 56, 64, 80, 96, 112, 128, 160, 192, 224, 256, 320,
+					384, -1 },
+			{ 0, 32, 40, 48, 56, 64, 80, 96, 112, 128, 160, 192, 224, 256, 320,
+					-1 },
+			{ 0, 32, 48, 56, 64, 80, 96, 112, 128, 144, 160, 176, 192, 224,
+					256, -1 },
+			{ 0, 8, 16, 24, 32, 40, 48, 56, 64, 80, 96, 112, 128, 144, 160, -1 }, };
+
 	private static final int[][] SAMPLERATES = {
-		// Version 2.5
-		{11025, 12000, 8000, -1},
-		// Unknown version
-		{-1, -1, -1, -1},
-		// Version 2
-		{22050, 24000, 16000, -1},
-		// Version 1
-		{44100, 44800, 32000, -1},
-	};
-	
+	// Version 2.5
+			{ 11025, 12000, 8000, -1 },
+			// Unknown version
+			{ -1, -1, -1, -1 },
+			// Version 2
+			{ 22050, 24000, 16000, -1 },
+			// Version 1
+			{ 44100, 44800, 32000, -1 }, };
+
 	private int data;
+
 	private byte audioVersionId;
+
 	private byte layerDescription;
+
 	private boolean protectionBit;
+
 	private byte bitRateIndex;
+
 	private byte samplingRateIndex;
+
 	private boolean paddingBit;
+
 	private boolean privateBit;
+
 	private byte channelMode;
+
 	private byte modeExtension;
-	private boolean copyright; 
+
+	private boolean copyright;
+
 	private boolean original;
+
 	private byte emphasis;
-	
+
 	public MP3Header(int data) throws Exception {
 		if ((data & 0xffe00000) != 0xffe00000)
 			throw new Exception("invalid frame sync");
-		
+
 		this.data = data;
 		// Strip signed bit
 		data &= 0x1fffff;
@@ -86,22 +100,22 @@ public class MP3Header {
 	public int getData() {
 		return data;
 	}
-	
+
 	public boolean isStereo() {
 		return (channelMode != 3);
 	}
-	
+
 	public boolean isProtected() {
 		return protectionBit;
 	}
-	
+
 	public int getBitRate() {
 		int result;
 		switch (audioVersionId) {
 		case 1:
 			// Unknown
 			return -1;
-			
+
 		case 0:
 		case 2:
 			// Version 2 or 2.5
@@ -115,7 +129,7 @@ public class MP3Header {
 				// Unknown layer
 				return -1;
 			break;
-		
+
 		case 3:
 			// Version 1
 			if (layerDescription == 3)
@@ -131,19 +145,19 @@ public class MP3Header {
 				// Unknown layer
 				return -1;
 			break;
-		
+
 		default:
 			// Unknown version
 			return -1;
 		}
-		
+
 		return result * 1000;
 	}
-	
+
 	public int getSampleRate() {
 		return SAMPLERATES[audioVersionId][samplingRateIndex];
 	}
-	
+
 	/**
 	 * Calculate the size of a MP3 frame for this header.
 	 * 
@@ -154,17 +168,19 @@ public class MP3Header {
 		case 3:
 			// Layer 1
 			return (12 * getBitRate() / getSampleRate() + (paddingBit ? 1 : 0)) * 4;
-			
+
 		case 2:
 		case 1:
 			// Layer 2 and 3
 			if (audioVersionId == 3)
 				// MPEG 1
-				return 144 * getBitRate() / getSampleRate() + (paddingBit ? 1 : 0);
+				return 144 * getBitRate() / getSampleRate()
+						+ (paddingBit ? 1 : 0);
 			else
 				// MPEG 2 or 2.5
-				return 72 * getBitRate() / getSampleRate() + (paddingBit ? 1 : 0);
-			
+				return 72 * getBitRate() / getSampleRate()
+						+ (paddingBit ? 1 : 0);
+
 		default:
 			// Unknown
 			return -1;
@@ -181,20 +197,20 @@ public class MP3Header {
 		case 3:
 			// Layer 1
 			return 384 / (getSampleRate() * 0.001);
-			
+
 		case 2:
 		case 1:
 			if (audioVersionId == 3)
 				// MPEG 1, Layer 2 and 3
-			return 1152 / (getSampleRate() * 0.001);
+				return 1152 / (getSampleRate() * 0.001);
 			else
 				// MPEG 2 or 2.5, Layer 2 and 3
 				return 576 / (getSampleRate() * 0.001);
-			
+
 		default:
 			// Unknown
 			return -1;
 		}
 	}
-	
+
 }

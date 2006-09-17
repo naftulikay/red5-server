@@ -19,36 +19,36 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 /**
- * @author Murali Kosaraju
- * Class which contains the method <code>executeTask()</code> 
- * which is ivoked by the <code>PoolWorker</code> thread. 
+ * @author Murali Kosaraju Class which contains the method
+ *         <code>executeTask()</code> which is ivoked by the
+ *         <code>PoolWorker</code> thread.
  */
 public class SampleWork {
-   /**
-    * Logger for this class
-    */
-   private static final Log log = LogFactory.getLog(SampleWork.class);
+	/**
+	 * Logger for this class
+	 */
+	private static final Log log = LogFactory.getLog(SampleWork.class);
 
-   public String executeTask(String strArg, int intArg) {
-      log.debug(" Begin executeTask(String, int)  ");
-      try {
-         Thread.sleep(1000);
-      } catch (InterruptedException e) {
-         log.debug("InterruptedException - ", e);
-      }
-      log.debug(" End executeTask(String, int) ");
-      return strArg + " : " + intArg;
-   }
+	public String executeTask(String strArg, int intArg) {
+		log.debug(" Begin executeTask(String, int)  ");
+		try {
+			Thread.sleep(1000);
+		} catch (InterruptedException e) {
+			log.debug("InterruptedException - ", e);
+		}
+		log.debug(" End executeTask(String, int) ");
+		return strArg + " : " + intArg;
+	}
 
-   public String executeTask() {
-      log.debug(" Begin executeTask() ");
-      try {
-         Thread.sleep(1000);
-      } catch (InterruptedException e) {
-         log.debug("InterruptedException - ", e);
-      }
-      log.debug(" End executeTask ");
-      return Thread.currentThread().getName();
-   }
+	public String executeTask() {
+		log.debug(" Begin executeTask() ");
+		try {
+			Thread.sleep(1000);
+		} catch (InterruptedException e) {
+			log.debug("InterruptedException - ", e);
+		}
+		log.debug(" End executeTask ");
+		return Thread.currentThread().getName();
+	}
 
 }

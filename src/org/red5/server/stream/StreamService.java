@@ -40,39 +40,46 @@ public class StreamService implements IStreamService {
 
 	public void closeStream() {
 		IConnection conn = Red5.getConnectionLocal();
-		if (!(conn instanceof IStreamCapableConnection)) return;
-		IClientStream stream = ((IStreamCapableConnection) conn).getStreamById(getCurrentStreamId());
+		if (!(conn instanceof IStreamCapableConnection))
+			return;
+		IClientStream stream = ((IStreamCapableConnection) conn)
+				.getStreamById(getCurrentStreamId());
 		if (stream != null) {
-		if (stream instanceof IClientBroadcastStream) {
-			IClientBroadcastStream bs = (IClientBroadcastStream) stream;
-			IBroadcastScope bsScope = getBroadcastScope(conn.getScope(), bs.getPublishedName());
-			if (bsScope != null && conn instanceof BaseConnection)
-				((BaseConnection) conn).unregisterBasicScope(bsScope);
+			if (stream instanceof IClientBroadcastStream) {
+				IClientBroadcastStream bs = (IClientBroadcastStream) stream;
+				IBroadcastScope bsScope = getBroadcastScope(conn.getScope(), bs
+						.getPublishedName());
+				if (bsScope != null && conn instanceof BaseConnection)
+					((BaseConnection) conn).unregisterBasicScope(bsScope);
+			}
+			stream.close();
 		}
-		stream.close();
-		}
-		((IStreamCapableConnection) conn).deleteStreamById(getCurrentStreamId());
+		((IStreamCapableConnection) conn)
+				.deleteStreamById(getCurrentStreamId());
 	}
 
 	public int createStream() {
 		IConnection conn = Red5.getConnectionLocal();
-		if (!(conn instanceof IStreamCapableConnection)) return -1;
+		if (!(conn instanceof IStreamCapableConnection))
+			return -1;
 		return ((IStreamCapableConnection) conn).reserveStreamId();
 	}
 
 	public void deleteStream(int streamId) {
 		IConnection conn = Red5.getConnectionLocal();
-		if (!(conn instanceof IStreamCapableConnection)) return;
+		if (!(conn instanceof IStreamCapableConnection))
+			return;
 		IStreamCapableConnection streamConn = (IStreamCapableConnection) conn;
 		deleteStream(streamConn, streamId);
 	}
-	
+
 	public void deleteStream(IStreamCapableConnection conn, int streamId) {
 		IClientStream stream = conn.getStreamById(streamId);
 		if (stream != null) {
 			if (stream instanceof IClientBroadcastStream) {
 				IClientBroadcastStream bs = (IClientBroadcastStream) stream;
-				IBroadcastScope bsScope = getBroadcastScope(conn.getScope(), bs.getPublishedName());
+				IBroadcastScope bsScope = getBroadcastScope(conn.getScope(), bs
+						.getPublishedName());
 				if (bsScope != null && conn instanceof BaseConnection)
 					((BaseConnection) conn).unregisterBasicScope(bsScope);
 			}
@@ -85,14 +92,17 @@ public class StreamService implements IStreamService {
 		pause(new Boolean(pausePlayback), position);
 	}
 
-	// Required as "pausePlayback" can be "null" if no flag is passed by the client
+	// Required as "pausePlayback" can be "null" if no flag is passed by the
+	// client
 	public void pause(Boolean pausePlayback, int position) {
 		IConnection conn = Red5.getConnectionLocal();
-		if (!(conn instanceof IStreamCapableConnection)) return;
+		if (!(conn instanceof IStreamCapableConnection))
+			return;
 		IStreamCapableConnection streamConn = (IStreamCapableConnection) conn;
 		int streamId = getCurrentStreamId();
 		IClientStream stream = streamConn.getStreamById(streamId);
-		if (stream == null || !(stream instanceof ISubscriberStream)) return;
+		if (stream == null || !(stream instanceof ISubscriberStream))
+			return;
 		ISubscriberStream subscriberStream = (ISubscriberStream) stream;
 		if (pausePlayback instanceof Boolean) {
 			if ((Boolean) pausePlayback) {
@@ -108,7 +118,7 @@ public class StreamService implements IStreamService {
 			}
 		}
 	}
-	
+
 	// "play" sometimes is called with "null" as last parameter.
 	public void play(String name, int start, int length, Object flushPlaylist) {
 		if (flushPlaylist instanceof Boolean)
@@ -119,7 +129,8 @@ public class StreamService implements IStreamService {
 
 	public void play(String name, int start, int length, boolean flushPlaylist) {
 		IConnection conn = Red5.getConnectionLocal();
-		if (!(conn instanceof IStreamCapableConnection)) return;
+		if (!(conn instanceof IStreamCapableConnection))
+			return;
 		IStreamCapableConnection streamConn = (IStreamCapableConnection) conn;
 		int streamId = getCurrentStreamId();
 		IClientStream stream = streamConn.getStreamById(streamId);
@@ -127,7 +138,8 @@ public class StreamService implements IStreamService {
 			stream = streamConn.newPlaylistSubscriberStream(streamId);
 			stream.start();
 		}
-		if (!(stream instanceof ISubscriberStream)) return;
+		if (!(stream instanceof ISubscriberStream))
+			return;
 		ISubscriberStream subscriberStream = (ISubscriberStream) stream;
 		SimplePlayItem item = new SimplePlayItem();
 		item.setName(name);
@@ -161,29 +173,36 @@ public class StreamService implements IStreamService {
 		play(name, -2000, -1, false);
 	}
 
-	public void play(boolean dontStop) {
+	public void play(Boolean dontStop) {
 		if (!dontStop) {
 			IConnection conn = Red5.getConnectionLocal();
-			if (!(conn instanceof IStreamCapableConnection)) return;
+			if (!(conn instanceof IStreamCapableConnection))
+				return;
 			IStreamCapableConnection streamConn = (IStreamCapableConnection) conn;
 			int streamId = getCurrentStreamId();
 			IClientStream stream = streamConn.getStreamById(streamId);
-			stream.close();
-			streamConn.deleteStreamById(streamId);
+			if (stream != null) {
+				stream.close();
+				streamConn.deleteStreamById(streamId);
+			}
 		}
 	}
-	
-	public void publish(boolean dontStop) {
+
+	public void publish(Boolean dontStop) {
 		if (!dontStop) {
 			IConnection conn = Red5.getConnectionLocal();
-			if (!(conn instanceof IStreamCapableConnection)) return;
+			if (!(conn instanceof IStreamCapableConnection))
+				return;
 			IStreamCapableConnection streamConn = (IStreamCapableConnection) conn;
 			int streamId = getCurrentStreamId();
 			IClientStream stream = streamConn.getStreamById(streamId);
-			if (!(stream instanceof IBroadcastStream)) return;
+			if (!(stream instanceof IBroadcastStream))
+				return;
 			IBroadcastStream bs = (IBroadcastStream) stream;
-			if (bs.getPublishedName() == null) return;
-			IBroadcastScope bsScope = getBroadcastScope(conn.getScope(), bs.getPublishedName());
+			if (bs.getPublishedName() == null)
+				return;
+			IBroadcastScope bsScope = getBroadcastScope(conn.getScope(), bs
+					.getPublishedName());
 			if (bsScope != null) {
 				bsScope.unsubscribe(bs.getProvider());
 				if (conn instanceof BaseConnection)
@@ -196,14 +215,16 @@ public class StreamService implements IStreamService {
 
 	public void publish(String name, String mode) {
 		IConnection conn = Red5.getConnectionLocal();
-		if (!(conn instanceof IStreamCapableConnection)) return;
+		if (!(conn instanceof IStreamCapableConnection))
+			return;
 		IStreamCapableConnection streamConn = (IStreamCapableConnection) conn;
 		int streamId = getCurrentStreamId();
 		IClientStream stream = streamConn.getStreamById(streamId);
-		if (stream != null && !(stream instanceof IClientBroadcastStream)) return;
+		if (stream != null && !(stream instanceof IClientBroadcastStream))
+			return;
 		if (stream == null)
 			stream = streamConn.newBroadcastStream(streamId);
-		
+
 		IClientBroadcastStream bs = (IClientBroadcastStream) stream;
 		try {
 			if (IClientStream.MODE_RECORD.equals(mode)) {
@@ -214,11 +235,14 @@ public class StreamService implements IStreamService {
 				bs.saveAs(name, true);
 			} else if (IClientStream.MODE_LIVE.equals(mode)) {
 				IContext context = conn.getScope().getContext();
-				IProviderService providerService = (IProviderService) context.getBean(IProviderService.KEY);
+				IProviderService providerService = (IProviderService) context
+						.getBean(IProviderService.KEY);
 				bs.setPublishedName(name);
 				// TODO handle registration failure
-				if (providerService.registerBroadcastStream(conn.getScope(), name, bs)) {
-					IBroadcastScope bsScope = getBroadcastScope(conn.getScope(), bs.getPublishedName());
+				if (providerService.registerBroadcastStream(conn.getScope(),
+						name, bs)) {
+					IBroadcastScope bsScope = getBroadcastScope(
+							conn.getScope(), bs.getPublishedName());
 					bsScope.setAttribute(IBroadcastScope.STREAM_ATTRIBUTE, bs);
 					if (conn instanceof BaseConnection)
 						((BaseConnection) conn).registerBasicScope(bsScope);
@@ -236,33 +260,39 @@ public class StreamService implements IStreamService {
 
 	public void seek(int position) {
 		IConnection conn = Red5.getConnectionLocal();
-		if (!(conn instanceof IStreamCapableConnection)) return;
+		if (!(conn instanceof IStreamCapableConnection))
+			return;
 		IStreamCapableConnection streamConn = (IStreamCapableConnection) conn;
 		int streamId = getCurrentStreamId();
 		IClientStream stream = streamConn.getStreamById(streamId);
-		if (stream == null || !(stream instanceof ISubscriberStream)) return;
+		if (stream == null || !(stream instanceof ISubscriberStream))
+			return;
 		ISubscriberStream subscriberStream = (ISubscriberStream) stream;
 		subscriberStream.seek(position);
 	}
 
 	public void receiveVideo(boolean receive) {
 		IConnection conn = Red5.getConnectionLocal();
-		if (!(conn instanceof IStreamCapableConnection)) return;
+		if (!(conn instanceof IStreamCapableConnection))
+			return;
 		IStreamCapableConnection streamConn = (IStreamCapableConnection) conn;
 		int streamId = getCurrentStreamId();
 		IClientStream stream = streamConn.getStreamById(streamId);
-		if (stream == null || !(stream instanceof ISubscriberStream)) return;
+		if (stream == null || !(stream instanceof ISubscriberStream))
+			return;
 		ISubscriberStream subscriberStream = (ISubscriberStream) stream;
 		subscriberStream.receiveVideo(receive);
 	}
 
 	public void receiveAudio(boolean receive) {
 		IConnection conn = Red5.getConnectionLocal();
-		if (!(conn instanceof IStreamCapableConnection)) return;
+		if (!(conn instanceof IStreamCapableConnection))
+			return;
 		IStreamCapableConnection streamConn = (IStreamCapableConnection) conn;
 		int streamId = getCurrentStreamId();
 		IClientStream stream = streamConn.getStreamById(streamId);
-		if (stream == null || !(stream instanceof ISubscriberStream)) return;
+		if (stream == null || !(stream instanceof ISubscriberStream))
+			return;
 		ISubscriberStream subscriberStream = (ISubscriberStream) stream;
 		subscriberStream.receiveAudio(receive);
 	}
@@ -271,12 +301,15 @@ public class StreamService implements IStreamService {
 		// TODO: this must come from the current connection!
 		return RTMPHandler.getStreamId();
 	}
-	
+
 	public IBroadcastScope getBroadcastScope(IScope scope, String name) {
 		synchronized (scope) {
-			IBasicScope basicScope = scope.getBasicScope(IBroadcastScope.TYPE, name);
-			if (!(basicScope instanceof IBroadcastScope)) return null;
-			else return (IBroadcastScope) basicScope;
+			IBasicScope basicScope = scope.getBasicScope(IBroadcastScope.TYPE,
+					name);
+			if (!(basicScope instanceof IBroadcastScope))
+				return null;
+			else
+				return (IBroadcastScope) basicScope;
 		}
 	}
 }

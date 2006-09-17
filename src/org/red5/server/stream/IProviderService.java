@@ -28,58 +28,67 @@ import org.red5.server.messaging.IMessageInput;
 
 public interface IProviderService {
 	public static final String KEY = "providerService";
-	
+
 	/**
-	 * Get a named provider as the source of input.
-	 * Live stream first, VOD stream second.
+	 * Get a named provider as the source of input. Live stream first, VOD
+	 * stream second.
+	 * 
 	 * @param scope
 	 * @param name
 	 * @return <tt>null</tt> if nothing found.
 	 */
 	IMessageInput getProviderInput(IScope scope, String name);
-	
+
 	/**
 	 * Get a named Live provider as the source of input.
+	 * 
 	 * @param scope
 	 * @param name
 	 * @return <tt>null</tt> if not found.
 	 */
-	IMessageInput getLiveProviderInput(IScope scope, String name, boolean needCreate);
-	
+	IMessageInput getLiveProviderInput(IScope scope, String name,
+			boolean needCreate);
+
 	/**
 	 * Get a named VOD provider as the source of input.
+	 * 
 	 * @param scope
 	 * @param name
 	 * @return <tt>null</tt> if not found.
 	 */
 	IMessageInput getVODProviderInput(IScope scope, String name);
-	
+
 	/**
 	 * Get a named VOD source file.
+	 * 
 	 * @param scope
 	 * @param name
 	 * @return <tt>null</tt> if not found.
 	 */
 	File getVODProviderFile(IScope scope, String name);
-	
+
 	/**
 	 * Register a broadcast stream to a scope.
+	 * 
 	 * @param scope
 	 * @param name
 	 * @param bs
 	 * @return <tt>true</tt> if register successfully.
 	 */
-	boolean registerBroadcastStream(IScope scope, String name, IBroadcastStream bs);
+	boolean registerBroadcastStream(IScope scope, String name,
+			IBroadcastStream bs);
 
 	/**
-	 * Get names of existing broadcast streams in a scope. 
+	 * Get names of existing broadcast streams in a scope.
+	 * 
 	 * @param scope
-	 * @return list of stream names 
+	 * @return list of stream names
 	 */
 	List<String> getBroadcastStreamNames(IScope scope);
-	
+
 	/**
 	 * Unregister a broadcast stream of a specific name from a scope.
+	 * 
 	 * @param scope
 	 * @param name
 	 * @return <tt>true</tt> if unregister successfully.

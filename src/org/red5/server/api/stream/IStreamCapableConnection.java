@@ -24,34 +24,39 @@ import org.red5.server.api.IFlowControllable;
 
 /**
  * A connection that supports streaming.
+ * 
  * @author The Red5 Project (red5@osflash.org)
  * @author Luke Hubbard (luke@codegent.com)
  * @author Steven Gong (steven.gong@gmail.com)
  */
-public interface IStreamCapableConnection extends IConnection, IFlowControllable {
+public interface IStreamCapableConnection extends IConnection,
+		IFlowControllable {
 
 	/**
-	 * Return a reserved stream id for use.
-	 * According to FCS/FMS regulation, the base is 1.
+	 * Return a reserved stream id for use. According to FCS/FMS regulation, the
+	 * base is 1.
+	 * 
 	 * @return
 	 */
 	int reserveStreamId();
-	
+
 	/**
 	 * Unreserve this id for future use.
+	 * 
 	 * @param streamId
 	 */
 	void unreserveStreamId(int streamId);
-	
+
 	/**
 	 * Deletes the stream with the given id.
 	 * 
 	 * @param streamId
 	 */
 	void deleteStreamById(int streamId);
-	
+
 	/**
 	 * Get a stream by its id.
+	 * 
 	 * @param streamId
 	 * @return
 	 */
@@ -59,13 +64,15 @@ public interface IStreamCapableConnection extends IConnection, IFlowControllable
 
 	/**
 	 * Create a stream that can play only one item.
+	 * 
 	 * @param streamId
 	 * @return
 	 */
 	ISingleItemSubscriberStream newSingleItemSubscriberStream(int streamId);
-	
+
 	/**
 	 * Create a stream that can play a list.
+	 * 
 	 * @param streamId
 	 * @return
 	 */
@@ -73,6 +80,7 @@ public interface IStreamCapableConnection extends IConnection, IFlowControllable
 
 	/**
 	 * Create a broadcast stream.
+	 * 
 	 * @param streamId
 	 * @return
 	 */
@@ -80,7 +88,7 @@ public interface IStreamCapableConnection extends IConnection, IFlowControllable
 
 	/**
 	 * Total number of video messages that are pending to be sent to a stream.
-	 *
+	 * 
 	 * @param streamId
 	 * @return number of pending video messages
 	 */

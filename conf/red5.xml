@@ -165,8 +165,8 @@
 	                <property name="rotatable" value="true" />
 	                <property name="fileDateFormat" value="[MM/dd/yyyy HH:mm:ss:SSS zz]" />
 	        	</bean>
- 				-->
 	    		<bean id="valve.reqs" class="org.apache.catalina.valves.RequestDumperValve" />
+ 				-->
         	</list>
         </property>
 	    
@@ -180,6 +180,10 @@
 		        <key><value>oflaDemo</value></key>
 		        <value>/oflaDemo</value>
 		      </entry>
+		      <entry>
+		        <key><value>SOSample</value></key>
+		        <value>/SOSample</value>
+		      </entry>		      
 		    </map>
   		</property>
 

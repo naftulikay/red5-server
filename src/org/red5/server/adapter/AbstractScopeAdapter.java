@@ -30,12 +30,17 @@ import org.red5.server.api.service.IServiceCall;
 public abstract class AbstractScopeAdapter implements IScopeHandler {
 
 	private boolean canStart = true;
+
 	private boolean canConnect = true;
+
 	private boolean canJoin = true;
+
 	private boolean canCallService = true;
+
 	private boolean canAddChildScope = true;
+
 	private boolean canHandleEvent = true;
-	
+
 	public void setCanStart(boolean canStart) {
 		this.canStart = canStart;
 	}
@@ -51,7 +56,7 @@ public abstract class AbstractScopeAdapter implements IScopeHandler {
 	public void setJoin(boolean canJoin) {
 		this.canJoin = canJoin;
 	}
-	
+
 	public boolean start(IScope scope) {
 		return canStart;
 	}
@@ -61,15 +66,14 @@ public abstract class AbstractScopeAdapter implements IScopeHandler {
 	}
 
 	/*
-	public boolean connect(IConnection conn, IScope scope) {
-		return connect(conn, scope, null);
-	}
-	*/
-	
+	 * public boolean connect(IConnection conn, IScope scope) { return
+	 * connect(conn, scope, null); }
+	 */
+
 	public boolean connect(IConnection conn, IScope scope, Object[] params) {
 		return canConnect;
 	}
-	
+
 	public void disconnect(IConnection conn, IScope scope) {
 		// nothing
 	}
@@ -77,8 +81,8 @@ public abstract class AbstractScopeAdapter implements IScopeHandler {
 	public boolean join(IClient client, IScope scope) {
 		return canJoin;
 	}
-	
-	public void leave(IClient client, IScope scope){
+
+	public void leave(IClient client, IScope scope) {
 		// nothing
 	}
 
@@ -91,10 +95,10 @@ public abstract class AbstractScopeAdapter implements IScopeHandler {
 	}
 
 	public void removeChildScope(IBasicScope scope) {
-		// TODO Auto-generated method stub	
+		// TODO Auto-generated method stub
 	}
-	
-	public boolean handleEvent(IEvent event){
+
+	public boolean handleEvent(IEvent event) {
 		return canHandleEvent;
 	}
 

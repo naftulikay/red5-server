@@ -26,7 +26,7 @@ import java.util.HashMap;
  * @author Dominick Accattato (daccattato@gmail.com)
  * @author Luke Hubbard, Codegent Ltd (luke@codegent.com)
  */
-public class MetaCue<K,V> extends HashMap<String, Object> implements IMetaCue {
+public class MetaCue<K, V> extends HashMap<String, Object> implements IMetaCue {
 
 	/**
 	 * SerialVersionUID = -1769771340654996861L;
@@ -40,64 +40,75 @@ public class MetaCue<K,V> extends HashMap<String, Object> implements IMetaCue {
 
 	}
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see org.red5.io.flv.ICuePoint#setName(java.lang.String)
 	 */
 	public void setName(String name) {
 		this.put("name", name);
 	}
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see org.red5.io.flv.ICuePoint#getName()
 	 */
 	public String getName() {
 		return (String) this.get("name");
 	}
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see org.red5.io.flv.ICuePoint#setType(java.lang.String)
 	 */
 	public void setType(String type) {
 		this.put("type", type);
 	}
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see org.red5.io.flv.ICuePoint#getType()
 	 */
 	public String getType() {
 		return (String) this.get("type");
 	}
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see org.red5.io.flv.ICuePoint#setTime(double)
 	 */
 	public void setTime(double d) {
 		this.put("time", d);
 	}
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see org.red5.io.flv.ICuePoint#getTime()
 	 */
 	public double getTime() {
 		return (Double) this.get("time");
 	}
 
-	public int compareTo(Object arg0) {		
+	public int compareTo(Object arg0) {
 		MetaCue cp = (MetaCue) arg0;
 		double cpTime = cp.getTime();
 		double thisTime = this.getTime();
-		
-		if(cpTime > thisTime) {
+
+		if (cpTime > thisTime) {
 			return -1;
-		} else if(cpTime < thisTime) {
+		} else if (cpTime < thisTime) {
 			return 1;
 		}
-		
+
 		return 0;
 	}
 
-
 	public String toString() {
-		return "MetaCue{"+this+"}";
+		return "MetaCue{" + this + "}";
 	}
 }

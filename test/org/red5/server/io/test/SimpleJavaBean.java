@@ -33,14 +33,13 @@ public class SimpleJavaBean {
 	public void setNameOfBean(String nameOfBean) {
 		this.nameOfBean = nameOfBean;
 	}
-	
-	public boolean equals(Object obj){
-		if(obj instanceof SimpleJavaBean){
+
+	public boolean equals(Object obj) {
+		if (obj instanceof SimpleJavaBean) {
 			SimpleJavaBean sjb = (SimpleJavaBean) obj;
 			return sjb.getNameOfBean() == sjb.getNameOfBean();
 		}
 		return false;
 	}
-	
 
 }

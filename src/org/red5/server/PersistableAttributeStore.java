@@ -31,29 +31,35 @@ import org.red5.server.api.IAttributeStore;
 import org.red5.server.api.persistence.IPersistable;
 import org.red5.server.api.persistence.IPersistenceStore;
 
-public class PersistableAttributeStore extends AttributeStore 
-	implements IPersistable {
-	
+public class PersistableAttributeStore extends AttributeStore implements
+		IPersistable {
+
 	protected boolean persistent = true;
+
 	protected String name;
+
 	protected String type;
+
 	protected String path;
+
 	protected long lastModified = -1;
+
 	protected IPersistenceStore store = null;
-	
-	public PersistableAttributeStore(String type, String name, String path, boolean persistent){
+
+	public PersistableAttributeStore(String type, String name, String path,
+			boolean persistent) {
 		this.type = type;
 		this.name = name;
 		this.path = path;
 		this.persistent = persistent;
 	}
-	
-	protected void modified(){
+
+	protected void modified() {
 		lastModified = System.currentTimeMillis();
 		if (store != null)
 			store.save(this);
 	}
-	
+
 	public boolean isPersistent() {
 		return persistent;
 	}
@@ -73,7 +79,7 @@ public class PersistableAttributeStore extends AttributeStore
 	public void setName(String name) {
 		this.name = name;
 	}
-	
+
 	public String getPath() {
 		return path;
 	}
@@ -81,7 +87,7 @@ public class PersistableAttributeStore extends AttributeStore
 	public void setPath(String path) {
 		this.path = path;
 	}
-	
+
 	public String getType() {
 		return type;
 	}
@@ -92,7 +98,7 @@ public class PersistableAttributeStore extends AttributeStore
 		for (String name : attributes.keySet()) {
 			if (name.startsWith(IPersistable.TRANSIENT_PREFIX))
 				continue;
-			
+
 			persistentAttributes.put(name, attributes.get(name));
 		}
 		serializer.serialize(output, persistentAttributes);
@@ -103,7 +109,7 @@ public class PersistableAttributeStore extends AttributeStore
 		Object obj = deserializer.deserialize(input);
 		if (!(obj instanceof Map))
 			throw new IOException("required Map object");
-		
+
 		attributes.putAll((Map<String, Object>) obj);
 	}
 
@@ -112,35 +118,35 @@ public class PersistableAttributeStore extends AttributeStore
 		if (store != null)
 			store.load(this);
 	}
-	
+
 	public IPersistenceStore getStore() {
 		return store;
 	}
-	
+
 	synchronized public boolean setAttribute(String name, Object value) {
 		boolean result = super.setAttribute(name, value);
-		if (result)
+		if (result && !name.startsWith(IPersistable.TRANSIENT_PREFIX))
 			modified();
 		return result;
 	}
-	
-	synchronized public void setAttributes(Map<String,Object> values) {
+
+	synchronized public void setAttributes(Map<String, Object> values) {
 		super.setAttributes(values);
 		modified();
 	}
-	
+
 	synchronized public void setAttributes(IAttributeStore values) {
 		super.setAttributes(values);
 		modified();
 	}
-	
+
 	synchronized public boolean removeAttribute(String name) {
 		boolean result = super.removeAttribute(name);
-		if (result)
+		if (result && !name.startsWith(IPersistable.TRANSIENT_PREFIX))
 			modified();
 		return result;
 	}
-	
+
 	synchronized public void removeAttributes() {
 		super.removeAttributes();
 		modified();

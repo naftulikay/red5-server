@@ -24,20 +24,21 @@ package org.red5.server.net.remoting;
  * 
  * @author The Red5 Project (red5@osflash.org)
  * @author Joachim Bauch (jojo@struktur.de)
- *
+ * 
  */
 public interface IRemotingCallback {
 
 	/**
 	 * The result of a remoting call has been received.
-	 *  
+	 * 
 	 * @param client
 	 * @param method
 	 * @param params
 	 * @param result
 	 */
-	public void resultReceived(RemotingClient client, String method, Object[] params, Object result);
-	
+	public void resultReceived(RemotingClient client, String method,
+			Object[] params, Object result);
+
 	/**
 	 * An error occured while performing the remoting call.
 	 * 
@@ -46,6 +47,7 @@ public interface IRemotingCallback {
 	 * @param params
 	 * @param error
 	 */
-	public void errorReceived(RemotingClient client, String method, Object[] params, Throwable error);
-	
+	public void errorReceived(RemotingClient client, String method,
+			Object[] params, Throwable error);
+
 }

@@ -39,31 +39,38 @@ import org.springframework.context.access.ContextSingletonBeanFactoryLocator;
 import org.springframework.core.io.Resource;
 
 public class Context implements IContext, ApplicationContextAware {
-	
-	private ApplicationContext applicationContext; 
+
+	private ApplicationContext applicationContext;
+
 	private BeanFactory coreContext;
+
 	private String contextPath = "";
-	
+
 	private IScopeResolver scopeResolver;
+
 	private IClientRegistry clientRegistry;
+
 	private IServiceInvoker serviceInvoker;
+
 	private IMappingStrategy mappingStrategy;
+
 	private IPersistenceStore persistanceStore;
-	
-	public Context(){
+
+	public Context() {
 		coreContext = ContextSingletonBeanFactoryLocator
-			.getInstance("red5.xml").useBeanFactory("red5.core").getFactory();
+				.getInstance("red5.xml").useBeanFactory("red5.core")
+				.getFactory();
 	}
-	
-	public Context(ApplicationContext context, String contextPath){
+
+	public Context(ApplicationContext context, String contextPath) {
 		this.applicationContext = context;
 		this.contextPath = contextPath;
 	}
-	
-	public IScope getGlobalScope(){
+
+	public IScope getGlobalScope() {
 		return scopeResolver.getGlobalScope();
 	}
-	
+
 	public IScope resolveScope(String path) {
 		return scopeResolver.resolveScope(path);
 	}
@@ -85,7 +92,7 @@ public class Context implements IContext, ApplicationContextAware {
 	}
 
 	public IPersistenceStore getPersistanceStore() {
-		return persistanceStore; 
+		return persistanceStore;
 	}
 
 	public void setPersistanceStore(IPersistenceStore persistanceStore) {
@@ -99,9 +106,10 @@ public class Context implements IContext, ApplicationContextAware {
 	public ApplicationContext getApplicationContext() {
 		return applicationContext;
 	}
-	
-	public void setContextPath(String contextPath){
-		if(!contextPath.endsWith("/")) contextPath += "/";
+
+	public void setContextPath(String contextPath) {
+		if (!contextPath.endsWith("/"))
+			contextPath += "/";
 		this.contextPath = contextPath;
 	}
 
@@ -122,25 +130,27 @@ public class Context implements IContext, ApplicationContextAware {
 		serviceName = getMappingStrategy().mapServiceName(serviceName);
 		try {
 			Object bean = applicationContext.getBean(serviceName);
-			if(bean != null ) return bean;
-			else throw new ServiceNotFoundException(serviceName);
+			if (bean != null)
+				return bean;
+			else
+				throw new ServiceNotFoundException(serviceName);
 		} catch (NoSuchBeanDefinitionException err) {
 			throw new ServiceNotFoundException(serviceName);
 		}
 	}
 
 	/*
-	public IScopeResolver getScopeResolver() {
-		return scopeResolver;
-	}
-	*/
+	 * public IScopeResolver getScopeResolver() { return scopeResolver; }
+	 */
 
 	public IScopeHandler lookupScopeHandler(String contextPath) {
-		String scopeHandlerName = getMappingStrategy().mapScopeHandlerName(contextPath); 
+		String scopeHandlerName = getMappingStrategy().mapScopeHandlerName(
+				contextPath);
 		Object bean = applicationContext.getBean(scopeHandlerName);
-		if(bean != null && bean instanceof IScopeHandler){
+		if (bean != null && bean instanceof IScopeHandler) {
 			return (IScopeHandler) bean;
-		} else throw new ScopeHandlerNotFoundException(scopeHandlerName);
+		} else
+			throw new ScopeHandlerNotFoundException(scopeHandlerName);
 	}
 
 	public IMappingStrategy getMappingStrategy() {
@@ -166,5 +176,5 @@ public class Context implements IContext, ApplicationContextAware {
 	public Object getCoreService(String beanId) {
 		return coreContext.getBean(beanId);
 	}
-	
+
 }

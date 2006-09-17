@@ -23,64 +23,65 @@ import java.util.Date;
 import java.util.List;
 
 /**
- * Service that supports periodic execution of jobs. 
+ * Service that supports periodic execution of jobs, adding, removing and
+ * getting their name as list.
  * 
  * @author The Red5 Project (red5@osflash.org)
  * @author Joachim Bauch (jojo@struktur.de)
- *
+ * 
  */
 public interface ISchedulingService {
 
 	public static final String SCHEDULING_SERVICE = "schedulingService";
-	
+
 	/**
 	 * Schedule a job for periodic execution.
 	 * 
 	 * @param interval
-	 * 			time in milliseconds between two notifications of the job
+	 *            time in milliseconds between two notifications of the job
 	 * @param job
-	 * 			the job to trigger periodically
+	 *            the job to trigger periodically
 	 * @return the name of the scheduled job
 	 */
 	public String addScheduledJob(int interval, IScheduledJob job);
 
 	/**
-	 * Schedule a job for single execution in the future.  Please note
-	 * that the jobs are not saved if Red5 is restarted in the meantime.
+	 * Schedule a job for single execution in the future. Please note that the
+	 * jobs are not saved if Red5 is restarted in the meantime.
 	 * 
 	 * @param timeDelta
-	 * 			time delta in milliseconds from the current date
+	 *            time delta in milliseconds from the current date
 	 * @param job
-	 * 			the job to trigger
+	 *            the job to trigger
 	 * @return the name of the scheduled job
 	 */
 	public String addScheduledOnceJob(long timeDelta, IScheduledJob job);
-	
+
 	/**
-	 * Schedule a job for single execution at a given date.  Please note
-	 * that the jobs are not saved if Red5 is restarted in the meantime.  
+	 * Schedule a job for single execution at a given date. Please note that the
+	 * jobs are not saved if Red5 is restarted in the meantime.
 	 * 
 	 * @param date
-	 * 			date when the job should be executed
+	 *            date when the job should be executed
 	 * @param job
-	 * 			the job to trigger
+	 *            the job to trigger
 	 * @return the name of the scheduled job
 	 */
 	public String addScheduledOnceJob(Date date, IScheduledJob job);
-	
+
 	/**
 	 * Stop executing a previously scheduled job.
 	 * 
 	 * @param name
-	 * 			name of the job to stop
+	 *            name of the job to stop
 	 */
 	public void removeScheduledJob(String name);
-	
+
 	/**
 	 * Return names of scheduled jobs.
 	 * 
 	 * @return list of job names
 	 */
 	public List<String> getScheduledJobNames();
-	
+
 }

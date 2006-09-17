@@ -17,14 +17,16 @@ import org.red5.server.net.rtmp.message.Header;
 
 public class RTMPTestCase extends TestCase implements Constants {
 
-	protected static Log log =
-        LogFactory.getLog(RTMPTestCase.class.getName());
-	
+	protected static Log log = LogFactory.getLog(RTMPTestCase.class.getName());
+
 	protected Serializer serializer;
+
 	protected Deserializer deserializer;
+
 	protected RTMPProtocolEncoder encoder;
+
 	protected RTMPProtocolDecoder decoder;
-	
+
 	protected void setUp() throws Exception {
 		// TODO Auto-generated method stub
 		super.setUp();
@@ -35,25 +37,24 @@ public class RTMPTestCase extends TestCase implements Constants {
 		encoder.setSerializer(serializer);
 		decoder.setDeserializer(deserializer);
 	}
-	
-	public void testHeaders(){
+
+	public void testHeaders() {
 		Header header = new Header();
-		header.setChannelId((byte)0x12);
+		header.setChannelId((byte) 0x12);
 		header.setDataType(TYPE_INVOKE);
 		header.setStreamId(100);
 		header.setTimer(2);
 		header.setSize(320);
-		ByteBuffer buf = encoder.encodeHeader(header,null);
+		ByteBuffer buf = encoder.encodeHeader(header, null);
 		buf.flip();
 		log.debug(buf.getHexDump());
 		Assert.assertNotNull(buf);
 		Header result = decoder.decodeHeader(buf, null);
 		Assert.assertEquals(header, result);
 	}
-	
-	public void testInvokePacket(){
+
+	public void testInvokePacket() {
 		Invoke invoke = new Invoke();
 	}
-	
 
 }

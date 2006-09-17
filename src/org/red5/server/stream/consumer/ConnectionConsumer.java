@@ -21,7 +21,6 @@ package org.red5.server.stream.consumer;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.red5.server.api.service.IServiceCall;
 import org.red5.server.api.stream.IClientStream;
 import org.red5.server.messaging.IMessage;
 import org.red5.server.messaging.IMessageComponent;
@@ -41,99 +40,100 @@ import org.red5.server.net.rtmp.event.Ping;
 import org.red5.server.net.rtmp.event.VideoData;
 import org.red5.server.net.rtmp.message.Constants;
 import org.red5.server.net.rtmp.message.Header;
+import org.red5.server.stream.StreamTracker;
 import org.red5.server.stream.message.RTMPMessage;
+import org.red5.server.stream.message.ResetMessage;
 import org.red5.server.stream.message.StatusMessage;
 
 public class ConnectionConsumer implements IPushableConsumer,
 		IPipeConnectionListener {
 	private static final Log log = LogFactory.getLog(ConnectionConsumer.class);
-	
+
 	public static final String KEY = ConnectionConsumer.class.getName();
-	
+
 	private RTMPConnection conn;
+
 	private Channel video;
+
 	private Channel audio;
+
 	private Channel data;
-	private boolean videofirst=true;
-	private boolean audiofirst=true;
-	private int deltafirst=0;
+
 	private int chunkSize = -1;
-	
-	public ConnectionConsumer(RTMPConnection conn, byte videoChannel, byte audioChannel, byte dataChannel) {
+
+	private StreamTracker streamTracker;
+
+	public ConnectionConsumer(RTMPConnection conn, byte videoChannel,
+			byte audioChannel, byte dataChannel) {
 		this.conn = conn;
 		this.video = conn.getChannel(videoChannel);
 		this.audio = conn.getChannel(audioChannel);
 		this.data = conn.getChannel(dataChannel);
+		streamTracker = new StreamTracker();
 	}
 
 	public void pushMessage(IPipe pipe, IMessage message) {
-		if (message instanceof StatusMessage) {
+		if (message instanceof ResetMessage) {
+			streamTracker.reset();
+		} else if (message instanceof StatusMessage) {
 			StatusMessage statusMsg = (StatusMessage) message;
 			data.sendStatus(statusMsg.getBody());
-		}
-		else if (message instanceof RTMPMessage) {
+		} else if (message instanceof RTMPMessage) {
 			RTMPMessage rtmpMsg = (RTMPMessage) message;
 			IRTMPEvent msg = rtmpMsg.getBody();
-			if (msg.getHeader() == null) {
-				msg.setHeader(new Header());
+			Header header = new Header();
+			int timestamp = streamTracker.add(msg);
+			if (timestamp < 0) {
+				log.warn("Skipping message with negative timestamp.");
+				return;
 			}
-			msg.getHeader().setTimerRelative(rtmpMsg.isTimerRelative());
-			switch(msg.getDataType()){
+			header.setTimerRelative(streamTracker.isRelative());
+			header.setTimer(timestamp);
+
+			switch (msg.getDataType()) {
 			case Constants.TYPE_STREAM_METADATA:
-				Notify notify = new Notify(((Notify) msg).getData().asReadOnlyBuffer());
-				notify.setHeader(msg.getHeader());
-				notify.setTimestamp(msg.getTimestamp());
+				Notify notify = new Notify(((Notify) msg).getData()
+						.asReadOnlyBuffer());
+				notify.setHeader(header);
+				notify.setTimestamp(header.getTimer());
 				data.write(notify);
 				break;
 			case Constants.TYPE_VIDEO_DATA:
-				VideoData videoData = new VideoData(((VideoData) msg).getData().asReadOnlyBuffer());
-				videoData.setHeader(msg.getHeader());
-				videoData.setTimestamp(msg.getTimestamp());
-				if (videofirst && audiofirst) {
-					videofirst = false;
-					deltafirst = videoData.getTimestamp();
-					videoData.setTimestamp(0);
-					videoData.getHeader().setTimerRelative(false);
-				}
-				if (videofirst && !audiofirst) {
-					videofirst = false;
-					videoData.setTimestamp(videoData.getTimestamp() - deltafirst);
-				}
+				VideoData videoData = new VideoData(((VideoData) msg).getData()
+						.asReadOnlyBuffer());
+				videoData.setHeader(header);
+				videoData.setTimestamp(header.getTimer());
 				video.write(videoData);
 				break;
 			case Constants.TYPE_AUDIO_DATA:
-				AudioData audioData = new AudioData(((AudioData) msg).getData().asReadOnlyBuffer());
-				audioData.setHeader(msg.getHeader());
-				audioData.setTimestamp(msg.getTimestamp());
-				if (audiofirst && videofirst) {
-					audiofirst = false;
-					deltafirst = audioData.getTimestamp();
-					audioData.setTimestamp(0);
-					audioData.getHeader().setTimerRelative(false);
-				
-					AudioData blankAudio=new AudioData();
-					blankAudio.setTimestamp(0);
-					audio.write(blankAudio);
-				}
-				if (audiofirst && !videofirst) {
-					audiofirst = false;
-					audioData.setTimestamp(audioData.getTimestamp() - deltafirst);
-				}
+				AudioData audioData = new AudioData(((AudioData) msg).getData()
+						.asReadOnlyBuffer());
+				audioData.setHeader(header);
+				audioData.setTimestamp(header.getTimer());
 				audio.write(audioData);
 				break;
 			case Constants.TYPE_PING:
-				msg.getHeader().setTimerRelative(false);
-				msg.setTimestamp(0);
-				conn.ping((Ping) msg);
+				Ping ping = new Ping(((Ping) msg).getValue1(), ((Ping) msg)
+						.getValue2(), ((Ping) msg).getValue3(), ((Ping) msg)
+						.getValue4());
+				header.setTimerRelative(false);
+				header.setTimer(0);
+				ping.setHeader(header);
+				ping.setTimestamp(header.getTimer());
+				conn.ping(ping);
 				break;
 			case Constants.TYPE_BYTES_READ:
-				msg.getHeader().setTimerRelative(false);
-				msg.setTimestamp(0);
-				conn.getChannel((byte) 2).write((BytesRead) msg);
+				BytesRead bytesRead = new BytesRead(((BytesRead) msg)
+						.getBytesRead());
+				header.setTimerRelative(false);
+				header.setTimer(0);
+				bytesRead.setHeader(header);
+				bytesRead.setTimestamp(header.getTimer());
+				conn.getChannel((byte) 2).write(bytesRead);
 				break;
 			default:
 				data.write(msg);
-			break;
+				break;
 			}
 		}
 	}
@@ -142,17 +142,23 @@ public class ConnectionConsumer implements IPushableConsumer,
 		// TODO close channels on pipe disconnect
 	}
 
-	public void onOOBControlMessage(IMessageComponent source, IPipe pipe, OOBControlMessage oobCtrlMsg) {
+	public void onOOBControlMessage(IMessageComponent source, IPipe pipe,
+			OOBControlMessage oobCtrlMsg) {
 		if (!"ConnectionConsumer".equals(oobCtrlMsg.getTarget()))
 			return;
-		
+
 		if ("pendingCount".equals(oobCtrlMsg.getServiceName())) {
 			oobCtrlMsg.setResult(conn.getPendingMessages());
 		} else if ("pendingVideoCount".equals(oobCtrlMsg.getServiceName())) {
 			IClientStream stream = conn.getStreamByChannelId(video.getId());
-			oobCtrlMsg.setResult(conn.getPendingVideoMessages(stream.getStreamId()));
+			if (stream != null)
+				oobCtrlMsg.setResult(conn.getPendingVideoMessages(stream
+						.getStreamId()));
+			else
+				oobCtrlMsg.setResult(0);
 		} else if ("chunkSize".equals(oobCtrlMsg.getServiceName())) {
-			int newSize = (Integer) oobCtrlMsg.getServiceParamMap().get("chunkSize");
+			int newSize = (Integer) oobCtrlMsg.getServiceParamMap().get(
+					"chunkSize");
 			if (newSize != chunkSize) {
 				chunkSize = newSize;
 				ChunkSize chunkSizeMsg = new ChunkSize(chunkSize);

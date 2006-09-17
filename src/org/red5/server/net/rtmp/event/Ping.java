@@ -20,43 +20,55 @@ package org.red5.server.net.rtmp.event;
  */
 
 public class Ping extends BaseEvent {
-	
+
 	public static final short STREAM_CLEAR = 0;
+
 	public static final short STREAM_PLAY = 1;
+
 	public static final short UNKNOWN_2 = 2;
+
 	public static final short CLIENT_BUFFER = 3;
+
 	public static final short STREAM_RESET = 4;
+
 	public static final short UNKNOWN_5 = 5;
+
 	public static final short PING_CLIENT = 6;
+
 	public static final short PONG_SERVER = 7;
+
 	public static final short UNKNOWN_8 = 8;
-	
+
 	public static final int UNDEFINED = -1;
-	
-	private short value1 = 0; // XXX: can someone suggest better names? 
+
+	private short value1 = 0; // XXX: can someone suggest better names?
+
 	private int value2 = 0;
+
 	private int value3 = UNDEFINED;
+
 	private int value4 = UNDEFINED;
+
 	private String debug = "";
-	
-	public Ping(){
+
+	public Ping() {
 		super(Type.SYSTEM);
 	}
-	
-	public Ping(short value1, int value2){
+
+	public Ping(short value1, int value2) {
 		super(Type.SYSTEM);
 		this.value1 = value1;
 		this.value2 = value2;
 	}
-	
-	public Ping(short value1, int value2, int value3){
+
+	public Ping(short value1, int value2, int value3) {
 		super(Type.SYSTEM);
 		this.value1 = value1;
 		this.value2 = value2;
 		this.value3 = value3;
 	}
-	
-	public Ping(short value1, int value2, int value3, int value4){
+
+	public Ping(short value1, int value2, int value3, int value4) {
 		super(Type.SYSTEM);
 		this.value1 = value1;
 		this.value2 = value2;
@@ -67,7 +79,7 @@ public class Ping extends BaseEvent {
 	public byte getDataType() {
 		return TYPE_PING;
 	}
-	
+
 	public short getValue1() {
 		return value1;
 	}
@@ -83,7 +95,7 @@ public class Ping extends BaseEvent {
 	public void setValue2(int value2) {
 		this.value2 = value2;
 	}
-	
+
 	public int getValue3() {
 		return value3;
 	}
@@ -114,14 +126,15 @@ public class Ping extends BaseEvent {
 		value3 = UNDEFINED;
 		value4 = UNDEFINED;
 	}
-	
-	public String toString(){
-		return "Ping: "+value1+", "+value2+", "+value3+", "+value4+"\n" + debug;
+
+	public String toString() {
+		return "Ping: " + value1 + ", " + value2 + ", " + value3 + ", "
+				+ value4 + "\n" + debug;
 	}
-	
+
 	@Override
 	protected void releaseInternal() {
-		
+
 	}
 
 }

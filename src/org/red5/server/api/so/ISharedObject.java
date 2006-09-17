@@ -48,10 +48,11 @@ import org.red5.server.api.event.IEventListener;
  * @author Joachim Bauch (jojo@struktur.de)
  */
 
-public interface ISharedObject extends IBasicScope, ISharedObjectHandlerProvider {
+public interface ISharedObject extends IBasicScope,
+		ISharedObjectHandlerProvider {
 
-	public static final String TYPE = "so";
-	
+	public static final String TYPE = "SharedObject";
+
 	/**
 	 * Returns the version of the shared object. The version is incremented
 	 * automatically on each modification.
@@ -74,7 +75,7 @@ public interface ISharedObject extends IBasicScope, ISharedObjectHandlerProvider
 	 * 
 	 * @return a map containing all attributes of the shared object
 	 */
-	public Map<String,Object> getData();
+	public Map<String, Object> getData();
 
 	/**
 	 * Send a message to a handler of the shared object.
@@ -104,53 +105,55 @@ public interface ISharedObject extends IBasicScope, ISharedObjectHandlerProvider
 	 * once.
 	 */
 	public void endUpdate();
-	
+
 	/**
 	 * Register object that will be notified about update events.
 	 * 
 	 * @param listener
-	 * 				the object to notify
+	 *            the object to notify
 	 */
 	public void addSharedObjectListener(ISharedObjectListener listener);
-	
+
 	/**
 	 * Unregister object to not longer receive update events.
-	 *  
+	 * 
 	 * @param listener
-	 * 				the object to unregister
+	 *            the object to unregister
 	 */
 	public void removeSharedObjectListener(ISharedObjectListener listener);
-	
+
 	/**
-	 * Locks the shared object instance. Prevents any changes to this 
-	 * object by clients until the SharedObject.unlock() method is called.
+	 * Locks the shared object instance. Prevents any changes to this object by
+	 * clients until the SharedObject.unlock() method is called.
 	 */
 	public void lock();
 
 	/**
-	 * Unlocks a shared object instance that was locked with 
+	 * Unlocks a shared object instance that was locked with
 	 * SharedObject.lock().
 	 */
 	public void unlock();
-	
+
 	/**
 	 * Returns the locked state of this SharedObject.
+	 * 
 	 * @return true if in a locked state; false otherwise
 	 */
 	public boolean isLocked();
-	
+
 	/**
-	 * Deletes all the attributes and sends a clear event to all listeners.
-	 * The persistent data object is also removed from a persistent shared object.
+	 * Deletes all the attributes and sends a clear event to all listeners. The
+	 * persistent data object is also removed from a persistent shared object.
 	 * 
 	 * @return true if successful; false otherwise
 	 */
 	public boolean clear();
-	
+
 	/**
-	 * Detaches a reference from this shared object, this will destroy the reference
-	 * immediately. This is useful when you don't want to proxy a shared object any longer.
+	 * Detaches a reference from this shared object, this will destroy the
+	 * reference immediately. This is useful when you don't want to proxy a
+	 * shared object any longer.
 	 */
 	public void close();
-	
+
 }

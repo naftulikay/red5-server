@@ -30,5 +30,5 @@ import org.red5.io.IStreamableFileService;
 public interface IMP3Service extends IStreamableFileService {
 
 	// TODO: add more methods
-	
+
 }

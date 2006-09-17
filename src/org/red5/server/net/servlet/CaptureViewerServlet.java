@@ -94,33 +94,32 @@ public class CaptureViewerServlet extends HttpServlet {
 			int id = 0;
 			try {
 
-				int nextTimePos = 0; 
-				long time = 0; 
+				int nextTimePos = 0;
+				long time = 0;
 				long offset = -1;
 				long read = 0;
-				
+
 				try {
 					while (true) {
-						
-						while(in.position() >= nextTimePos){
-						
-							if(cap.remaining() >= 12){
-								
+
+						while (in.position() >= nextTimePos) {
+
+							if (cap.remaining() >= 12) {
+
 								time = cap.getLong();
-								if(offset == -1) offset = time;
+								if (offset == -1)
+									offset = time;
 								time -= offset;
-								
+
 								read = cap.getInt();
 								nextTimePos += read;
-								
-								out.write("<div class=\"time\">TIME: " + time+ " READ: "+read
-										+ "</div>");
+
+								out.write("<div class=\"time\">TIME: " + time
+										+ " READ: " + read + "</div>");
 							}
-						
+
 						}
-					
-						
-						
+
 						final int remaining = in.remaining();
 						if (state.canStartDecoding(remaining))
 							state.startDecoding();
@@ -131,8 +130,6 @@ public class CaptureViewerServlet extends HttpServlet {
 
 						if (state.hasDecodedObject()) {
 							// log.debug(decodedObject);
-							
-							
 
 							if (decodedObject instanceof Packet) {
 								out.write(formatHTML((Packet) decodedObject,

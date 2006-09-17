@@ -33,7 +33,8 @@ import org.red5.server.api.IScope;
 import org.red5.server.api.event.IEvent;
 
 /**
- * Simple connection class so the Red5 object works in methods invoked through remoting.
+ * Simple connection class so the Red5 object works in methods invoked through
+ * remoting.
  * 
  * @author The Red5 Project (red5@osflash.org)
  * @author Joachim Bauch (jojo@struktur.de)
@@ -41,8 +42,9 @@ import org.red5.server.api.event.IEvent;
 public class ServletConnection extends AttributeStore implements IConnection {
 
 	protected IScope scope;
+
 	protected HttpServletRequest request;
-	
+
 	public ServletConnection(HttpServletRequest request, IScope scope) {
 		this.request = request;
 		this.scope = scope;
@@ -51,7 +53,7 @@ public class ServletConnection extends AttributeStore implements IConnection {
 	private void notSupported() {
 		throw new RuntimeException("not supported for this type of connection");
 	}
-	
+
 	public String getType() {
 		return IConnection.TRANSIENT;
 	}
@@ -81,7 +83,7 @@ public class ServletConnection extends AttributeStore implements IConnection {
 	public Map<String, String> getConnectParams() {
 		return new HashMap<String, String>();
 	}
-	
+
 	public IClient getClient() {
 		return null;
 	}

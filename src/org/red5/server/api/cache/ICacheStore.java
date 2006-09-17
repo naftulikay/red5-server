@@ -27,11 +27,12 @@ import java.util.Iterator;
  * interface.
  * 
  * <p>
+ * 
  * @see http://www-128.ibm.com/developerworks/java/library/j-jtp01246.html
  * @see http://java.sun.com/developer/technicalArticles/ALT/RefObj/
  * @see http://www.onjava.com/pub/a/onjava/2002/10/02/javanio.html?page=3
  * @see http://csci.csusb.edu/turner/archive/courses/aiit2004/proxy_cache_solution.html
- * </p>
+ *      </p>
  * 
  * @author The Red5 Project (red5@osflash.org)
  * @author Paul Gregoire (mondain@gmail.com)

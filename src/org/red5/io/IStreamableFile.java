@@ -31,7 +31,7 @@ public interface IStreamableFile {
 	public ITagReader getReader() throws IOException;
 
 	/**
-	 * Returns a writer that creates a new file or truncates existing contents. 
+	 * Returns a writer that creates a new file or truncates existing contents.
 	 * 
 	 * @return the writer
 	 */
@@ -43,6 +43,5 @@ public interface IStreamableFile {
 	 * @return the writer
 	 */
 	public ITagWriter getAppendWriter() throws IOException;
-	
 
 }

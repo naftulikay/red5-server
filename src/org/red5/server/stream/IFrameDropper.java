@@ -31,11 +31,14 @@ import org.red5.server.stream.message.RTMPMessage;
 public interface IFrameDropper {
 
 	/** Send keyframes, interframes and disposable interframes. */
-	public final static int SEND_ALL = 0; 
+	public final static int SEND_ALL = 0;
+
 	/** Send keyframes and interframes. */
 	public final static int SEND_INTERFRAMES = 1;
+
 	/** Send keyframes only. */
 	public final static int SEND_KEYFRAMES = 2;
+
 	/** Send keyframes only and switch to SEND_INTERFRAMES later. */
 	public final static int SEND_KEYFRAMES_CHECK = 3;
 
@@ -43,10 +46,11 @@ public interface IFrameDropper {
 	 * Checks if a message may be sent to the subscriber.
 	 * 
 	 * @param message
-	 * 			the message to check
+	 *            the message to check
 	 * @param pending
-	 * 			the number of pending messages
-	 * @return <code>true</code> if the packet may be sent, otherwise <code>false</code>
+	 *            the number of pending messages
+	 * @return <code>true</code> if the packet may be sent, otherwise
+	 *         <code>false</code>
 	 */
 	boolean canSendPacket(RTMPMessage message, long pending);
 
@@ -54,7 +58,7 @@ public interface IFrameDropper {
 	 * Notify that a packet has been dropped.
 	 * 
 	 * @param message
-	 * 			the message that was dropped
+	 *            the message that was dropped
 	 */
 	void dropPacket(RTMPMessage message);
 
@@ -62,19 +66,19 @@ public interface IFrameDropper {
 	 * Notify that a message has been sent.
 	 * 
 	 * @param message
-	 * 			the message that was sent
+	 *            the message that was sent
 	 */
 	void sendPacket(RTMPMessage message);
 
 	/** Reset the frame dropper. */
 	void reset();
-	
+
 	/**
 	 * Reset the frame dropper to a given state.
 	 * 
 	 * @param state
-	 * 			the state to reset the frame dropper to
-	 * */
+	 *            the state to reset the frame dropper to
+	 */
 	void reset(int state);
-	
+
 }

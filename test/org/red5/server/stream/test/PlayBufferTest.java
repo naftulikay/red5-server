@@ -1,4 +1,5 @@
 package org.red5.server.stream.test;
+
 /**
  * @author m.j.milicevic <marijan at info.nl>
  * @version 1.0
@@ -17,6 +18,7 @@ import org.red5.server.stream.message.RTMPMessage;
  */
 public class PlayBufferTest extends TestCase {
 	PlayBuffer playBuffer;
+
 	private RTMPMessage rtmpMessage;
 
 	protected void setUp() throws Exception {
@@ -61,7 +63,6 @@ public class PlayBufferTest extends TestCase {
 	public static Test suite() {
 		return new JUnit4TestAdapter(PlayBufferTest.class);
 	}
-
 
 	/**
 	 * enqueue with messages

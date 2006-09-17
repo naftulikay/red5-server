@@ -32,13 +32,13 @@ import org.red5.io.mock.Output;
 public class MockIOTest extends AbstractIOTest {
 
 	protected List list;
-	
+
 	void setupIO() {
 		list = new LinkedList();
 		in = new Input(list);
 		out = new Output(list);
 	}
-	
+
 	void dumpOutput() {
 		System.out.println(Mock.listToString(list));
 	}

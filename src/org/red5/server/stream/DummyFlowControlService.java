@@ -24,18 +24,19 @@ import org.red5.server.stream.ITokenBucket.ITokenBucketCallback;
 
 /**
  * A dummy flow control service that always has token available.
+ * 
  * @author The Red5 Project (red5@osflash.org)
  * @author Steven Gong (steven.gong@gmail.com)
  */
 public class DummyFlowControlService implements IFlowControlService {
 	private ITokenBucket dummyBucket = new DummyTokenBukcet();
-	
+
 	public void init() {
 	}
-	
+
 	public void setInterval(long interval) {
 	}
-	
+
 	public void setDefaultCapacity(long defaultCapacity) {
 	}
 
@@ -66,7 +67,8 @@ public class DummyFlowControlService implements IFlowControlService {
 			return upperLimitCount;
 		}
 
-		public boolean acquireTokenNonblocking(double tokenCount, ITokenBucketCallback callback) {
+		public boolean acquireTokenNonblocking(double tokenCount,
+				ITokenBucketCallback callback) {
 			return true;
 		}
 
@@ -80,6 +82,6 @@ public class DummyFlowControlService implements IFlowControlService {
 
 		public void reset() {
 		}
-		
+
 	}
 }

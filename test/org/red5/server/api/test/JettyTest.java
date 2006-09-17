@@ -2,7 +2,7 @@ package org.red5.server.api.test;
 
 public class JettyTest {
 
-	public void startJettyAndCheckContext(){
+	public void startJettyAndCheckContext() {
 		// load spring
 		// -> load the global contexts
 		// --> setup mina, handlers, etc
@@ -16,7 +16,7 @@ public class JettyTest {
 		// start jetty server
 		// -> start the webapp
 		// --> listener loads spring & connects via global context
-		// our work is done 
+		// our work is done
 	}
-	
+
 }

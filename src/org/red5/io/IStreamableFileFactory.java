@@ -25,7 +25,7 @@ import java.util.Set;
 public interface IStreamableFileFactory {
 
 	public static final String KEY = "streamableFileFactory";
-	
+
 	public abstract IStreamableFileService getService(File fp);
 
 	public abstract Set<IStreamableFileService> getServices();

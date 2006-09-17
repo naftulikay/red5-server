@@ -1,7 +1,5 @@
 package org.red5.server.api.stream;
 
-import org.red5.server.api.service.IServiceCall;
-
 /*
  * RED5 Open Source Flash Server - http://www.osflash.org/red5
  * 
@@ -27,56 +25,50 @@ import org.red5.server.api.service.IServiceCall;
 public interface IStreamService {
 
 	public static final String STREAM_SERVICE = "streamService";
-	
+
 	/**
 	 * Create a stream and return a corresponding id.
+	 * 
 	 * @return
 	 */
 	public int createStream();
-	
+
 	/**
 	 * Close the stream but not deallocate the resources.
 	 */
 	public void closeStream();
-	
+
 	/**
-	 * Close the stream if not been closed.
-	 * Deallocate the related resources.
+	 * Close the stream if not been closed. Deallocate the related resources.
+	 * 
 	 * @param number
 	 */
 	public void deleteStream(int streamId);
-	
+
 	public void deleteStream(IStreamCapableConnection conn, int streamId);
-	
-	public void play(boolean dontStop);
-	
+
+	public void play(Boolean dontStop);
+
 	public void play(String name);
-	
+
 	public void play(String name, int start);
-	
+
 	public void play(String name, int start, int length);
-	
+
 	public void play(String name, int start, int length, boolean flushPlaylist);
-	
+
 	public void publish(String name);
-	
+
 	public void publish(String name, String mode);
-	
-	public void publish(boolean dontStop);
-	
+
+	public void publish(Boolean dontStop);
+
 	public void seek(int position);
-	
+
 	public void pause(boolean pausePlayback, int position);
-	
+
 	public void receiveVideo(boolean receive);
-	
+
 	public void receiveAudio(boolean receive);
-	
-	/**
-	 * Send a call to all subscribers of a stream.
-	 * 
-	 * @param call
-	 */
-	//public void send(IServiceCall call);
-	
+
 }

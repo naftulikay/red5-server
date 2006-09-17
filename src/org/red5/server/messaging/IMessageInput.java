@@ -19,52 +19,61 @@ package org.red5.server.messaging;
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA 
  */
 
+import java.util.List;
 import java.util.Map;
 
 /**
  * Input Endpoint for a consumer to connect.
+ * 
  * @author The Red5 Project (red5@osflash.org)
  * @author Steven Gong (steven.gong@gmail.com)
  */
 public interface IMessageInput {
 	/**
-	 * Pull message from this input endpoint. Return
-	 * w/o waiting.
-	 * @return The pulled message or <tt>null</tt> if message is
-	 * not available.
+	 * Pull message from this input endpoint. Return w/o waiting.
+	 * 
+	 * @return The pulled message or <tt>null</tt> if message is not
+	 *         available.
 	 */
 	IMessage pullMessage();
-	
+
 	/**
-	 * Pull message from this input endpoint. Wait
-	 * <tt>wait</tt> milliseconds if message is not available.
-	 * @param wait milliseconds to wait when message is not
-	 * available.
-	 * @return The pulled message or <tt>null</tt> if message is
-	 * not available.
+	 * Pull message from this input endpoint. Wait <tt>wait</tt> milliseconds
+	 * if message is not available.
+	 * 
+	 * @param wait
+	 *            milliseconds to wait when message is not available.
+	 * @return The pulled message or <tt>null</tt> if message is not
+	 *         available.
 	 */
 	IMessage pullMessage(long wait);
-	
+
 	/**
 	 * Connect to a consumer.
+	 * 
 	 * @param consumer
 	 * @param paramMap
-	 * @return <tt>true</tt> when successfully subscribed,
-	 * <tt>false</tt> otherwise.
+	 * @return <tt>true</tt> when successfully subscribed, <tt>false</tt>
+	 *         otherwise.
 	 */
 	boolean subscribe(IConsumer consumer, Map paramMap);
-	
+
 	/**
 	 * Disconnect from a consumer.
+	 * 
 	 * @param consumer
-	 * @return <tt>true</tt> when successfully unsubscribed,
-	 * <tt>false</tt> otherwise.
+	 * @return <tt>true</tt> when successfully unsubscribed, <tt>false</tt>
+	 *         otherwise.
 	 */
 	boolean unsubscribe(IConsumer consumer);
-	
+
+	List<IConsumer> getConsumers();
+
 	/**
 	 * Send OOB Control Message to all providers on the other side of pipe.
-	 * @param consumer The consumer that sends the message
+	 * 
+	 * @param consumer
+	 *            The consumer that sends the message
 	 * @param oobCtrlMsg
 	 */
 	void sendOOBControlMessage(IConsumer consumer, OOBControlMessage oobCtrlMsg);

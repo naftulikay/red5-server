@@ -38,17 +38,16 @@ public interface IEventEncoder {
 
 	public abstract ByteBuffer encodePing(Ping ping);
 
-	public abstract ByteBuffer encodeBytesRead(
-			BytesRead streamBytesRead);
+	public abstract ByteBuffer encodeBytesRead(BytesRead streamBytesRead);
 
 	public abstract ByteBuffer encodeAudioData(AudioData audioData);
 
 	public abstract ByteBuffer encodeVideoData(VideoData videoData);
-	
+
 	public abstract ByteBuffer encodeUnknown(Unknown unknown);
 
 	public abstract ByteBuffer encodeChunkSize(ChunkSize chunkSize);
-	
+
 	public abstract ByteBuffer encodeSharedObject(ISharedObjectMessage so);
-	
+
 }

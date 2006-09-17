@@ -33,14 +33,16 @@ import org.springframework.context.ApplicationContext;
  */
 public class CacheableImpl implements ICacheable {
 
-	protected static Log log = LogFactory.getLog(CacheableImpl.class.getName());	
-	
+	protected static Log log = LogFactory.getLog(CacheableImpl.class.getName());
+
 	protected ApplicationContext applicationContext;
-	
+
 	private byte[] bytes;
+
 	private String name;
+
 	private boolean cached;
-	
+
 	public CacheableImpl(Object obj) {
 		ByteBuffer tmp = ByteBuffer.allocate(1024, true);
 		tmp.setAutoExpand(true);
@@ -50,15 +52,17 @@ public class CacheableImpl implements ICacheable {
 		tmp.release();
 		cached = true;
 	}
-	
+
 	public CacheableImpl(ByteBuffer buffer) {
-		log.debug("Buffer is direct: " + buffer.isDirect() + " capacity: " + buffer.capacity());
-		log.debug("Buffer limit: " + buffer.limit() + " remaining: " + buffer.remaining() + " position: " + buffer.position());
+		log.debug("Buffer is direct: " + buffer.isDirect() + " capacity: "
+				+ buffer.capacity());
+		log.debug("Buffer limit: " + buffer.limit() + " remaining: "
+				+ buffer.remaining() + " position: " + buffer.position());
 		bytes = new byte[buffer.capacity()];
 		buffer.rewind();
 		int i = 0;
 		while (i < buffer.limit()) {
-			buffer.position(i);			
+			buffer.position(i);
 			while (buffer.remaining() > 0) {
 				bytes[i++] = buffer.get();
 			}
@@ -67,7 +71,7 @@ public class CacheableImpl implements ICacheable {
 		log.debug("Buffer size: " + buffer.capacity());
 		buffer.release();
 	}
-	
+
 	public void addRequest() {
 		log.info("Adding request for: " + name);
 	}
@@ -95,5 +99,5 @@ public class CacheableImpl implements ICacheable {
 	public void setName(String name) {
 		this.name = name;
 	}
-	
+
 }

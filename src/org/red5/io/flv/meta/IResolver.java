@@ -27,9 +27,10 @@ public interface IResolver {
 
 	/**
 	 * Merges the two Meta objects
+	 * 
 	 * @param m1
 	 * @param m2
-	 * @return IMeta Meta 
+	 * @return IMeta Meta
 	 */
 	public IMeta resolve(IMeta m1, IMeta m2);
 }

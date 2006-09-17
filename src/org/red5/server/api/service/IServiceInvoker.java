@@ -30,24 +30,24 @@ import org.red5.server.api.IScope;
 public interface IServiceInvoker {
 
 	/**
-	 * Execute the passed service call in the given scope.  This looks up the
+	 * Execute the passed service call in the given scope. This looks up the
 	 * handler for the call in the scope and the context of the scope.
 	 * 
 	 * @param call
-	 * 			the call to invoke
+	 *            the call to invoke
 	 * @param scope
-	 * 			the scope to search for a handler
+	 *            the scope to search for a handler
 	 */
 	public void invoke(IServiceCall call, IScope scope);
-	
+
 	/**
 	 * Execute the passed service call in the given object.
 	 * 
 	 * @param call
-	 * 			the call to invoke
+	 *            the call to invoke
 	 * @param service
-	 * 			the service to use
+	 *            the service to use
 	 */
 	public void invoke(IServiceCall call, Object service);
-	
+
 }

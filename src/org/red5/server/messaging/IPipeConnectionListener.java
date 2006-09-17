@@ -20,9 +20,8 @@ package org.red5.server.messaging;
  */
 
 /**
- * A listener that wants to listen to events when
- * provider/consumer connects to or disconnects from
- * a specific pipe.
+ * A listener that wants to listen to events when provider/consumer connects to
+ * or disconnects from a specific pipe.
  * 
  * @author The Red5 Project (red5@osflash.org)
  * @author Steven Gong (steven.gong@gmail.com)

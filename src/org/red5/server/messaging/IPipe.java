@@ -20,14 +20,14 @@ package org.red5.server.messaging;
  */
 
 /**
- * A pipe is an object that connects message providers and
- * message consumers. Its main function is to transport messages
- * in kind of ways it provides.
+ * A pipe is an object that connects message providers and message consumers.
+ * Its main function is to transport messages in kind of ways it provides.
  * 
  * @author The Red5 Project (red5@osflash.org)
  * @author Steven Gong (steven.gong@gmail.com)
  */
 public interface IPipe extends IMessageInput, IMessageOutput {
 	void addPipeConnectionListener(IPipeConnectionListener listener);
+
 	void removePipeConnectionListener(IPipeConnectionListener listener);
 }

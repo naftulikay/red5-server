@@ -35,15 +35,19 @@ import org.red5.server.api.stream.IVideoStreamCodec;
 public class SorensonVideo implements IVideoStreamCodec {
 
 	private Log log = LogFactory.getLog(SorensonVideo.class.getName());
-	
+
 	static final String CODEC_NAME = "SorensonVideo";
+
 	static final byte FLV_FRAME_KEY = 0x10;
+
 	static final byte FLV_CODEC_SORENSON = 0x02;
 
 	private byte[] blockData;
+
 	private int dataCount;
+
 	private int blockSize;
-	
+
 	public SorensonVideo() {
 		this.reset();
 	}
@@ -51,11 +55,11 @@ public class SorensonVideo implements IVideoStreamCodec {
 	public String getName() {
 		return CODEC_NAME;
 	}
-	
+
 	public boolean canDropFrames() {
 		return true;
 	}
-	
+
 	public void reset() {
 		this.blockData = null;
 		this.blockSize = 0;
@@ -66,7 +70,7 @@ public class SorensonVideo implements IVideoStreamCodec {
 		if (data.limit() == 0)
 			// Empty buffer
 			return false;
-		
+
 		byte first = data.get();
 		boolean result = ((first & 0x0f) == FLV_CODEC_SORENSON);
 		data.rewind();
@@ -77,24 +81,24 @@ public class SorensonVideo implements IVideoStreamCodec {
 		if (data.limit() == 0)
 			// Empty buffer
 			return true;
-		
+
 		if (!this.canHandleData(data))
 			return false;
-		
+
 		byte first = data.get();
 		data.rewind();
 		if ((first & 0xf0) != FLV_FRAME_KEY) {
 			// Not a keyframe
 			return true;
 		}
-		
+
 		// Store last keyframe
 		this.dataCount = data.limit();
 		if (this.blockSize < this.dataCount) {
 			this.blockSize = this.dataCount;
 			this.blockData = new byte[this.blockSize];
 		}
-		
+
 		data.get(this.blockData, 0, this.dataCount);
 		data.rewind();
 		return true;
@@ -103,7 +107,7 @@ public class SorensonVideo implements IVideoStreamCodec {
 	public ByteBuffer getKeyframe() {
 		if (this.dataCount == 0)
 			return null;
-		
+
 		ByteBuffer result = ByteBuffer.allocate(this.dataCount);
 		result.put(this.blockData, 0, this.dataCount);
 		result.rewind();

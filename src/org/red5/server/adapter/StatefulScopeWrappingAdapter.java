@@ -32,13 +32,23 @@ import org.red5.server.api.IScope;
 import org.red5.server.api.IScopeAware;
 import org.springframework.core.io.Resource;
 
-public class StatefulScopeWrappingAdapter extends AbstractScopeAdapter 
-	implements IScopeAware, IAttributeStore {
-	
-	protected IScope scope; 
-	
+/**
+ * StatefulScopeWrappingAdapter class wraps stateful IScope functionality. That
+ * is, it has attributes that you can work with, subscopes, associated resources
+ * and connections.
+ * 
+ */
+public class StatefulScopeWrappingAdapter extends AbstractScopeAdapter
+		implements IScopeAware, IAttributeStore {
+
+	protected IScope scope;
+
 	public void setScope(IScope scope) {
-		this.scope = scope;	
+		this.scope = scope;
+	}
+
+	public IScope getScope() {
+		return scope;
 	}
 
 	public Object getAttribute(String name) {
@@ -48,7 +58,7 @@ public class StatefulScopeWrappingAdapter extends AbstractScopeAdapter
 	public Object getAttribute(String name, Object defaultValue) {
 		return scope.getAttribute(name, defaultValue);
 	}
-	
+
 	public Set<String> getAttributeNames() {
 		return scope.getAttributeNames();
 	}
@@ -66,7 +76,7 @@ public class StatefulScopeWrappingAdapter extends AbstractScopeAdapter
 	}
 
 	public boolean setAttribute(String name, Object value) {
-		return scope.setAttribute(name,value);
+		return scope.setAttribute(name, value);
 	}
 
 	public void setAttributes(IAttributeStore values) {
@@ -76,7 +86,7 @@ public class StatefulScopeWrappingAdapter extends AbstractScopeAdapter
 	public void setAttributes(Map<String, Object> values) {
 		scope.setAttributes(values);
 	}
-	
+
 	public boolean createChildScope(String name) {
 		return scope.createChildScope(name);
 	}
@@ -135,6 +145,6 @@ public class StatefulScopeWrappingAdapter extends AbstractScopeAdapter
 
 	public Resource getResource(String path) {
 		return scope.getResource(path);
-	} 
+	}
 
 }

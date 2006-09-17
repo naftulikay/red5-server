@@ -9,14 +9,16 @@ import static junit.framework.Assert.assertTrue;
 
 public class ServiceTest extends BaseTest {
 
-	@Test public void simpletest(){
-		IPendingServiceCall call = new PendingCall("echoService","echoString",new Object[]{"My String"});
+	@Test
+	public void simpletest() {
+		IPendingServiceCall call = new PendingCall("echoService", "echoString",
+				new Object[] { "My String" });
 		context.getServiceInvoker().invoke(call, context);
-		assertTrue("result null",call.getResult()!=null);
+		assertTrue("result null", call.getResult() != null);
 	}
-	
-	public static junit.framework.Test suite(){
+
+	public static junit.framework.Test suite() {
 		return new JUnit4TestAdapter(ServiceTest.class);
 	}
-	
+
 }

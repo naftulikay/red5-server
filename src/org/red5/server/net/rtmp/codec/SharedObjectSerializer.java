@@ -38,35 +38,37 @@ import org.red5.io.object.Serializer;
 public class SharedObjectSerializer extends Serializer {
 
 	// Initialize Logging
-	protected static Log log = LogFactory.getLog(SharedObjectSerializer.class.getName());
-	
+	protected static Log log = LogFactory.getLog(SharedObjectSerializer.class
+			.getName());
 
 	/**
 	 * Writes a map to the output.
 	 * 
 	 * @param out
-	 * 			output stream
+	 *            output stream
 	 * @param map
-	 * 			Map object to serialize
+	 *            Map object to serialize
 	 */
-	public void writeMap(Output out, Map map){
-		if(log.isDebugEnabled()) {
+	public void writeMap(Output out, Map map) {
+		if (log.isDebugEnabled()) {
 			log.debug("writeMap");
 		}
-		
+
 		final Set set = map.entrySet();
 		// NOTE: we need to encode maps as objects for shared objects
 		out.writeStartObject(null);
 		Iterator it = set.iterator();
 		boolean isBeanMap = (map instanceof BeanMap);
-		while(it.hasNext()){
+		while (it.hasNext()) {
 			Map.Entry entry = (Map.Entry) it.next();
-			if(isBeanMap && ((String)entry.getKey()).equals("class")) continue;
+			if (isBeanMap && ((String) entry.getKey()).equals("class"))
+				continue;
 			out.writeItemKey(entry.getKey().toString());
-			serialize(out,entry.getValue());
-			if(it.hasNext()) out.markPropertySeparator();
+			serialize(out, entry.getValue());
+			if (it.hasNext())
+				out.markPropertySeparator();
 		}
 		out.markEndObject();
 	}
-	
+
 }

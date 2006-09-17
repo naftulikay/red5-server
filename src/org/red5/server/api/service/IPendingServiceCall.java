@@ -21,15 +21,47 @@ package org.red5.server.api.service;
 
 import java.util.Set;
 
+/**
+ * IPendingServiceCall is a call that have a list of callbacks.
+ * 
+ * 
+ */
 public interface IPendingServiceCall extends IServiceCall {
 
+	/**
+	 * Returns service call result
+	 * 
+	 * @return
+	 */
 	public abstract Object getResult();
-	
+
 	public abstract void setResult(Object result);
 
+	/**
+	 * Registers callback object usually represented as an anonymous class
+	 * instance that implements IPendingServiceCallback interface.
+	 * 
+	 * @param callback
+	 *            Callback object
+	 */
 	public void registerCallback(IPendingServiceCallback callback);
-	
+
+	/**
+	 * Unregisters callback object usually represented as an anonymous class
+	 * instance that implements IPendingServiceCallback interface.
+	 * 
+	 * @param callback
+	 *            Callback object
+	 */
 	public void unregisterCallback(IPendingServiceCallback callback);
 
+	/**
+	 * Returns list of callback objects, usually callback object represented as
+	 * an anonymous class instance that implements IPendingServiceCallback
+	 * interface.
+	 * 
+	 * @param callback
+	 *            Callback object
+	 */
 	public Set<IPendingServiceCallback> getCallbacks();
 }

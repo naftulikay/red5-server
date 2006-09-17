@@ -29,17 +29,21 @@ import org.red5.server.messaging.IPipeConnectionListener;
 import org.red5.server.messaging.OOBControlMessage;
 import org.red5.server.messaging.PipeConnectionEvent;
 
-public class StreamBandwidthController
-implements IFilter, IPipeConnectionListener, Runnable {
-	private static final Log log = LogFactory.getLog(StreamBandwidthController.class);
-	
+public class StreamBandwidthController implements IFilter,
+		IPipeConnectionListener, Runnable {
+	private static final Log log = LogFactory
+			.getLog(StreamBandwidthController.class);
+
 	public static final String KEY = StreamBandwidthController.class.getName();
-	
+
 	private IPipe providerPipe;
+
 	private IPipe consumerPipe;
+
 	private Thread puller;
+
 	private boolean isStarted;
-	
+
 	public void onPipeConnectionEvent(PipeConnectionEvent event) {
 		switch (event.getType()) {
 		case PipeConnectionEvent.PROVIDER_CONNECT_PULL:
@@ -67,9 +71,10 @@ implements IFilter, IPipeConnectionListener, Runnable {
 		}
 	}
 
-	public void onOOBControlMessage(IMessageComponent source, IPipe pipe, OOBControlMessage oobCtrlMsg) {
+	public void onOOBControlMessage(IMessageComponent source, IPipe pipe,
+			OOBControlMessage oobCtrlMsg) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	public void run() {
@@ -84,15 +89,15 @@ implements IFilter, IPipeConnectionListener, Runnable {
 		}
 		isStarted = false;
 	}
-	
+
 	public void start() {
 		startThread();
 	}
-	
+
 	public void close() {
 		isStarted = false;
 	}
-	
+
 	synchronized private void startThread() {
 		if (!isStarted && providerPipe != null && consumerPipe != null) {
 			puller = new Thread(this);

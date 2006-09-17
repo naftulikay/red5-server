@@ -22,16 +22,15 @@ package org.red5.server.net.rtmp.event;
 import org.apache.mina.common.ByteBuffer;
 import org.red5.server.stream.IStreamData;
 
-
 public class AudioData extends BaseEvent implements IStreamData {
 
 	protected ByteBuffer data = null;
-	
-	public AudioData(){
+
+	public AudioData() {
 		this(ByteBuffer.allocate(0).flip());
 	}
-	
-	public AudioData(ByteBuffer data){
+
+	public AudioData(ByteBuffer data) {
 		super(Type.STREAM_DATA);
 		this.data = data;
 	}
@@ -39,15 +38,15 @@ public class AudioData extends BaseEvent implements IStreamData {
 	public byte getDataType() {
 		return TYPE_AUDIO_DATA;
 	}
-	
-	public ByteBuffer getData(){
+
+	public ByteBuffer getData() {
 		return data;
 	}
-	
-	public String toString(){
-		return "Audio  ts: "+getTimestamp();
+
+	public String toString() {
+		return "Audio  ts: " + getTimestamp();
 	}
-	
+
 	@Override
 	protected void releaseInternal() {
 		if (data != null) {

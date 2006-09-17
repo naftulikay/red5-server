@@ -29,37 +29,42 @@ import org.apache.mina.common.IoSession;
 
 public class NetworkDumpFilter extends IoFilterAdapter {
 
-	protected static Log log =
-        LogFactory.getLog(ProxyFilter.class.getName());
-	
+	protected static Log log = LogFactory.getLog(ProxyFilter.class.getName());
+
 	protected WritableByteChannel raw;
+
 	protected WritableByteChannel headers;
-	
-	public NetworkDumpFilter(WritableByteChannel headers, WritableByteChannel raw){
+
+	public NetworkDumpFilter(WritableByteChannel headers,
+			WritableByteChannel raw) {
 		this.raw = raw;
 		this.headers = headers;
 	}
-	
-	public void messageReceived(NextFilter next, IoSession session, Object message) throws Exception {
-		if(message instanceof ByteBuffer){
+
+	public void messageReceived(NextFilter next, IoSession session,
+			Object message) throws Exception {
+		if (message instanceof ByteBuffer) {
 			ByteBuffer out = (ByteBuffer) message;
-			if(headers != null){
+			if (headers != null) {
 				ByteBuffer header = ByteBuffer.allocate(12);
 				header.putLong(System.currentTimeMillis());
 				header.putInt(out.limit() - out.position());
 				header.flip();
-				headers.write( header.buf() );
+				headers.write(header.buf());
 			}
-			if(raw != null){
-				raw.write( out.asReadOnlyBuffer().buf() );
+			if (raw != null) {
+				raw.write(out.asReadOnlyBuffer().buf());
 			}
 		}
 		next.messageReceived(session, message);
 	}
 
-	public void sessionClosed(NextFilter next, IoSession session) throws Exception {
-		if(headers.isOpen()) headers.close();
-		if(raw.isOpen()) raw.close();
+	public void sessionClosed(NextFilter next, IoSession session)
+			throws Exception {
+		if (headers.isOpen())
+			headers.close();
+		if (raw.isOpen())
+			raw.close();
 		next.sessionClosed(session);
 	}
 

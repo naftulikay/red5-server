@@ -19,50 +19,56 @@ package org.red5.server.messaging;
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA 
  */
 
-import java.util.Iterator;
 import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 /**
- * A simple in-memory version of pull-pull pipe.
- * It is triggered by an active consumer that pulls messages
- * through it from a pullable provider.
+ * A simple in-memory version of pull-pull pipe. It is triggered by an active
+ * consumer that pulls messages through it from a pullable provider.
  * 
  * @author The Red5 Project (red5@osflash.org)
  * @author Steven Gong (steven.gong@gmail.com)
  */
 public class InMemoryPullPullPipe extends AbstractPipe {
-	private static final Log log = LogFactory.getLog(InMemoryPullPullPipe.class);
-	
+	private static final Log log = LogFactory
+			.getLog(InMemoryPullPullPipe.class);
+
 	public boolean subscribe(IConsumer consumer, Map paramMap) {
 		boolean success = super.subscribe(consumer, paramMap);
-		if (success) fireConsumerConnectionEvent(consumer, PipeConnectionEvent.CONSUMER_CONNECT_PULL, paramMap);
+		if (success)
+			fireConsumerConnectionEvent(consumer,
+					PipeConnectionEvent.CONSUMER_CONNECT_PULL, paramMap);
 		return success;
 	}
 
 	public boolean subscribe(IProvider provider, Map paramMap) {
 		if (!(provider instanceof IPullableProvider)) {
-			throw new IllegalArgumentException("Non-pullable provider not supported by PullPullPipe");
+			throw new IllegalArgumentException(
+					"Non-pullable provider not supported by PullPullPipe");
 		}
 		boolean success = super.subscribe(provider, paramMap);
-		if (success) fireProviderConnectionEvent(provider, PipeConnectionEvent.PROVIDER_CONNECT_PULL, paramMap);
+		if (success)
+			fireProviderConnectionEvent(provider,
+					PipeConnectionEvent.PROVIDER_CONNECT_PULL, paramMap);
 		return success;
 	}
 
 	public IMessage pullMessage() {
 		IMessage message = null;
+		IPullableProvider[] providerArray = null;
 		synchronized (providers) {
+			providerArray = providers.toArray(new IPullableProvider[] {});
+		}
+		for (IPullableProvider provider : providerArray) {
 			// choose the first available provider
-			for (Iterator iter = providers.iterator(); iter.hasNext(); ) {
-				IPullableProvider provider = (IPullableProvider) iter.next();
-				try {
-					message = provider.pullMessage(this);
-					if (message != null) break;
-				} catch (Throwable t) {
-					log.error("exception when pulling message from provider", t);
-				}
+			try {
+				message = provider.pullMessage(this);
+				if (message != null)
+					break;
+			} catch (Throwable t) {
+				log.error("exception when pulling message from provider", t);
 			}
 		}
 		return message;
@@ -70,18 +76,21 @@ public class InMemoryPullPullPipe extends AbstractPipe {
 
 	public IMessage pullMessage(long wait) {
 		IMessage message = null;
+		IPullableProvider[] providerArray = null;
 		synchronized (providers) {
-			// divided evenly
-			long averageWait = providers.size() > 0 ? wait / providers.size() : 0;
-			// choose the first available provider
-			for (Iterator iter = providers.iterator(); iter.hasNext(); ) {
-				IPullableProvider provider = (IPullableProvider) iter.next();
-				try {
-					message = provider.pullMessage(this, averageWait);
-					if (message != null) break;
-				} catch (Throwable t) {
-					log.error("exception when pulling message from provider", t);
-				}
+			providerArray = providers.toArray(new IPullableProvider[] {});
+		}
+		// divided evenly
+		long averageWait = providerArray.length > 0 ? wait
+				/ providerArray.length : 0;
+		// choose the first available provider
+		for (IPullableProvider provider : providerArray) {
+			try {
+				message = provider.pullMessage(this, averageWait);
+				if (message != null)
+					break;
+			} catch (Throwable t) {
+				log.error("exception when pulling message from provider", t);
 			}
 		}
 		return message;

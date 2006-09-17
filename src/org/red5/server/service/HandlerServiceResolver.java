@@ -22,10 +22,11 @@ package org.red5.server.service;
 import org.red5.server.api.IScope;
 import org.red5.server.api.IScopeHandler;
 import org.red5.server.api.service.IServiceHandlerProvider;
+import org.red5.server.api.service.IServiceHandlerProviderAware;
 
 /**
  * Allow scope handlers to create service handlers dynamically.
- *
+ * 
  * @author The Red5 Project (red5@osflash.org)
  * @author Joachim Bauch (jojo@struktur.de)
  */
@@ -33,9 +34,21 @@ public class HandlerServiceResolver implements IServiceResolver {
 
 	public Object resolveService(IScope scope, String serviceName) {
 		IScopeHandler handler = scope.getHandler();
-		if (handler instanceof IServiceHandlerProvider)
-			return ((IServiceHandlerProvider) handler).getServiceHandler(serviceName);
-		
+		if (handler instanceof IServiceHandlerProvider) {
+			// TODO: deprecate this?
+			Object result = ((IServiceHandlerProvider) handler)
+					.getServiceHandler(serviceName);
+			if (result != null)
+				return result;
+		}
+
+		if (handler instanceof IServiceHandlerProviderAware) {
+			IServiceHandlerProvider shp = ((IServiceHandlerProviderAware) handler)
+					.getServiceHandlerProvider();
+			if (shp != null)
+				return shp.getServiceHandler(serviceName);
+		}
+
 		return null;
 	}
 

@@ -25,8 +25,8 @@ package org.red5.server.io.test;
 public class CircularRefBean extends SimpleJavaBean {
 
 	private CircularRefBean refToSelf;
-	
-	public CircularRefBean(){
+
+	public CircularRefBean() {
 		super();
 	}
 
@@ -37,7 +37,5 @@ public class CircularRefBean extends SimpleJavaBean {
 	public void setRefToSelf(CircularRefBean refToSelf) {
 		this.refToSelf = refToSelf;
 	}
-	
-	
 
 }

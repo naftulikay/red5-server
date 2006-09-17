@@ -33,12 +33,11 @@ import org.red5.io.object.DataTypes;
 
 /**
  * Input for red5 data (AMF3) types
- *
+ * 
  * @author The Red5 Project (red5@osflash.org)
  * @author Luke Hubbard, Codegent Ltd (luke@codegent.com)
  */
 public class Input extends BaseInput implements org.red5.io.object.Input {
-
 
 	protected static Log log = LogFactory.getLog(Input.class.getName());
 
@@ -48,7 +47,7 @@ public class Input extends BaseInput implements org.red5.io.object.Input {
 
 	/**
 	 * Input Constructor
-	 *
+	 * 
 	 * @param buf
 	 */
 	public Input(ByteBuffer buf) {
@@ -58,7 +57,7 @@ public class Input extends BaseInput implements org.red5.io.object.Input {
 
 	/**
 	 * Reads the data type
-	 *
+	 * 
 	 * @return byte
 	 */
 	public byte readDataType() {
@@ -72,47 +71,46 @@ public class Input extends BaseInput implements org.red5.io.object.Input {
 
 		switch (currentDataType) {
 
-			case AMF3.TYPE_NULL:
-				coreType = DataTypes.CORE_NULL;
-				break;
+		case AMF3.TYPE_NULL:
+			coreType = DataTypes.CORE_NULL;
+			break;
 
-			case AMF3.TYPE_INTEGER:
-			case AMF3.TYPE_NUMBER:
-				coreType = DataTypes.CORE_NUMBER;
-				break;
+		case AMF3.TYPE_INTEGER:
+		case AMF3.TYPE_NUMBER:
+			coreType = DataTypes.CORE_NUMBER;
+			break;
 
-			case AMF3.TYPE_BOOLEAN_TRUE:
-			case AMF3.TYPE_BOOLEAN_FALSE:
-				coreType = DataTypes.CORE_BOOLEAN;
-				break;
+		case AMF3.TYPE_BOOLEAN_TRUE:
+		case AMF3.TYPE_BOOLEAN_FALSE:
+			coreType = DataTypes.CORE_BOOLEAN;
+			break;
 
-			case AMF3.TYPE_STRING:
-				coreType = DataTypes.CORE_STRING;
-				break;
-				//TODO check XML_SPECIAL
-			case AMF3.TYPE_XML:
-			case AMF3.TYPE_XML_SPECIAL:
-				coreType = DataTypes.CORE_XML;
-				break;
-			case AMF3.TYPE_OBJECT:
-				coreType = DataTypes.CORE_OBJECT;
-				break;
+		case AMF3.TYPE_STRING:
+			coreType = DataTypes.CORE_STRING;
+			break;
+		// TODO check XML_SPECIAL
+		case AMF3.TYPE_XML:
+		case AMF3.TYPE_XML_SPECIAL:
+			coreType = DataTypes.CORE_XML;
+			break;
+		case AMF3.TYPE_OBJECT:
+			coreType = DataTypes.CORE_OBJECT;
+			break;
 
-			case AMF3.TYPE_ARRAY:
-				// should we map this to list or array?
-				coreType = DataTypes.CORE_ARRAY;
-				break;
+		case AMF3.TYPE_ARRAY:
+			// should we map this to list or array?
+			coreType = DataTypes.CORE_ARRAY;
+			break;
 
-			case AMF3.TYPE_DATE:
-				coreType = DataTypes.CORE_DATE;
-				break;
+		case AMF3.TYPE_DATE:
+			coreType = DataTypes.CORE_DATE;
+			break;
 
-
-			default:
-				log.info("Unknown datatype: " + currentDataType);
-				// End of object, and anything else lets just skip
-				coreType = DataTypes.CORE_SKIP;
-				break;
+		default:
+			log.info("Unknown datatype: " + currentDataType);
+			// End of object, and anything else lets just skip
+			coreType = DataTypes.CORE_SKIP;
+			break;
 		}
 
 		return coreType;
@@ -122,7 +120,7 @@ public class Input extends BaseInput implements org.red5.io.object.Input {
 
 	/**
 	 * Reads a null
-	 *
+	 * 
 	 * @return Object
 	 */
 	public Object readNull() {
@@ -131,16 +129,17 @@ public class Input extends BaseInput implements org.red5.io.object.Input {
 
 	/**
 	 * Reads a boolean
-	 *
+	 * 
 	 * @return boolean
 	 */
 	public Boolean readBoolean() {
-		return (currentDataType == AMF3.TYPE_BOOLEAN_TRUE) ? Boolean.TRUE : Boolean.FALSE;
+		return (currentDataType == AMF3.TYPE_BOOLEAN_TRUE) ? Boolean.TRUE
+				: Boolean.FALSE;
 	}
 
 	/**
 	 * Reads a Number
-	 *
+	 * 
 	 * @return Number
 	 */
 	public Number readNumber() {
@@ -154,7 +153,7 @@ public class Input extends BaseInput implements org.red5.io.object.Input {
 
 	/**
 	 * Reads a string
-	 *
+	 * 
 	 * @return String
 	 */
 	public String readString() {
@@ -172,18 +171,18 @@ public class Input extends BaseInput implements org.red5.io.object.Input {
 
 	/**
 	 * Returns a date
-	 *
+	 * 
 	 * @return Date
 	 */
 	public Date readDate() {
 		/*
-		 * Date: 0x0B T7 T6 .. T0 Z1 Z2
-		T7 to T0 form a 64 bit Big Endian number that specifies the number of 
-		nanoseconds that have passed since 1/1/1970 0:00 to the specified time. 
-		This format is “UTC 1970”. Z1 an Z0 for a 16 bit Big Endian number 
-		indicating the indicated time’s timezone in minutes.
+		 * Date: 0x0B T7 T6 .. T0 Z1 Z2 T7 to T0 form a 64 bit Big Endian number
+		 * that specifies the number of nanoseconds that have passed since
+		 * 1/1/1970 0:00 to the specified time. This format is “UTC 1970”. Z1 an
+		 * Z0 for a 16 bit Big Endian number indicating the indicated time’s
+		 * timezone in minutes.
 		 */
-		long ms = (long)buf.getDouble();
+		long ms = (long) buf.getDouble();
 		short clientTimeZoneMins = buf.getShort();
 		ms += clientTimeZoneMins * 60 * 1000;
 		Calendar cal = new GregorianCalendar();
@@ -199,7 +198,7 @@ public class Input extends BaseInput implements org.red5.io.object.Input {
 
 	/**
 	 * Returns an array
-	 *
+	 * 
 	 * @return int
 	 */
 	public int readStartArray() {
@@ -207,16 +206,14 @@ public class Input extends BaseInput implements org.red5.io.object.Input {
 	}
 
 	/**
-	 * Skips elements
-	 * TODO
+	 * Skips elements TODO
 	 */
 	public void skipElementSeparator() {
 		// SKIP
 	}
 
 	/**
-	 * Skips end array
-	 * TODO
+	 * Skips end array TODO
 	 */
 	public void skipEndArray() {
 		// SKIP
@@ -226,7 +223,7 @@ public class Input extends BaseInput implements org.red5.io.object.Input {
 
 	/**
 	 * Reads start list
-	 *
+	 * 
 	 * @return int
 	 */
 	public int readStartMap() {
@@ -235,7 +232,7 @@ public class Input extends BaseInput implements org.red5.io.object.Input {
 
 	/**
 	 * Returns a boolean stating whether this has more items
-	 *
+	 * 
 	 * @return boolean
 	 */
 	public boolean hasMoreItems() {
@@ -244,7 +241,7 @@ public class Input extends BaseInput implements org.red5.io.object.Input {
 
 	/**
 	 * Reads the item index
-	 *
+	 * 
 	 * @return int
 	 */
 	public String readItemKey() {
@@ -269,7 +266,7 @@ public class Input extends BaseInput implements org.red5.io.object.Input {
 
 	/**
 	 * Reads start object
-	 *
+	 * 
 	 * @return String
 	 */
 	public String readStartObject() {
@@ -278,7 +275,7 @@ public class Input extends BaseInput implements org.red5.io.object.Input {
 
 	/**
 	 * Returns a boolean stating whether there are more properties
-	 *
+	 * 
 	 * @return boolean
 	 */
 	public boolean hasMoreProperties() {
@@ -287,7 +284,7 @@ public class Input extends BaseInput implements org.red5.io.object.Input {
 
 	/**
 	 * Reads property name
-	 *
+	 * 
 	 * @return String
 	 */
 	public String readPropertyName() {
@@ -308,14 +305,14 @@ public class Input extends BaseInput implements org.red5.io.object.Input {
 		// skip two marker bytes
 		// then end of object byte
 		buf.skip(3);
-		//byte nextType = buf.get();
+		// byte nextType = buf.get();
 	}
 
 	// Others
 
 	/**
 	 * Reads xml
-	 *
+	 * 
 	 * @return String
 	 */
 	public String readXML() {
@@ -324,7 +321,7 @@ public class Input extends BaseInput implements org.red5.io.object.Input {
 
 	/**
 	 * Reads Custom
-	 *
+	 * 
 	 * @return Object
 	 */
 	public Object readCustom() {
@@ -334,7 +331,7 @@ public class Input extends BaseInput implements org.red5.io.object.Input {
 
 	/**
 	 * Reads Reference
-	 *
+	 * 
 	 * @return Object
 	 */
 	public Object readReference() {
@@ -350,10 +347,11 @@ public class Input extends BaseInput implements org.red5.io.object.Input {
 
 	/**
 	 * Parser of AMF3 "compressed" integer data type
-	 *
+	 * 
 	 * @return a converted integer value
 	 * @throws IOException
-	 * @see <a href="http://osflash.org/amf3/parsing_integers">parsing AMF3 integers (external)</a>
+	 * @see <a href="http://osflash.org/amf3/parsing_integers">parsing AMF3
+	 *      integers (external)</a>
 	 */
 	private int readAMF3Integer() {
 		int n = 0;

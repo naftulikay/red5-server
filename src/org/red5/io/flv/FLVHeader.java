@@ -20,8 +20,8 @@ package org.red5.io.flv;
  */
 
 /**
- * FLVHeader parses out the contents of a FLV video file and returns
- * the Header data 
+ * FLVHeader parses out the contents of a FLV video file and returns the Header
+ * data
  * 
  * @author The Red5 Project (red5@osflash.org)
  * @author Dominick Accattato (daccattato@gmail.com)
@@ -31,20 +31,25 @@ public class FLVHeader {
 
 	// Signature
 	public byte[] signature = null;
-	public byte version = 0x00; //version 1
-	 
+
+	public byte version = 0x00; // version 1
+
 	// TYPES
 	public byte flagReserved01 = 0x00;
+
 	public boolean flagAudio = false;
+
 	public byte flagReserved02 = 0x00;
+
 	public boolean flagVideo = false;
-	
+
 	// DATA OFFSET
 	// reserved for data up to 4,294,967,295
 	public int dataOffset = 0x00;
 
 	/**
 	 * Returns the data offset bytes
+	 * 
 	 * @return int
 	 */
 	public int getDataOffset() {
@@ -53,6 +58,7 @@ public class FLVHeader {
 
 	/**
 	 * Sets the data offset bytes
+	 * 
 	 * @param data_offset
 	 */
 	public void setDataOffset(int data_offset) {
@@ -61,33 +67,36 @@ public class FLVHeader {
 
 	/**
 	 * Returns the signature bytes
+	 * 
 	 * @return byte[]
 	 */
-	public byte[] getSignature() {		
+	public byte[] getSignature() {
 		return signature;
 	}
-	
+
 	/**
-	 * Overrides the toString method so that a FLVHeader can
-	 * be represented by its datatypes
+	 * Overrides the toString method so that a FLVHeader can be represented by
+	 * its datatypes
+	 * 
 	 * @return String
 	 */
 	public String toString() {
 		String ret = "";
-		//ret += "SIGNATURE: \t" + getSIGNATURE() + "\n";
-		//ret += "SIGNATURE: \t\t" + new String(signature) + "\n";  
+		// ret += "SIGNATURE: \t" + getSIGNATURE() + "\n";
+		// ret += "SIGNATURE: \t\t" + new String(signature) + "\n";
 		ret += "VERSION: \t\t" + getVersion() + "\n";
 		ret += "TYPE FLAGS VIDEO: \t" + getFlagVideo() + "\n";
 		ret += "TYPE FLAGS AUDIO: \t" + getFlagAudio() + "\n";
 		ret += "DATA OFFSET: \t\t" + getDataOffset() + "\n";
-		//byte b = 0x01;
-		
+		// byte b = 0x01;
+
 		return ret;
-		
+
 	}
 
 	/**
 	 * Sets the signature bytes
+	 * 
 	 * @param signature
 	 */
 	public void setSignature(byte[] signature) {
@@ -96,6 +105,7 @@ public class FLVHeader {
 
 	/**
 	 * Returns a boolean on whether this data contains audio
+	 * 
 	 * @return boolean
 	 */
 	public boolean getFlagAudio() {
@@ -104,6 +114,7 @@ public class FLVHeader {
 
 	/**
 	 * Sets the audioflag on whether this data contains audio
+	 * 
 	 * @param flagAudio
 	 */
 	public void setFlagAudio(boolean flagAudio) {
@@ -112,15 +123,18 @@ public class FLVHeader {
 
 	/**
 	 * Sets the type flags on whether this data is audio or video
+	 * 
 	 * @param typeFlags
 	 */
 	public void setTypeFlags(byte typeFlags) {
 		flagVideo = (((typeFlags << 7) >> 7) > 0x00);
 		flagAudio = (((typeFlags << 5) >> 7) > 0x00);
 	}
-	
+
 	/**
-	 * Gets the FlagReserved01 which is a datatype specified in the Flash Specification
+	 * Gets the FlagReserved01 which is a datatype specified in the Flash
+	 * Specification
+	 * 
 	 * @return byte
 	 */
 	public byte getFlagReserved01() {
@@ -128,7 +142,9 @@ public class FLVHeader {
 	}
 
 	/**
-	 * Sets the FlagReserved01 which is a datatype specified in the Flash Specification
+	 * Sets the FlagReserved01 which is a datatype specified in the Flash
+	 * Specification
+	 * 
 	 * @param flagReserved01
 	 */
 	public void setFlagReserved01(byte flagReserved01) {
@@ -136,7 +152,9 @@ public class FLVHeader {
 	}
 
 	/**
-	 * Gets the FlagReserved02 which is a datatype specified in the Flash Specification
+	 * Gets the FlagReserved02 which is a datatype specified in the Flash
+	 * Specification
+	 * 
 	 * @return byte
 	 */
 	public byte getFlagReserved02() {
@@ -144,7 +162,9 @@ public class FLVHeader {
 	}
 
 	/**
-	 * Sets the Flag Reserved02 which is a datatype specified in the Flash Specification
+	 * Sets the Flag Reserved02 which is a datatype specified in the Flash
+	 * Specification
+	 * 
 	 * @param flagReserved02
 	 */
 	public void setFlagReserved02(byte flagReserved02) {
@@ -153,6 +173,7 @@ public class FLVHeader {
 
 	/**
 	 * Returns a boolean on whether this data contains video
+	 * 
 	 * @return boolean
 	 */
 	public boolean getFlagVideo() {
@@ -161,6 +182,7 @@ public class FLVHeader {
 
 	/**
 	 * Sets the audioflag on whether this data contains audio
+	 * 
 	 * @param type_flags_video
 	 */
 	public void setFlagVideo(boolean type_flags_video) {
@@ -169,6 +191,7 @@ public class FLVHeader {
 
 	/**
 	 * Gets the version byte
+	 * 
 	 * @return byte
 	 */
 	public byte getVersion() {
@@ -177,6 +200,7 @@ public class FLVHeader {
 
 	/**
 	 * Sets the version byte
+	 * 
 	 * @param version
 	 */
 	public void setVersion(byte version) {

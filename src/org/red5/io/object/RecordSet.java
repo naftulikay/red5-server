@@ -37,23 +37,34 @@ import org.red5.server.net.remoting.RemotingClient;
 public class RecordSet {
 
 	private static final String MODE_ONDEMAND = "ondemand";
+
 	private static final String MODE_FETCHALL = "fetchall";
+
 	private static final String MODE_PAGE = "page";
-	
+
 	private int totalCount;
+
 	private List<List<Object>> data;
+
 	private int cursor;
+
 	private String serviceName;
+
 	private List<String> columns;
+
 	private int version;
+
 	private Object id;
+
 	private RemotingClient client = null;
+
 	private String mode = MODE_ONDEMAND;
+
 	private int pageSize = 25;
-	
+
 	// XXX: prefetching of multiple pages is not supported yet
 	private int prefetchCount = 0;
-	
+
 	public RecordSet(Input input) {
 		Deserializer deserializer = new Deserializer();
 		Map<String, Object> dataMap = new HashMap<String, Object>();
@@ -63,26 +74,28 @@ public class RecordSet {
 			dataMap.put(key, value);
 		}
 		input.skipEndObject();
-		
-		Map<String, Object> serverInfo = (Map<String, Object>) dataMap.get("serverinfo");
+
+		Map<String, Object> serverInfo = (Map<String, Object>) dataMap
+				.get("serverinfo");
 		if (serverInfo == null)
 			// This is right according to the specs on osflash.org
 			serverInfo = (Map<String, Object>) dataMap.get("serverInfo");
-		
+
 		if (!(serverInfo instanceof Map))
 			throw new RuntimeException("Expected Map but got " + serverInfo);
-		
+
 		totalCount = (Integer) serverInfo.get("totalCount");
-		List<List<Object>> initialData = (List<List<Object>>) serverInfo.get("initialData");
+		List<List<Object>> initialData = (List<List<Object>>) serverInfo
+				.get("initialData");
 		cursor = (Integer) serverInfo.get("cursor");
 		serviceName = (String) serverInfo.get("serviceName");
 		columns = (List<String>) serverInfo.get("columNames");
 		version = (Integer) serverInfo.get("version");
 		id = serverInfo.get("id");
-		
+
 		this.data = new ArrayList<List<Object>>(totalCount);
-		for (int i=0; i<initialData.size(); i++)
-			this.data.add(i+cursor-1, initialData.get(i));
+		for (int i = 0; i < initialData.size(); i++)
+			this.data.add(i + cursor - 1, initialData.get(i));
 	}
 
 	/**
@@ -93,7 +106,7 @@ public class RecordSet {
 	public void setRemotingClient(RemotingClient client) {
 		this.client = client;
 	}
-	
+
 	/**
 	 * Set the mode for fetching paged results.
 	 * 
@@ -125,7 +138,7 @@ public class RecordSet {
 		this.pageSize = pageSize;
 		this.prefetchCount = prefetchCount;
 	}
-	
+
 	/**
 	 * Return a list containing the names of the columns in the recordset.
 	 * 
@@ -144,10 +157,10 @@ public class RecordSet {
 		if (data.get(index) != null)
 			// Already have this item.
 			return;
-		
+
 		if (client == null)
 			throw new RuntimeException("no remoting client configured");
-		
+
 		Object result;
 		int start = index;
 		int count;
@@ -156,38 +169,42 @@ public class RecordSet {
 			count = 1;
 		else if (mode.equals(MODE_FETCHALL))
 			// Get remaining items
-			count = totalCount - cursor; 
+			count = totalCount - cursor;
 		else if (mode.equals(MODE_PAGE)) {
 			// Get next page
 			// TODO: implement prefetching of multiple pages
 			count = 1;
-			for (int i=1; i<pageSize; i++)
-				if (this.data.get(start+i) == null)
+			for (int i = 1; i < pageSize; i++)
+				if (this.data.get(start + i) == null)
 					count += 1;
 		} else
 			// Default to "ondemand"
 			count = 1;
-		
- 		result = client.invokeMethod(serviceName + ".getRecords", new Object[]{id, start+1, count});
+
+		result = client.invokeMethod(serviceName + ".getRecords", new Object[] {
+				id, start + 1, count });
 		if (!(result instanceof RecordSetPage))
-			throw new RuntimeException("expected RecordSetPage but got " + result);
-		
+			throw new RuntimeException("expected RecordSetPage but got "
+					+ result);
+
 		RecordSetPage page = (RecordSetPage) result;
-		if (page.getCursor() != start+1)
-			throw new RuntimeException("expected offset " + (start+1) + " but got " + page.getCursor());
-		
+		if (page.getCursor() != start + 1)
+			throw new RuntimeException("expected offset " + (start + 1)
+					+ " but got " + page.getCursor());
+
 		List<List<Object>> data = page.getData();
 		if (data.size() != count)
-			throw new RuntimeException("expected " + count + " results but got " + data.size());
-		
+			throw new RuntimeException("expected " + count
+					+ " results but got " + data.size());
+
 		// Store received items
-		for (int i=0; i<count; i++)
-			this.data.add(start+i, data.get(i));
+		for (int i = 0; i < count; i++)
+			this.data.add(start + i, data.get(i));
 	}
-	
+
 	/**
-	 * Return a specified item from the recordset.  If the item is not
-	 * available yet, it will be received from the server.
+	 * Return a specified item from the recordset. If the item is not available
+	 * yet, it will be received from the server.
 	 * 
 	 * @param index
 	 */
@@ -195,11 +212,11 @@ public class RecordSet {
 		if (index < 0 || index >= totalCount)
 			// Out of range
 			return null;
-		
+
 		ensureAvailable(index);
 		return data.get(index);
 	}
-	
+
 	/**
 	 * Get the total number of items.
 	 * 
@@ -208,7 +225,7 @@ public class RecordSet {
 	public int getLength() {
 		return totalCount;
 	}
-	
+
 	/**
 	 * Get the number of items already received from the server.
 	 * 
@@ -216,19 +233,19 @@ public class RecordSet {
 	 */
 	public int getNumberAvailable() {
 		int result = 0;
-		for (int i=0; i<data.size(); i++)
+		for (int i = 0; i < data.size(); i++)
 			if (data.get(i) != null)
 				result += 1;
 		return result;
 	}
-	
+
 	/**
-	 * Check if all items are available on the client. 
+	 * Check if all items are available on the client.
 	 * 
 	 * @return number of available items
 	 */
 	public boolean isFullyPopulated() {
 		return getNumberAvailable() == getLength();
 	}
-	
+
 }

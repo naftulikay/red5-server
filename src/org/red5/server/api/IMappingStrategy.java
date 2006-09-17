@@ -20,7 +20,7 @@ package org.red5.server.api;
  */
 
 /**
- * This interface encapsulates the mapping strategy used by the context. 
+ * This interface encapsulates the mapping strategy used by the context.
  */
 public interface IMappingStrategy {
 
@@ -28,27 +28,27 @@ public interface IMappingStrategy {
 	 * Map a name to the name of a service.
 	 * 
 	 * @param name
-	 * 			name to map
+	 *            name to map
 	 * @return the name of the service with the passed name
 	 */
 	public String mapServiceName(String name);
-	
+
 	/**
 	 * Map a context path to the name of a scope handler.
 	 * 
 	 * @param contextPath
-	 * 			context path to map
+	 *            context path to map
 	 * @return the name of a scope handler
 	 */
 	public String mapScopeHandlerName(String contextPath);
-	
+
 	/**
 	 * Map a context path to a path prefix for resources.
 	 * 
 	 * @param contextPath
-	 * 			context path to map
-	 * @return the path prefix for resources with the given name 
+	 *            context path to map
+	 * @return the path prefix for resources with the given name
 	 */
 	public String mapResourcePrefix(String contextPath);
-	
+
 }

@@ -21,17 +21,20 @@ package org.red5.server.stream;
 
 public class TokenBucket implements ITokenBucket {
 	private double speed;
+
 	private long capacity;
+
 	private double tokens = 0;
+
 	private WaitObject waitObject = null;
-	
+
 	public TokenBucket() {
 	}
-	
+
 	public TokenBucket(double initialTokens) {
 		tokens = initialTokens;
 	}
-	
+
 	synchronized public boolean acquireToken(double tokenCount, long wait) {
 		if (wait > 0) {
 			// as of now, we don't support blocking mode
@@ -48,7 +51,8 @@ public class TokenBucket implements ITokenBucket {
 	synchronized public boolean acquireTokenNonblocking(double tokenCount,
 			ITokenBucketCallback callback) {
 		// TODO use a wait queue instead
-		if (waitObject != null) return false;
+		if (waitObject != null)
+			return false;
 		if (tokens >= tokenCount) {
 			tokens -= tokenCount;
 			return true;
@@ -63,7 +67,8 @@ public class TokenBucket implements ITokenBucket {
 	}
 
 	synchronized public double acquireTokenBestEffort(double upperLimitCount) {
-		if (waitObject != null) return 0;
+		if (waitObject != null)
+			return 0;
 		if (tokens >= upperLimitCount) {
 			tokens -= upperLimitCount;
 			return upperLimitCount;
@@ -90,13 +95,14 @@ public class TokenBucket implements ITokenBucket {
 	void setCapacity(long capacity) {
 		this.capacity = capacity;
 	}
-	
+
 	void setSpeed(double speed) {
 		this.speed = speed;
 	}
-	
+
 	/**
 	 * Add some tokens to this bucket.
+	 * 
 	 * @param token
 	 */
 	synchronized void addToken(double token) {
@@ -112,9 +118,10 @@ public class TokenBucket implements ITokenBucket {
 			callback.available(this, tokenCount);
 		}
 	}
-	
+
 	private class WaitObject {
 		private ITokenBucketCallback callback;
+
 		private double tokenCount;
 	}
 }

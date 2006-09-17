@@ -19,19 +19,20 @@ package org.red5.server.so;
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA 
  */
 
-public class SharedObjectEvent 
-	implements ISharedObjectEvent {
+public class SharedObjectEvent implements ISharedObjectEvent {
 
 	private Type type;
+
 	private String key;
+
 	private Object value;
-	
-	public SharedObjectEvent(Type type, String key, Object value){
+
+	public SharedObjectEvent(Type type, String key, Object value) {
 		this.type = type;
 		this.key = key;
 		this.value = value;
 	}
-	
+
 	public String getKey() {
 		return key;
 	}
@@ -43,8 +44,9 @@ public class SharedObjectEvent
 	public Object getValue() {
 		return value;
 	}
-	
+
 	public String toString() {
-		return "SOEvent(" + getType() + ", " + getKey() + ", " + getValue() + ")";
+		return "SOEvent(" + getType() + ", " + getKey() + ", " + getValue()
+				+ ")";
 	}
 }

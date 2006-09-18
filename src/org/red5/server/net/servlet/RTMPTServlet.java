@@ -320,8 +320,12 @@ public class RTMPTServlet extends HttpServlet {
 		data.flip();
 		
 		// Decode the objects in the data
-		List messages = client.decode(data);
-		data.release();
+		List messages;
+		try {
+			messages = client.decode(data);
+		} finally {
+			data.release();
+		}
 		if (messages == null || messages.isEmpty()) {
 			returnMessage(client.getPollingDelay(), resp);
 			return;

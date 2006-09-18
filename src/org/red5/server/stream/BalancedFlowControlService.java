@@ -21,6 +21,7 @@ package org.red5.server.stream;
 
 import java.lang.reflect.Array;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -61,6 +62,7 @@ public class BalancedFlowControlService extends TimerTask implements
 	private Map<IFlowControllable, FcData> fcMap =
 		new HashMap<IFlowControllable, FcData>();
 	private List<FcData>[] fcListArray;
+	private FcData[][] sortedListArray = new FcData[maxDepth][];
 	
 	private Timer timer;
 	private Thread cbThread = new Thread(new CallbackRunnable());
@@ -90,7 +92,9 @@ public class BalancedFlowControlService extends TimerTask implements
 		lock.writeLock().lock();
 		try {
 			for (int i = 0; i < maxDepth; i++) {
-				Collections.sort(fcListArray[i]);
+				FcData[] tmpArray = fcListArray[i].toArray(new FcData[]{});
+				Arrays.sort(tmpArray);
+				sortedListArray[i] = tmpArray;
 			}
 		} finally {
 			lock.writeLock().unlock();
@@ -100,8 +104,9 @@ public class BalancedFlowControlService extends TimerTask implements
 		lock.readLock().lock();
 		try {
 			for (int i = 0; i < maxDepth; i++) {
-				List<FcData> fcList = fcListArray[i];
-				for (FcData fcData : fcList) {
+				FcData[] fcList = sortedListArray[i];
+				for (int j = 0; j < fcList.length; j++) {
+					FcData fcData = fcList[j];
 					if (fcData.hasBandwidthResource()) {
 						boolean gotToken = false;
 						for (int channelId = 0; channelId < fcData.bwResources.length; channelId++) {

@@ -58,6 +58,12 @@ public class ConnectionConsumer implements IPushableConsumer,
 	private Channel data;
 	private int chunkSize = -1;
 	private StreamTracker streamTracker;
+	private Ping ping = new Ping();
+	private Header header = new Header();
+	private Notify notify = new Notify();
+	private VideoData videoData = new VideoData();
+	private AudioData audioData = new AudioData();
+	private BytesRead bytesRead = new BytesRead(0);
 	
 	public ConnectionConsumer(RTMPConnection conn, byte videoChannel, byte audioChannel, byte dataChannel) {
 		this.conn = conn;
@@ -78,7 +84,6 @@ public class ConnectionConsumer implements IPushableConsumer,
 		else if (message instanceof RTMPMessage) {
 			RTMPMessage rtmpMsg = (RTMPMessage) message;
 			IRTMPEvent msg = rtmpMsg.getBody();
-			Header header = new Header();
 			int timestamp = streamTracker.add(msg);
 			if (timestamp < 0) {
 				log.warn("Skipping message with negative timestamp.");
@@ -89,25 +94,33 @@ public class ConnectionConsumer implements IPushableConsumer,
 			
 			switch (msg.getDataType()) {
 			case Constants.TYPE_STREAM_METADATA:
-				Notify notify = new Notify(((Notify) msg).getData().asReadOnlyBuffer());
+				//Notify notify = new Notify(((Notify) msg).getData().asReadOnlyBuffer());
+				notify.setData(((Notify) msg).getData().asReadOnlyBuffer());
 				notify.setHeader(header);
 				notify.setTimestamp(header.getTimer());
 				data.write(notify);
 				break;
 			case Constants.TYPE_VIDEO_DATA:
-				VideoData videoData = new VideoData(((VideoData) msg).getData().asReadOnlyBuffer());
+				//VideoData videoData = new VideoData(((VideoData) msg).getData().asReadOnlyBuffer());
+				videoData.setData(((VideoData) msg).getData().asReadOnlyBuffer());
 				videoData.setHeader(header);
 				videoData.setTimestamp(header.getTimer());
 				video.write(videoData);
 				break;
 			case Constants.TYPE_AUDIO_DATA:
-				AudioData audioData = new AudioData(((AudioData) msg).getData().asReadOnlyBuffer());
+				//AudioData audioData = new AudioData(((AudioData) msg).getData().asReadOnlyBuffer());
+				audioData.setData(((AudioData) msg).getData().asReadOnlyBuffer());
 				audioData.setHeader(header);
 				audioData.setTimestamp(header.getTimer());
 				audio.write(audioData);
 				break;
 			case Constants.TYPE_PING:
-				Ping ping = new Ping(((Ping)msg).getValue1(),((Ping)msg).getValue2(),((Ping)msg).getValue3(),((Ping)msg).getValue4());
+				//Ping ping = new Ping(((Ping)msg).getValue1(),((Ping)msg).getValue2(),((Ping)msg).getValue3(),((Ping)msg).getValue4());
+				Ping pingMsg = (Ping) msg;
+				ping.setValue1(pingMsg.getValue1());
+				ping.setValue2(pingMsg.getValue2());
+				ping.setValue3(pingMsg.getValue3());
+				ping.setValue4(pingMsg.getValue4());
 				header.setTimerRelative(false);
 				header.setTimer(0);
 				ping.setHeader(header);
@@ -115,7 +128,8 @@ public class ConnectionConsumer implements IPushableConsumer,
 				conn.ping(ping);
 				break;
 			case Constants.TYPE_BYTES_READ:
-				BytesRead bytesRead = new BytesRead(((BytesRead)msg).getBytesRead());
+				//BytesRead bytesRead = new BytesRead(((BytesRead)msg).getBytesRead());
+				bytesRead.setBytesRead(((BytesRead)msg).getBytesRead());
 				header.setTimerRelative(false);
 				header.setTimer(0);
 				bytesRead.setHeader(header);

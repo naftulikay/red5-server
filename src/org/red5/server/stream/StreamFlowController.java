@@ -89,7 +89,7 @@ public class StreamFlowController {
 			controllable.setBandwidthConfigure(bwConf);
 		}
 		
-		log.debug("bw: "+bw+" buf: "+bufferTime+" data bit rate: "+flow.getDataBitRate());
+		//log.debug("bw: "+bw+" buf: "+bufferTime+" data bit rate: "+flow.getDataBitRate());
 		
 		return change;
 	}

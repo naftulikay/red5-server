@@ -98,19 +98,18 @@ public class RTMPProtocolEncoder implements SimpleProtocolEncoder, Constants, IE
 			data.rewind();
 		header.setSize(data.limit());
 		
-		final ByteBuffer headers = encodeHeader(header,rtmp.getLastWriteHeader(channelId));
+		Header lastWriteHeader = rtmp.getLastWriteHeader(channelId);
 		
 		rtmp.setLastWriteHeader(channelId, header);
 		rtmp.setLastWritePacket(channelId, packet);
 		
+		final int headerSize = calculateHeaderSize(header, lastWriteHeader);
 		final int chunkSize = rtmp.getWriteChunkSize();
 		final int numChunks = (int) Math.ceil(header.getSize() / (float) chunkSize);
-		final int bufSize = header.getSize() + headers.limit() + (numChunks - 1 * 1);
+		final int bufSize = header.getSize() + headerSize + (numChunks - 1 * 1);
 		final ByteBuffer out = ByteBuffer.allocate(bufSize);
 		
-		headers.flip();	
-		out.put(headers);
-		headers.release();
+		encodeHeader(header, lastWriteHeader, out);
 		
 		if(numChunks == 1){
 			// we can do it with a single copy
@@ -129,7 +128,50 @@ public class RTMPProtocolEncoder implements SimpleProtocolEncoder, Constants, IE
 		return out;
 	}
 	
+	public int calculateHeaderSize(Header header, Header lastHeader) {
+		byte headerType = HEADER_NEW;
+		if(lastHeader==null || header.getStreamId() != lastHeader.getStreamId() || !header.isTimerRelative()){
+			headerType = HEADER_NEW;
+		} else if(header.getSize() != lastHeader.getSize() || header.getDataType() != lastHeader.getDataType()){
+			headerType = HEADER_SAME_SOURCE;
+		} else if(header.getTimer() != lastHeader.getTimer()){
+			headerType = HEADER_TIMER_CHANGE;
+		} else
+			headerType = HEADER_CONTINUE;
+		
+		int result = 0;
+		switch(headerType){
+		
+		case HEADER_NEW:
+			result = 12;
+			break;
+			
+		case HEADER_SAME_SOURCE:
+			result = 8;
+			break;
+			
+		case HEADER_TIMER_CHANGE:
+			result = 4;
+			break;
+			
+		case HEADER_CONTINUE:
+			result = 1;
+			break;
+		
+		}
+		
+		return result;
+	}
+
 	public ByteBuffer encodeHeader(Header header, Header lastHeader){
+		int size = calculateHeaderSize(header, lastHeader);
+		ByteBuffer buf = ByteBuffer.allocate(size);
+		encodeHeader(header, lastHeader, buf);
+		buf.flip();
+		return buf;
+	}
+
+	public void encodeHeader(Header header, Header lastHeader, ByteBuffer buf){
 		
 		byte headerType = HEADER_NEW;
 		if(lastHeader==null || header.getStreamId() != lastHeader.getStreamId() || !header.isTimerRelative()){
@@ -141,7 +183,6 @@ public class RTMPProtocolEncoder implements SimpleProtocolEncoder, Constants, IE
 		} else
 			headerType = HEADER_CONTINUE;
 		
-		final ByteBuffer buf = ByteBuffer.allocate(RTMPUtils.getHeaderLength(headerType));
 		final byte headerByte = RTMPUtils.encodeHeaderByte(headerType, header.getChannelId());
 		
 		buf.put(headerByte);
@@ -169,7 +210,6 @@ public class RTMPProtocolEncoder implements SimpleProtocolEncoder, Constants, IE
 			break;
 		
 		}
-		return buf;
 	}
 	
 	public ByteBuffer encodeMessage(Header header, IRTMPEvent message){
@@ -430,22 +470,26 @@ public class RTMPProtocolEncoder implements SimpleProtocolEncoder, Constants, IE
 	 * @see org.red5.server.net.rtmp.codec.IEventEncoder#encodeAudioData(org.red5.server.net.rtmp.event.AudioData)
 	 */
 	public ByteBuffer encodeAudioData(AudioData audioData){
-		return audioData.getData().asReadOnlyBuffer();
+		audioData.getData().acquire();
+		return audioData.getData();
 	}
 	
 	/* (non-Javadoc)
 	 * @see org.red5.server.net.rtmp.codec.IEventEncoder#encodeVideoData(org.red5.server.net.rtmp.event.VideoData)
 	 */
 	public ByteBuffer encodeVideoData(VideoData videoData){
-		return videoData.getData().asReadOnlyBuffer();
+		videoData.getData().acquire();
+		return videoData.getData();
 	}
 	
 	public ByteBuffer encodeUnknown(Unknown unknown){
-		return unknown.getData().asReadOnlyBuffer();
+		unknown.getData().acquire();
+		return unknown.getData();
 	}
 	
 	public ByteBuffer encodeStreamMetadata(Notify metaData){
-		return metaData.getData().asReadOnlyBuffer();
+		metaData.getData().acquire();
+		return metaData.getData();
 	}
 
 	public void setSerializer(org.red5.io.object.Serializer serializer) {

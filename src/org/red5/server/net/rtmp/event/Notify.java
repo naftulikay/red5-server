@@ -51,6 +51,7 @@ public class Notify extends BaseEvent implements IStreamData {
 	}
 	
 	public void setData(ByteBuffer data) {
+		releaseInternal();
 		this.data = data;
 	}
 	

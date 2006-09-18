@@ -41,6 +41,11 @@ public class VideoData extends BaseEvent implements IoConstants, IStreamData {
 	
 	public VideoData(ByteBuffer data){
 		super(Type.STREAM_DATA);
+		setData(data);
+	}
+
+	public void setData(ByteBuffer data) {
+		releaseInternal();
 		this.data = data;
 		if (data != null && data.limit() > 0) {
 			int oldPos = data.position();
@@ -57,7 +62,7 @@ public class VideoData extends BaseEvent implements IoConstants, IStreamData {
 				this.frameType = FrameType.UNKNOWN;
 		}
 	}
-
+	
 	public byte getDataType() {
 		return TYPE_VIDEO_DATA;
 	}

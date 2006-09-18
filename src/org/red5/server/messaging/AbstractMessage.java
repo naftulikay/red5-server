@@ -26,7 +26,7 @@ public class AbstractMessage implements IMessage {
 	protected String messageID;
 	protected String correlationID;
 	protected String messageType;
-	protected Map extraHeaders = new HashMap();
+	//protected Map extraHeaders = new HashMap();
 
 	public String getMessageID() {
 		return messageID;

@@ -21,7 +21,10 @@ package org.red5.server.stream;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -395,6 +398,7 @@ implements IFlowControlService, ApplicationContextAware {
 		private double speed;
 		private long capacity;
 		private double tokens = 0;
+		private List<IFlowControllable> fcWaitingList = new ArrayList<IFlowControllable>();
 		private Map<IFlowControllable, Map<ITokenBucketCallback, RequestObject>> fcWaitingMap =
 			new HashMap<IFlowControllable, Map<ITokenBucketCallback, RequestObject>>();
 		
@@ -412,10 +416,13 @@ implements IFlowControlService, ApplicationContextAware {
 			else tokens = tmp;
 			IFlowControllable toReleaseFC = null;
 			ITokenBucketCallback toReleaseCallback = null;
-			loop: for (IFlowControllable fc : fcWaitingMap.keySet()) {
+			loop: for (int i=0; i<fcWaitingList.size(); i++) {
+				IFlowControllable fc = fcWaitingList.get(i);
 				Map<ITokenBucketCallback, RequestObject> callbackMap =
 					fcWaitingMap.get(fc);
-				for (ITokenBucketCallback callback : callbackMap.keySet()) {
+				Iterator<ITokenBucketCallback> cbIterator = callbackMap.keySet().iterator();
+				while (cbIterator.hasNext()) {
+					ITokenBucketCallback callback = cbIterator.next();
 					RequestObject reqObj = callbackMap.get(callback);
 					if (reqObj.requestTokenCount <= tokens) {
 						toReleaseFC = fc;
@@ -430,10 +437,11 @@ implements IFlowControlService, ApplicationContextAware {
 				RequestObject reqObj = callbackMap.remove(toReleaseCallback);
 				if (callbackMap.size() == 0) {
 					fcWaitingMap.remove(toReleaseFC);
+					fcWaitingList.remove(toReleaseFC);
 				}
 				// finally call back
 				try {
-					log.debug("Token available and calling callback: request " + reqObj.requestTokenCount + ", available " + tokens);
+					//log.debug("Token available and calling callback: request " + reqObj.requestTokenCount + ", available " + tokens);
 					toReleaseCallback.available(reqObj.requestBucket, reqObj.requestTokenCount);
 				} catch (Throwable t) {
 					log.error("exception when calling callback", t);
@@ -443,11 +451,12 @@ implements IFlowControlService, ApplicationContextAware {
 		
 		synchronized public boolean acquireToken(IFlowControllable fc, double tokenCount, ITokenBucketCallback callback, ITokenBucket requestBucket) {
 			if (tokenCount > tokens) {
-				log.debug("Token not enough: request " + tokenCount + ", available " + tokens);
+				//log.debug("Token not enough: request " + tokenCount + ", available " + tokens);
 				Map<ITokenBucketCallback, RequestObject> callbackMap = fcWaitingMap.get(fc);
 				if (callbackMap == null) {
 					callbackMap = new HashMap<ITokenBucketCallback, RequestObject>();
 					fcWaitingMap.put(fc, callbackMap);
+					fcWaitingList.add(fc);
 				}
 				if (!callbackMap.containsKey(callback)) {
 					RequestObject reqObj = new RequestObject();
@@ -498,6 +507,7 @@ implements IFlowControlService, ApplicationContextAware {
 					} catch (Throwable t) {}
 				}
 				fcWaitingMap.remove(callbackMap);
+				fcWaitingList.remove(fc);
 			}
 		}
 		
@@ -510,8 +520,10 @@ implements IFlowControlService, ApplicationContextAware {
 				if (dstMap == null) {
 					dstMap = new HashMap<ITokenBucketCallback, RequestObject>();
 					fcWaitingMap.put(fc, dstMap);
+					fcWaitingList.add(fc);
 				}
 				dstMap.putAll(srcMap);
+				source.fcWaitingList.remove(fc);
 			}
 		}
 		

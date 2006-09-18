@@ -36,6 +36,11 @@ public class AudioData extends BaseEvent implements IStreamData {
 		this.data = data;
 	}
 
+	public void setData(ByteBuffer data) {
+		releaseInternal();
+		this.data = data;
+	}
+
 	public byte getDataType() {
 		return TYPE_AUDIO_DATA;
 	}

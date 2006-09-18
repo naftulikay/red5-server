@@ -177,4 +177,8 @@ public class Context implements IContext, ApplicationContextAware {
 		return coreContext.getBean(beanId);
 	}
 
+	public ClassLoader getClassLoader() {
+		return Thread.currentThread().getContextClassLoader();
+	}	
+	
 }

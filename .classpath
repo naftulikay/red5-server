@@ -3,21 +3,17 @@
 	<classpathentry excluding=".svn/*" kind="src" path="src"/>
 	<classpathentry excluding=".svn/*" output="webapps/oflaDemo/WEB-INF/classes" kind="src" path="webapps/oflaDemo/WEB-INF/src"/>
 	<classpathentry excluding=".svn/*" kind="src" path="conf"/>
-	<classpathentry kind="lib" path="lib/spring.jar"/>
 	<classpathentry kind="lib" path="lib/slf4j-log4j12.jar"/>
 	<classpathentry kind="lib" path="lib/log4j-1.2.9.jar"/>
-	<classpathentry kind="lib" path="lib/junit.jar"/>
 	<classpathentry kind="lib" path="lib/jpda.jar"/>
 	<classpathentry kind="lib" path="lib/commons-logging.jar"/>
 	<classpathentry kind="lib" path="lib/commons-collections.jar"/>
 	<classpathentry kind="lib" path="lib/commons-beanutils.jar"/>
-	<classpathentry kind="lib" path="lib/cglib-nodep-2.1_2.jar"/>
 	<classpathentry excluding=".svn/*" kind="src" path="test"/>
 	<classpathentry kind="lib" path="lib/commons-el-1.0.jar"/>
 	<classpathentry kind="lib" path="lib/servlet-api-2.5.jar"/>
 	<classpathentry kind="lib" path="lib/xercesImpl-2.6.2.jar"/>
 	<classpathentry kind="lib" path="lib/xmlParserAPIs-2.6.2.jar"/>
-	<classpathentry kind="lib" path="lib/junit-4.0.jar"/>
 	<classpathentry excluding=".svn/*" output="webapps/test/WEB-INF/classes" kind="src" path="webapps/test/WEB-INF/src"/>
 	<classpathentry kind="lib" path="lib/quartz-1.5.2.jar"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
@@ -36,5 +32,8 @@
 	<classpathentry kind="lib" path="lib/commons-pool-1.3.jar"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/Jetty Embedded"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/red5_scripting"/>
+	<classpathentry kind="lib" path="lib/cglib-nodep-2.1_3.jar"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/4"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/Spring2rc4"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

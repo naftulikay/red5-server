@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE beans PUBLIC "-//SPRING//DTD BEAN//EN" "http://www.springframework.org/dtd/spring-beans.dtd">
-<beans>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:lang="http://www.springframework.org/schema/lang"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-2.0.xsd
+                           http://www.springframework.org/schema/lang http://www.springframework.org/schema/lang/spring-lang-2.0.xsd">
 	
 	<bean id="placeholderConfig" class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
 	    <property name="location" value="/WEB-INF/red5-web.properties" />
@@ -19,55 +22,54 @@
 		<property name="virtualHosts" value="${webapp.virtualHosts}" />
 	</bean>
 	
+	<bean class="org.red5.server.script.ScriptFactoryPostProcessor"/>
 
+<!-- 
 	<bean id="web.handler" 
 	    class="org.red5.server.webapp.oflaDemo.Application" 
 		singleton="true" />
 
-<!-- 
+
 	<bean id="web.handler" class="org.red5.server.script.rhino.RhinoScriptFactory">
 		<constructor-arg value="classpath:applications/main.js" />
 		<constructor-arg><value>org.red5.server.adapter.IApplication</value></constructor-arg>
 		<property name="scriptContext" ref="script.context" />
 	</bean>
  -->
-<!-- 
+ 
     <bean id="demoService.service" 
-	    class="org.red5.server.webapp.oflaDemo.DemoService" 
-		singleton="true" />
- -->
-	
+	    class="org.red5.server.webapp.oflaDemo.DemoService" />
+ 
+<!--	
 	<bean id="demoService.service" class="org.red5.server.script.rhino.RhinoScriptFactory">
 		<constructor-arg value="classpath:applications/demoservice.js" />
 		<property name="scriptContext" ref="script.context" />
 	</bean>
-	
-	
-	<bean class="org.red5.server.script.ScriptFactoryPostProcessor"/>
-
+ 	
 	<bean id="calculator" class="org.red5.server.script.jruby.JRubyScriptFactory">
 		<constructor-arg>
 			<value>inline:
 require 'java'
-
 include_class 'org.springframework.scripting.Calculator'
-
 class RubyCalculator &lt; Calculator
-
  def add(x, y)
     x + y
  end
-
 end
 			</value>
 		</constructor-arg>
 		<constructor-arg value="org.springframework.scripting.Calculator"/>
 	</bean>
-
-	<bean id="messenger" class="org.red5.server.script.jruby.JRubyScriptFactory">
-		<constructor-arg value="classpath:org/springframework/scripting/jruby/Messenger.rb"/>
-		<constructor-arg value="org.springframework.scripting.Messenger"/>
-		<property name="message" value="Hello World!"/>
+ -->
+ 
+	<bean id="web.handler" class="org.red5.server.script.jruby.JRubyScriptFactory">
+		<constructor-arg index="0" value="classpath:applications/main.rb"/>
+		<constructor-arg index="1">
+			<list>
+     			<value>org.red5.server.adapter.IApplication</value>
+     			<value>org.red5.server.api.IScopeHandler</value>
+  			</list>
+		</constructor-arg>
 	</bean>		
 		
 </beans>

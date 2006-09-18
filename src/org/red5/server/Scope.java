@@ -517,5 +517,9 @@ public class Scope extends BasicScope implements IScope {
 		Map<String, Object> serviceHandlers = getServiceHandlers();
 		return serviceHandlers.keySet();
 	}
+	
+	public ClassLoader getClassLoader() {
+		return Thread.currentThread().getContextClassLoader();
+	}
 
 }

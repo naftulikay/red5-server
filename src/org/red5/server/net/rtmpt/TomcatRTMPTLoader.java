@@ -114,10 +114,10 @@ public class TomcatRTMPTLoader extends TomcatLoader implements
 	 * 
 	 * @param context
 	 */
-	public void setContext(Context context) {
-		log.debug("RTMPT setContext");
-		this.context = context;
-	}
+	//public void setContext(Context context) {
+	//	log.debug("RTMPT setContext");
+	//	this.context = context;
+	//}
 
 	public void setContext(Map<String, String> contextMap) {
 		log.debug("RTMPT setContext (map)");

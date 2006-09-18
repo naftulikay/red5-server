@@ -57,6 +57,10 @@ class Application < RedFive::ApplicationAdapter
 		return "Ruby toString"
 	end
 
+    def setScriptContext(scriptContext)
+	   puts "Ruby application setScriptContext"
+    end
+
     def method_missing(m, *args)
       super unless @value.respond_to?(m) 
       return @value.send(m, *args)

@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE beans PUBLIC "-//SPRING//DTD BEAN//EN" "http://www.springframework.org/dtd/spring-beans.dtd">
-<beans>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:lang="http://www.springframework.org/schema/lang"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-2.0.xsd
+                           http://www.springframework.org/schema/lang http://www.springframework.org/schema/lang/spring-lang-2.0.xsd">
 
 	<!-- This context is shared between all child contexts. -->
 
@@ -119,14 +122,12 @@
 	</bean>    
 	
 	<!-- Then we load the scripting context, with the common as parent --> 
-	<bean id="script.context" class="org.red5.server.script.ScriptObjectContext"
-		singleton="true"
-		init-method="init">
+	<bean id="script.context" class="org.red5.server.script.ScriptObjectContext" init-method="init">
 		<property name="scriptBeanFactory">
 			<bean class="org.red5.server.script.ScriptBeanFactory" />
 		</property>
 		<property name="scriptManager">
-			<bean class="javax.script.ScriptEngineManager" singleton="true" />
+			<bean class="javax.script.ScriptEngineManager" />
 		</property>
 	</bean>
 

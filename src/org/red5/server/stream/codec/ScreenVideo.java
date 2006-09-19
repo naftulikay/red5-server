@@ -49,6 +49,7 @@ public class ScreenVideo implements IVideoStreamCodec {
 	private int blockCount;
 	private int blockDataSize;
 	private int totalBlockDataSize;
+	private byte[] tmpData;
 	
 	public ScreenVideo() {
 		this.reset();
@@ -70,6 +71,7 @@ public class ScreenVideo implements IVideoStreamCodec {
 		this.blockCount = 0;
 		this.blockDataSize = 0;
 		this.totalBlockDataSize = 0;
+		this.tmpData = null;
 	}
 
 	public boolean canHandleData(ByteBuffer data) {
@@ -120,6 +122,7 @@ public class ScreenVideo implements IVideoStreamCodec {
 			this.totalBlockDataSize = totalBlockSize;
 			this.blockData = new byte[blockSize * this.blockCount];
 			this.blockSize = new int[blockSize * this.blockCount];
+			this.tmpData = new byte[this.blockDataSize];
 			// Reset the sizes to zero
 			for (int idx=0; idx<this.blockCount; idx++)
 				this.blockSize[idx] = 0;
@@ -134,7 +137,6 @@ public class ScreenVideo implements IVideoStreamCodec {
 		this.updateSize(data);
 		int idx = 0;
 		int pos = 0;
-		byte[] tmpData = new byte[this.blockDataSize];
 		
 		while (data.remaining() > 0) {
 			short size = data.getShort();
@@ -158,6 +160,9 @@ public class ScreenVideo implements IVideoStreamCodec {
 	}
 
 	public synchronized ByteBuffer getKeyframe() {
+		if (this.blockData == null)
+			return null;
+		
 		ByteBuffer result = ByteBuffer.allocate(1024);
 		result.setAutoExpand(true);
 
@@ -169,7 +174,6 @@ public class ScreenVideo implements IVideoStreamCodec {
 		result.putShort((short) this.heightInfo);
 		
 		// Get compressed blocks
-		byte[] tmpData = new byte[this.blockDataSize];
 		int pos=0;
 		for (int idx=0; idx<this.blockCount; idx++) {
 			int size = this.blockSize[idx];

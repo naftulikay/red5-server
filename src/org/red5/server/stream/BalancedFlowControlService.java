@@ -63,6 +63,7 @@ public class BalancedFlowControlService extends TimerTask implements
 		new HashMap<IFlowControllable, FcData>();
 	private List<FcData>[] fcListArray;
 	private FcData[][] sortedListArray = new FcData[maxDepth][];
+	private int[] sortedListArrayLengths = new int[maxDepth];
 	
 	private Timer timer;
 	private Thread cbThread = new Thread(new CallbackRunnable());
@@ -74,6 +75,7 @@ public class BalancedFlowControlService extends TimerTask implements
 		fcListArray = (List<FcData>[]) Array.newInstance(List.class, maxDepth);
 		for (int i = 0; i < maxDepth; i++) {
 			fcListArray[i] = new ArrayList<FcData>();
+			sortedListArray[i] = new FcData[]{};
 		}
 	}
 	
@@ -92,9 +94,8 @@ public class BalancedFlowControlService extends TimerTask implements
 		lock.writeLock().lock();
 		try {
 			for (int i = 0; i < maxDepth; i++) {
-				FcData[] tmpArray = fcListArray[i].toArray(new FcData[]{});
-				Arrays.sort(tmpArray);
-				sortedListArray[i] = tmpArray;
+				sortedListArray[i] = fcListArray[i].toArray(sortedListArray[i]);
+				sortedListArrayLengths[i] = fcListArray[i].size();
 			}
 		} finally {
 			lock.writeLock().unlock();
@@ -105,7 +106,7 @@ public class BalancedFlowControlService extends TimerTask implements
 		try {
 			for (int i = 0; i < maxDepth; i++) {
 				FcData[] fcList = sortedListArray[i];
-				for (int j = 0; j < fcList.length; j++) {
+				for (int j = 0; j < sortedListArrayLengths[i]; j++) {
 					FcData fcData = fcList[j];
 					if (fcData.hasBandwidthResource()) {
 						boolean gotToken = false;
@@ -344,6 +345,10 @@ public class BalancedFlowControlService extends TimerTask implements
 	}
 	
 	private void wakeUpCallback(FcData fcData) {
+		if (fcData.waitingList.size() == 0)
+			// No waiting callbacks, no need to process
+			return;
+		
 		try {
 			wakeUpQueue.put(fcData);
 		} catch (InterruptedException e) {}

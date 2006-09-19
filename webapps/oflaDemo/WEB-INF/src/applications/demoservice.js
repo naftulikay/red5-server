@@ -11,7 +11,7 @@ javaNames.importPackage(Packages.org.red5.server.api);
 javaNames.importPackage(Packages.org.springframework.core.io);
 javaNames.importPackage(Packages.org.apache.commons.logging);
 
-function DemoService() {
+instance = function DemoService() {
 
 	//var log = LogFactory.getLog('javascript.DemoService');
 	log.debug('DemoService init');

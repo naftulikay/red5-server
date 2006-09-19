@@ -130,29 +130,5 @@
 			<bean class="javax.script.ScriptEngineManager" />
 		</property>
 	</bean>
-
-<!-- Global script application defs
-
-	<bean id="jsApplication" class="org.red5.server.script.rhino.RhinoScriptFactory">
-		<constructor-arg value="classpath:applications/main.js" />
-		<constructor-arg><value>org.red5.server.adapter.IApplication</value></constructor-arg>
-		<property name="scriptContext" ref="script.context" />
-	</bean>
-
-	<bean id="groovyApplication" class="org.red5.server.script.groovy.GroovyScriptFactory">
-		<constructor-arg value="classpath:applications/main.groovy" />
-		<constructor-arg><value>org.red5.server.adapter.IApplication</value></constructor-arg>
-		<property name="scriptContext" ref="script.context" />
-	</bean>
-
-	<bean id="rubyApplication" class="org.red5.server.script.ruby.RubyScriptFactory">
-		<constructor-arg value="classpath:applications/main.rb" />
-		<constructor-arg><value>org.red5.server.adapter.IApplication</value></constructor-arg>
-		<property name="scriptContext" ref="script.context" />
-	</bean>
- --> 
-
-
-	
     
 </beans>

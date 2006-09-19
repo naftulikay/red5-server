@@ -1,29 +1,32 @@
 # JRuby - style
 require 'java'
 module RedFive
-    include_package "org.red5.server.api"
     include_package "org.springframework.core.io"
 end
+include_class "org.red5.server.api.Red5"
+include_class "java.util.HashMap"
 
 #
 # demoservice.rb - a translation into Ruby of the olfa demo application, a red5 example.
 #
 # @author Paul Gregoire
 #
-# http://www.rubycentral.com/ref/ref_c_array.html#assoc
-# http://www-128.ibm.com/developerworks/java/library/j-alj09084/
 class DemoService
+
+    attr_reader :filesMap
+    attr_writer :filesMap
 
 	def initialize
 	   puts "Initializing ruby demoservice"
+	   @filesMap = HashMap.new
 	end
 
 	def getListOfAvailableFLVs
-		puts "getListOfAvailableFLVs"
-		@filesMap = {}
 		puts "Getting the FLV files"
 		begin
-			flvs = Red5.getConnectionLocal.getScope.getResources("streams/*.flv")
+		    #puts "R5 con local: #{Red5::getConnectionLocal}"
+		    #puts "Scope: #{Red5::getConnectionLocal.getScope}"
+			flvs = Red5::getConnectionLocal.getScope.getResources("streams/*.flv")
 			for flv in flvs
 				file = flv.getFile
 				lastModified = formatDate(Time.at(file.lastModified))
@@ -35,11 +38,11 @@ class DemoService
 				puts "Last modified date: #{lastModified}"
 				puts "Size: #{flvBytes}"
 				puts "-------"
-				@fileInfo = {}
+				fileInfo = HashMap.new
 				fileInfo["name"] = flvName
 				fileInfo["lastModified"] = lastModified
 				fileInfo["size"] = flvBytes
-				filesMap[flvName] = fileInfo
+				@filesMap[flvName] = fileInfo
 			end
 		rescue
 			puts "Error in getListOfAvailableFLVs"
@@ -48,7 +51,6 @@ class DemoService
 	end
 
 	def formatDate(date)
-		puts "formatDate"
 		return date.strftime("%d/%m/%Y %I:%M:%S")
 	end
 

@@ -12,8 +12,6 @@
 	<classpathentry excluding=".svn/*" kind="src" path="test"/>
 	<classpathentry kind="lib" path="lib/commons-el-1.0.jar"/>
 	<classpathentry kind="lib" path="lib/servlet-api-2.5.jar"/>
-	<classpathentry kind="lib" path="lib/xercesImpl-2.6.2.jar"/>
-	<classpathentry kind="lib" path="lib/xmlParserAPIs-2.6.2.jar"/>
 	<classpathentry excluding=".svn/*" output="webapps/test/WEB-INF/classes" kind="src" path="webapps/test/WEB-INF/src"/>
 	<classpathentry kind="lib" path="lib/quartz-1.5.2.jar"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
@@ -34,6 +32,8 @@
 	<classpathentry combineaccessrules="false" kind="src" path="/red5_scripting"/>
 	<classpathentry kind="lib" path="lib/cglib-nodep-2.1_3.jar"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/4"/>
-	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/Spring2rc4"/>
+	<classpathentry kind="lib" path="lib/xercesImpl-2.8.1.jar"/>
+	<classpathentry kind="lib" path="lib/xmlParserAPIs-2.8.1.jar"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/Spring2.0"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

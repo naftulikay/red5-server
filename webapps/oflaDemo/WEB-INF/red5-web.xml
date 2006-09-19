@@ -35,17 +35,38 @@
 		<constructor-arg><value>org.red5.server.adapter.IApplication</value></constructor-arg>
 		<property name="scriptContext" ref="script.context" />
 	</bean>
- -->
- 
+-->
+
+	<bean id="web.handler" class="org.red5.server.script.jruby.JRubyScriptFactory">
+		<constructor-arg index="0" value="classpath:applications/main.rb"/>
+		<constructor-arg index="1">
+			<list>
+     			<value>org.red5.server.adapter.IApplication</value>
+     			<value>org.red5.server.api.IScopeHandler</value>
+  			</list>
+		</constructor-arg>
+	</bean>		
+
+<!-- 
     <bean id="demoService.service" 
 	    class="org.red5.server.webapp.oflaDemo.DemoService" />
  
-<!--	
 	<bean id="demoService.service" class="org.red5.server.script.rhino.RhinoScriptFactory">
 		<constructor-arg value="classpath:applications/demoservice.js" />
 		<property name="scriptContext" ref="script.context" />
 	</bean>
+ -->
+	
+	<bean id="demoService.service" class="org.red5.server.script.jruby.JRubyScriptFactory">
+		<constructor-arg index="0" value="classpath:applications/demoservice.rb"/>
+		<constructor-arg index="1">
+			<list>
+     			<value>org.red5.server.webapp.oflaDemo.IDemoService</value>
+  			</list>
+		</constructor-arg>
+	</bean>	
  	
+<!--  	
 	<bean id="calculator" class="org.red5.server.script.jruby.JRubyScriptFactory">
 		<constructor-arg>
 			<value>inline:
@@ -61,15 +82,5 @@ end
 		<constructor-arg value="org.springframework.scripting.Calculator"/>
 	</bean>
  -->
- 
-	<bean id="web.handler" class="org.red5.server.script.jruby.JRubyScriptFactory">
-		<constructor-arg index="0" value="classpath:applications/main.rb"/>
-		<constructor-arg index="1">
-			<list>
-     			<value>org.red5.server.adapter.IApplication</value>
-     			<value>org.red5.server.api.IScopeHandler</value>
-  			</list>
-		</constructor-arg>
-	</bean>		
 		
 </beans>

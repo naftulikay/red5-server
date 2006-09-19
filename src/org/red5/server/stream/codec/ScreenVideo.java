@@ -58,7 +58,7 @@ public class ScreenVideo implements IVideoStreamCodec {
 		return CODEC_NAME;
 	}
 	
-	public void reset() {
+	public synchronized void reset() {
 		this.blockData = null;
 		this.blockSize = null;
 		this.width = 0;
@@ -126,7 +126,7 @@ public class ScreenVideo implements IVideoStreamCodec {
 		}
 	}
 	
-	public boolean addData(ByteBuffer data) {
+	public synchronized boolean addData(ByteBuffer data) {
 		if (!this.canHandleData(data))
 			return false;
 		
@@ -157,7 +157,7 @@ public class ScreenVideo implements IVideoStreamCodec {
 		return true;
 	}
 
-	public ByteBuffer getKeyframe() {
+	public synchronized ByteBuffer getKeyframe() {
 		ByteBuffer result = ByteBuffer.allocate(1024);
 		result.setAutoExpand(true);
 

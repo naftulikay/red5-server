@@ -79,12 +79,14 @@ public class SharedObjectService
 	}
 	
 	public boolean createSharedObject(IScope scope, String name, boolean persistent) {
-		if (hasSharedObject(scope, name))
-			// The shared object already exists.
-			return true;
-			
-		final IBasicScope soScope = new SharedObjectScope(scope, name, persistent, getStore(scope, persistent));
-		return scope.addChildScope(soScope);
+		synchronized (scope) {
+			if (hasSharedObject(scope, name))
+				// The shared object already exists.
+				return true;
+				
+			final IBasicScope soScope = new SharedObjectScope(scope, name, persistent, getStore(scope, persistent));
+			return scope.addChildScope(soScope);
+		}
 	}
 
 	public ISharedObject getSharedObject(IScope scope, String name) {
@@ -92,8 +94,10 @@ public class SharedObjectService
 	}
 
 	public ISharedObject getSharedObject(IScope scope, String name, boolean persistent) {
-		if (!hasSharedObject(scope, name))
-			createSharedObject(scope, name, persistent);
+		synchronized (scope) {
+			if (!hasSharedObject(scope, name))
+				createSharedObject(scope, name, persistent);
+		}
 		return getSharedObject(scope, name);
 	}
 

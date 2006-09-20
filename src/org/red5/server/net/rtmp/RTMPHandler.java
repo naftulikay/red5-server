@@ -264,7 +264,7 @@ public class RTMPHandler
 	
 	public void onInvoke(RTMPConnection conn, Channel channel, Header source, Notify invoke){
 		
-		log.debug("Invoke");
+		//log.debug("Invoke");
 		
 		final IServiceCall call = invoke.getCall();
 		if (call.getServiceMethodName().equals("_result") || call.getServiceMethodName().equals("_error")) {
@@ -304,13 +304,13 @@ public class RTMPHandler
 		
 		boolean disconnectOnReturn = false;
 		if(call.getServiceName() == null){
-			log.info("call: "+call);
+			//log.info("call: "+call);
 			final String action = call.getServiceMethodName();
-			log.info("--"+action);
+			//log.info("--"+action);
 			if(!conn.isConnected()){
 				
 				if(action.equals(ACTION_CONNECT)){
-					log.debug("connect");
+					//log.debug("connect");
 					final Map params = invoke.getConnectionParams();
 					String host = getHostname((String) params.get("tcUrl"));
 					if (host.endsWith(":1935"))
@@ -340,7 +340,7 @@ public class RTMPHandler
 								disconnectOnReturn = true;
 							}
 							if (scope != null) {
-								log.info("Connecting to: "+scope);
+								//log.info("Connecting to: "+scope);
 								boolean okayToConnect;
 								try {
 									if (call.getArguments() != null)
@@ -348,8 +348,8 @@ public class RTMPHandler
 									else
 										okayToConnect = conn.connect(scope);
 									if (okayToConnect){
-										log.debug("connected");
-										log.debug("client: "+conn.getClient());
+										//log.debug("connected");
+										//log.debug("client: "+conn.getClient());
 										call.setStatus(Call.STATUS_SUCCESS_RESULT);
 										if (call instanceof IPendingServiceCall)
 											((IPendingServiceCall) call).setResult(getStatus(NC_CONNECT_SUCCESS));
@@ -407,7 +407,7 @@ public class RTMPHandler
 			if ((source.getStreamId() != 0) &&
 				(call.getStatus() == Call.STATUS_SUCCESS_VOID || call.getStatus() == Call.STATUS_SUCCESS_NULL)) {
 				// This fixes a bug in the FP on Intel Macs.
-				log.debug("Method does not have return value, do not reply"); 
+				//log.debug("Method does not have return value, do not reply"); 
 				return; 
 			}
 			
@@ -415,7 +415,7 @@ public class RTMPHandler
 			Invoke reply = new Invoke();
 			reply.setCall(call);
 			reply.setInvokeId(invoke.getInvokeId());
-			log.debug("sending reply");
+			//log.debug("sending reply");
 			channel.write(reply);
 			if (disconnectOnReturn)
 				conn.close();

@@ -151,7 +151,7 @@ public class Scope extends BasicScope implements IScope {
 				return false;
 			}
 		}
-		log.debug("Add child scope: "+scope+" to "+this);
+		//log.debug("Add child scope: "+scope+" to "+this);
 		children.put(scope.getType() + SEPARATOR + scope.getName(),scope);
 		return true;
 	} 
@@ -167,13 +167,13 @@ public class Scope extends BasicScope implements IScope {
 		}
 		children.remove(scope.getType() + SEPARATOR + scope.getName());
 		if (hasHandler()){
-			log.debug("Remove child scope");
+			//log.debug("Remove child scope");
 			getHandler().removeChildScope(scope);
 		}
 	}
 	
 	public boolean hasChildScope(String name){
-		log.debug("Has child scope? "+name+" in "+this);
+		//log.debug("Has child scope? "+name+" in "+this);
 		return children.containsKey(TYPE + SEPARATOR + name);
 	}
 	
@@ -195,11 +195,11 @@ public class Scope extends BasicScope implements IScope {
 	
 	public IContext getContext() {
 		if( ! hasContext() && hasParent()) {
-			log.debug("returning parent context");
+			//log.debug("returning parent context");
 			return parent.getContext();
 		}
 		else {
-			log.debug("returning context");
+			//log.debug("returning context");
 			return context;
 		}
 	}
@@ -258,7 +258,7 @@ public class Scope extends BasicScope implements IScope {
 			final Set<IConnection> conns = new HashSet<IConnection>();
 			conns.add(conn);
 			clients.put(conn.getClient(), conns);
-			log.debug("adding client");
+			//log.debug("adding client");
 		} else {
 			final Set<IConnection> conns = clients.get(client);
 			conns.add(conn);

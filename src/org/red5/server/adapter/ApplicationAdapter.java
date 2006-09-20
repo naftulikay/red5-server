@@ -187,7 +187,7 @@ public class ApplicationAdapter extends StatefulScopeWrappingAdapter
 	 * @return			<code>true</code> if disconnect is successful, <code>false</code> otherwise
 	 */	
 	public void disconnect(IConnection conn, IScope scope) {
-		log.debug("disconnect");
+		//log.debug("disconnect");
 		if(isApp(scope)) appDisconnect(conn);
 		else if(isRoom(scope)) roomDisconnect(conn);
 		super.disconnect(conn, scope);
@@ -231,7 +231,7 @@ public class ApplicationAdapter extends StatefulScopeWrappingAdapter
 	 * @param	scope	Scope object
 	 */
 	public void leave(IClient client, IScope scope) {
-		log.debug("leave");
+		//log.debug("leave");
 		if(isApp(scope)) appLeave(client, scope);
 		else if(isRoom(scope)) roomLeave(client, scope);
 		super.leave(client, scope);
@@ -246,7 +246,7 @@ public class ApplicationAdapter extends StatefulScopeWrappingAdapter
 	 * @return			<code>true</code> if scope can be started, <code>false</code> otherwise
 	 */
 	public boolean appStart(IScope app){
-		log.debug("appStart: " + app);
+		//log.debug("appStart: " + app);
 		for (IApplication listener: listeners) {
 			listener.appStart(app);
 		}
@@ -259,7 +259,7 @@ public class ApplicationAdapter extends StatefulScopeWrappingAdapter
 	 * @param 	app		Scope object
 	 */
 	public void appStop(IScope app){
-		log.debug("appStop: " + app);
+		//log.debug("appStop: " + app);
 		for (IApplication listener: listeners) {
 			listener.appStop(app);
 		}
@@ -272,7 +272,7 @@ public class ApplicationAdapter extends StatefulScopeWrappingAdapter
 	 * @return		Boolean value
 	 */
 	public boolean roomStart(IScope room){
-		log.debug("roomStart: " + room);
+		//log.debug("roomStart: " + room);
 		// TODO : Get to know what does roomStart return mean
 		for (IApplication listener: listeners) {
 			listener.roomStart(room);
@@ -286,7 +286,7 @@ public class ApplicationAdapter extends StatefulScopeWrappingAdapter
 	 * @param room	Room scope.
 	 */
 	public void roomStop(IScope room){
-		log.debug("roomStop: " + room);
+		//log.debug("roomStop: " + room);
 		for (IApplication listener: listeners) {
 			listener.roomStop(room);
 		}
@@ -315,7 +315,7 @@ public class ApplicationAdapter extends StatefulScopeWrappingAdapter
 	 * @return			Boolean value
 	 */
 	public boolean appConnect(IConnection conn, Object[] params){
-		log.debug("appConnect: "+conn);
+		//log.debug("appConnect: "+conn);
 		for (IApplication listener: listeners) {
 			listener.appConnect(conn, params);
 		}
@@ -335,7 +335,7 @@ public class ApplicationAdapter extends StatefulScopeWrappingAdapter
 	 * @return			Boolean value
 	 */
 	public boolean roomConnect(IConnection conn, Object[] params){
-		log.debug("roomConnect: "+conn);
+		//log.debug("roomConnect: "+conn);
 		for (IApplication listener: listeners) {
 			listener.roomConnect(conn, params);
 		}
@@ -348,7 +348,7 @@ public class ApplicationAdapter extends StatefulScopeWrappingAdapter
 	 * @param conn	Disconnected connection object
 	 */
 	public void appDisconnect(IConnection conn){
-		log.debug("appDisconnect: "+conn);
+		//log.debug("appDisconnect: "+conn);
 		for (IApplication listener: listeners) {
 			listener.appDisconnect(conn);
 		}
@@ -360,14 +360,14 @@ public class ApplicationAdapter extends StatefulScopeWrappingAdapter
 	 * @param conn	Disconnected connection object
 	 */
 	public void roomDisconnect(IConnection conn){
-		log.debug("roomDisconnect: "+conn);
+		//log.debug("roomDisconnect: "+conn);
 		for (IApplication listener: listeners) {
 			listener.roomDisconnect(conn);
 		}
 	}
 	
 	public boolean appJoin(IClient client, IScope app){
-		log.debug("appJoin: "+client+" >> "+app);
+		//log.debug("appJoin: "+client+" >> "+app);
 		for (IApplication listener: listeners) {
 			listener.appJoin(client, app);
 		}
@@ -381,14 +381,14 @@ public class ApplicationAdapter extends StatefulScopeWrappingAdapter
 	 * @param app		Application scope
 	 */
 	public void appLeave(IClient client, IScope app){
-		log.debug("appLeave: "+client+" << "+app);
+		//log.debug("appLeave: "+client+" << "+app);
 		for (IApplication listener: listeners) {
 			listener.appLeave(client, app);
 		}
 	}
 	
 	public boolean roomJoin(IClient client, IScope room){
-		log.debug("roomJoin: "+client+" >> "+room);
+		//log.debug("roomJoin: "+client+" >> "+room);
 		for (IApplication listener: listeners) {
 			listener.roomJoin(client, room);
 		}
@@ -401,7 +401,7 @@ public class ApplicationAdapter extends StatefulScopeWrappingAdapter
 	 * @param conn	Disconnected connection object
 	 */
 	public void roomLeave(IClient client, IScope room){
-		log.debug("roomLeave: "+client+" << "+room);
+		//log.debug("roomLeave: "+client+" << "+room);
 		for (IApplication listener: listeners) {
 			listener.roomLeave(client, room);
 		}

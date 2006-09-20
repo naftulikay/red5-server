@@ -20,6 +20,8 @@ package org.red5.server;
  */
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.red5.server.api.IClientRegistry;
 import org.red5.server.api.IContext;
@@ -49,6 +51,7 @@ public class Context implements IContext, ApplicationContextAware {
 	private IServiceInvoker serviceInvoker;
 	private IMappingStrategy mappingStrategy;
 	private IPersistenceStore persistanceStore;
+	private Map<String, Object> beanCache = new HashMap<String, Object>();
 	
 	public Context(){
 		coreContext = ContextSingletonBeanFactoryLocator
@@ -160,7 +163,12 @@ public class Context implements IContext, ApplicationContextAware {
 	}
 
 	public Object getBean(String beanId) {
-		return applicationContext.getBean(beanId);
+		if (beanCache.containsKey(beanId))
+			return beanCache.get(beanId);
+		
+		Object bean = applicationContext.getBean(beanId);
+		beanCache.put(beanId, bean);
+		return bean;
 	}
 
 	public Object getCoreService(String beanId) {

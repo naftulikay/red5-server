@@ -138,7 +138,7 @@ public abstract class BaseConnection extends AttributeStore
 	
 		if(scope != null) {
 			
-			log.debug("Close, disconnect from scope, and children");
+			//log.debug("Close, disconnect from scope, and children");
 			try {
 				Set<IBasicScope> tmpScopes = new HashSet<IBasicScope>(basicScopes);
 				for(IBasicScope basicScope : tmpScopes){
@@ -161,7 +161,7 @@ public abstract class BaseConnection extends AttributeStore
 			
 			scope=null;
 		} else {
-			log.debug("Close, not connected nothing to do.");
+			//log.debug("Close, not connected nothing to do.");
 		}
 		
 	}

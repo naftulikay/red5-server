@@ -124,13 +124,15 @@ public class BalancedFlowControlService extends TimerTask implements
 							}
 						}
 						if (gotToken) {
-							wakeUpCallback(fcData);
+							if (fcData.waitingList.size() > 0)
+								wakeUpCallback(fcData);
 						} else {
 							fcData.hungry++;
 						}
 					} else {
-						// no bw resource available, try to wake up callbacks
-						wakeUpCallback(fcData);
+						if (fcData.waitingList.size() > 0)
+							// no bw resource available, try to wake up callbacks
+							wakeUpCallback(fcData);
 					}
 				}
 			}
@@ -345,10 +347,6 @@ public class BalancedFlowControlService extends TimerTask implements
 	}
 	
 	private void wakeUpCallback(FcData fcData) {
-		if (fcData.waitingList.size() == 0)
-			// No waiting callbacks, no need to process
-			return;
-		
 		try {
 			wakeUpQueue.put(fcData);
 		} catch (InterruptedException e) {}

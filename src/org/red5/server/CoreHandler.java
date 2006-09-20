@@ -47,7 +47,7 @@ public class CoreHandler implements IScopeHandler {
 		
 	public boolean connect(IConnection conn, IScope scope, Object[] params) {
 		
-		log.debug("Connect to core handler ?");
+		//log.debug("Connect to core handler ?");
 		
 		String id = conn.getSessionId();
 		

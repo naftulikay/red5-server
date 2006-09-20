@@ -5,22 +5,20 @@
  * @author Paul Gregoire
  */
 
-var javaNames = JavaImporter();
-
-javaNames.importPackage(Packages.org.red5.server.api);
-javaNames.importPackage(Packages.org.springframework.core.io);
-javaNames.importPackage(Packages.org.apache.commons.logging);
+importPackage(Packages.org.red5.server.api);
+importPackage(Packages.org.springframework.core.io);
+importPackage(Packages.org.apache.commons.logging);
 
 importClass(java.io.File);
-importClass(java.io.FileInputStream);
 importClass(java.util.HashMap);
+importClass(java.text.SimpleDateFormat);
 importClass(Packages.org.springframework.core.io.Resource);
 importClass(Packages.org.red5.server.api.Red5);
 
-log.debug('DemoService init');
-
+//class impersonator
 function DemoService() {
-	
+	log.debug('DemoService init');
+
 	this.getListOfAvailableFLVs = function() {
 		log.debug('getListOfAvailableFLVs');
 		log.debug('Con local: ' + Red5.getConnectionLocal());
@@ -36,29 +34,40 @@ function DemoService() {
 			for (var i=0;i<flvs.length;i++) {
 				var file = flvs[i];
 				log.debug('file: ' + file);
-				log.debug('file type: ' + (file == typeof(java.io.File)));
-				log.debug('file type: ' + typeof(file));
+				log.debug('java.io.File type: ' + (file == typeof(java.io.File)));
+				log.debug('js type: ' + typeof(file));
 				log.debug('file path: ' + file.path);
-				log.debug('file path: ' + file.URL);
-				//var fso = new File(new FileInputStream('../../' + file.getInputStream()));
-				//var fso = new File(file.path);
-				//var fso = new File('../../..' + file.path);
-				var fso = new File(file.URL);
+				log.debug('file url: ' + file.URL);
+				var serverRoot = java.lang.System.getProperty('red5.root');
+				log.debug('Red5 root: ' + serverRoot);
+				var fso = new File(serverRoot + '/webapps/oflaDemo' + file.path);
 				var flvName = fso.getName();
 				log.debug('flvName: ' + flvName);
 				log.debug('exist: ' + fso.exists());
-				var flvBytes = fso.getLength();
+				log.debug('readable: ' + fso.canRead());
+				//loop thru props
+				var flvBytes = 0;
+				if ('length' in fso) {
+					flvBytes = fso.length();
+				} else {
+					log.debug('Length not found');
+				}
 				log.debug('flvBytes: ' + flvBytes);
-				var lastModified = this.formatDate(new java.util.Date(fso.getLastModified()));
+				var lastMod = '0';
+				if ('lastModified' in fso) {
+					lastMod = this.formatDate(new java.util.Date(fso.lastModified()));
+				} else {
+					log.debug('Last modified not found');
+				}
 	
 				print('FLV Name: ' + flvName);
-				print('Last modified date: ' + lastModified);
+				print('Last modified date: ' + lastMod);
 				print('Size: ' + flvBytes);
 				print('-------');
 				
-				fileInfo = new HashMap();
+				fileInfo = new HashMap(3);
 				fileInfo.put("name", flvName);
-				fileInfo.put("lastModified", lastModified);
+				fileInfo.put("lastModified", lastMod);
 				fileInfo.put("size", flvBytes);
 				filesMap.put(flvName, fileInfo);
 			}
@@ -71,7 +80,9 @@ function DemoService() {
 
 	this.formatDate = function(date) {
 		log.debug('formatDate');
-		return date.getDate() + '/' + date.getMonth() + '/' + date.getFullYear() + ' ' + date.getHours() + ':' + date.getMinutes() + ':' + date.getSeconds();
-	};
-	
+		//java 'thread-safe' date formatting
+		return new SimpleDateFormat("dd/MM/yyyy hh:mm:ss").format(date);
+		//javascript style date formatting
+		//return date.getDate() + '/' + date.getMonth() + '/' + date.getFullYear() + ' ' + date.getHours() + ':' + date.getMinutes() + ':' + date.getSeconds();
+	};	
 }

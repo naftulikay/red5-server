@@ -28,7 +28,7 @@
 	<bean id="web.handler" 
 	    class="org.red5.server.webapp.oflaDemo.Application" 
 		singleton="true" />
-
+-->
 
 	<bean id="web.handler" class="org.red5.server.script.rhino.RhinoScriptFactory">
 		<constructor-arg index="0" value="classpath:applications/main.js"/>
@@ -38,10 +38,9 @@
      			<value>org.red5.server.api.IScopeHandler</value>
   			</list>
 		</constructor-arg>
-		<property name="scriptContext" ref="script.context" />
 	</bean>
--->
 
+<!-- 
 	<bean id="web.handler" class="org.red5.server.script.jruby.JRubyScriptFactory">
 		<constructor-arg index="0" value="classpath:applications/main.rb"/>
 		<constructor-arg index="1">
@@ -51,6 +50,7 @@
   			</list>
 		</constructor-arg>
 	</bean>		
+-->
 
 <!-- 
     <bean id="demoService.service" 

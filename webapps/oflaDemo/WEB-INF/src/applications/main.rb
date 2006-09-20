@@ -68,10 +68,3 @@ class Application < RedFive::ApplicationAdapter
 
 end
 
-#puts "Ruby application"
-#a = Application.new
-#puts "Application started?", a.appStart(nil)
-#a.appConnect(nil, nil)
-
-#aa = RedFive::ApplicationAdapter.new
-#puts aa.appStart(nil)

@@ -4,54 +4,38 @@
  * @author Paul Gregoire
  */
 
-var javaNames = JavaImporter();
+importPackage(Packages.org.red5.server.adapter);
+importPackage(Packages.org.red5.server.api);
+importPackage(Packages.org.red5.server.api.stream);
+importPackage(Packages.org.red5.server.api.stream.support);
+importPackage(Packages.org.springframework.core.io);
+importPackage(Packages.org.apache.commons.logging);
 
-javaNames.importPackage(Packages.org.red5.server.adapter);
-javaNames.importPackage(Packages.org.red5.server.api);
-javaNames.importPackage(Packages.org.red5.server.api.stream);
-javaNames.importPackage(Packages.org.red5.server.api.stream.support);
-
-//namespace
-Red5 = {};
-
-/**
- * A function used to extend one class with another
- * 
- * @param {Object} subClass
- * 		The inheriting class, or subclass
- * @param {Object} baseClass
- * 		The class from which to inherit
- */
-Red5.extend = function(subClass, baseClass) {
-   function inheritance() {}
-   inheritance.prototype = baseClass.prototype;
-   subClass.prototype = new inheritance();
-   subClass.prototype.constructor = subClass;
-   subClass.baseConstructor = baseClass;
-   //subClass.superClass = baseClass.prototype; //use if base is Javascript
-   subClass.superClass = new baseClass(); //use if base is Java
-};
+importClass(Packages.org.springframework.core.io.Resource);
+importClass(Packages.org.red5.server.api.Red5);
+importClass(Packages.org.red5.server.api.IScopeHandler);
+importClass(Packages.org.red5.server.adapter.ApplicationAdapter);
+importClass(Packages.org.red5.server.api.stream.IStreamCapableConnection);
+importClass(Packages.org.red5.server.api.stream.support.SimpleBandwidthConfigure);
 
 function Application() {
 	var appScope;
 	var serverStream;
-	//subclass ApplicationAdapter
-	Red5.extend(this, Packages.org.red5.server.adapter.ApplicationAdapter);
+	Application.extend(this, ApplicationAdapter);
+	//r5.extend(this, Packages.org.red5.server.adapter.ApplicationAdapter);
 }	
 
 //public boolean appConnect(IConnection conn, Object[] params) {
 Application.prototype.appConnect = function (conn, params) {
 	print('Javascript appConnect');
 	this.superClass.measureBandwidth(conn);
-	with(javaNames) {
-		if (conn == typeof(IStreamCapableConnection)) {
-			var streamConn = conn;
-			var sbc = new SimpleBandwidthConfigure();
-			sbc.setMaxBurst(8388608);
-			sbc.setBurst(8388608);
-			sbc.setOverallBandwidth(2097152);
-			streamConn.setBandwidthConfigure(sbc);
-		}
+	if (conn == typeof(IStreamCapableConnection)) {
+		var streamConn = conn;
+		var sbc = new SimpleBandwidthConfigure();
+		sbc.setMaxBurst(8388608);
+		sbc.setBurst(8388608);
+		sbc.setOverallBandwidth(2097152);
+		streamConn.setBandwidthConfigure(sbc);
 	}
 	return this.superClass.appConnect(conn, params);
 };
@@ -71,28 +55,39 @@ Application.prototype.appDisconnect = function (conn) {
 	}
 	return this.superClass.appDisconnect(conn);
 };
+
+Function.prototype.extend=function(subClass, superClass){
+   	function inheritance() {}
+   	inheritance.prototype = superClass.prototype;	
+	subClass.prototype=new inheritance();
+	subClass.prototype.constructor=subClass;
+	subClass.superClass=superClass;
+	subClass.prototype.superClass=new superClass();
+	//copy public static stuff
+	for (property in superClass) {
+		print('>>>' + property);
+		if (!subClass[property]) {			
+			try {
+				subClass[property] = superClass[property];	
+			} catch(e) {
+				print('Extend error: ' + e);
+			}				
+		}
+	}
+	//copy instance stuff
+	for (property in subClass.prototype.superClass) {
+		print('>>>>>' + property);
+		if (!subClass[property]) {
+			try {
+				subClass[property] = subClass.prototype.superClass[property];	
+			} catch(e) {
+				print('Extend error: ' + e);
+			}
+		}
+	}
 	
-Application.prototype.toString = function () {
-    return 'Javascript toString ' + this.superClass.toString();
 };
 
-print('Javascript application BEGIN');
-	
-try {
-	var ap = new Application();
-	///
-	//for (prop in ap) {
-	//	print(prop + ' type: ' + typeof(prop));
-	//}
-	///
-	print('Script - To string: ' + ap.toString());
-	print('Script - App: ' + ap.appStart(null));
-	ap.appConnect(null, null);
-	ap.appDisconnect(null);
-	ap.measureBandwidth();
-	ap.getStreamLength('temp.flv');
-} catch(e) {
-	print('Script - Exception: ' + e);
-}
 
-print('Javascript application END');
+
+

@@ -191,6 +191,9 @@ public class FilePersistence extends RamPersistence implements IPersistenceStore
 					}
 					
 					// Set object's properties
+					if (name.endsWith(extension))
+						name = name.substring(0, name.length()-extension.length());
+					
 					result.setName(getObjectName(name));
 					result.setPath(getObjectPath(name, result.getName()));
 				} else {

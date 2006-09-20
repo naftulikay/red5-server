@@ -228,8 +228,8 @@ public class RTMPHandler
 		final IScope scope = conn.getScope();
 		if (scope.hasHandler()) {
 			final IScopeHandler handler = scope.getHandler();
-			log.debug("Scope: " + scope);
-			log.debug("Handler: " + handler);
+			//log.debug("Scope: " + scope);
+			//log.debug("Handler: " + handler);
 			if (!handler.serviceCall(conn, call)) {
 				// XXX: What do do here? Return an error?
 				return;
@@ -237,29 +237,36 @@ public class RTMPHandler
 		}
 		
 		final IContext context = scope.getContext();
-		log.debug("Context: " + context);
+		//log.debug("Context: " + context);
 		context.getServiceInvoker().invoke(call, scope);
 	}
 	
 	private void invokeCall(RTMPConnection conn, IServiceCall call, Object service){
 		final IScope scope = conn.getScope();
 		final IContext context = scope.getContext();
-		log.debug("Scope: " + scope);
-		log.debug("Service: " + service);
-		log.debug("Context: " + context);
+		//log.debug("Scope: " + scope);
+		//log.debug("Service: " + service);
+		//log.debug("Context: " + context);
 		context.getServiceInvoker().invoke(call, service);
 	}
 	
 	// ------------------------------------------------------------------------------
 	
 	protected String getHostname(String url) {
-		log.debug("url: "+url);
-		String[] parts = url.split("/");
-		if (parts.length == 2)
-			// TODO: is this a good default hostname?
+		//log.debug("url: "+url);
+		int pos = url.indexOf('/');
+		if (pos < 0)
 			return "";
+		
+		pos = url.indexOf('/', pos+1);
+		if (pos < 0)
+			return "";
+		
+		int end = url.indexOf('/', pos+1);
+		if (end < 0)
+			return url.substring(pos+1);
 		else
-			return parts[2];
+			return url.substring(pos+1, end);
 	}
 	
 	public void onInvoke(RTMPConnection conn, Channel channel, Header source, Notify invoke){

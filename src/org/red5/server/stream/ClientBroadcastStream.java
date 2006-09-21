@@ -211,7 +211,7 @@ public class ClientBroadcastStream extends AbstractClientStream implements
 			streamCodec = (StreamCodecInfo) codecInfo;
 		
 		IRTMPEvent rtmpEvent = (IRTMPEvent) event;
-		int thisTime = -1;
+		int thisTime = 0;
 		if (rtmpEvent instanceof AudioData) {
 			if (streamCodec != null)
 				streamCodec.setHasAudio(true);

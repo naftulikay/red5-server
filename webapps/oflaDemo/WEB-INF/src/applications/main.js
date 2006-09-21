@@ -4,27 +4,35 @@
  * @author Paul Gregoire
  */
 
-importPackage(Packages.org.red5.server.adapter);
+//importPackage(Packages.org.red5.server.adapter);
 importPackage(Packages.org.red5.server.api);
 importPackage(Packages.org.red5.server.api.stream);
 importPackage(Packages.org.red5.server.api.stream.support);
-importPackage(Packages.org.springframework.core.io);
+//importPackage(Packages.org.springframework.core.io);
 importPackage(Packages.org.apache.commons.logging);
 
 importClass(Packages.org.springframework.core.io.Resource);
 importClass(Packages.org.red5.server.api.Red5);
 importClass(Packages.org.red5.server.api.IScopeHandler);
-importClass(Packages.org.red5.server.adapter.ApplicationAdapter);
-importClass(Packages.org.red5.server.api.stream.IStreamCapableConnection);
-importClass(Packages.org.red5.server.api.stream.support.SimpleBandwidthConfigure);
+//importClass(Packages.org.red5.server.adapter.ApplicationAdapter);
+//importClass(Packages.org.red5.server.api.stream.IStreamCapableConnection);
+//importClass(Packages.org.red5.server.api.stream.support.SimpleBandwidthConfigure);
+
+var ApplicationAdapter = new Packages.org.red5.server.adapter.ApplicationAdapter();
+var IStreamCapableConnection = Packages.org.red5.server.api.stream.IStreamCapableConnection;
 
 function Application() {
-	this.appScope;
-	this.serverStream;
+	this.appScope = null;
+	this.serverStream = null;
 	this.base = ApplicationAdapter;
-	this.base();
-	
-	for (property in this.__proto__) {
+    this.__proto__.__proto__=Packages.org.red5.server.api.IScopeHandler;
+
+     
+/*
+this.start = function() {
+        print('Hello from start!!');
+    };
+   for (property in this.__proto__) {
 		print('Application\n');
 		try {
 			print('>>>' + property);
@@ -40,6 +48,7 @@ function Application() {
 			e.rhinoException.printStackTrace();
 		}	
 	}	
+*/
 
 }	
 
@@ -51,16 +60,16 @@ Application.prototype.appStart = function(app) {
 
 Application.prototype.appConnect = function(conn, params) {
 	print('Javascript appConnect');
-	this.measureBandwidth(conn);
+	this.base.easureBandwidth(conn);
 	if (conn == typeof(IStreamCapableConnection)) {
 		var streamConn = conn;
-		var sbc = new SimpleBandwidthConfigure();
+		var sbc = new Packages.org.red5.server.api.stream.support.SimpleBandwidthConfigure();
 		sbc.setMaxBurst(8388608);
 		sbc.setBurst(8388608);
 		sbc.setOverallBandwidth(2097152);
 		streamConn.setBandwidthConfigure(sbc);
 	}
-	return this.__proto__.__proto__.appConnect(conn, params);
+	return this.base.appConnect(conn, params);
 };
 
 Application.prototype.appDisconnect = function(conn) {
@@ -68,17 +77,24 @@ Application.prototype.appDisconnect = function(conn) {
 	if (this.appScope == conn.getScope() && this.serverStream)  {
 		this.serverStream.close();
 	}
-	return this.__proto__.__proto__.appDisconnect(conn);
+	return this.base.appDisconnect(conn);
+};
+
+Application.prototype.helloFromAnExtendedMethod = function(conn) {
+	print('Hello!!!!!');
 };
 
 //set superclass
-Application.prototype = new ApplicationAdapter;
+Application.prototype = ApplicationAdapter;
 
 //create an instance
-instance = new Application();
+var instance = new Application();
+//instance.base.start = function() {
+//    print('Hello from start!!');
+//};
 
 Function.prototype.printStackTrace=function(exp) {    
-    if (exp == undefined) {
+    if (exp === undefined) {
         try {
             exp.toString();
         } catch (e) {
@@ -90,7 +106,7 @@ Function.prototype.printStackTrace=function(exp) {
     // and passed the same as argument. Also, check for
     // rhinoException property before using it
     if (exp instanceof Error && 
-        exp.rhinoException != undefined) {
+        exp.rhinoException !== undefined) {
         exp.rhinoException.printStackTrace();
     }
 };

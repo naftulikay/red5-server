@@ -19,6 +19,10 @@ package org.red5.server.stream.codec;
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA 
  */
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.mina.common.ByteBuffer;
@@ -37,8 +41,10 @@ public class ScreenVideo implements IVideoStreamCodec {
 	static final String CODEC_NAME = "ScreenVideo";
 	static final byte FLV_FRAME_KEY = 0x10;
 	static final byte FLV_CODEC_SCREEN = 0x03;
+	static final int COPY_BUFFER_SIZE = 8192;
+	static final int INITIAL_BUFFER_SIZE = 1048576;
 	
-	private byte[] blockData;
+	private ByteBuffer blockData = null;
 	private int[] blockSize;
 	private int width;
 	private int height;
@@ -49,10 +55,18 @@ public class ScreenVideo implements IVideoStreamCodec {
 	private int blockCount;
 	private int blockDataSize;
 	private int totalBlockDataSize;
-	private byte[] tmpData;
+	private byte[] tmpData = new byte[COPY_BUFFER_SIZE];
 	
 	public ScreenVideo() {
-		this.reset();
+		blockData = ByteBuffer.allocate(INITIAL_BUFFER_SIZE);
+		blockData.setAutoExpand(true);
+		reset();
+	}
+	
+	protected void finalize() throws Throwable {
+		if (blockData != null)
+			blockData.release();
+		super.finalize();
 	}
 	
 	public String getName() {
@@ -60,18 +74,17 @@ public class ScreenVideo implements IVideoStreamCodec {
 	}
 	
 	public synchronized void reset() {
-		this.blockData = null;
-		this.blockSize = null;
-		this.width = 0;
-		this.height = 0;
-		this.widthInfo = 0;
-		this.heightInfo = 0;
-		this.blockWidth = 0;
-		this.blockHeight = 0;
-		this.blockCount = 0;
-		this.blockDataSize = 0;
-		this.totalBlockDataSize = 0;
-		this.tmpData = null;
+		blockData.clear();
+		blockSize = null;
+		width = 0;
+		height = 0;
+		widthInfo = 0;
+		heightInfo = 0;
+		blockWidth = 0;
+		blockHeight = 0;
+		blockCount = 0;
+		blockDataSize = 0;
+		totalBlockDataSize = 0;
 	}
 
 	public boolean canHandleData(ByteBuffer data) {
@@ -85,6 +98,20 @@ public class ScreenVideo implements IVideoStreamCodec {
 		return false;
 	}
 	
+	private void copyStream(InputStream in, OutputStream out, int size) {
+		int read = 0;
+		while (size > 0) {
+			try {
+				read = in.read(tmpData, 0, size > COPY_BUFFER_SIZE ? COPY_BUFFER_SIZE : size);
+				out.write(tmpData, 0, read);
+			} catch (IOException err) {
+				log.error("Could not copy data.", err);
+				break;
+			}
+			size -= read;
+		}
+	}
+	
 	/*
 	 * This uses the same algorithm as "compressBound" from zlib
 	 */
@@ -93,66 +120,66 @@ public class ScreenVideo implements IVideoStreamCodec {
 	}
 	
 	private void updateSize(ByteBuffer data) {
-		this.widthInfo = data.getShort();
-		this.heightInfo = data.getShort();
+		widthInfo = data.getShort();
+		heightInfo = data.getShort();
 		// extract width and height of the frame
-		this.width = this.widthInfo & 0xfff;
-		this.height = this.heightInfo & 0xfff;
+		width = widthInfo & 0xfff;
+		height = heightInfo & 0xfff;
 		// calculate size of blocks
-		this.blockWidth = ((this.widthInfo >> 12) + 1) << 4;
-		this.blockHeight = ((this.heightInfo >> 12) + 1) << 4;
+		blockWidth = ((widthInfo >> 12) + 1) << 4;
+		blockHeight = ((heightInfo >> 12) + 1) << 4;
 		
-		int xblocks = this.width / this.blockWidth;
-		if ((this.width % this.blockWidth) != 0)
+		int xblocks = width / blockWidth;
+		if ((width % blockWidth) != 0)
 			// partial block
 			xblocks += 1;
 
-		int yblocks = this.height / this.blockHeight;
-		if ((this.height % this.blockHeight) != 0)
+		int yblocks = height / blockHeight;
+		if ((height % blockHeight) != 0)
 			// partial block
 			yblocks += 1;
 
-		this.blockCount = xblocks * yblocks;
+		blockCount = xblocks * yblocks;
 		
-		int blockSize = this.maxCompressedSize(this.blockWidth * this.blockHeight * 3);
-		int totalBlockSize = blockSize * this.blockCount;
-		if (this.totalBlockDataSize != totalBlockSize) {
-			log.info("Allocating memory for " + this.blockCount + " compressed blocks.");
-			this.blockDataSize = blockSize;
-			this.totalBlockDataSize = totalBlockSize;
-			this.blockData = new byte[blockSize * this.blockCount];
-			this.blockSize = new int[blockSize * this.blockCount];
-			this.tmpData = new byte[this.blockDataSize];
+		int maxBlockSize = this.maxCompressedSize(blockWidth * blockHeight * 3);
+		int totalBlockSize = maxBlockSize * blockCount;
+		if (totalBlockDataSize != totalBlockSize) {
+			log.info("Allocating memory for " + blockCount + " compressed blocks.");
+			blockDataSize = maxBlockSize;
+			totalBlockDataSize = totalBlockSize;
+			blockSize = new int[blockCount];
 			// Reset the sizes to zero
-			for (int idx=0; idx<this.blockCount; idx++)
-				this.blockSize[idx] = 0;
+			for (int idx=0; idx<blockCount; idx++)
+				blockSize[idx] = 0;
 		}
 	}
 	
 	public synchronized boolean addData(ByteBuffer data) {
-		if (!this.canHandleData(data))
+		if (!canHandleData(data))
 			return false;
 		
 		data.get();
-		this.updateSize(data);
+		updateSize(data);
 		int idx = 0;
-		int pos = 0;
+		int pos = 0;;
 		
+		blockData.clear();
 		while (data.remaining() > 0) {
 			short size = data.getShort();
 			if (size == 0) {
 				// Block has not been modified
 				idx += 1;
-				pos += this.blockDataSize;
+				pos += blockDataSize;
+				blockData.position(pos);
 				continue;
 			}
 			
 			// Store new block data
-			this.blockSize[idx] = size;
-			data.get(tmpData, 0, (int)size);
-			System.arraycopy(tmpData, 0, this.blockData, pos, size);
+			copyStream(data.asInputStream(), blockData.asOutputStream(), size);
+			blockSize[idx] = size;
 			idx += 1;
-			pos += this.blockDataSize;
+			pos += blockDataSize;
+			blockData.position(pos);
 		}
 		
 		data.rewind();
@@ -160,7 +187,7 @@ public class ScreenVideo implements IVideoStreamCodec {
 	}
 
 	public synchronized ByteBuffer getKeyframe() {
-		if (this.blockData == null)
+		if (blockSize == null)
 			return null;
 		
 		ByteBuffer result = ByteBuffer.allocate(1024);
@@ -170,24 +197,24 @@ public class ScreenVideo implements IVideoStreamCodec {
 		result.put((byte) (FLV_FRAME_KEY | FLV_CODEC_SCREEN));
 		
 		// Frame size
-		result.putShort((short) this.widthInfo);
-		result.putShort((short) this.heightInfo);
+		result.putShort((short) widthInfo);
+		result.putShort((short) heightInfo);
 		
 		// Get compressed blocks
 		int pos=0;
-		for (int idx=0; idx<this.blockCount; idx++) {
-			int size = this.blockSize[idx];
+		for (int idx=0; idx<blockCount; idx++) {
+			int size = blockSize[idx];
 			if (size == 0)
 				// this should not happen: no data for this block
 				return null;
 			
 			result.putShort((short) size);
-			System.arraycopy(this.blockData, pos, tmpData, 0, size);
-			result.put(tmpData, 0, size);
-			pos += this.blockDataSize;
+			blockData.position(pos);
+			copyStream(blockData.asInputStream(), result.asOutputStream(), size);
+			pos += blockDataSize;
 		}
 		
-		result.rewind();
+		result.flip();
 		return result;
 	}
 

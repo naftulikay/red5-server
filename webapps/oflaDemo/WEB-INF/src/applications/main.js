@@ -19,16 +19,39 @@ importClass(Packages.org.red5.server.api.stream.IStreamCapableConnection);
 importClass(Packages.org.red5.server.api.stream.support.SimpleBandwidthConfigure);
 
 function Application() {
-	var appScope;
-	var serverStream;
-	Application.extend(this, ApplicationAdapter);
-	//r5.extend(this, Packages.org.red5.server.adapter.ApplicationAdapter);
+	this.appScope;
+	this.serverStream;
+	this.base = ApplicationAdapter;
+	this.base();
+	
+	for (property in this.__proto__) {
+		print('Application\n');
+		try {
+			print('>>>' + property);
+		} catch(e) {
+			e.rhinoException.printStackTrace();
+		}	
+	}	
+	for (property in this.__proto__.__proto__) {
+		print('\nApplicationAdapter\n');
+		try {
+			print('>>>' + property);
+		} catch(e) {
+			e.rhinoException.printStackTrace();
+		}	
+	}	
+
 }	
 
-//public boolean appConnect(IConnection conn, Object[] params) {
-Application.prototype.appConnect = function (conn, params) {
+Application.prototype.appStart = function(app) {
+	print('Javascript appStart');
+	this.appScope = app;
+	return true;
+};
+
+Application.prototype.appConnect = function(conn, params) {
 	print('Javascript appConnect');
-	this.superClass.measureBandwidth(conn);
+	this.measureBandwidth(conn);
 	if (conn == typeof(IStreamCapableConnection)) {
 		var streamConn = conn;
 		var sbc = new SimpleBandwidthConfigure();
@@ -37,55 +60,39 @@ Application.prototype.appConnect = function (conn, params) {
 		sbc.setOverallBandwidth(2097152);
 		streamConn.setBandwidthConfigure(sbc);
 	}
-	return this.superClass.appConnect(conn, params);
+	return this.__proto__.__proto__.appConnect(conn, params);
 };
 
-//public boolean appStart(IScope app) 
-Application.prototype.appStart = function (app) {
-	print('Javascript appStart');
-	this.appScope = app;
-	return true;
-};
-	
-//public void appDisconnect(IConnection conn) 
-Application.prototype.appDisconnect = function (conn) {
+Application.prototype.appDisconnect = function(conn) {
 	print('Javascript appDisconnect');
 	if (this.appScope == conn.getScope() && this.serverStream)  {
 		this.serverStream.close();
 	}
-	return this.superClass.appDisconnect(conn);
+	return this.__proto__.__proto__.appDisconnect(conn);
 };
 
-Function.prototype.extend=function(subClass, superClass){
-   	function inheritance() {}
-   	inheritance.prototype = superClass.prototype;	
-	subClass.prototype=new inheritance();
-	subClass.prototype.constructor=subClass;
-	subClass.superClass=superClass;
-	subClass.prototype.superClass=new superClass();
-	//copy public static stuff
-	for (property in superClass) {
-		print('>>>' + property);
-		if (!subClass[property]) {			
-			try {
-				subClass[property] = superClass[property];	
-			} catch(e) {
-				print('Extend error: ' + e);
-			}				
-		}
-	}
-	//copy instance stuff
-	for (property in subClass.prototype.superClass) {
-		print('>>>>>' + property);
-		if (!subClass[property]) {
-			try {
-				subClass[property] = subClass.prototype.superClass[property];	
-			} catch(e) {
-				print('Extend error: ' + e);
-			}
-		}
-	}
-	
+//set superclass
+Application.prototype = new ApplicationAdapter;
+
+//create an instance
+instance = new Application();
+
+Function.prototype.printStackTrace=function(exp) {    
+    if (exp == undefined) {
+        try {
+            exp.toString();
+        } catch (e) {
+            exp = e;
+        }
+    }
+    // note that user could have caught some other
+    // "exception"- may be even a string or number -
+    // and passed the same as argument. Also, check for
+    // rhinoException property before using it
+    if (exp instanceof Error && 
+        exp.rhinoException != undefined) {
+        exp.rhinoException.printStackTrace();
+    }
 };
 
 

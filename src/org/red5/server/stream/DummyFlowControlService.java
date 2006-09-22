@@ -20,7 +20,6 @@ package org.red5.server.stream;
  */
 
 import org.red5.server.api.IFlowControllable;
-import org.red5.server.stream.ITokenBucket.ITokenBucketCallback;
 
 /**
  * A dummy flow control service that always has token available.

@@ -6,7 +6,6 @@ import junit.framework.TestCase;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.mina.common.ByteBuffer;
-import org.apache.mina.filter.SSLFilter;
 import org.red5.io.object.Deserializer;
 import org.red5.io.object.Serializer;
 import org.red5.server.net.rtmp.codec.RTMPProtocolDecoder;

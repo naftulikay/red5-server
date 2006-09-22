@@ -58,6 +58,10 @@ public class RTMPMinaProtocolDecoder extends RTMPProtocolDecoder implements
 
 	public void dispose(IoSession ioSession) throws Exception {
 		// TODO Auto-generated method stub
-
 	}
+	
+	public void finishDecode(IoSession session, ProtocolDecoderOutput out) throws Exception {
+		// TODO Auto-generated method stub	
+	}
+	
 }

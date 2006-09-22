@@ -1,7 +1,5 @@
 package org.red5.server.cache;
 
-import static org.junit.Assert.fail;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.nio.MappedByteBuffer;

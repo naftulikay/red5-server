@@ -18,14 +18,14 @@ importClass(Packages.org.red5.server.api.IScopeHandler);
 //importClass(Packages.org.red5.server.api.stream.IStreamCapableConnection);
 //importClass(Packages.org.red5.server.api.stream.support.SimpleBandwidthConfigure);
 
-var ApplicationAdapter = new Packages.org.red5.server.adapter.ApplicationAdapter();
+//var ApplicationAdapter = new Packages.org.red5.server.adapter.ApplicationAdapter();
 var IStreamCapableConnection = Packages.org.red5.server.api.stream.IStreamCapableConnection;
 
 function Application() {
 	this.appScope = null;
 	this.serverStream = null;
 	this.base = ApplicationAdapter;
-    this.__proto__.__proto__=Packages.org.red5.server.api.IScopeHandler;
+    //this.__proto__.__proto__=Packages.org.red5.server.api.IScopeHandler;
 
      
 /*

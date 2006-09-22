@@ -1,11 +1,11 @@
 package org.red5.server.api.test;
 
+import static junit.framework.Assert.assertTrue;
 import junit.framework.JUnit4TestAdapter;
 
 import org.junit.Test;
 import org.red5.server.api.service.IPendingServiceCall;
 import org.red5.server.service.PendingCall;
-import static junit.framework.Assert.assertTrue;
 
 public class ServiceTest extends BaseTest {
 

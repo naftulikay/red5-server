@@ -32,11 +32,16 @@
 
 	<bean id="web.handler" class="org.red5.server.script.rhino.RhinoScriptFactory">
 		<constructor-arg index="0" value="classpath:applications/main.js"/>
+		<!-- Implemented interfaces -->
 		<constructor-arg index="1">
 			<list>
-     			<value>org.red5.server.api.IScopeHandler</value>
      			<value>org.red5.server.adapter.IApplication</value>
+     			<value>org.red5.server.api.IScopeHandler</value>
   			</list>
+		</constructor-arg>
+		<!-- Extended class -->
+		<constructor-arg index="2">
+   			<value>org.red5.server.adapter.ApplicationAdapter</value>
 		</constructor-arg>
 	</bean>
 

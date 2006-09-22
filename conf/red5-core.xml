@@ -24,15 +24,23 @@
 	
 	<bean id="filterChainBuilder" 
         class="org.apache.mina.integration.spring.DefaultIoFilterChainBuilderFactoryBean">
-	  <property name="filters">
-	    <list>
-	      <bean class="org.apache.mina.filter.ThreadPoolFilter">
-	        <!-- Threads will be named IoWorker-1, IoWorker-2, etc -->
-	        <constructor-arg value="IoWorker"/>
-	        <property name="maximumPoolSize" value="128"/>
-	      </bean>
-	    </list>
-	  </property>
+		<property name="filters">
+	    	<list>
+	    		<!-- mina 0.9.4 -->
+				<!--  bean class="org.apache.mina.filter.ThreadPoolFilter" -->
+					<!-- Threads will be named IoWorker-1, IoWorker-2, etc - - >
+					<constructor-arg value="IoWorker" />
+					<property name="maximumPoolSize" value="128"/>
+ 					-->
+				<!-- mina 0.9.x snapshot with java5 executor class -->
+				<bean class="org.red5.io.filter.ExecutorFilter">
+					<!-- int corePoolSize, int maximumPoolSize, long keepAliveTime (seconds) -->
+					<constructor-arg index="0" value="16" />
+					<constructor-arg index="1" value="128" />
+					<constructor-arg index="2" value="60" />
+				</bean>
+			</list>
+		</property>
 	</bean>
 	
 	<bean id="socketAcceptor" class="org.apache.mina.integration.spring.IoAcceptorFactoryBean">

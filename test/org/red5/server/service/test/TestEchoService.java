@@ -22,30 +22,27 @@ package org.red5.server.service.test;
  * @author Chris Allen (mrchrisallen@gmail.com)
  */
 
+import java.io.IOException;
+import java.io.StringReader;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.StringBufferInputStream;
-import java.io.StringReader;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
+
+import junit.framework.TestCase;
 
 import org.red5.samples.services.EchoService;
 import org.red5.samples.services.IEchoService;
 import org.w3c.dom.Document;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
-
-import junit.framework.TestCase;
 
 public class TestEchoService extends TestCase {
 

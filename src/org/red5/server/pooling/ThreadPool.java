@@ -17,7 +17,6 @@ package org.red5.server.pooling;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
 import org.apache.commons.pool.impl.GenericObjectPool;
 
 /**

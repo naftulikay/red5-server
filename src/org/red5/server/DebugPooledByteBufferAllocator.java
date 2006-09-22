@@ -794,6 +794,31 @@ public class DebugPooledByteBufferAllocator implements ByteBufferAllocator {
 			this.buf = newBuf;
 			oldBuf.release();
 		}
+
+		@Override
+		public byte[] array() {
+			// TODO Auto-generated method stub
+			return null;
+		}
+
+		@Override
+		public int arrayOffset() {
+			// TODO Auto-generated method stub
+			return 0;
+		}
+
+		@Override
+		public ByteBuffer capacity(int newCapacity) {
+			// TODO Auto-generated method stub
+			return null;
+		}
+
+		@Override
+		public int markValue() {
+			// TODO Auto-generated method stub
+			return 0;
+		}
+		
 	}
 
 	private class UnexpandableByteBuffer {

@@ -35,8 +35,8 @@
 		<!-- Implemented interfaces -->
 		<constructor-arg index="1">
 			<list>
-     			<value>org.red5.server.adapter.IApplication</value>
      			<value>org.red5.server.api.IScopeHandler</value>
+     			<value>org.red5.server.adapter.IApplication</value>
   			</list>
 		</constructor-arg>
 		<!-- Extended class -->

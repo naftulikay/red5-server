@@ -4,23 +4,31 @@
  * @author Paul Gregoire
  */
 
+//importPackage(Packages.org.red5.server.adapter);
 importPackage(Packages.org.red5.server.api);
 importPackage(Packages.org.red5.server.api.stream);
 importPackage(Packages.org.red5.server.api.stream.support);
+//importPackage(Packages.org.springframework.core.io);
 importPackage(Packages.org.apache.commons.logging);
 
 importClass(Packages.org.springframework.core.io.Resource);
 importClass(Packages.org.red5.server.api.Red5);
 importClass(Packages.org.red5.server.api.IScopeHandler);
+//importClass(Packages.org.red5.server.adapter.ApplicationAdapter);
+//importClass(Packages.org.red5.server.api.stream.IStreamCapableConnection);
+//importClass(Packages.org.red5.server.api.stream.support.SimpleBandwidthConfigure);
 
+//var ApplicationAdapter = new Packages.org.red5.server.adapter.ApplicationAdapter();
 var IStreamCapableConnection = Packages.org.red5.server.api.stream.IStreamCapableConnection;
 
 function Application() {
-	var appScope = null;
-	var serverStream = null;
+	this.appScope = null;
+	this.serverStream = null;
+	//this.base = this;
+	this.supa = new __proto__;
+    this.__proto__.__proto__ = __proto__;
 
     print('Application\n');
-    /*
     for (property in this.__proto__) {
 		try {
 			print('>>>' + property);
@@ -28,7 +36,7 @@ function Application() {
 			e.rhinoException.printStackTrace();
 		}	
 	}
- 
+    /* 
     print('\nApplicationAdapter\n');
 	for (property in this.__proto__.__proto__) {
 		try {
@@ -38,6 +46,7 @@ function Application() {
 		}	
 	}	
     */
+
 }	
 
 Application.prototype.appStart = function(app) {
@@ -48,7 +57,7 @@ Application.prototype.appStart = function(app) {
 
 Application.prototype.appConnect = function(conn, params) {
 	print('Javascript appConnect');
-	measureBandwidth(conn);
+	this.supa.easureBandwidth(conn);
 	if (conn == typeof(IStreamCapableConnection)) {
 		var streamConn = conn;
 		var sbc = new Packages.org.red5.server.api.stream.support.SimpleBandwidthConfigure();
@@ -57,7 +66,7 @@ Application.prototype.appConnect = function(conn, params) {
 		sbc.setOverallBandwidth(2097152);
 		streamConn.setBandwidthConfigure(sbc);
 	}
-	return appConnect(conn, params);
+	return this.supa.appConnect(conn, params);
 };
 
 Application.prototype.appDisconnect = function(conn) {
@@ -65,13 +74,44 @@ Application.prototype.appDisconnect = function(conn) {
 	if (this.appScope == conn.getScope() && this.serverStream)  {
 		this.serverStream.close();
 	}
-	return appDisconnect(conn);
+	return this.supa.appDisconnect(conn);
 };
 
-Application.prototype = supa;
+Application.prototype.helloFromAnExtendedMethod = function(conn) {
+	print('Hello!!!!!');
+};
+
+//set superclass
+//Application.prototype = ApplicationAdapter;
+Application.prototype = __proto__;
 
 new Application();
 
+//create an instance
+//var instance = new Application();
+//instance.base.start = function() {
+//    print('Hello from start!!');
+//};
+
+/*
+Function.prototype.printStackTrace=function(exp) {    
+    if (exp === undefined) {
+        try {
+            exp.toString();
+        } catch (e) {
+            exp = e;
+        }
+    }
+    // note that user could have caught some other
+    // "exception"- may be even a string or number -
+    // and passed the same as argument. Also, check for
+    // rhinoException property before using it
+    if (exp instanceof Error && 
+        exp.rhinoException !== undefined) {
+        exp.rhinoException.printStackTrace();
+    }
+};
+*/
 
 
 

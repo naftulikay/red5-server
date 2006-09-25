@@ -22,7 +22,7 @@
 		<property name="virtualHosts" value="${webapp.virtualHosts}" />
 	</bean>
 	
-	<bean class="org.red5.server.script.ScriptFactoryPostProcessor"/>
+	<bean class="org.springframework.scripting.support.ScriptFactoryPostProcessor"/>
 
 <!-- 
 	<bean id="web.handler" 

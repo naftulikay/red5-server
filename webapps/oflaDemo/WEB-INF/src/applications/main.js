@@ -15,62 +15,60 @@ importClass(Packages.org.red5.server.api.IScopeHandler);
 
 var IStreamCapableConnection = Packages.org.red5.server.api.stream.IStreamCapableConnection;
 
-function Application() {
-	var appScope = null;
-	var serverStream = null;
-
-    print('Application\n');
-    /*
-    for (property in this.__proto__) {
-		try {
-			print('>>>' + property);
-		} catch(e) {
-			e.rhinoException.printStackTrace();
-		}	
+function object(o) {
+	function Application() {
+		this.appScope;
+		this.serverStream;
+		this.className = 'Application';
+	  	this.testMe = function() {
+			print('Javascript testMe');
+		};
+	
+		this.getClassName = function() {
+			return this.className;
+		};
+		
+		appStart: function(app) {
+			print('Javascript appStart');
+			this.appScope = app;
+			return true;
+		};   
+	
+		appConnect: function(conn, params) {
+			print('Javascript appConnect');
+			measureBandwidth(conn);
+			if (conn == typeof(IStreamCapableConnection)) {
+				var streamConn = conn;
+				var sbc = new Packages.org.red5.server.api.stream.support.SimpleBandwidthConfigure();
+				sbc.setMaxBurst(8388608);
+				sbc.setBurst(8388608);
+				sbc.setOverallBandwidth(2097152);
+				streamConn.setBandwidthConfigure(sbc);
+			}
+			return this.__proto__.appConnect(conn, params);
+		};
+		
+		appDisconnect: function(conn) {
+			print('Javascript appDisconnect');
+			if (this.appScope == conn.getScope() && this.serverStream)  {
+				this.serverStream.close();
+			}
+			return this.__proto__.appDisconnect(conn);
+		};  			
 	}
- 
-    print('\nApplicationAdapter\n');
-	for (property in this.__proto__.__proto__) {
-		try {
-			print('>>>' + property);
-		} catch(e) {
-			e.rhinoException.printStackTrace();
-		}	
-	}	
-    */
-}	
+	Application.prototype = o;
+	return new Application();
+}
 
-Application.prototype.appStart = function(app) {
-	print('Javascript appStart');
-	this.appScope = app;
-	return true;
-};
+//if a super class exists in the namespace / bindings
+if (supa) {
+	print('New instance of prototype: ' + supa);
+	//print('Result: ' + object(supa));
+	object(supa);
+}
 
-Application.prototype.appConnect = function(conn, params) {
-	print('Javascript appConnect');
-	measureBandwidth(conn);
-	if (conn == typeof(IStreamCapableConnection)) {
-		var streamConn = conn;
-		var sbc = new Packages.org.red5.server.api.stream.support.SimpleBandwidthConfigure();
-		sbc.setMaxBurst(8388608);
-		sbc.setBurst(8388608);
-		sbc.setOverallBandwidth(2097152);
-		streamConn.setBandwidthConfigure(sbc);
-	}
-	return appConnect(conn, params);
-};
 
-Application.prototype.appDisconnect = function(conn) {
-	print('Javascript appDisconnect');
-	if (this.appScope == conn.getScope() && this.serverStream)  {
-		this.serverStream.close();
-	}
-	return appDisconnect(conn);
-};
 
-Application.prototype = supa;
-
-new Application();
 
 
 

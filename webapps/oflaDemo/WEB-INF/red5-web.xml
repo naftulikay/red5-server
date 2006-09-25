@@ -50,8 +50,8 @@
 		<constructor-arg index="0" value="classpath:applications/main.rb"/>
 		<constructor-arg index="1">
 			<list>
-     			<value>org.red5.server.adapter.IApplication</value>
      			<value>org.red5.server.api.IScopeHandler</value>
+     			<value>org.red5.server.adapter.IApplication</value>
   			</list>
 		</constructor-arg>
 	</bean>		
@@ -69,7 +69,6 @@
   			</list>
 		</constructor-arg>
 	</bean>	
-	 
  -->
 	
 	<bean id="demoService.service" class="org.red5.server.script.rhino.RhinoScriptFactory">
@@ -79,6 +78,9 @@
      			<value>org.red5.server.webapp.oflaDemo.IDemoService</value>
   			</list>
 		</constructor-arg>
+		<constructor-arg index="2">
+   			<value>org.red5.server.webapp.oflaDemo.DemoServiceImpl</value>
+		</constructor-arg>		
 	</bean>
 
  		

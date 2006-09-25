@@ -31,6 +31,6 @@
 	<classpathentry kind="lib" path="lib/xercesImpl-2.8.1.jar"/>
 	<classpathentry kind="lib" path="lib/xmlParserAPIs-2.8.1.jar"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/Spring2.0"/>
-	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/Mina-Snapshot"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/Mina 0.9.5"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

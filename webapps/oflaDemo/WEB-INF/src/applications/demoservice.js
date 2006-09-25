@@ -17,7 +17,16 @@ importClass(Packages.org.red5.server.api.Red5);
 
 //class impersonator
 function DemoService() {
+	this.className = 'DemoService';
 	log.debug('DemoService init');
+
+    for (property in this) {
+		try {
+			print('>>' + property);
+		} catch(e) {
+			e.rhinoException.printStackTrace();
+		}	
+	}
 
 	this.getListOfAvailableFLVs = function() {
 		log.debug('getListOfAvailableFLVs');
@@ -78,11 +87,11 @@ function DemoService() {
 		return filesMap;
 	};
 
-	this.formatDate = function(date) {
-		log.debug('formatDate');
-		//java 'thread-safe' date formatting
-		return new SimpleDateFormat("dd/MM/yyyy hh:mm:ss").format(date);
-		//javascript style date formatting
-		//return date.getDate() + '/' + date.getMonth() + '/' + date.getFullYear() + ' ' + date.getHours() + ':' + date.getMinutes() + ':' + date.getSeconds();
-	};	
 }
+
+DemoService.prototype.formatDate = function(date) {
+	log.debug('formatDate');
+	//java 'thread-safe' date formatting
+	return new SimpleDateFormat("dd/MM/yyyy hh:mm:ss").format(date);
+};	
+

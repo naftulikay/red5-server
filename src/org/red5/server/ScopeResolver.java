@@ -40,10 +40,20 @@ public class ScopeResolver implements IScopeResolver {
 
 	public IScope resolveScope(String path){
 		IScope scope = globalScope;
-		if(path == null) return scope;
-		final String[] parts = path.split("/");
-		for(int i=0; i < parts.length; i++){
-			final String room = parts[i];
+		if (path == null)
+			return scope;
+		
+		int start = 0;
+		String room;
+		while (start < path.length()) {
+			final int idx = path.indexOf('/', start);
+			if (idx == -1) {
+				room = path.substring(start);
+				start = path.length();
+			} else {
+				room = path.substring(start, idx);
+				start = idx+1;
+			}
 			if (room.equals(""))
 				// Skip empty path elements
 				continue;
@@ -54,7 +64,7 @@ public class ScopeResolver implements IScopeResolver {
 					scope = scope.getScope(room);
 				} else if (!scope.equals(globalScope) && scope.createChildScope(room)){
 					scope = scope.getScope(room);
-				} else throw new ScopeNotFoundException(scope,parts[i]);
+				} else throw new ScopeNotFoundException(scope, room);
 			}
 		}
 		return scope;

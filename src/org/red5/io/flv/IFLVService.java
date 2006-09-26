@@ -24,7 +24,8 @@ import org.red5.io.object.Deserializer;
 import org.red5.io.object.Serializer;
 
 /**
- * A FLVService sets up the service and hands out FLV objects to its callers
+ * A FLVService sets up the service and hands out FLV objects to 
+ * its callers
  * 
  * @author The Red5 Project (red5@osflash.org)
  * @author Dominick Accattato (daccattato@gmail.com)

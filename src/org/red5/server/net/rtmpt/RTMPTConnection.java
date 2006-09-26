@@ -44,8 +44,8 @@ import org.red5.server.net.rtmp.message.Packet;
 
 public class RTMPTConnection extends RTMPConnection {
 
-	protected static Log log = LogFactory.getLog(RTMPTConnection.class
-			.getName());
+	protected static Log log =
+        LogFactory.getLog(RTMPTConnection.class.getName());
 
 	/**
 	 * Start to increase the polling delay after this many empty results
@@ -252,10 +252,7 @@ public class RTMPTConnection extends RTMPConnection {
 				try {
 					handler.messageSent(this, it.next());
 				} catch (Exception e) {
-					log
-							.error(
-									"Could not notify stream subsystem about sent message.",
-									e);
+					log.error("Could not notify stream subsystem about sent message.", e);
 					continue;
 				}
 			}

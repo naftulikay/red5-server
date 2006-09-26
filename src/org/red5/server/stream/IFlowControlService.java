@@ -22,8 +22,8 @@ package org.red5.server.stream;
 import org.red5.server.api.IFlowControllable;
 
 /**
- * A service that controls bandwidth of IFlowControllable objects based on token
- * buckets.
+ * A service that controls bandwidth of IFlowControllable objects based
+ * on token buckets.
  * <p>
  * 1. Each FC is recommended to release itself by calling
  * releaseFlowControllable on disposal.
@@ -47,33 +47,32 @@ public interface IFlowControlService {
 	void releaseFlowControllable(IFlowControllable fc);
 
 	/**
-	 * Update configuration of buckets according to BW configuration of the flow
-	 * controllable.
-	 * 
+	 * Update configuration of buckets according to BW configuration
+	 * of the flow controllable.
 	 * @param fc
 	 */
 	void updateBWConfigure(IFlowControllable fc);
 
 	/**
-	 * Reset all token buckets that are assigned to the flow controllable.
-	 * 
+	 * Reset all token buckets that are assigned to the
+	 * flow controllable.
 	 * @param fc
 	 */
 	void resetTokenBuckets(IFlowControllable fc);
 
 	/**
-	 * Get the audio bucket for a flow controllable. The bucket can be used till
-	 * releasing regardless of BW configuration changes.
-	 * 
+	 * Get the audio bucket for a flow controllable.
+	 * The bucket can be used till releasing regardless of
+	 * BW configuration changes.
 	 * @param fc
 	 * @return
 	 */
 	ITokenBucket getAudioTokenBucket(IFlowControllable fc);
 
 	/**
-	 * Get the video bucket for a flow controllable. The bucket can be used till
-	 * releasing regardless of BW configuration changes.
-	 * 
+	 * Get the video bucket for a flow controllable.
+	 * The bucket can be used till releasing regardless of
+	 * BW configuration changes.
 	 * @param fc
 	 * @return
 	 */

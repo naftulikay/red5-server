@@ -30,8 +30,8 @@ import org.red5.server.api.persistence.IPersistenceStore;
 import org.springframework.core.io.support.ResourcePatternResolver;
 
 /**
- * Persistence implementation that stores the objects in memory. This serves as
- * default persistence if nothing has been configured.
+ * Persistence implementation that stores the objects in memory.
+ * This serves as default persistence if nothing has been configured.
  * 
  * @author The Red5 Project (red5@osflash.org)
  * @author Joachim Bauch (jojo@struktur.de)

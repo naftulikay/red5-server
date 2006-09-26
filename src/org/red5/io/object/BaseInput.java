@@ -23,8 +23,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * BaseInput represents a way to map input to a HashMap. This class is meant to
- * be extended.
+ * BaseInput represents a way to map input to a HashMap.  This class
+ * is meant to be extended.
  * 
  * @author The Red5 Project (red5@osflash.org)
  * @author Luke Hubbard, Codegent Ltd (luke@codegent.com)
@@ -37,7 +37,6 @@ public class BaseInput {
 
 	/**
 	 * Store an object into a map
-	 * 
 	 * @param obj
 	 */
 	public void storeReference(Object obj) {
@@ -54,7 +53,6 @@ public class BaseInput {
 
 	/**
 	 * Returns the object with the parameters id
-	 * 
 	 * @param id
 	 * @return Object
 	 */

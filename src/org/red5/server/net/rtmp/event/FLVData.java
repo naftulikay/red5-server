@@ -25,16 +25,19 @@ public class FLVData {
 
 	/*
 	 * 0×08 AUDIO Contains an audio packet similar to a SWF SoundStreamBlock
-	 * plus codec information 0×09 VIDEO Contains a video packet similar to a
-	 * SWF VideoFrame plus codec information 0×12 META Contains two AMF
-	 * packets, the name of the event and the data to go with it
+	 * plus codec information 
+	 * 0×09 VIDEO Contains a video packet similar to a SWF VideoFrame plus
+	 * codec information 
+	 * 0×12 META Contains two AMF packets, the name of the event and the data
+	 * to go with it
 	 */
 
 	/*
-	 * soundType (byte & 0×01) » 0 0: mono, 1: stereo soundSize (byte & 0×02)
-	 * » 1 0: 8-bit, 2: 16-bit soundRate (byte & 0x0C) » 2 0: 5.5 kHz, 1: 11
-	 * kHz, 2: 22 kHz, 3: 44 kHz soundFormat (byte & 0xf0) » 4 0: Uncompressed,
-	 * 1: ADPCM, 2: MP3, 5: Nellymoser 8kHz mono, 6: Nellymoser
+	 * soundType (byte & 0×01) » 0 0: mono, 1: stereo 
+	 * soundSize (byte & 0×02) » 1 0: 8-bit, 2: 16-bit 
+	 * soundRate (byte & 0x0C) » 2 0: 5.5kHz, 1: 11kHz, 2: 22kHz, 3: 44kHz 
+	 * soundFormat (byte & 0xf0) » 4 0: Uncompressed, 1: ADPCM, 2: MP3, 
+	 *     5: Nellymoser 8kHz mono, 6: Nellymoser
 	 */
 
 	/*

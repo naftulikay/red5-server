@@ -48,6 +48,7 @@ import org.springframework.context.access.ContextSingletonBeanFactoryLocator;
  * @author The Red5 Project (red5@osflash.org)
  * @author Dominick Accattato (daccattato@gmail.com)
  * @author Luke Hubbard, Codegent Ltd (luke@codegent.com)
+ * @author Paul Gregoire, (mondain@gmail.com)
  */
 public class FLV implements IFLV {
 
@@ -207,16 +208,14 @@ public class FLV implements IFLV {
 	public ITagWriter getAppendWriter() throws IOException {
 		// If the file doesnt exist, we cant append to it, so return a writer
 		if (!file.exists()) {
-			log
-					.info("File does not exist, calling writer. This will create a new file.");
+			log.info("File does not exist, calling writer. This will create a new file.");
 			return getWriter();
 		}
 		ITagReader reader = getReader();
 		// Its an empty flv, so no point appending call writer
 		if (!reader.hasMoreTags()) {
 			reader.close();
-			log
-					.info("Reader is empty, calling writer. This will create a new file.");
+			log.info("Reader is empty, calling writer. This will create a new file.");
 			return getWriter();
 		}
 		ITag lastTag = null;

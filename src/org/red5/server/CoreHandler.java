@@ -34,7 +34,8 @@ import org.red5.server.api.service.IServiceCall;
 
 public class CoreHandler implements IScopeHandler {
 
-	protected static Log log = LogFactory.getLog(CoreHandler.class.getName());
+	protected static Log log =
+        LogFactory.getLog(CoreHandler.class.getName());
 
 	public boolean addChildScope(IBasicScope scope) {
 		return true;

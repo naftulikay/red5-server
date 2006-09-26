@@ -58,12 +58,11 @@ import org.red5.server.so.SharedObjectMessage;
 public class RTMPProtocolDecoder implements Constants, SimpleProtocolDecoder,
 		IEventDecoder {
 
-	protected static Log log = LogFactory.getLog(RTMPProtocolDecoder.class
-			.getName());
+	protected static Log log =
+        LogFactory.getLog(RTMPProtocolDecoder.class.getName());
 
-	protected static Log ioLog = LogFactory.getLog(RTMPProtocolDecoder.class
-			.getName()
-			+ ".in");
+	protected static Log ioLog =
+        LogFactory.getLog(RTMPProtocolDecoder.class.getName()+".in");
 
 	private Deserializer deserializer = null;
 
@@ -141,9 +140,7 @@ public class RTMPProtocolDecoder implements Constants, SimpleProtocolDecoder,
 			if (rtmp.getState() == RTMP.STATE_CONNECT) {
 
 				if (remaining < HANDSHAKE_SIZE + 1) {
-					log
-							.debug("Handshake init too small, buffering. remaining: "
-									+ remaining);
+					log.debug("Handshake init too small, buffering. remaining: "+remaining);
 					rtmp.bufferDecoding(HANDSHAKE_SIZE + 1);
 					return null;
 				} else {
@@ -159,9 +156,7 @@ public class RTMPProtocolDecoder implements Constants, SimpleProtocolDecoder,
 			if (rtmp.getState() == RTMP.STATE_HANDSHAKE) {
 				log.debug("Handshake reply");
 				if (remaining < HANDSHAKE_SIZE) {
-					log
-							.debug("Handshake reply too small, buffering. remaining: "
-									+ remaining);
+					log.debug("Handshake reply too small, buffering. remaining: "+remaining);
 					rtmp.bufferDecoding(HANDSHAKE_SIZE);
 					return null;
 				} else {
@@ -177,9 +172,7 @@ public class RTMPProtocolDecoder implements Constants, SimpleProtocolDecoder,
 			if (rtmp.getState() == RTMP.STATE_CONNECT) {
 				final int size = (2 * HANDSHAKE_SIZE) + 1;
 				if (remaining < size) {
-					log
-							.debug("Handshake init too small, buffering. remaining: "
-									+ remaining);
+					log.debug("Handshake init too small, buffering. remaining: "+remaining);
 					rtmp.bufferDecoding(size);
 					return null;
 				} else {

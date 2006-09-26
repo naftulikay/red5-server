@@ -3,7 +3,9 @@ package org.red5.io.object;
 public interface SerializerOpts {
 
 	public enum Flag {
-		Enabled, Disabled, Default
+		Enabled,
+		Disabled,
+		Default
 	}
 
 	public enum SerializerOption {

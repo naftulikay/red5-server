@@ -26,17 +26,16 @@ import org.red5.io.BaseStreamableFileService;
 import org.red5.io.IStreamableFile;
 import org.red5.io.mp3.IMP3Service;
 
-public class MP3Service extends BaseStreamableFileService implements
-		IMP3Service {
+public class MP3Service extends BaseStreamableFileService implements IMP3Service {
 
 	public String getPrefix() {
 		return "mp3";
 	}
-
+	
 	public String getExtension() {
 		return ".mp3";
 	}
-
+	
 	public IStreamableFile getStreamableFile(File file) throws IOException {
 		return new MP3(file);
 	}

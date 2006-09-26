@@ -46,21 +46,32 @@ import org.red5.server.api.IConnection;
  */
 public class ConversionUtils {
 
-	protected static Log log = LogFactory.getLog(Deserializer.class.getName());
+	protected static Log log =
+        LogFactory.getLog(Deserializer.class.getName());
 
-	private static final Class[] PRIMITIVES = { boolean.class, byte.class,
-			char.class, short.class, int.class, long.class, float.class,
-			double.class };
+	private static final Class[] PRIMITIVES = 
+	{   
+		boolean.class, byte.class, char.class, short.class, 
+		int.class, long.class, float.class, double.class
+	};
+	
+	private static final Class[] WRAPPERS =
+	{	
+		Boolean.class, Byte.class, Character.class, Short.class,
+		Integer.class, Long.class, Float.class, Double.class
+	};
 
-	private static final Class[] WRAPPERS = { Boolean.class, Byte.class,
-			Character.class, Short.class, Integer.class, Long.class,
-			Float.class, Double.class };
-
-	private static final Class[][] PARAMETER_CHAINS = {
-			{ boolean.class, null }, { byte.class, Short.class },
-			{ char.class, Integer.class }, { short.class, Integer.class },
-			{ int.class, Long.class }, { long.class, Float.class },
-			{ float.class, Double.class }, { double.class, null } };
+	private static final Class[][] PARAMETER_CHAINS =
+	{
+		{boolean.class, null},
+		{byte.class, Short.class},
+		{char.class, Integer.class},
+		{short.class, Integer.class},
+		{int.class, Long.class},
+		{long.class, Float.class},
+		{float.class, Double.class},
+		{double.class, null}
+	};
 
 	/** Mapping of primitives to wrappers */
 	private static Map<Class, Class> primitiveMap = new HashMap<Class, Class>();
@@ -69,61 +80,45 @@ public class ConversionUtils {
 	private static Map<Class, Class> wrapperMap = new HashMap<Class, Class>();
 
 	/**
-	 * Mapping from wrapper class to appropriate parameter types (in order) Each
-	 * entry is an array of Classes, the last of which is either null (for no
-	 * chaining) or the next class to try
+	 * Mapping from wrapper class to appropriate parameter types (in order) 
+	 * Each entry is an array of Classes, the last of which is either null
+	 * (for no chaining) or the next class to try
 	 */
 	private static Map<Class, Class[]> parameterMap = new HashMap<Class, Class[]>();
 
 	/** Default number format */
 	private static NumberFormat NUMBER_FORMAT = NumberFormat.getInstance();
 
-	static {
-		for (int i = 0; i < PRIMITIVES.length; i++) {
+	static
+	{
+		for (int i=0; i < PRIMITIVES.length; i++)
+		{
 			primitiveMap.put(PRIMITIVES[i], WRAPPERS[i]);
 			wrapperMap.put(WRAPPERS[i], PRIMITIVES[i]);
 			parameterMap.put(WRAPPERS[i], PARAMETER_CHAINS[i]);
 		}
 	}
 
-	public static Object convert(Object source, Class target)
-			throws ConversionException {
-		if (target == null)
-			throw new ConversionException("Unable to perform conversion");
+	public static Object convert(Object source, Class target) throws ConversionException {
+		if(target==null) throw new ConversionException("Unable to perform conversion");
 		if (source == null) {
-			if (target.isPrimitive())
-				throw new ConversionException(
-						"Unable to convert null to primitive value");
+			if(target.isPrimitive())  throw new ConversionException("Unable to convert null to primitive value");
 			return source;
 		}
-		if (IConnection.class.isAssignableFrom(source.getClass())
-				&& !target.equals(IConnection.class))
-			throw new ConversionException("IConnection must match exact.");
-		if (target.isInstance(source))
-			return source;
-		if (target.isAssignableFrom(source.getClass()))
-			return source;
-		if (target.isArray())
-			return convertToArray(source, target);
-		if (target.equals(String.class))
-			return source.toString();
-		if (target.isPrimitive())
-			return convertToWrappedPrimitive(source, (Class) primitiveMap
-					.get(target));
-		if (wrapperMap.containsKey(target))
-			return convertToWrappedPrimitive(source, target);
-		if (target.equals(Map.class))
-			return convertBeanToMap(source);
-		if ((target.equals(List.class) || target.equals(Collection.class))
-				&& source.getClass().isArray())
-			return convertArrayToList((Object[]) source);
-		if (target.equals(Set.class) && source.getClass().isArray())
-			return convertArrayToSet((Object[]) source);
+		if(IConnection.class.isAssignableFrom(source.getClass()) && !target.equals(IConnection.class)) throw new ConversionException("IConnection must match exact.");
+		if(target.isInstance(source)) return source;
+		if(target.isAssignableFrom(source.getClass())) return source;
+		if(target.isArray()) return convertToArray(source, target);
+		if(target.equals(String.class)) return source.toString();
+		if(target.isPrimitive()) return convertToWrappedPrimitive(source, (Class) primitiveMap.get(target));	
+		if(wrapperMap.containsKey(target)) return convertToWrappedPrimitive(source, target);
+		if(target.equals(Map.class)) return convertBeanToMap(source);
+		if( (target.equals(List.class) || target.equals(Collection.class))  && source.getClass().isArray()) return convertArrayToList((Object[]) source);
+		if(target.equals(Set.class) && source.getClass().isArray()) return convertArrayToSet((Object[]) source);
 		throw new ConversionException("Unable to preform conversion");
 	}
 
-	public static Object convertToArray(Object source, Class target)
-			throws ConversionException {
+	public static Object convertToArray(Object source, Class target) throws ConversionException {
 		try {
 			Object[] targetInstance = (Object[]) Array.newInstance(target
 					.getComponentType(), 0);

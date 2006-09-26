@@ -30,11 +30,10 @@ import java.util.Map;
  */
 public interface IMessageOutput {
 	/**
-	 * Push a message to this output endpoint. May block the pusher when output
-	 * can't handle the message at the time.
-	 * 
-	 * @param message
-	 *            Message to be pushed.
+	 * Push a message to this output endpoint. May block
+	 * the pusher when output can't handle the message at
+	 * the time.
+	 * @param message Message to be pushed.
 	 */
 	void pushMessage(IMessage message);
 
@@ -43,8 +42,8 @@ public interface IMessageOutput {
 	 * 
 	 * @param provider
 	 * @param paramMap
-	 * @return <tt>true</tt> when successfully subscribed, <tt>false</tt>
-	 *         otherwise.
+	 * @return <tt>true</tt> when successfully subscribed,
+	 * <tt>false</tt> otherwise.
 	 */
 	boolean subscribe(IProvider provider, Map paramMap);
 
@@ -52,8 +51,8 @@ public interface IMessageOutput {
 	 * Disconnect from a provider.
 	 * 
 	 * @param provider
-	 * @return <tt>true</tt> when successfully unsubscribed, <tt>false</tt>
-	 *         otherwise.
+	 * @return <tt>true</tt> when successfully unsubscribed,
+	 * <tt>false</tt> otherwise.
 	 */
 	boolean unsubscribe(IProvider provider);
 

@@ -29,7 +29,8 @@ import org.apache.mina.common.IoSession;
 
 public class NetworkDumpFilter extends IoFilterAdapter {
 
-	protected static Log log = LogFactory.getLog(ProxyFilter.class.getName());
+	protected static Log log =
+        LogFactory.getLog(ProxyFilter.class.getName());
 
 	protected WritableByteChannel raw;
 

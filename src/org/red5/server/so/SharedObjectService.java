@@ -73,10 +73,7 @@ public class SharedObjectService implements ISharedObjectService {
 				log.info("Created persistence store " + store
 						+ " for shared objects.");
 			} catch (Exception err) {
-				log
-						.error(
-								"Could not create persistence store for shared objects, falling back to Ram persistence.",
-								err);
+				log.error("Could not create persistence store for shared objects, falling back to Ram persistence.", err);
 				store = new RamPersistence(scope);
 			}
 			scope.setAttribute(SO_PERSISTENCE_STORE, store);

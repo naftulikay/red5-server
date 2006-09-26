@@ -23,8 +23,8 @@ import org.red5.server.exception.ClientNotFoundException;
 import org.red5.server.exception.ClientRejectedException;
 
 /**
- * Provides a registry of client objects. You can lookup a client by its
- * clientid / session id.
+ * Provides a registry of client objects.
+ * You can lookup a client by its clientid / session id.
  * 
  * @author The Red5 Project (red5@osflash.org)
  * @author Luke Hubbard (luke@codegent.com)
@@ -36,8 +36,7 @@ public interface IClientRegistry {
 	 * 
 	 * @param id
 	 *            the id of the client to check for
-	 * @return <code>true</code> if the client exists, <code>false</code>
-	 *         otherwise
+	 * @return <code>true</code> if the client exists, <code>false</code> otherwise
 	 */
 	public boolean hasClient(String id);
 

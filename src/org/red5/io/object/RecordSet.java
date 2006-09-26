@@ -203,8 +203,8 @@ public class RecordSet {
 	}
 
 	/**
-	 * Return a specified item from the recordset. If the item is not available
-	 * yet, it will be received from the server.
+	 * Return a specified item from the recordset.  If the item is not
+	 * available yet, it will be received from the server.
 	 * 
 	 * @param index
 	 */

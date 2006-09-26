@@ -39,7 +39,8 @@ import org.springframework.context.access.ContextSingletonBeanFactoryLocator;
 public class Standalone {
 
 	// Initialize Logging
-	protected static Log log = LogFactory.getLog(Standalone.class.getName());
+	protected static Log log =
+        LogFactory.getLog(Standalone.class.getName());
 
 	protected static String red5Config = "red5.xml";
 

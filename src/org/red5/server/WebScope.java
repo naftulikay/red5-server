@@ -30,7 +30,8 @@ import org.springframework.web.context.ServletContextAware;
 public class WebScope extends Scope implements ServletContextAware {
 
 	// Initialize Logging
-	protected static Log log = LogFactory.getLog(WebScope.class.getName());
+	protected static Log log =
+        LogFactory.getLog(WebScope.class.getName());
 
 	protected IServer server;
 

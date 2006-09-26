@@ -322,6 +322,7 @@ public class RemotingClient {
 	public void invokeMethod(String method, Object[] methodParams,
 			IRemotingCallback callback) {
 		IScope scope = Red5.getConnectionLocal().getScope();
+		
 		ThreadPool pool = (ThreadPool) scope.getContext().getBean(POOL_BEAN_ID);
 		try {
 			WorkerThread wt = (WorkerThread) pool.borrowObject();

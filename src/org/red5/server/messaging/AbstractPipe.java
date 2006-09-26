@@ -27,8 +27,8 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 /**
- * Abstract pipe that books providers/consumers and listeners. Aim to ease the
- * implementation of concrete pipes.
+ * Abstract pipe that books providers/consumers and listeners.
+ * Aim to ease the implementation of concrete pipes.
  * 
  * @author The Red5 Project (red5@osflash.org)
  * @author Steven Gong (steven.gong@gmail.com)
@@ -127,10 +127,7 @@ public abstract class AbstractPipe implements IPipe {
 			try {
 				consumer.onOOBControlMessage(provider, this, oobCtrlMsg);
 			} catch (Throwable t) {
-				log
-						.error(
-								"exception when passing OOBCM from provider to consumers",
-								t);
+				log.error("exception when passing OOBCM from provider to consumers", t);
 			}
 		}
 	}
@@ -145,10 +142,7 @@ public abstract class AbstractPipe implements IPipe {
 			try {
 				provider.onOOBControlMessage(consumer, this, oobCtrlMsg);
 			} catch (Throwable t) {
-				log
-						.error(
-								"exception when passing OOBCM from consumer to providers",
-								t);
+				log.error("exception when passing OOBCM from consumer to providers", t);
 			}
 		}
 	}

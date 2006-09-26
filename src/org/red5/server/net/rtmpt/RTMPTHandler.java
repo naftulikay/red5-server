@@ -38,7 +38,8 @@ import org.red5.server.net.rtmp.message.Constants;
 
 public class RTMPTHandler extends RTMPHandler implements Constants {
 
-	protected static Log log = LogFactory.getLog(RTMPTHandler.class.getName());
+	protected static Log log =
+        LogFactory.getLog(RTMPTHandler.class.getName());
 
 	public static final String HANDLER_ATTRIBUTE = "red5.RMPTHandler";
 

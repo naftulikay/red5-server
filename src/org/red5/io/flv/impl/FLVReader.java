@@ -46,6 +46,7 @@ import org.red5.io.utils.IOUtils;
  * @author The Red5 Project (red5@osflash.org)
  * @author Dominick Accattato (daccattato@gmail.com)
  * @author Luke Hubbard, Codegent Ltd (luke@codegent.com)
+ * @author Paul Gregoire, (mondain@gmail.com)
  */
 public class FLVReader implements IoConstants, ITagReader,
 		IKeyFrameDataAnalyzer {
@@ -92,16 +93,13 @@ public class FLVReader implements IoConstants, ITagReader,
 		this.generateMetadata = generateMetadata;
 		channel = fis.getChannel();
 		try {
-			mappedFile = channel.map(FileChannel.MapMode.READ_ONLY, 0, channel
-					.size());
+			mappedFile = channel.map(FileChannel.MapMode.READ_ONLY, 0, channel.size());
 			mappedFile.order(ByteOrder.BIG_ENDIAN);
 		} catch (IOException e) {
 			log.error("FLVReader :: FLVReader ::>\n", e);
 		}
 		in = ByteBuffer.wrap(mappedFile);
-		// wrapped byte buffers are not pooled by default
-		// in.setPooled(true);
-		log.error("FLVReader 1 - Buffer size: " + in.capacity() + " position: "
+		log.debug("FLVReader 1 - Buffer size: " + in.capacity() + " position: "
 				+ in.position() + " remaining: " + in.remaining());
 		if (in.remaining() >= 9) {
 			decodeHeader();
@@ -118,7 +116,7 @@ public class FLVReader implements IoConstants, ITagReader,
 	public FLVReader(ByteBuffer buffer, boolean generateMetadata) {
 		this.generateMetadata = generateMetadata;
 		in = buffer;
-		log.error("FLVReader 2 - Buffer size: " + in.capacity() + " position: "
+		log.debug("FLVReader 2 - Buffer size: " + in.capacity() + " position: "
 				+ in.position() + " remaining: " + in.remaining());
 		if (in.remaining() >= 9) {
 			decodeHeader();
@@ -132,7 +130,7 @@ public class FLVReader implements IoConstants, ITagReader,
 	 * @return file bytes
 	 */
 	public ByteBuffer getFileData() {
-		return in.asReadOnlyBuffer(); // ByteBuffer.wrap(mappedFile).asReadOnlyBuffer();
+		return in.asReadOnlyBuffer();
 	}
 
 	public void decodeHeader() {

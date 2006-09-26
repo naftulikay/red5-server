@@ -35,8 +35,8 @@ import org.red5.server.net.rtmp.message.Constants;
 
 public class FileStreamSource implements ISeekableStreamSource, Constants {
 
-	protected static Log log = LogFactory.getLog(FileStreamSource.class
-			.getName());
+	protected static Log log =
+        LogFactory.getLog(FileStreamSource.class.getName());
 
 	private ITagReader reader = null;
 

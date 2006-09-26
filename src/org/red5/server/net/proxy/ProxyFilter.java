@@ -29,7 +29,8 @@ public class ProxyFilter extends IoFilterAdapter {
 
 	public static final String FORWARD_KEY = "proxy_forward_key";
 
-	protected static Log log = LogFactory.getLog(ProxyFilter.class.getName());
+	protected static Log log =
+        LogFactory.getLog(ProxyFilter.class.getName());
 
 	protected String name;
 

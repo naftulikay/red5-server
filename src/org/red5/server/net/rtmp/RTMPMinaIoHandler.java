@@ -34,8 +34,8 @@ import org.red5.server.net.rtmp.message.Constants;
 
 public class RTMPMinaIoHandler extends IoHandlerAdapter {
 
-	protected static Log log = LogFactory.getLog(RTMPMinaIoHandler.class
-			.getName());
+	protected static Log log =
+        LogFactory.getLog(RTMPMinaIoHandler.class.getName());
 
 	protected RTMPHandler handler;
 

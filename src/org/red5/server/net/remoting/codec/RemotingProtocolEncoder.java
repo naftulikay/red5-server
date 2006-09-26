@@ -34,11 +34,11 @@ import org.red5.server.net.remoting.message.RemotingPacket;
 
 public class RemotingProtocolEncoder implements SimpleProtocolEncoder {
 
-	protected static Log log = LogFactory.getLog(RemotingProtocolEncoder.class
-			.getName());
+	protected static Log log =
+        LogFactory.getLog(RemotingProtocolEncoder.class.getName());
 
-	protected static Log ioLog = LogFactory
-			.getLog(RemotingProtocolEncoder.class.getName() + ".out");
+	protected static Log ioLog =
+        LogFactory.getLog(RemotingProtocolEncoder.class.getName()+".out");
 
 	private Serializer serializer = null;
 
@@ -52,8 +52,7 @@ public class RemotingProtocolEncoder implements SimpleProtocolEncoder {
 		Output output = new Output(buf);
 		buf.putShort((short) 0); // write the version
 		buf.putShort((short) 0); // write the header count
-		buf.putShort((short) resp.getCalls().size()); // write the number of
-														// bodies
+		buf.putShort((short) resp.getCalls().size()); // write the number of bodies
 		while (it.hasNext()) {
 			log.debug("Call");
 			RemotingCall call = (RemotingCall) it.next();

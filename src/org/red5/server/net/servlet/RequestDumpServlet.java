@@ -34,8 +34,8 @@ import org.red5.io.utils.HexDump;
 
 public class RequestDumpServlet extends HttpServlet {
 
-	protected static Log log = LogFactory.getLog(RequestDumpServlet.class
-			.getName());
+	protected static Log log =
+        LogFactory.getLog(RequestDumpServlet.class.getName());
 
 	public static final String APPLICATION_AMF = "application/x-amf";
 

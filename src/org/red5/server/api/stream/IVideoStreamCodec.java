@@ -39,7 +39,8 @@ public interface IVideoStreamCodec {
 	public boolean canDropFrames();
 
 	/**
-	 * Returns true if the codec knows how to handle the passed stream data.
+	 * Returns true if the codec knows how to handle the passed
+	 * stream data.
 	 */
 	public boolean canHandleData(ByteBuffer data);
 

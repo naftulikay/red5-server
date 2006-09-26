@@ -621,18 +621,11 @@ public class ApplicationAdapter extends StatefulScopeWrappingAdapter implements
 	}
 
 	/**
-	 * Returns list of stream names broadcasted in
+	 * Returns list of stream names broadcasted in <pre>scope</pre>. Broadcast stream name is somewhat different
+	 * from server stream name. Server stream name is just an ID assigned by Red5 to every created stream. Broadcast stream name
+	 * is the name that is being used to subscribe to the stream at client side, that is, in <code>NetStream.play</code> call.
 	 * 
-	 * <pre>
-	 * scope
-	 * </pre>. Broadcast stream name is somewhat different from server stream
-	 * name. Server stream name is just an ID assigned by Red5 to every created
-	 * stream. Broadcast stream name is the name that is being used to subscribe
-	 * to the stream at client side, that is, in <code>NetStream.play</code>
-	 * call.
-	 * 
-	 * @param scope
-	 *            Scope to retrieve broadcasted stream names
+	 * @param	scope	Scope to retrieve broadcasted stream names
 	 * @return List of broadcasted stream names.
 	 */
 	public List<String> getBroadcastStreamNames(IScope scope) {
@@ -671,11 +664,8 @@ public class ApplicationAdapter extends StatefulScopeWrappingAdapter implements
 	 *         details.
 	 */
 	public IOnDemandStream getOnDemandStream(IScope scope, String name) {
-		log
-				.warn("This won't work until the refactoring of the streaming code is complete.");
-		IOnDemandStreamService service = (IOnDemandStreamService) getScopeService(
-				scope, IOnDemandStreamService.ON_DEMAND_STREAM_SERVICE,
-				StreamService.class);
+		log.warn("This won't work until the refactoring of the streaming code is complete.");
+		IOnDemandStreamService service = (IOnDemandStreamService) getScopeService(scope, IOnDemandStreamService.ON_DEMAND_STREAM_SERVICE, StreamService.class); 
 		return service.getOnDemandStream(scope, name);
 	}
 
@@ -691,11 +681,8 @@ public class ApplicationAdapter extends StatefulScopeWrappingAdapter implements
 	 * @return ISubscriberStream object
 	 */
 	public ISubscriberStream getSubscriberStream(IScope scope, String name) {
-		log
-				.warn("This won't work until the refactoring of the streaming code is complete.");
-		ISubscriberStreamService service = (ISubscriberStreamService) getScopeService(
-				scope, ISubscriberStreamService.SUBSCRIBER_STREAM_SERVICE,
-				StreamService.class);
+		log.warn("This won't work until the refactoring of the streaming code is complete.");
+		ISubscriberStreamService service = (ISubscriberStreamService) getScopeService(scope, ISubscriberStreamService.SUBSCRIBER_STREAM_SERVICE, StreamService.class); 
 		return service.getSubscriberStream(scope, name);
 	}
 

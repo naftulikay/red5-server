@@ -24,51 +24,31 @@ public interface Constants {
 	public static final int MEDIUM_INT_MAX = 16777215;
 
 	public static final byte TYPE_CHUNK_SIZE = 0x01;
-
 	// Unknown: 0x02
 	public static final byte TYPE_BYTES_READ = 0x03;
-
 	public static final byte TYPE_PING = 0x04;
-
 	public static final byte TYPE_SERVER_BANDWIDTH = 0x05;
-
 	public static final byte TYPE_CLIENT_BANDWIDTH = 0x06;
-
 	// Unknown: 0x07
 	public static final byte TYPE_AUDIO_DATA = 0x08;
-
 	public static final byte TYPE_VIDEO_DATA = 0x09;
-
 	// Unknown: 0x0A ... 0x11
 	public static final byte TYPE_NOTIFY = 0x12;
-
 	public static final byte TYPE_STREAM_METADATA = 0x12;
-
 	public static final byte TYPE_SHARED_OBJECT = 0x13;
-
 	public static final byte TYPE_INVOKE = 0x14;
 
 	public static final byte HEADER_NEW = 0x00;
-
 	public static final byte HEADER_SAME_SOURCE = 0x01;
-
 	public static final byte HEADER_TIMER_CHANGE = 0x02;
-
 	public static final byte HEADER_CONTINUE = 0x03;
 
 	public static final int HANDSHAKE_SIZE = 1536;
 
 	public static final byte SO_CLIENT_UPDATE_DATA = 0x04; // update data
-
-	public static final byte SO_CLIENT_UPDATE_ATTRIBUTE = 0x05; // 5: update
-																// attribute
-
+	public static final byte SO_CLIENT_UPDATE_ATTRIBUTE = 0x05; //5: update attribute
 	public static final byte SO_CLIENT_SEND_MESSAGE = 0x06; // 6: send message
-
-	public static final byte SO_CLIENT_STATUS = 0x07; // 7: status (usually
-														// returned with error
-														// messages)
-
+    public static final byte SO_CLIENT_STATUS = 0x07;  // 7: status (usually returned with error messages)
 	public static final byte SO_CLIENT_CLEAR_DATA = 0x08; // 8: clear data
 
 	public static final byte SO_CLIENT_DELETE_DATA = 0x09; // 9: delete data

@@ -47,7 +47,8 @@ import org.w3c.dom.Document;
 public class Serializer implements SerializerOpts {
 
 	// Initialize Logging
-	protected static Log log = LogFactory.getLog(Serializer.class.getName());
+	protected static Log log =
+        LogFactory.getLog(Serializer.class.getName());
 
 	/**
 	 * serializes output to a core data type object

@@ -43,10 +43,9 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 
 /**
- * An implementation of IFlowControlService that fairly distribute tokens across
- * child nodes and elegantly order the IFlowControllables for scheduling (give
- * priority to buckets that have been waiting longer)
- * 
+ * An implementation of IFlowControlService that fairly distribute tokens
+ * across child nodes and elegantly order the IFlowControllables for
+ * scheduling (give priority to buckets that have been waiting longer)
  * @author The Red5 Project (red5@osflash.org)
  * @author Steven Gong (steven.gong@gmail.com)
  */
@@ -61,8 +60,8 @@ public class BalancedFlowControlService extends TimerTask implements
 
 	private long defaultCapacity = 1024 * 100;
 
-	private Map<IFlowControllable, FcData> fcMap = new HashMap<IFlowControllable, FcData>();
-
+	private Map<IFlowControllable, FcData> fcMap =
+		new HashMap<IFlowControllable, FcData>();
 	private List<FcData>[] fcListArray;
 
 	private Timer timer;
@@ -257,9 +256,8 @@ public class BalancedFlowControlService extends TimerTask implements
 	}
 
 	/**
-	 * Get bw resource from the parent tree nodes. Read-lock should be held when
-	 * calling into this method.
-	 * 
+	 * Get bw resource from the parent tree nodes.
+	 * Read-lock should be held when calling into this method.
 	 * @param fcData
 	 * @param channelId
 	 * @return
@@ -281,8 +279,8 @@ public class BalancedFlowControlService extends TimerTask implements
 	}
 
 	/**
-	 * Register an fc. Write-lock should be held when calling into this method.
-	 * 
+	 * Register an fc.
+	 * Write-lock should be held when calling into this method.
 	 * @param fc
 	 */
 	private void registerFlowControllable(IFlowControllable fc) {
@@ -332,10 +330,9 @@ public class BalancedFlowControlService extends TimerTask implements
 	}
 
 	/**
-	 * Search nodes (including itself) along the parent path for available
-	 * bandwidth resource. Read-lock should be held when calling into this
-	 * method.
-	 * 
+	 * Search nodes (including itself) along the parent path for
+	 * available bandwidth resource.
+	 * Read-lock should be held when calling into this method.
 	 * @param fcData
 	 * @param channelId
 	 * @return
@@ -363,9 +360,8 @@ public class BalancedFlowControlService extends TimerTask implements
 	}
 
 	/**
-	 * Get the fcData from the fc map. Readlock should be held when calling into
-	 * this method.
-	 * 
+	 * Get the fcData from the fc map.
+	 * Readlock should be held when calling into this method.
 	 * @param fc
 	 * @return
 	 */

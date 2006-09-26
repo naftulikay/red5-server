@@ -30,8 +30,8 @@ import org.red5.server.net.rtmp.message.Packet;
 
 public class RTMPMinaConnection extends RTMPConnection {
 
-	protected static Log log = LogFactory.getLog(RTMPMinaConnection.class
-			.getName());
+	protected static Log log =
+        LogFactory.getLog(RTMPMinaConnection.class.getName());
 
 	private IoSession ioSession;
 
@@ -52,10 +52,6 @@ public class RTMPMinaConnection extends RTMPConnection {
 	public IoSession getIoSession() {
 		return ioSession;
 	}
-
-	/*
-	 * public void dispatchEvent(Object packet){ ioSession.write(packet); }
-	 */
 
 	@Override
 	public void rawWrite(ByteBuffer out) {

@@ -26,8 +26,8 @@ import org.red5.server.net.rtmp.event.IRTMPEvent;
 import org.red5.server.stream.message.RTMPMessage;
 
 /**
- * A Play buffer for sending VOD. The implementation is not synchronized.
- * 
+ * A Play buffer for sending VOD.
+ * The implementation is not synchronized.
  * @author The Red5 Project (red5@osflash.org)
  * @author Steven Gong (steven.gong@gmail.com)
  */
@@ -78,8 +78,8 @@ public class PlayBuffer {
 	 * Put a message into this buffer.
 	 * 
 	 * @param message
-	 * @return <tt>true</tt> indicates success and <tt>false</tt> indicates
-	 *         buffer is full.
+	 * @return <tt>true</tt> indicates success and <tt>false</tt>
+	 * indicates buffer is full.
 	 */
 	public boolean putMessage(RTMPMessage message) {
 		IRTMPEvent body = message.getBody();
@@ -105,8 +105,7 @@ public class PlayBuffer {
 		if (message != null) {
 			IRTMPEvent body = message.getBody();
 			if (!(body instanceof IStreamData))
-				throw new RuntimeException("expected IStreamData but got "
-						+ body);
+				throw new RuntimeException("expected IStreamData but got " + body);
 
 			messageSize -= ((IStreamData) body).getData().limit();
 		}
@@ -114,9 +113,8 @@ public class PlayBuffer {
 	}
 
 	/**
-	 * Peek a message but not take it from the buffer. The message count doesn't
-	 * change.
-	 * 
+	 * Peek a message but not take it from the buffer. The message count
+	 * doesn't change.
 	 * @return <tt>null</tt> if buffer is empty.
 	 */
 	public RTMPMessage peekMessage() {

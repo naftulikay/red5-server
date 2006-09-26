@@ -146,9 +146,7 @@ public class FilePersistence extends RamPersistence implements
 			log.error("The file at " + data.getFilename() + " does not exist.");
 			return null;
 		} catch (IOException e) {
-			log
-					.error("Could not load file from " + data.getFilename()
-							+ ".", e);
+			log.error("Could not load file from " + data.getFilename() + ".", e);
 			return null;
 		}
 
@@ -166,13 +164,10 @@ public class FilePersistence extends RamPersistence implements
 						Class theClass = Class.forName(className);
 						Constructor constructor = null;
 						try {
-							// Try to create object by calling constructor with
-							// Input stream as
+							// Try to create object by calling constructor with Input stream as
 							// parameter.
-							for (Class interfaceClass : in.getClass()
-									.getInterfaces()) {
-								constructor = theClass
-										.getConstructor(new Class[] { interfaceClass });
+							for (Class interfaceClass : in.getClass().getInterfaces()) {
+								constructor = theClass.getConstructor(new Class[]{interfaceClass});
 								if (constructor != null)
 									break;
 							}

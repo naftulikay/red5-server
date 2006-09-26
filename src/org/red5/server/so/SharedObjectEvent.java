@@ -46,7 +46,6 @@ public class SharedObjectEvent implements ISharedObjectEvent {
 	}
 
 	public String toString() {
-		return "SOEvent(" + getType() + ", " + getKey() + ", " + getValue()
-				+ ")";
+		return "SOEvent(" + getType() + ", " + getKey() + ", " + getValue() + ")";
 	}
 }

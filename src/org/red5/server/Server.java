@@ -34,7 +34,8 @@ import org.springframework.core.style.ToStringCreator;
 public class Server implements IServer, ApplicationContextAware {
 
 	// Initialize Logging
-	protected static Log log = LogFactory.getLog(Server.class.getName());
+	protected static Log log =
+        LogFactory.getLog(Server.class.getName());
 
 	protected HashMap<String, IGlobalScope> globals = new HashMap<String, IGlobalScope>();
 

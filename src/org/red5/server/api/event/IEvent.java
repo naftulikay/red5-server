@@ -33,7 +33,14 @@ public interface IEvent {
 	public IEventListener getSource();
 
 	enum Type {
-		SYSTEM, STATUS, SERVICE_CALL, SHARED_OBJECT, STREAM_CONTROL, STREAM_DATA, CLIENT, SERVER
+		SYSTEM,
+		STATUS,
+		SERVICE_CALL,
+		SHARED_OBJECT,
+		STREAM_CONTROL,
+		STREAM_DATA,
+		CLIENT,
+		SERVER
 	}
 
 }

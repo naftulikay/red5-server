@@ -66,10 +66,7 @@ public class StreamFlow implements IStreamFlow {
 	private long zeroToStreamTime = -1;
 
 	private int bufferTime = 0;
-
-	private int lastBufferTimes[] = new int[] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-			0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
-
+	private int lastBufferTimes[] = new int[]{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
 	private int lastBufferTime = 0;
 
 	private int lastBufferTimeIndex = 0;
@@ -121,8 +118,9 @@ public class StreamFlow implements IStreamFlow {
 		} else if (segmentDataTimes[AUDIO] >= segmentDataTimes[VIDEO]
 				&& segmentDataTimes[AUDIO] >= segmentDataTimes[DATA]) {
 			return segmentDataTimes[AUDIO];
-		} else
+		} else {
 			return segmentDataTimes[DATA];
+        }
 	}
 
 	public long getSegmentStreamTime() {
@@ -159,8 +157,9 @@ public class StreamFlow implements IStreamFlow {
 		} else if (totalDataTimes[AUDIO] >= totalDataTimes[VIDEO]
 				&& totalDataTimes[AUDIO] >= totalDataTimes[DATA]) {
 			return totalDataTimes[AUDIO];
-		} else
+		} else {
 			return totalDataTimes[DATA];
+        }
 	}
 
 	public long getTotalStreamTime() {
@@ -264,14 +263,12 @@ public class StreamFlow implements IStreamFlow {
 	}
 
 	public String toString() {
-		return new ToStringCreator(this).append("BT", getBufferTime()).append(
-				"SBT", segmentBytesTransfered).append("SDT",
-				getSegmentDataTime()).append("SST", getSegmentStreamTime())
+		return new ToStringCreator(this)
+		    .append("BT", getBufferTime())
+			.append("SBT", segmentBytesTransfered)
+			.append("SDT", getSegmentDataTime())
+			.append("SST",getSegmentStreamTime())
 				.toString();
 	}
 
-	/*
-	 *  // protected startSegment clearSegment updateSegment ( bytes,
-	 * relativeDataTime )
-	 */
 }

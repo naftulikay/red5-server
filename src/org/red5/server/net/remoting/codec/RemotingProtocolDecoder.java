@@ -36,11 +36,11 @@ import org.red5.server.net.remoting.message.RemotingPacket;
 
 public class RemotingProtocolDecoder implements SimpleProtocolDecoder {
 
-	protected static Log log = LogFactory.getLog(RemotingProtocolDecoder.class
-			.getName());
+	protected static Log log =
+        LogFactory.getLog(RemotingProtocolDecoder.class.getName());
 
-	protected static Log ioLog = LogFactory
-			.getLog(RemotingProtocolDecoder.class.getName() + ".in");
+	protected static Log ioLog =
+        LogFactory.getLog(RemotingProtocolDecoder.class.getName()+".in");
 
 	private Deserializer deserializer = null;
 

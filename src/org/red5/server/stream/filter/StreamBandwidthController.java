@@ -73,8 +73,6 @@ public class StreamBandwidthController implements IFilter,
 
 	public void onOOBControlMessage(IMessageComponent source, IPipe pipe,
 			OOBControlMessage oobCtrlMsg) {
-		// TODO Auto-generated method stub
-
 	}
 
 	public void run() {

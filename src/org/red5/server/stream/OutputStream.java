@@ -25,7 +25,8 @@ import org.red5.server.net.rtmp.Channel;
 
 public class OutputStream {
 
-	protected static Log log = LogFactory.getLog(OutputStream.class.getName());
+	protected static Log log =
+        LogFactory.getLog(OutputStream.class.getName());
 
 	private Channel video;
 

@@ -24,8 +24,8 @@ import org.red5.server.api.IScope;
 /**
  * Interface for objects that resolve service names to services.
  * 
- * This is used by the ServiceInvoker to lookup the service to invoke a method
- * on.
+ * This is used by the ServiceInvoker to lookup the service to invoke
+ * a method on.
  * 
  * @author The Red5 Project (red5@osflash.org)
  * @author Joachim Bauch (jojo@struktur.de)

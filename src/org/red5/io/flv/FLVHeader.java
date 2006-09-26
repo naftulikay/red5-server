@@ -20,8 +20,8 @@ package org.red5.io.flv;
  */
 
 /**
- * FLVHeader parses out the contents of a FLV video file and returns the Header
- * data
+ * FLVHeader parses out the contents of a FLV video file and returns
+ * the Header data 
  * 
  * @author The Red5 Project (red5@osflash.org)
  * @author Dominick Accattato (daccattato@gmail.com)
@@ -75,9 +75,8 @@ public class FLVHeader {
 	}
 
 	/**
-	 * Overrides the toString method so that a FLVHeader can be represented by
-	 * its datatypes
-	 * 
+	 * Overrides the toString method so that a FLVHeader can
+	 * be represented by its datatypes
 	 * @return String
 	 */
 	public String toString() {

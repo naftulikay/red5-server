@@ -30,9 +30,8 @@ public interface IProviderService {
 	public static final String KEY = "providerService";
 
 	/**
-	 * Get a named provider as the source of input. Live stream first, VOD
-	 * stream second.
-	 * 
+	 * Get a named provider as the source of input.
+	 * Live stream first, VOD stream second.
 	 * @param scope
 	 * @param name
 	 * @return <tt>null</tt> if nothing found.

@@ -266,8 +266,7 @@ public abstract class RTMPConnection extends BaseConnection implements
 			try {
 				fcs.releaseFlowControllable(this);
 			} catch (Exception err) {
-				log.error("Could not release flowcontrollable connection "
-						+ this, err);
+				log.error("Could not release flowcontrollable connection " + this, err);
 			}
 		}
 		super.close();

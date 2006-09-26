@@ -29,8 +29,8 @@ import org.red5.server.api.IScopeHandler;
  */
 public interface IStreamAwareScopeHandler extends IScopeHandler {
 	/**
-	 * A broadcast stream starts being published. This will be called when the
-	 * first video packet has been received.
+	 * A broadcast stream starts being published. This will be called
+	 * when the first video packet has been received.
 	 * 
 	 * @param stream
 	 */

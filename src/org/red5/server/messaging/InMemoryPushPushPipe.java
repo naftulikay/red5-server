@@ -25,8 +25,9 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 /**
- * A simple in-memory version of push-push pipe. It is triggered by an active
- * provider to push messages through it to an event-driven consumer.
+ * A simple in-memory version of push-push pipe.
+ * It is triggered by an active provider to push messages
+ * through it to an event-driven consumer.
  * 
  * @author The Red5 Project (red5@osflash.org)
  * @author Steven Gong (steven.gong@gmail.com)

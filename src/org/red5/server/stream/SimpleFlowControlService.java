@@ -36,10 +36,10 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 
 /**
- * A simple implementation of IFlowControlService. No fairly distribute tokens
- * across child nodes and no elegantly order the IFlowControllables for
- * scheduling (won't give priority to buckets that have threads waiting).
- * 
+ * A simple implementation of IFlowControlService.
+ * No fairly distribute tokens across child nodes and no elegantly
+ * order the IFlowControllables for scheduling (won't give priority to buckets
+ * that have threads waiting).
  * @author The Red5 Project (red5@osflash.org)
  * @author Steven Gong (steven.gong@gmail.com)
  */
@@ -54,7 +54,8 @@ public class SimpleFlowControlService extends TimerTask implements
 
 	private Timer timer;
 
-	private Map<IFlowControllable, FCData> fcsMap = new HashMap<IFlowControllable, FCData>();
+	private Map <IFlowControllable, FCData> fcsMap =
+		new HashMap<IFlowControllable, FCData>();
 
 	public void init() {
 		timer = new Timer("FlowControlService", true);
@@ -71,8 +72,7 @@ public class SimpleFlowControlService extends TimerTask implements
 					IFlowControllable parentFC = fc.getParentFlowControllable();
 					while (parentFC != null) {
 						FCData parentData = fcsMap.get(parentFC);
-						if (parentData != null
-								&& parentData.resources.length > 0) {
+						if (parentData != null && parentData.resources.length > 0) {
 							for (int i = 0; i < data.resources.length; i++) {
 								for (int j = i; j >= 0; j--) {
 									if (j < parentData.resources.length) {
@@ -228,9 +228,7 @@ public class SimpleFlowControlService extends TimerTask implements
 
 	/**
 	 * Bit per second to Byte per millisecond.
-	 * 
-	 * @param bps
-	 *            Bit per second.
+	 * @param bps Bit per second.
 	 * @return Byte per millisecond.
 	 */
 	private long bps2Bpms(long bps) {

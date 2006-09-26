@@ -22,7 +22,7 @@ package org.red5.server.api.event;
 import java.util.Iterator;
 
 /**
- * IEventObservable hold functionality of well-knows Observer pattern, that is
+ * IEventObservable hold functionality of the well-known Observer pattern, that is
  * it has a list of objects that listen to events.
  * 
  */

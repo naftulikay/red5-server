@@ -39,7 +39,8 @@ import org.springframework.context.ApplicationContextAware;
 public class RTMPTLoader implements ApplicationContextAware {
 
 	// Initialize Logging
-	protected static Log log = LogFactory.getLog(RTMPTLoader.class.getName());
+	protected static Log log =
+        LogFactory.getLog(RTMPTLoader.class.getName());
 
 	protected ApplicationContext applicationContext;
 

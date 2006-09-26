@@ -33,9 +33,8 @@ public interface IStreamCapableConnection extends IConnection,
 		IFlowControllable {
 
 	/**
-	 * Return a reserved stream id for use. According to FCS/FMS regulation, the
-	 * base is 1.
-	 * 
+	 * Return a reserved stream id for use.
+	 * According to FCS/FMS regulation, the base is 1.
 	 * @return
 	 */
 	int reserveStreamId();

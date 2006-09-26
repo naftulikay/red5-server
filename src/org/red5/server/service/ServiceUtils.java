@@ -59,8 +59,7 @@ public class ServiceUtils {
 		if (methods.isEmpty())
 			return new Object[] { null, null };
 		else if (methods.size() > 1) {
-			log
-					.debug("Multiple methods found with same name and parameter count.");
+			log.debug("Multiple methods found with same name and parameter count.");
 			log.debug("Parameter conversion will be attempted in order.");
 		}
 
@@ -131,8 +130,7 @@ public class ServiceUtils {
 		if (methods.isEmpty())
 			return new Object[] { null, null };
 		else if (methods.size() > 1) {
-			log
-					.debug("Multiple methods found with same name and parameter count.");
+			log.debug("Multiple methods found with same name and parameter count.");
 			log.debug("Parameter conversion will be attempted in order.");
 		}
 

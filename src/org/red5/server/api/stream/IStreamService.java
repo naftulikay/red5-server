@@ -39,8 +39,8 @@ public interface IStreamService {
 	public void closeStream();
 
 	/**
-	 * Close the stream if not been closed. Deallocate the related resources.
-	 * 
+	 * Close the stream if not been closed.
+	 * Deallocate the related resources.
 	 * @param number
 	 */
 	public void deleteStream(int streamId);

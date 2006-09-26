@@ -34,7 +34,8 @@ import org.springframework.core.io.Resource;
 
 public class ContextLoader implements ApplicationContextAware {
 
-	protected static Log log = LogFactory.getLog(ContextLoader.class.getName());
+	protected static Log log =
+        LogFactory.getLog(ContextLoader.class.getName());
 
 	protected ApplicationContext applicationContext;
 

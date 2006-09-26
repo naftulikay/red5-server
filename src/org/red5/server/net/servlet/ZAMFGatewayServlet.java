@@ -41,8 +41,8 @@ import org.mortbay.util.ajax.ContinuationSupport;
 
 public class ZAMFGatewayServlet extends HttpServlet {
 
-	protected static Log log = LogFactory.getLog(ZAMFGatewayServlet.class
-			.getName());
+	protected static Log log =
+        LogFactory.getLog(ZAMFGatewayServlet.class.getName());
 
 	public static final String APPLICATION_AMF = "application/x-amf";
 

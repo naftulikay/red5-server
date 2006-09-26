@@ -230,11 +230,4 @@ public abstract class BaseConnection extends AttributeStore implements
 		return 0;
 	}
 
-	/*
-	 * This is really a utility public boolean switchScope(String contextPath) { //
-	 * At the moment this method is not dealing with tree schematics Scope
-	 * newScope = (Scope) ScopeUtils.resolveScope(scope, contextPath);
-	 * if(newScope == null) return false; return connect(scope); }
-	 */
-
 }

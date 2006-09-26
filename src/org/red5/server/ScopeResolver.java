@@ -56,8 +56,9 @@ public class ScopeResolver implements IScopeResolver {
 				} else if (!scope.equals(globalScope)
 						&& scope.createChildScope(room)) {
 					scope = scope.getScope(room);
-				} else
+				} else {
 					throw new ScopeNotFoundException(scope, parts[i]);
+				}
 			}
 		}
 		return scope;

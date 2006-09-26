@@ -26,7 +26,10 @@ import org.red5.server.stream.IStreamData;
 public class VideoData extends BaseEvent implements IoConstants, IStreamData {
 
 	public static enum FrameType {
-		UNKNOWN, KEYFRAME, INTERFRAME, DISPOSABLE_INTERFRAME,
+		UNKNOWN,
+		KEYFRAME,
+		INTERFRAME,
+		DISPOSABLE_INTERFRAME,
 	}
 
 	protected ByteBuffer data = null;

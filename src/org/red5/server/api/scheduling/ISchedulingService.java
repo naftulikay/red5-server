@@ -46,8 +46,8 @@ public interface ISchedulingService {
 	public String addScheduledJob(int interval, IScheduledJob job);
 
 	/**
-	 * Schedule a job for single execution in the future. Please note that the
-	 * jobs are not saved if Red5 is restarted in the meantime.
+	 * Schedule a job for single execution in the future.  Please note
+	 * that the jobs are not saved if Red5 is restarted in the meantime.
 	 * 
 	 * @param timeDelta
 	 *            time delta in milliseconds from the current date
@@ -58,8 +58,8 @@ public interface ISchedulingService {
 	public String addScheduledOnceJob(long timeDelta, IScheduledJob job);
 
 	/**
-	 * Schedule a job for single execution at a given date. Please note that the
-	 * jobs are not saved if Red5 is restarted in the meantime.
+	 * Schedule a job for single execution at a given date.  Please note
+	 * that the jobs are not saved if Red5 is restarted in the meantime.  
 	 * 
 	 * @param date
 	 *            date when the job should be executed

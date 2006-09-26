@@ -32,8 +32,8 @@ import org.red5.io.utils.XMLUtils;
 import org.w3c.dom.Document;
 
 /**
- * The Deserializer class reads data input and handles the data according to the
- * core data types
+ * The Deserializer class reads data input and handles the data 
+ * according to the core data types 
  * 
  * @author The Red5 Project (red5@osflash.org)
  * @author Luke Hubbard, Codegent Ltd (luke@codegent.com)
@@ -41,12 +41,12 @@ import org.w3c.dom.Document;
 public class Deserializer {
 
 	// Initialize Logging
-	protected static Log log = LogFactory.getLog(Deserializer.class.getName());
+	protected static Log log =
+        LogFactory.getLog(Deserializer.class.getName());
 
 	/**
-	 * Deserializes the input parameter and returns an Object which must then be
-	 * cast to a core data type
-	 * 
+	 * Deserializes the input parameter and returns an Object
+	 * which must then be cast to a core data type
 	 * @param in
 	 * @return Object
 	 */
@@ -286,8 +286,8 @@ public class Deserializer {
 	}
 
 	/**
-	 * Creats a new instance of the className parameter and returns as an Object
-	 * 
+	 * Creats a new instance of the className parameter and 
+	 * returns as an Object
 	 * @param className
 	 * @return Object
 	 */
@@ -317,7 +317,8 @@ public class Deserializer {
 	}
 
 	/**
-	 * Post processes the result TODO Extension Point
+	 * Post processes the result
+	 * TODO Extension Point
 	 */
 	protected Object postProcessExtension(Object result) {
 		// does nothing at the moment, but will later!

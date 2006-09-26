@@ -20,8 +20,8 @@ package org.red5.server.api.service;
  */
 
 /**
- * Callback that will be executed when the result of a pending service call has
- * been received.
+ * Callback that will be executed when the result of a pending service call
+ * has been received.
  * 
  * @author The Red5 Project (red5@osflash.org)
  * @author Joachim Bauch (jojo@struktur.de)

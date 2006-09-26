@@ -21,11 +21,10 @@ package org.red5.server.messaging;
 
 /**
  * Common interface for all messages.
- * <p>
- * Structure of messages is designed according to JMS. Message is composed of
- * header and body. Header contains commonly used pre-defined headers and
- * extensible headers.
- * </p>
+ * <p>Structure of messages is designed according to
+ * JMS. Message is composed of header and body.
+ * Header contains commonly used pre-defined headers
+ * and extensible headers.</p>
  * 
  * @author The Red5 Project (red5@osflash.org)
  * @author Steven Gong (steven.gong@gmail.com)

@@ -43,7 +43,8 @@ import org.xml.sax.InputSource;
  */
 public class XMLUtils {
 
-	protected static Log log = LogFactory.getLog(XMLUtils.class.getName());
+    protected static Log log =
+        LogFactory.getLog(XMLUtils.class.getName());
 
 	public static Document stringToDoc(String str) throws IOException {
 		try {
@@ -51,8 +52,7 @@ public class XMLUtils {
 					.newDocumentBuilder();
 			return db.parse(new InputSource(str));
 		} catch (Exception ex) {
-			throw new IOException("Error converting from string to doc "
-					+ ex.getMessage());
+			throw new IOException("Error converting from string to doc "+ex.getMessage());
 		}
 	}
 
@@ -82,8 +82,7 @@ public class XMLUtils {
 			trans.transform(new DOMSource(domDoc), result);
 			return sw.toString();
 		} catch (Exception ex) {
-			throw new IOException("Error converting from doc to string "
-					+ ex.getMessage());
+			throw new IOException("Error converting from doc to string "+ex.getMessage());
 		}
 	}
 

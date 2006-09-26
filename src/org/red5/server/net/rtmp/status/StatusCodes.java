@@ -22,11 +22,7 @@ package org.red5.server.net.rtmp.status;
 public interface StatusCodes {
 
 	public static final String NC_CALL_FAILED = "NetConnection.Call.Failed";
-
-	public static final String NC_CALL_BADVERSION = "NetConnection.Call.BadVersion"; // Why
-																						// small
-																						// c in
-																						// call
+	public static final String NC_CALL_BADVERSION = "NetConnection.Call.BadVersion"; // Why small c in call
 
 	public static final String NC_CONNECT_APPSHUTDOWN = "NetConnection.Connect.AppShutdown";
 

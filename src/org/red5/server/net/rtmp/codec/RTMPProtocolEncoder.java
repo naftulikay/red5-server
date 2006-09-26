@@ -56,12 +56,11 @@ import org.red5.server.so.ISharedObjectMessage;
 public class RTMPProtocolEncoder implements SimpleProtocolEncoder, Constants,
 		IEventEncoder {
 
-	protected static Log log = LogFactory.getLog(RTMPProtocolEncoder.class
-			.getName());
+	protected static Log log =
+        LogFactory.getLog(RTMPProtocolEncoder.class.getName());
 
-	protected static Log ioLog = LogFactory.getLog(RTMPProtocolEncoder.class
-			.getName()
-			+ ".out");
+	protected static Log ioLog =
+        LogFactory.getLog(RTMPProtocolEncoder.class.getName()+".out");
 
 	private Serializer serializer = null;
 

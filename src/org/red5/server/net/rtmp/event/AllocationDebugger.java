@@ -30,8 +30,7 @@ import org.apache.commons.logging.LogFactory;
  * Simple allocation debugger for Event reference counting.
  * 
  * @author The Red5 Project (red5@osflash.org)
- * @author Steven Gong (steven.gong@gmail.com) on behalf of
- *         (ce@publishing-etc.de)
+ * @author Steven Gong (steven.gong@gmail.com) on behalf of (ce@publishing-etc.de)
  */
 public class AllocationDebugger {
 

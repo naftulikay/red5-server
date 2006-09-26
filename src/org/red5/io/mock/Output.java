@@ -29,7 +29,8 @@ import org.red5.io.object.DataTypes;
 
 public class Output extends BaseOutput implements org.red5.io.object.Output {
 
-	protected static Log log = LogFactory.getLog(Output.class.getName());
+	protected static Log log =
+        LogFactory.getLog(Output.class.getName());
 
 	protected List<Object> list;
 

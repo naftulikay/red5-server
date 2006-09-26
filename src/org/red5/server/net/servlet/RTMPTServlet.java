@@ -45,7 +45,8 @@ import org.red5.server.net.rtmpt.RTMPTHandler;
  */
 public class RTMPTServlet extends HttpServlet {
 
-	protected static Log log = LogFactory.getLog(RTMPTServlet.class.getName());
+	protected static Log log =
+        LogFactory.getLog(RTMPTServlet.class.getName());
 
 	/**
 	 * HTTP request method to use for RTMPT calls.
@@ -79,8 +80,8 @@ public class RTMPTServlet extends HttpServlet {
 
 	/**
 	 * Try to generate responses that contain at least 32768 bytes data.
-	 * Increasing this value results in better stream performance, but also
-	 * increases the latency.
+	 * Increasing this value results in better stream performance, but
+	 * also increases the latency.
 	 */
 	private static final int RESPONSE_TARGET_SIZE = 32768;
 
@@ -373,25 +374,6 @@ public class RTMPTServlet extends HttpServlet {
 		client.setServletRequest(req);
 		returnPendingMessages(client, resp);
 	}
-
-	/**
-	 * Main entry point for the servlet. / protected void
-	 * service(HttpServletRequest req, HttpServletResponse resp) throws
-	 * ServletException, IOException {
-	 * 
-	 * if (!req.getMethod().equals(REQUEST_METHOD) || req.getContentLength() ==
-	 * 0 || req.getContentType() == null ||
-	 * !req.getContentType().equals(CONTENT_TYPE)) { // Bad request - return
-	 * simple error page handleBadRequest("Bad request, only RTMPT supported.",
-	 * resp); return; }
-	 * 
-	 * String path = req.getServletPath(); if (path.equals(OPEN_REQUEST)) {
-	 * handleOpen(req, resp); } else if (path.equals(CLOSE_REQUEST)) {
-	 * handleClose(req, resp); } else if (path.equals(SEND_REQUEST)) {
-	 * handleSend(req, resp); } else if (path.equals(IDLE_REQUEST)) {
-	 * handleIdle(req, resp); } else { handleBadRequest("RTMPT command " + path + "
-	 * is not supported.", resp); } }
-	 */
 
 	/**
 	 * Main entry point for the servlet.

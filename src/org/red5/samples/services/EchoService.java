@@ -31,8 +31,8 @@ import org.red5.server.api.Red5;
 import org.w3c.dom.Document;
 
 /**
- * The Echo service is used to test all of the different datatypes and to make
- * sure that they are being returned properly.
+ * The Echo service is used to test all of the different datatypes 
+ * and to make sure that they are being returned properly.
  * 
  * @author The Red5 Project (red5@osflash.org)
  * @author Chris Allen (mrchrisallen@gmail.com)

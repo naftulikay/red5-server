@@ -23,8 +23,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * BaseOutput represents a way to map input to a HashMap. This class is meant to
- * be extended.
+ * BaseOutput represents a way to map input to a HashMap.  This class
+ * is meant to be extended.
  * 
  * @author The Red5 Project (red5@osflash.org)
  * @author Luke Hubbard, Codegent Ltd (luke@codegent.com)
@@ -76,8 +76,8 @@ public class BaseOutput {
 	}
 
 	/**
-	 * Returns a boolean stating whether the map contains an object by that key
-	 * 
+	 * Returns a boolean stating whether the map contains an object by
+	 * that key
 	 * @param obj
 	 * @return boolean
 	 */

@@ -52,16 +52,18 @@ public class HexDump {
 	}
 
 	/** Field HEX_DIGITS */
-	private final static char[] HEX_DIGITS = { '0', '1', '2', '3', '4', '5',
-			'6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F' };
+   private final static char[] HEX_DIGITS = { '0', '1', '2', '3', '4', '5', '6',
+                                              '7', '8', '9', 'A', 'B', 'C', 'D',
+                                              'E', 'F' };
 
 	/** Field BIT_DIGIT */
 	private static char[] BIT_DIGIT = { '0', '1' };
 
 	/** Field COMPARE_BITS */
 	private final static byte[] COMPARE_BITS = { (byte) 0x80, (byte) 0x40,
-			(byte) 0x20, (byte) 0x10, (byte) 0x08, (byte) 0x04, (byte) 0x02,
-			(byte) 0x01 };
+                                                (byte) 0x20, (byte) 0x10,
+                                                (byte) 0x08, (byte) 0x04,
+                                                (byte) 0x02, (byte) 0x01 };
 
 	/** Field BYTE_SEPARATOR */
 	private static char BYTE_SEPARATOR = ' ';
@@ -662,14 +664,11 @@ public class HexDump {
 	 *            Description of Parameter
 	 */
 	private static void byte2hex(byte b, StringBuffer buf) {
-
-		char[] hexChars = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
-				'A', 'B', 'C', 'D', 'E', 'F' };
 		int high = ((b & 0xf0) >> 4);
 		int low = (b & 0x0f);
 
-		buf.append(hexChars[high]);
-		buf.append(hexChars[low]);
+      buf.append(HEX_DIGITS[high]);
+      buf.append(HEX_DIGITS[low]);
 	}
 
 	/**
@@ -739,9 +738,9 @@ public class HexDump {
 		System.out.println("to convert: " + i + " -> " + intToHexString(i));
 		System.out.println("----Convert byte[] to binary String...");
 
-		byte[] baToConvert = { (byte) 0xff, (byte) 0x00, (byte) 0x33,
-				(byte) 0x11, (byte) 0xff, (byte) 0x5f, (byte) 0x5f,
-				(byte) 0x4f, (byte) 0x1f, (byte) 0xff };
+      byte[] baToConvert = { (byte) 0xff, (byte) 0x00, (byte) 0x33, (byte) 0x11,
+                             (byte) 0xff, (byte) 0x5f, (byte) 0x5f, (byte) 0x4f,
+                             (byte) 0x1f, (byte) 0xff };
 
 		System.out.println("to convert: " + toHexString(baToConvert) + " -> "
 				+ byteArrayToBinaryString(baToConvert));

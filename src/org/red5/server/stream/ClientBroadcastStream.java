@@ -90,15 +90,16 @@ public class ClientBroadcastStream extends AbstractClientStream implements
 
 	/** Stores absolute time for data stream. */
 	private int dataTime = -1;
+	/** Stores timestamp of first packet. */
+	private int firstTime = -1;
 
 	private int chunkSize = 0;
 
 	public void start() {
-		IConsumerService consumerManager = (IConsumerService) getScope()
-				.getContext().getBean(IConsumerService.KEY);
+		IConsumerService consumerManager =
+			(IConsumerService) getScope().getContext().getBean(IConsumerService.KEY);
 		try {
-			videoCodecFactory = (VideoCodecFactory) getScope().getContext()
-					.getBean(VideoCodecFactory.KEY);
+			videoCodecFactory = (VideoCodecFactory) getScope().getContext().getBean(VideoCodecFactory.KEY);
 			checkVideoCodec = true;
 		} catch (Exception err) {
 			log.warn("No video codec factory available.", err);
@@ -126,9 +127,7 @@ public class ClientBroadcastStream extends AbstractClientStream implements
 			throws ResourceNotFoundException, ResourceExistException {
 		try {
 			IScope scope = getConnection().getScope();
-			IStreamFilenameGenerator generator = (IStreamFilenameGenerator) ScopeUtils
-					.getScopeService(scope, IStreamFilenameGenerator.KEY,
-							DefaultStreamFilenameGenerator.class);
+			IStreamFilenameGenerator generator = (IStreamFilenameGenerator) ScopeUtils.getScopeService(scope, IStreamFilenameGenerator.KEY, DefaultStreamFilenameGenerator.class);
 
 			String filename = generator.generateFilename(scope, name, ".flv");
 			Resource res = scope.getResource(filename);
@@ -136,17 +135,14 @@ public class ClientBroadcastStream extends AbstractClientStream implements
 				if (res.exists()) {
 					// Per livedoc of FCS/FMS:
 					// When "live" or "record" is used,
-					// any previously recorded stream with the same stream URI
-					// is deleted.
+					// any previously recorded stream with the same stream URI is deleted.
 					res.getFile().delete();
 				}
 			} else {
 				if (!res.exists()) {
 					// Per livedoc of FCS/FMS:
-					// If a recorded stream at the same URI does not already
-					// exist,
-					// "append" creates the stream as though "record" was
-					// passed.
+					// If a recorded stream at the same URI does not already exist,
+					// "append" creates the stream as though "record" was passed.
 					isAppend = false;
 				}
 			}
@@ -234,6 +230,8 @@ public class ClientBroadcastStream extends AbstractClientStream implements
 
 		IRTMPEvent rtmpEvent = (IRTMPEvent) event;
 		int thisTime = -1;
+		if (firstTime == -1)
+			firstTime = rtmpEvent.getTimestamp();
 		if (rtmpEvent instanceof AudioData) {
 			if (streamCodec != null)
 				streamCodec.setHasAudio(true);

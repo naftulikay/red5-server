@@ -62,7 +62,10 @@ public class ServerStream extends AbstractStream implements IServerStream,
 	private static final Log log = LogFactory.getLog(ServerStream.class);
 
 	private enum State {
-		UNINIT, CLOSED, STOPPED, PLAYING
+		UNINIT,
+		CLOSED,
+		STOPPED,
+		PLAYING
 	}
 
 	private State state;
@@ -135,6 +138,18 @@ public class ServerStream extends AbstractStream implements IServerStream,
 
 	public int getItemSize() {
 		return items.size();
+	}
+
+	public int getCurrentItemIndex() {
+		return currentItemIndex;
+	}
+	
+	public IPlayItem getItem(int index) {
+		try {
+			return items.get(index);
+		} catch (IndexOutOfBoundsException e) {
+			return null;
+		}
 	}
 
 	synchronized public void previousItem() {
@@ -294,9 +309,9 @@ public class ServerStream extends AbstractStream implements IServerStream,
 	}
 
 	/**
-	 * Play a specific IPlayItem. The strategy for now is VOD first, Live
-	 * second. Should be called in a synchronized context.
-	 * 
+	 * Play a specific IPlayItem.
+	 * The strategy for now is VOD first, Live second.
+	 * Should be called in a synchronized context.
 	 * @param item
 	 */
 	private void play(IPlayItem item) {
@@ -312,8 +327,7 @@ public class ServerStream extends AbstractStream implements IServerStream,
 			isLive = true;
 		}
 		if (msgIn == null) {
-			log
-					.warn("ABNORMAL Can't get both VOD and Live input from providerService");
+			log.warn("ABNORMAL Can't get both VOD and Live input from providerService");
 			return;
 		}
 		state = State.PLAYING;
@@ -359,8 +373,8 @@ public class ServerStream extends AbstractStream implements IServerStream,
 	}
 
 	/**
-	 * Pull the next message from IMessageInput and schedule it for push
-	 * according to the timestamp.
+	 * Pull the next message from IMessageInput and schedule
+	 * it for push according to the timestamp.
 	 */
 	private void scheduleNextMessage() {
 		boolean first = nextRTMPMessage == null;
@@ -451,8 +465,8 @@ public class ServerStream extends AbstractStream implements IServerStream,
 	}
 
 	/**
-	 * Move to the next item updating the currentItemIndex. Should be called in
-	 * synchronized context.
+	 * Move to the next item updating the currentItemIndex.
+	 * Should be called in synchronized context.
 	 */
 	private void moveToNext() {
 		if (currentItemIndex >= items.size()) {
@@ -467,8 +481,8 @@ public class ServerStream extends AbstractStream implements IServerStream,
 	}
 
 	/**
-	 * Move to the previous item updating the currentItemIndex. Should be called
-	 * in synchronized context.
+	 * Move to the previous item updating the currentItemIndex.
+	 * Should be called in synchronized context.
 	 */
 	private void moveToPrevious() {
 		if (currentItemIndex >= items.size()) {

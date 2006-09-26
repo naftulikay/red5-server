@@ -40,11 +40,11 @@ import org.red5.server.net.rtmp.message.Packet;
 import org.springframework.context.ResourceLoaderAware;
 import org.springframework.core.io.ResourceLoader;
 
-public class DebugProxyHandler extends IoHandlerAdapter implements
-		ResourceLoaderAware {
+public class DebugProxyHandler extends IoHandlerAdapter
+	implements ResourceLoaderAware {
 
-	protected static Log log = LogFactory.getLog(DebugProxyHandler.class
-			.getName());
+	protected static Log log =
+        LogFactory.getLog(DebugProxyHandler.class.getName());
 
 	private ResourceLoader loader;
 
@@ -65,8 +65,7 @@ public class DebugProxyHandler extends IoHandlerAdapter implements
 	public void setForward(String forward) {
 		int split = forward.indexOf(':');
 		String host = forward.substring(0, split);
-		int port = Integer.parseInt(forward.substring(split + 1, forward
-				.length()));
+		int port = Integer.parseInt( forward.substring(split+1,forward.length()) );
 		this.forward = new InetSocketAddress(host, port);
 	}
 
@@ -106,9 +105,10 @@ public class DebugProxyHandler extends IoHandlerAdapter implements
 
 		if (true) {
 
-			String fileName = System.currentTimeMillis() + "_"
-					+ forward.getHostName() + "_" + forward.getPort() + "_"
-					+ (isClient ? "DOWNSTREAM" : "UPSTREAM");
+			String fileName = System.currentTimeMillis() 
+				+ "_" + forward.getHostName() 
+				+ "_" + forward.getPort() 
+				+ "_" + (isClient ? "DOWNSTREAM" : "UPSTREAM");
 
 			File headersFile = loader.getResource(dumpTo + fileName + ".cap")
 					.getFile();

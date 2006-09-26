@@ -78,9 +78,8 @@ public class BufferUtils {
 	}
 
 	/**
-	 * Puts an in buffer stream onto an out buffer stream and returns the bytes
-	 * written
-	 * 
+	 * Puts an in buffer stream onto an out buffer stream
+	 * and returns the bytes written
 	 * @param out
 	 * @param in
 	 * @param numBytesMax

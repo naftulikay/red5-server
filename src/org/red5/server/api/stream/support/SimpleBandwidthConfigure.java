@@ -119,8 +119,10 @@ public class SimpleBandwidthConfigure implements IBandwidthConfigure {
 	}
 
 	public String toString() {
-		return new ToStringCreator(this).append("ALL", getOverallBandwidth())
-				.append("BURST", getBurst()).append("MAX", getMaxBurst())
+		return new ToStringCreator(this)
+			.append("ALL",getOverallBandwidth())
+			.append("BURST",getBurst())
+			.append("MAX",getMaxBurst())
 				.toString();
 	}
 

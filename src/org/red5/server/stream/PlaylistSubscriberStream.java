@@ -67,7 +67,11 @@ public class PlaylistSubscriberStream extends AbstractClientStream implements
 			.getLog(PlaylistSubscriberStream.class);
 
 	private enum State {
-		UNINIT, STOPPED, PLAYING, PAUSED, CLOSED
+		UNINIT,
+		STOPPED,
+		PLAYING,
+		PAUSED,
+		CLOSED
 	}
 
 	private IPlaylistController controller;
@@ -323,6 +327,18 @@ public class PlaylistSubscriberStream extends AbstractClientStream implements
 		return items.size();
 	}
 
+	public int getCurrentItemIndex() {
+		return currentItemIndex;
+	}
+	
+	public IPlayItem getItem(int index) {
+		try {
+			return items.get(index);
+		} catch (IndexOutOfBoundsException e) {
+			return null;
+		}
+	}
+
 	@Override
 	public void setBandwidthConfigure(IBandwidthConfigure config) {
 		super.setBandwidthConfigure(config);
@@ -330,9 +346,8 @@ public class PlaylistSubscriberStream extends AbstractClientStream implements
 	}
 
 	/**
-	 * Notified by RTMPHandler when a message has been sent. Glue for old code
-	 * base.
-	 * 
+	 * Notified by RTMPHandler when a message has been sent.
+	 * Glue for old code base.
 	 * @param message
 	 */
 	public void written(Object message) {
@@ -826,11 +841,8 @@ public class PlaylistSubscriberStream extends AbstractClientStream implements
 								waitStopJob = schedulingService
 										.addScheduledOnceJob(timeDelta,
 												new IScheduledJob() {
-													public void execute(
-															ISchedulingService service) {
-														// OMFG: it works god
-														// dammit! now we stop
-														// it.
+									public void execute(ISchedulingService service) {
+										// OMFG: it works god dammit! now we stop it.
 														stop();
 														onItemEnd();
 														log.info("Stop");
@@ -844,21 +856,17 @@ public class PlaylistSubscriberStream extends AbstractClientStream implements
 								RTMPMessage rtmpMessage = (RTMPMessage) msg;
 								IRTMPEvent body = rtmpMessage.getBody();
 								if (!(body instanceof IStreamData))
-									throw new RuntimeException(
-											"expected IStreamData but got "
-													+ body);
+									throw new RuntimeException("expected IStreamData but got " + body);
 
 								size = ((IStreamData) body).getData().limit();
 								boolean toSend = true;
 								if (body instanceof VideoData) {
-									if (!videoBucket.acquireTokenNonblocking(
-											size, this)) {
+									if (!videoBucket.acquireTokenNonblocking(size, this)) {
 										isWaitingForToken = true;
 										toSend = false;
 									}
 								} else if (body instanceof AudioData) {
-									if (!audioBucket.acquireTokenNonblocking(
-											size, this)) {
+									if (!audioBucket.acquireTokenNonblocking(size, this)) {
 										isWaitingForToken = true;
 										toSend = false;
 									}
@@ -953,9 +961,7 @@ public class PlaylistSubscriberStream extends AbstractClientStream implements
 			Status reset = new Status(Status.NS_PLAY_RESET);
 			reset.setClientid(getStreamId());
 			reset.setDetails(item.getName());
-			reset
-					.setDesciption("Playing and resetting " + item.getName()
-							+ ".");
+			reset.setDesciption("Playing and resetting " + item.getName() + ".");
 
 			StatusMessage resetMsg = new StatusMessage();
 			resetMsg.setBody(reset);
@@ -1074,9 +1080,7 @@ public class PlaylistSubscriberStream extends AbstractClientStream implements
 				OOBControlMessage oobCtrlMsg) {
 			if ("ConnectionConsumer".equals(oobCtrlMsg.getTarget())) {
 				if (source instanceof IProvider)
-					msgOut
-							.sendOOBControlMessage((IProvider) source,
-									oobCtrlMsg);
+					msgOut.sendOOBControlMessage((IProvider) source, oobCtrlMsg);
 			}
 		}
 
@@ -1088,9 +1092,7 @@ public class PlaylistSubscriberStream extends AbstractClientStream implements
 						schedulingService.removeScheduledJob(waitLiveJob);
 						waitLiveJob = null;
 						if (currentItem.getLength() >= 0) {
-							playLengthJob = schedulingService
-									.addScheduledOnceJob(currentItem
-											.getLength(), this);
+							playLengthJob = schedulingService.addScheduledOnceJob(currentItem.getLength(), this);
 						}
 						isWaiting = false;
 					}
@@ -1127,35 +1129,28 @@ public class PlaylistSubscriberStream extends AbstractClientStream implements
 				RTMPMessage rtmpMessage = (RTMPMessage) message;
 				IRTMPEvent body = rtmpMessage.getBody();
 				if (!(body instanceof IStreamData))
-					throw new RuntimeException("expected IStreamData but got "
-							+ body);
+					throw new RuntimeException("expected IStreamData but got " + body);
 
 				int size = ((IStreamData) body).getData().limit();
 				if (body instanceof VideoData) {
 					IVideoStreamCodec videoCodec = null;
 					if (msgIn instanceof IBroadcastScope) {
-						IClientBroadcastStream stream = (IClientBroadcastStream) ((IBroadcastScope) msgIn)
-								.getAttribute(IBroadcastScope.STREAM_ATTRIBUTE);
+						IClientBroadcastStream stream = (IClientBroadcastStream) ((IBroadcastScope) msgIn).getAttribute(IBroadcastScope.STREAM_ATTRIBUTE);
 						if (stream != null && stream.getCodecInfo() != null)
 							videoCodec = stream.getCodecInfo().getVideoCodec();
 					}
 
 					if (videoCodec == null || videoCodec.canDropFrames()) {
-						// Only check for frame dropping if the codec supports
-						// it
+						// Only check for frame dropping if the codec supports it
 						long pendingVideos = pendingVideoMessages();
-						if (!videoFrameDropper.canSendPacket(rtmpMessage,
-								pendingVideos)) {
-							// System.err.println("Dropping1: " + body + " " +
-							// pendingVideos);
+						if (!videoFrameDropper.canSendPacket(rtmpMessage, pendingVideos)) {
+							//System.err.println("Dropping1: " + body + " " + pendingVideos);
 							return;
 						}
 
 						boolean drop = !videoBucket.acquireToken(size, 0);
 						if (!receiveVideo || pendingVideos > 1 || drop) {
-							// System.err.println("Dropping2: " + receiveVideo +
-							// " " + pendingVideos + " " + videoBucket + " size:
-							// " + size + " drop: " + drop);
+							//System.err.println("Dropping2: " + receiveVideo + " " + pendingVideos + " " + videoBucket + " size: " + size + " drop: " + drop);
 							videoFrameDropper.dropPacket(rtmpMessage);
 							return;
 						}

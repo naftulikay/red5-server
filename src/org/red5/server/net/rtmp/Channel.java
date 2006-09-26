@@ -33,7 +33,8 @@ import org.red5.server.service.PendingCall;
 
 public class Channel {
 
-	protected static Log log = LogFactory.getLog(Channel.class.getName());
+	protected static Log log =
+        LogFactory.getLog(Channel.class.getName());
 
 	private RTMPConnection connection = null;
 
@@ -54,10 +55,6 @@ public class Channel {
 		return id;
 	}
 
-	/*
-	 * public Stream getStream() { return stream; }
-	 */
-
 	public void write(IRTMPEvent event) {
 		final IClientStream stream = connection.getStreamByChannelId(id);
 		if (id > 3 && stream == null) {
@@ -65,11 +62,7 @@ public class Channel {
 					+ event);
 			return;
 		}
-		/*
-		 * final int streamId = ( stream==null || ( message.getDataType() !=
-		 * Constants.TYPE_AUDIO_DATA && message.getDataType() !=
-		 * Constants.TYPE_VIDEO_DATA ) ) ? 0 : stream.getStreamId();
-		 */
+
 		final int streamId = (stream == null) ? 0 : stream.getStreamId();
 		write(event, streamId);
 	}

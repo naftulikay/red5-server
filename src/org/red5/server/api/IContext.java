@@ -25,8 +25,8 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.core.io.support.ResourcePatternResolver;
 
 /**
- * The current context, this object basically wraps the spring context or in the
- * case of the .Net version, any similar system.
+ * The current context, this object basically wraps the spring context
+ * or in the case of the .Net version, any similar system.
  * 
  */
 public interface IContext extends ResourcePatternResolver {

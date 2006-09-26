@@ -66,8 +66,8 @@ public class ClientManager {
 	}
 
 	/**
-	 * A new client connected. This adds the username to the shared object of
-	 * the passed scope.
+	 * A new client connected. This adds the username to
+	 * the shared object of the passed scope. 
 	 * 
 	 * @param scope
 	 *            scope the client connected to
@@ -83,8 +83,8 @@ public class ClientManager {
 	}
 
 	/**
-	 * A client disconnected. This removes the username from the shared object
-	 * of the passed scope.
+	 * A client disconnected. This removes the username from
+	 * the shared object of the passed scope.
 	 * 
 	 * @param scope
 	 *            scope the client disconnected from

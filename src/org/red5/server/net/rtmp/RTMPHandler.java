@@ -76,7 +76,8 @@ import org.red5.server.stream.StreamService;
 
 public class RTMPHandler implements Constants, StatusCodes {
 
-	protected static Log log = LogFactory.getLog(RTMPHandler.class.getName());
+	protected static Log log =
+        LogFactory.getLog(RTMPHandler.class.getName());
 
 	protected StatusObjectService statusObjectService;
 
@@ -303,8 +304,7 @@ public class RTMPHandler implements Constants, StatusCodes {
 					try {
 						callback.resultReceived(pendingCall);
 					} catch (Exception e) {
-						log.error("Error while executing callback " + callback,
-								e);
+						log.error("Error while executing callback " + callback, e);
 					}
 				}
 			}
@@ -370,26 +370,18 @@ public class RTMPHandler implements Constants, StatusCodes {
 										okayToConnect = conn.connect(scope);
 									if (okayToConnect) {
 										log.debug("connected");
-										log
-												.debug("client: "
-														+ conn.getClient());
-										call
-												.setStatus(Call.STATUS_SUCCESS_RESULT);
+										log.debug("client: "+conn.getClient());
+										call.setStatus(Call.STATUS_SUCCESS_RESULT);
 										if (call instanceof IPendingServiceCall)
-											((IPendingServiceCall) call)
-													.setResult(getStatus(NC_CONNECT_SUCCESS));
-										// Measure initial roundtrip time after
-										// connecting
-										conn.getChannel((byte) 2).write(
-												new Ping((short) 0, 0, -1));
+											((IPendingServiceCall) call).setResult(getStatus(NC_CONNECT_SUCCESS));
+										// Measure initial roundtrip time after connecting
+										conn.getChannel((byte) 2).write(new Ping((short)0,0,-1)); 
 										conn.ping();
 									} else {
 										log.debug("connect failed");
-										call
-												.setStatus(Call.STATUS_ACCESS_DENIED);
+										call.setStatus(Call.STATUS_ACCESS_DENIED);
 										if (call instanceof IPendingServiceCall)
-											((IPendingServiceCall) call)
-													.setResult(getStatus(NC_CONNECT_REJECTED));
+											((IPendingServiceCall) call).setResult(getStatus(NC_CONNECT_REJECTED));
 										disconnectOnReturn = true;
 									}
 								} catch (ClientRejectedException rejected) {
@@ -397,10 +389,8 @@ public class RTMPHandler implements Constants, StatusCodes {
 									call.setStatus(Call.STATUS_ACCESS_DENIED);
 									if (call instanceof IPendingServiceCall) {
 										StatusObject status = (StatusObject) getStatus(NC_CONNECT_REJECTED);
-										status.setApplication(rejected
-												.getReason());
-										((IPendingServiceCall) call)
-												.setResult(status);
+										status.setApplication(rejected.getReason());
+										((IPendingServiceCall) call).setResult(status);
 									}
 									disconnectOnReturn = true;
 								}
@@ -409,8 +399,7 @@ public class RTMPHandler implements Constants, StatusCodes {
 					} catch (RuntimeException e) {
 						call.setStatus(Call.STATUS_GENERAL_EXCEPTION);
 						if (call instanceof IPendingServiceCall)
-							((IPendingServiceCall) call)
-									.setResult(getStatus(NC_CONNECT_FAILED));
+							((IPendingServiceCall) call).setResult(getStatus(NC_CONNECT_FAILED));
 						log.error("Error connecting", e);
 						disconnectOnReturn = true;
 					}
@@ -504,14 +493,6 @@ public class RTMPHandler implements Constants, StatusCodes {
 			log.warn("Unhandled ping: " + ping);
 		}
 
-		/*
-		 * final Ping pong = new Ping(); pong.setValue1((short) 4);
-		 * pong.setValue2(source.getStreamId()); channel.write(pong);
-		 * log.info(ping); // No idea why this is needed, // but it was the
-		 * thing stopping the new rtmp code streaming final Ping pong2 = new
-		 * Ping(); pong2.setValue1((short) 0);
-		 * pong2.setValue2(source.getStreamId()); channel.write(pong2);
-		 */
 	}
 
 	public void onStreamBytesRead(RTMPConnection conn, Channel channel,

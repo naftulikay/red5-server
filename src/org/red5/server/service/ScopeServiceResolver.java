@@ -25,8 +25,7 @@ import org.red5.server.api.IScope;
  * 
  * @author The Red5 Project (red5@osflash.org)
  * @author Joachim Bauch (jojo@struktur.de)
- * @see org.red5.server.api.service.IServiceHandlerProvider#registerServiceHandler(String,
- *      Object)
+ * @see org.red5.server.api.service.IServiceHandlerProvider#registerServiceHandler(String, Object)
  * 
  */
 public class ScopeServiceResolver implements IServiceResolver {

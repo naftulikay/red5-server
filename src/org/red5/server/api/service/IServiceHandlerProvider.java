@@ -37,9 +37,8 @@ public interface IServiceHandlerProvider {
 	 * <p>
 	 * Example:<br>
 	 * If you registered a handler with the name "<code>one.two</code>" that
-	 * provides a method "<code>callMe</code>", you can call a method "<code>one.two.callMe</code>"
-	 * from the client.
-	 * </p>
+	 * provides a method "<code>callMe</code>", you can call a method
+	 * "<code>one.two.callMe</code>" from the client.</p>
 	 * 
 	 * @param name
 	 *            the name of the handler

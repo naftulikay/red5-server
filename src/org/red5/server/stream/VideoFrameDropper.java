@@ -19,11 +19,12 @@ package org.red5.server.stream;
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA 
  */
 
+import static org.red5.server.net.rtmp.event.VideoData.FrameType;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.red5.server.net.rtmp.event.IRTMPEvent;
 import org.red5.server.net.rtmp.event.VideoData;
-import org.red5.server.net.rtmp.event.VideoData.FrameType;
 import org.red5.server.stream.message.RTMPMessage;
 
 /**
@@ -52,8 +53,8 @@ import org.red5.server.stream.message.RTMPMessage;
  */
 public class VideoFrameDropper implements IFrameDropper {
 
-	protected static Log log = LogFactory.getLog(VideoFrameDropper.class
-			.getName());
+	protected static Log log =
+        LogFactory.getLog(VideoFrameDropper.class.getName());
 
 	/** Current state. */
 	private int state;

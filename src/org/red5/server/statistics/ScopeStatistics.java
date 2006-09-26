@@ -116,8 +116,8 @@ public class ScopeStatistics {
 	}
 
 	/**
-	 * Return an object that can be serialized through XML-RPC. Inspired by
-	 * "Reflective XML-RPC" by "Stephan Maier".
+	 * Return an object that can be serialized through XML-RPC.
+	 * Inspired by "Reflective XML-RPC" by "Stephan Maier".
 	 * 
 	 * @param value
 	 * @return
@@ -128,8 +128,10 @@ public class ScopeStatistics {
 		}
 
 		Class type = value.getClass();
-		if (type.equals(Integer.class) || type.equals(Double.class)
-				|| type.equals(Boolean.class) || type.equals(String.class)
+		if (type.equals(Integer.class)
+			|| type.equals(Double.class)
+			|| type.equals(Boolean.class)
+			|| type.equals(String.class)
 				|| type.equals(Date.class)) {
 			return value;
 		} else if (type.equals(Long.class)) {

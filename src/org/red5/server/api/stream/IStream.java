@@ -22,8 +22,8 @@ package org.red5.server.api.stream;
 import org.red5.server.api.IScope;
 
 /**
- * Base interface for stream objects. A stream object is always associated with
- * a scope.
+ * Base interface for stream objects.
+ * A stream object is always associated with a scope. 
  */
 public interface IStream {
 

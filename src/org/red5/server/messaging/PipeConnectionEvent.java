@@ -25,8 +25,8 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Event object corresponds to the connect/disconnect events among
- * providers/consumers and pipes.
+ * Event object corresponds to the connect/disconnect events
+ * among providers/consumers and pipes.
  * 
  * @author The Red5 Project (red5@osflash.org)
  * @author Steven Gong (steven.gong@gmail.com)
@@ -75,10 +75,9 @@ public class PipeConnectionEvent extends EventObject {
 	private Map paramMap;
 
 	/**
-	 * Construct an object with the specific pipe as the <tt>source</tt>
-	 * 
-	 * @param source
-	 *            A pipe that triggers this event.
+	 * Construct an object with the specific pipe as the
+	 * <tt>source</tt>
+	 * @param source A pipe that triggers this event.
 	 */
 	public PipeConnectionEvent(Object source) {
 		super(source);

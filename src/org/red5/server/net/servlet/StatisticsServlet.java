@@ -43,8 +43,8 @@ import org.springframework.web.context.support.WebApplicationContextUtils;
  */
 public class StatisticsServlet extends HttpServlet {
 
-	private static Log log = LogFactory.getLog(StatisticsServlet.class
-			.getName());
+	private static Log log =
+        LogFactory.getLog(StatisticsServlet.class.getName());
 
 	private XmlRpcServer server = new XmlRpcServer();
 

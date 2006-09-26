@@ -125,8 +125,8 @@ public interface IConnection extends ICoreObject {
 	public int getRemotePort();
 
 	/**
-	 * Get the path for this connection. This is not updated if you switch
-	 * scope.
+	 * Get the path for this connection.
+	 * This is not updated if you switch scope.
 	 * 
 	 * @return path
 	 */
@@ -202,8 +202,8 @@ public interface IConnection extends ICoreObject {
 
 	/**
 	 * Get the basic scopes this connection has subscribed. This list will
-	 * contain the shared objects and broadcast streams the connection connected
-	 * to.
+	 * contain the shared objects and broadcast streams the connection
+	 * connected to.
 	 * 
 	 * @return list of basic scopes
 	 */

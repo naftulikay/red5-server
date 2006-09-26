@@ -38,10 +38,8 @@ public class QuartzSchedulingServiceJob implements Job {
 	protected static final String SCHEDULED_JOB = "scheduled_job";
 
 	public void execute(JobExecutionContext arg0) throws JobExecutionException {
-		ISchedulingService service = (ISchedulingService) arg0.getJobDetail()
-				.getJobDataMap().get(SCHEDULING_SERVICE);
-		IScheduledJob job = (IScheduledJob) arg0.getJobDetail().getJobDataMap()
-				.get(SCHEDULED_JOB);
+		ISchedulingService service = (ISchedulingService) arg0.getJobDetail().getJobDataMap().get(SCHEDULING_SERVICE);
+		IScheduledJob job = (IScheduledJob) arg0.getJobDetail().getJobDataMap().get(SCHEDULED_JOB);
 		job.execute(service);
 	}
 

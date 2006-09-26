@@ -25,8 +25,9 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 /**
- * A simple in-memory version of pull-pull pipe. It is triggered by an active
- * consumer that pulls messages through it from a pullable provider.
+ * A simple in-memory version of pull-pull pipe.
+ * It is triggered by an active consumer that pulls messages
+ * through it from a pullable provider.
  * 
  * @author The Red5 Project (red5@osflash.org)
  * @author Steven Gong (steven.gong@gmail.com)
@@ -37,16 +38,13 @@ public class InMemoryPullPullPipe extends AbstractPipe {
 
 	public boolean subscribe(IConsumer consumer, Map paramMap) {
 		boolean success = super.subscribe(consumer, paramMap);
-		if (success)
-			fireConsumerConnectionEvent(consumer,
-					PipeConnectionEvent.CONSUMER_CONNECT_PULL, paramMap);
+		if (success) fireConsumerConnectionEvent(consumer, PipeConnectionEvent.CONSUMER_CONNECT_PULL, paramMap);
 		return success;
 	}
 
 	public boolean subscribe(IProvider provider, Map paramMap) {
 		if (!(provider instanceof IPullableProvider)) {
-			throw new IllegalArgumentException(
-					"Non-pullable provider not supported by PullPullPipe");
+			throw new IllegalArgumentException("Non-pullable provider not supported by PullPullPipe");
 		}
 		boolean success = super.subscribe(provider, paramMap);
 		if (success)

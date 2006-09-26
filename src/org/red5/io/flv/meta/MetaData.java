@@ -33,9 +33,14 @@ import java.util.TreeSet;
  * @author Dominick Accattato (daccattato@gmail.com)
  * 
  * Example:
- *  // private boolean canSeekToEnd = true; // private int videocodecid = 4; //
- * private int framerate = 15; // private int videodatarate = 600; // private
- * int height; // private int width = 320; // private double duration = 7.347;
+ *
+ *          //	private boolean canSeekToEnd = true;
+ *          //	private int videocodecid = 4;
+ *          //	private int framerate = 15;
+ *          //	private int videodatarate = 600;
+ *          //	private int height;
+ *          //	private int width = 320;
+ *          //	private double duration = 7.347;
  */
 public class MetaData<K, V> extends HashMap<String, Object> implements
 		IMetaData, Serializable {
@@ -43,9 +48,7 @@ public class MetaData<K, V> extends HashMap<String, Object> implements
 	/** serialVersionUID = -5681069577717669925L; */
 	private static final long serialVersionUID = -5681069577717669925L;
 
-	IMetaCue cuePoints[] = null;
-
-	/** CuePoint array * */
+	IMetaCue cuePoints[] = null; //CuePoint array
 
 	/** MetaData constructor */
 	public MetaData() {

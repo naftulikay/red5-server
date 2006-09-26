@@ -22,8 +22,8 @@ package org.red5.io.flv.meta;
 import java.io.Serializable;
 
 /**
- * IMeta is a Marker Interface CuePoint and MetaData both implement this
- * interface
+ * IMeta is a Marker Interface
+ * CuePoint and MetaData both implement this interface
  * 
  * @author The Red5 Project (red5@osflash.org)
  * @author daccattato(daccattato@gmail.com)

@@ -31,8 +31,8 @@ import org.red5.server.api.service.IServiceHandlerProvider;
 public interface ISharedObjectHandlerProvider extends IServiceHandlerProvider {
 
 	/**
-	 * Register an object that provides methods which handle calls without a
-	 * service name to a shared object.
+	 * Register an object that provides methods which handle calls without
+	 * a service name to a shared object.
 	 * 
 	 * @param handler
 	 *            the handler object

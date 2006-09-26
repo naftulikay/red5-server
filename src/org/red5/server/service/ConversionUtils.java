@@ -194,13 +194,13 @@ public class ConversionUtils {
 		Method[] methods = object.getClass().getMethods();
 		for(int i=0; i<methods.length; i++){
 			Method m = methods[i];
-			log.debug("Method name: "+m.getName());
+			//log.debug("Method name: "+m.getName());
 			if(!m.getName().equals(method)) {
-				log.debug("Method name not the same");
+				//log.debug("Method name not the same");
 				continue;
 			}
 			if(m.getParameterTypes().length != numParam) {
-				log.debug("Param length not the same");
+				//log.debug("Param length not the same");
 				continue;
 			}
 			list.add(m);

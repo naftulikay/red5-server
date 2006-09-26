@@ -333,7 +333,7 @@ public class RTMPHandler
 							if (call instanceof IPendingServiceCall)
 								((IPendingServiceCall) call).setResult(getStatus(NC_CONNECT_FAILED));
 							log.info("No global scope found for " + path + " on " + host);
-							conn.close();
+							disconnectOnReturn = true;
 						} else {
 							final IContext context = global.getContext();
 							IScope scope = null;

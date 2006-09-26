@@ -50,12 +50,12 @@ public class ServiceUtils {
 	public static Object[] findMethodWithExactParameters(Object service, String methodName, Object[] args) {
 		int numParams = (args==null) ? 0 : args.length;
 		List methods = ConversionUtils.findMethodsByNameAndNumParams(service, methodName, numParams);
-		log.debug("Found " + methods.size() + " methods");
+		//log.debug("Found " + methods.size() + " methods");
 		if (methods.isEmpty())
 			return new Object[]{null, null};
 		else if (methods.size() > 1) {
-			log.debug("Multiple methods found with same name and parameter count.");
-			log.debug("Parameter conversion will be attempted in order.");
+			//log.debug("Multiple methods found with same name and parameter count.");
+			//log.debug("Parameter conversion will be attempted in order.");
 		}
 		
 		Method method = null;
@@ -88,7 +88,7 @@ public class ServiceUtils {
 				
 				return new Object[]{method, params};
 			} catch (Exception ex){
-				log.debug("Parameter conversion failed for " + method);
+				//log.debug("Parameter conversion failed for " + method);
 			}
 		}
 		
@@ -112,12 +112,12 @@ public class ServiceUtils {
 	 */
 	public static Object[] findMethodWithListParameters(Object service, String methodName, Object[] args) {
 		List methods = ConversionUtils.findMethodsByNameAndNumParams(service, methodName, 1);
-		log.debug("Found " + methods.size() + " methods");
+		//log.debug("Found " + methods.size() + " methods");
 		if (methods.isEmpty())
 			return new Object[]{null, null};
 		else if (methods.size() > 1) {
-			log.debug("Multiple methods found with same name and parameter count.");
-			log.debug("Parameter conversion will be attempted in order.");
+			//log.debug("Multiple methods found with same name and parameter count.");
+			//log.debug("Parameter conversion will be attempted in order.");
 		}
 		
 		ArrayList argsList = new ArrayList();
@@ -140,7 +140,7 @@ public class ServiceUtils {
 				
 				return new Object[]{method, params};
 			} catch (Exception ex){
-				log.debug("Parameter conversion failed", ex);
+				//log.debug("Parameter conversion failed", ex);
 			}
 		}
 		

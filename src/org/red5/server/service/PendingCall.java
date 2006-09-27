@@ -28,7 +28,7 @@ import org.red5.server.api.service.IPendingServiceCallback;
 public class PendingCall extends Call implements IPendingServiceCall {
 
 	private Object result = null;
-	private HashSet<IPendingServiceCallback> callbacks = new HashSet<IPendingServiceCallback>();
+	private HashSet<IPendingServiceCallback> callbacks = null;
 
     public PendingCall(String method){
     	super(method);
@@ -57,11 +57,17 @@ public class PendingCall extends Call implements IPendingServiceCall {
 		this.result = result;
 	}
 
-	public void registerCallback(IPendingServiceCallback callback) {
+	public synchronized void registerCallback(IPendingServiceCallback callback) {
+		if (callbacks == null)
+			callbacks = new HashSet<IPendingServiceCallback>();
+		
 		callbacks.add(callback);
 	}
 	
-	public void unregisterCallback(IPendingServiceCallback callback) {
+	public synchronized void unregisterCallback(IPendingServiceCallback callback) {
+		if (callbacks == null)
+			return;
+		
 		callbacks.remove(callback);
 	}
 

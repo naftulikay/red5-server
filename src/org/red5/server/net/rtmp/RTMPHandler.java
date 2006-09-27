@@ -285,7 +285,7 @@ public class RTMPHandler
 				}
 				
 				Set<IPendingServiceCallback> callbacks = pendingCall.getCallbacks();
-				if (callbacks.isEmpty())
+				if (callbacks == null || callbacks.isEmpty())
 					return;
 				
 				HashSet<IPendingServiceCallback> tmp = new HashSet<IPendingServiceCallback>();

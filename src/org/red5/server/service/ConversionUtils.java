@@ -87,6 +87,9 @@ public class ConversionUtils {
 	/** Default number format */
 	private static NumberFormat NUMBER_FORMAT = NumberFormat.getInstance();
 	
+	/** Cache methods of a class. */
+	private static Map<String, Method[]> classMethods = new HashMap<String, Method[]>();
+	
 	static
 	{
 		for (int i=0; i < PRIMITIVES.length; i++)
@@ -191,7 +194,12 @@ public class ConversionUtils {
 	
 	public static List findMethodsByNameAndNumParams(Object object, String method, int numParam){
 		LinkedList list = new LinkedList();
-		Method[] methods = object.getClass().getMethods();
+		Class klass = object.getClass();
+		Method[] methods = classMethods.get(klass.getCanonicalName());
+		if (methods == null) {
+			methods = klass.getMethods();
+			classMethods.put(klass.getCanonicalName(), methods);
+		}
 		for(int i=0; i<methods.length; i++){
 			Method m = methods[i];
 			//log.debug("Method name: "+m.getName());

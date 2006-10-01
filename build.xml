@@ -1,0 +1,581 @@
+<?xml version="1.0"?>
+<project name="RED5" basedir="." default="all">
+
+    <!-- user overides for project properties
+    <property file="${user.home}/ant.properties" /> -->
+    <!-- base project properties -->
+    <property file="build.properties" />
+
+    <!-- project properties -->
+	<property environment="env"/>
+
+	<property name="java.home" value="${env.JAVA_HOME}"/>
+
+	<property name="src.dir" value="src"/>
+	<property name="bin.dir" value="bin"/>
+	<property name="dist.dir" value="dist"/>
+	<property name="lib.dir" value="lib"/>
+	<property name="classes.dir" value="bin"/>
+	<property name="debug.state" value="true"/>
+	<property name="config.dir" value="conf"/>
+	<property name="javadoc.dir" value="doc/api"/>
+	<!-- JUNIT TESTING -->
+	<property name="test.dir" value="test"/>
+	<property name="testclass.dir" value="bin/testcases"/>
+	<property name="testreports.dir" value="${testclass.dir}/testreports"/>
+	<property name="testdoc.dir" value="doc/test"/>
+	<target name="-junit.check">
+		<available property="junit.installed" classname="junit.framework.TestCase" />
+	</target>
+
+	<path id="project.classpath">
+        <fileset dir="${lib.dir}" includesfile="${lib.dir}/library.properties" />
+	</path>
+
+    <path id="script.classpath">
+        <fileset dir="${lib.dir}" includesfile="${lib.dir}/script.properties" />
+        <pathelement location="${bin.dir}"/>
+    </path>    
+    
+	<path id="webapps.classpath">
+		<fileset dir="${lib.dir}">
+			<filename name="*.jar"/>
+		</fileset>
+		<pathelement location="${bin.dir}"/>
+	</path>
+
+	<path id="full.classpath">
+        <fileset dir="${lib.dir}" includesfile="${lib.dir}/library.properties" />
+        <fileset dir="${lib.dir}" includesfile="${lib.dir}/script.properties" />
+		<fileset dir="./">
+			<filename name="red5.jar"/>
+		</fileset>
+	</path>
+
+	<echo>java.home is ${java.home} and the target version is ${java.target_version}</echo>
+
+
+	<!-- setup the directories for building -->
+
+	<target name="prepare">
+		<mkdir dir="${classes.dir}"/>
+		<mkdir dir="${bin.dir}"/>
+		<mkdir dir="${dist.dir}"/>
+		<mkdir dir="${testclass.dir}"/>
+		<mkdir dir="${testreports.dir}"/>
+		<mkdir dir="${src.dir}/../webapps/fitcDemo/WEB-INF/classes"/>
+		<mkdir dir="${src.dir}/../webapps/fitcDemo/WEB-INF/lib"/>
+		<mkdir dir="${src.dir}/../webapps/midiDemo/WEB-INF/classes"/>
+		<mkdir dir="${src.dir}/../webapps/midiDemo/WEB-INF/lib"/>
+		<mkdir dir="${src.dir}/../webapps/oflaDemo/WEB-INF/classes"/>
+		<mkdir dir="${src.dir}/../webapps/oflaDemo/WEB-INF/lib"/>
+		<mkdir dir="${src.dir}/../webapps/test/WEB-INF/classes"/>
+		<mkdir dir="${src.dir}/../webapps/test/WEB-INF/lib"/>
+		<mkdir dir="${src.dir}/../webapps/tutorial/WEB-INF/classes"/>
+		<mkdir dir="${src.dir}/../webapps/tutorial/WEB-INF/lib"/>
+	</target>
+
+	<!-- do a clean -->
+
+	<target name="clean">
+		<delete dir="${classes.dir}"/>
+		<delete dir="${bin.dir}"/>
+		<delete dir="${dist.dir}"/>
+		<delete dir="${javadoc.dir}"/>
+		<delete dir="${testdoc.dir}"/>
+		<delete dir="${src.dir}/../webapps/fitcDemo/WEB-INF/classes"/>
+		<delete dir="${src.dir}/../webapps/fitcDemo/WEB-INF/lib"/>
+		<delete dir="${src.dir}/../webapps/midi/WEB-INF/classes"/>
+	    <delete dir="${src.dir}/../webapps/midi/WEB-INF/lib"/>
+		<delete dir="${src.dir}/../webapps/oflaDemo/WEB-INF/classes"/>
+		<delete dir="${src.dir}/../webapps/oflaDemo/WEB-INF/lib"/>
+		<delete dir="${src.dir}/../webapps/test/WEB-INF/classes"/>
+		<delete dir="${src.dir}/../webapps/test/WEB-INF/lib"/>
+		<delete dir="${src.dir}/../webapps/tutorial/WEB-INF/classes"/>
+		<delete dir="${src.dir}/../webapps/tutorial/WEB-INF/lib"/>
+	</target>
+
+	<target name="compile" depends="-junit.check, prepare">
+        <condition property="java.target_version" value="1.5">
+            <not>
+                <isset property="java.target_version" />
+            </not>
+        </condition>
+        <echo message="Javac version: ${java.target_version}" />     
+
+        <condition property="compiler" value="${build.compiler}${java.target_version}">
+            <equals arg1="${build.compiler}" arg2="javac" />
+        </condition>        
+        <property name="compiler" value="${build.compiler}" />
+        <echo message="Compiler adapter name: ${compiler}" />
+       
+		<javac
+			sourcepath=""
+			srcdir="${src.dir}"
+			destdir="${classes.dir}"     
+            classpathref="project.classpath"
+    
+            optimize="${build.optimize}" 
+            verbose="${build.verbose}" 
+            fork="${build.fork}" 
+            nowarn="${build.nowarn}"
+            deprecation="${build.deprecation}"
+  
+            debug="${debug.state}"
+            compiler="${compiler}"
+            source="${java.target_version}"
+            target="${java.target_version}" 
+            memoryMaximumSize="1024m" 
+            excludes="**/*.jsp,com/sun/**,org/red5/server/script/**" 
+            listfiles="false"      
+            />
+
+		<javac
+			sourcepath=""
+			srcdir="${src.dir}/../webapps/fitcDemo/WEB-INF/src"
+			destdir="${src.dir}/../webapps/fitcDemo/WEB-INF/classes"
+			classpathref="webapps.classpath"
+            optimize="${build.optimize}" 
+            verbose="${build.verbose}" 
+            fork="${build.fork}" 
+            nowarn="${build.nowarn}"
+            deprecation="${build.deprecation}"
+            debug="${debug.state}"
+            compiler="${compiler}"
+            source="${java.target_version}"
+            target="${java.target_version}" 
+		/>
+
+		<javac
+			sourcepath=""
+			srcdir="${src.dir}/../webapps/midiDemo/WEB-INF/src"
+			destdir="${src.dir}/../webapps/midiDemo/WEB-INF/classes"
+			classpathref="webapps.classpath"
+            optimize="${build.optimize}" 
+            verbose="${build.verbose}" 
+            fork="${build.fork}" 
+            nowarn="${build.nowarn}"
+            deprecation="${build.deprecation}"
+            debug="${debug.state}"
+            compiler="${compiler}"
+            source="${java.target_version}"
+            target="${java.target_version}" 
+        />
+		
+		<javac
+			sourcepath=""
+			srcdir="${src.dir}/../webapps/oflaDemo/WEB-INF/src"
+			destdir="${src.dir}/../webapps/oflaDemo/WEB-INF/classes"
+			classpathref="webapps.classpath"
+            optimize="${build.optimize}" 
+            verbose="${build.verbose}" 
+            fork="${build.fork}" 
+            nowarn="${build.nowarn}"
+            deprecation="${build.deprecation}"
+            debug="${debug.state}"
+            compiler="${compiler}"
+            source="${java.target_version}"
+            target="${java.target_version}" 
+		/>
+        
+        <mkdir dir="webapps/oflaDemo/WEB-INF/classes/applications"/>
+        
+        <copy todir="webapps/oflaDemo/WEB-INF/classes/applications">
+            <fileset dir="webapps/oflaDemo/WEB-INF/src/applications"/>
+        </copy>
+        
+		<javac
+			sourcepath=""
+			srcdir="${src.dir}/../webapps/test/WEB-INF/src"
+			destdir="${src.dir}/../webapps/test/WEB-INF/classes"
+            classpathref="webapps.classpath"
+            optimize="${build.optimize}" 
+            verbose="${build.verbose}" 
+            fork="${build.fork}" 
+            nowarn="${build.nowarn}"
+            deprecation="${build.deprecation}"
+            debug="${debug.state}"
+            compiler="${compiler}"
+            source="${java.target_version}"
+            target="${java.target_version}" 
+        />
+
+		<javac
+			sourcepath=""
+			srcdir="${src.dir}/../webapps/tutorial/WEB-INF/src"
+			destdir="${src.dir}/../webapps/tutorial/WEB-INF/classes"
+            classpathref="webapps.classpath"
+            optimize="${build.optimize}" 
+            verbose="${build.verbose}" 
+            fork="${build.fork}" 
+            nowarn="${build.nowarn}"
+            deprecation="${build.deprecation}"
+            debug="${debug.state}"
+            compiler="${compiler}"
+            source="${java.target_version}"
+            target="${java.target_version}" 
+        />
+        
+        <javac
+            sourcepath=""
+            srcdir="${src.dir}"
+            destdir="${classes.dir}"     
+            classpathref="script.classpath"
+    
+            optimize="${build.optimize}" 
+            verbose="${build.verbose}" 
+            fork="${build.fork}" 
+            nowarn="${build.nowarn}"
+            deprecation="${build.deprecation}"
+  
+            debug="${debug.state}"
+            compiler="${compiler}"
+            source="${java.target_version}"
+            target="${java.target_version}" 
+            memoryMaximumSize="1024m" 
+            listfiles="false"      
+            />     
+        
+	</target>
+
+	<target name="javadoc" description="Generate JavaDoc">
+	    <echo message="Path: ${env.Path}" />
+		<javadoc
+		        useexternalfile="true"
+		        failonerror="false"
+		        verbose="false"
+				classpathref="full.classpath"
+				destdir="${javadoc.dir}"
+				author="true"
+				version="true"
+				use="true"
+				splitindex="true"
+				windowtitle="Red5 Server Documentation">
+
+			<fileset dir="src" defaultexcludes="yes">
+				<include name="org/red5/**"/>
+				<exclude name="**/*.xml"/>
+				<exclude name="**/*.xsd"/>
+			</fileset>
+
+			<doctitle><![CDATA[<h1>Red5 Server Documentation</h1>]]></doctitle>
+			<bottom><![CDATA[<i>Copyright &#169; 2006 <a href="http://osflash.org/red5" target="_blank">the Red5 project</a>.</i>]]></bottom>
+			<tag name="todo" scope="all" description="To do:"/>
+			<group title="Public API" packages="org.red5.server.api:org.red5.server.api.*"/>
+			<group title="Network Protocols" packages="org.red5.server.net:org.red5.server.net.*"/>
+			<group title="Streaming" packages="org.red5.server.stream:org.red5.server.stream.*"/>
+			<group title="IO Packages" packages="org.red5.io:org.red5.io.*"/>
+			<group title="Scripting" packages="org.red5.server.script:org.red5.server.script.*"/>
+			<link href="http://java.sun.com/j2se/1.5.0/docs/api"/>
+			<link href="http://jetty.mortbay.org/apidocs"/>
+			<link href="http://directory.apache.org/subprojects/mina/apidocs"/>
+			<link href="http://www.springframework.org/docs/api"/>
+			<link href="http://www.opensymphony.com/quartz/api"/>
+		</javadoc>
+	</target>
+
+    <!--  
+    yDoc - Javadoc UML Extension
+    This will enable you to generate and automatically integrate clear and concise UML diagrams into your Java API documentation.
+    http://www.yworks.com/en/products_ydoc.htm
+    -->
+    <target name="javadoc-ydoc">
+        <property name="ydoc.home" value="C:/dev/ydoc"/>
+        <property name="ps" value="${path.separator}"/>
+
+        <javadoc
+            source="${java.target_version}"
+            destdir="${javadoc.dir}"
+            additionalparam="-breakiterator"
+	        useexternalfile="true"
+	        failonerror="false"
+	        verbose="false"
+			classpathref="full.classpath"
+			author="true"
+			version="true"
+			use="true"
+			splitindex="true"
+			windowtitle="Red5 Server Documentation">
+
+			<fileset dir="src" defaultexcludes="yes">
+				<include name="org/red5/**"/>
+				<exclude name="**/*.xml"/>
+				<exclude name="**/*.xsd"/>
+			</fileset>            
+
+            <packageset dir="${src.dir}">
+                <include name="org/red5/**"/>
+            </packageset>
+
+            <doclet
+                name="ydoc.doclets.YStandard"
+                path="${ydoc.home}/lib/ydoc.jar${ps}${ydoc.home}/lib/class2svg.jar${ps}${ydoc.home}/resources${ps}${ydoc.home}/doc">
+                <param name="-author"/>
+                <param name="-generic"/>
+                <param name="-umlautogen"/>
+                <param name="-filterpath" value="${ydoc.home}/lib/ydoc.jar"/>
+                <param name="-filter"     value="ydoc.filters.ExcludeFilter"/>
+                <param name="-tag" value="y.precondition"/>
+                <param name="-tag" value="y.postcondition"/>
+                <param name="-tag" value="y.complexity"/>
+                <param name="-tag" value="param"/>
+                <param name="-tag" value="return"/>
+                <param name="-tag" value="see"/>
+                <param name="-tag" value="y.uml"/>
+            </doclet>
+            
+			<doctitle><![CDATA[<h1>Red5 Server Documentation</h1>]]></doctitle>
+			<bottom><![CDATA[<i>Copyright &#169; 2006 <a href="http://osflash.org/red5" target="_blank">the Red5 project</a>.</i>]]></bottom>
+			<tag name="todo" scope="all" description="To do:"/>
+			<group title="Public API" packages="org.red5.server.api:org.red5.server.api.*"/>
+			<group title="Network Protocols" packages="org.red5.server.net:org.red5.server.net.*"/>
+			<group title="Streaming" packages="org.red5.server.stream:org.red5.server.stream.*"/>
+			<group title="IO Packages" packages="org.red5.io:org.red5.io.*"/>
+			<group title="Scripting" packages="org.red5.server.script:org.red5.server.script.*"/>
+			<link href="http://java.sun.com/j2se/1.5.0/docs/api"/>
+			<link href="http://jetty.mortbay.org/apidocs"/>
+			<link href="http://directory.apache.org/subprojects/mina/apidocs"/>
+			<link href="http://www.springframework.org/docs/api"/>
+			<link href="http://www.opensymphony.com/quartz/api"/>
+		</javadoc>
+    </target>
+
+	<target name="jar" description="Make Archive" depends="compile">
+        <tstamp prefix="build">
+            <format property="TODAY" pattern="d-MMMM-yyyy" locale="en" />
+        </tstamp>
+
+        <!-- Load the library props files to generate a class-path for the jar -->
+        <loadfile
+          property="library.jars"
+          srcFile="${lib.dir}/library.properties">
+            <filterchain>
+                <tokenfilter>
+                    <trim/>
+                    <ignoreblank/>
+                </tokenfilter>
+                <striplinecomments>
+                    <comment value="#"/>
+                </striplinecomments>
+                <prefixlines prefix=" lib/"/>
+                <striplinebreaks/>
+            </filterchain>
+        </loadfile>
+        <loadfile
+          property="script.jars"
+          srcFile="${lib.dir}/script.properties">
+            <filterchain>
+                <tokenfilter>
+                    <trim/>
+                    <ignoreblank/>
+                </tokenfilter>
+                <striplinecomments>
+                    <comment value="#"/>
+                </striplinecomments>
+                <prefixlines prefix=" lib/"/>
+                <striplinebreaks/>
+            </filterchain>
+        </loadfile>
+        <echo message="Jar launch classpath: conf/${library.jars} ${script.jars}" />   
+     
+        <mkdir dir="${classes.dir}/conf"/>   
+        <copy todir="${classes.dir}/conf">
+          <fileset dir="${config.dir}"/>
+        </copy>
+        
+        <jar destfile="red5.jar">
+			<fileset dir="${classes.dir}">
+				<include name="**"/>
+				<exclude name="testcases/**"/>
+			</fileset>
+			<manifest>
+				<attribute name="Built-By" value="RED5 Project - red5@osflash.org"/>
+                <attribute name="Built-On" value="${build.TODAY}" />
+                <attribute name="Main-Class" value="org.red5.server.Standalone"/>
+				<attribute name="Class-Path" value="conf/ ${library.jars} ${script.jars}"/>
+			</manifest>
+            <metainf dir="${src.dir}/META-INF">
+                <include name="**"/>
+            </metainf>
+		</jar>
+		
+		<jar destfile="${src.dir}/../webapps/fitcDemo/WEB-INF/lib/fitcDemo.jar">
+			<fileset dir="${src.dir}/../webapps/fitcDemo/WEB-INF/classes">
+				<include name="**"/>
+			</fileset>
+		</jar>
+		
+		<jar destfile="${src.dir}/../webapps/midiDemo/WEB-INF/lib/midiDemo.jar">
+			<fileset dir="${src.dir}/../webapps/midiDemo/WEB-INF/classes">
+				<include name="**"/>
+			</fileset>
+		</jar>
+		
+        <!-- copy scripts -->
+        <mkdir dir="webapps/oflaDemo/WEB-INF/classes/applications"/>   
+        <copy todir="webapps/oflaDemo/WEB-INF/classes/applications">
+          <fileset dir="webapps/oflaDemo/WEB-INF/src/applications"/>
+        </copy>           
+        
+		<jar destfile="webapps/oflaDemo/WEB-INF/lib/oflaDemo.jar">
+			<fileset dir="webapps/oflaDemo/WEB-INF/classes">
+				<include name="**"/>
+			</fileset>
+		</jar>
+		
+		<jar destfile="${src.dir}/../webapps/test/WEB-INF/lib/test.jar">
+			<fileset dir="${src.dir}/../webapps/test/WEB-INF/classes">
+				<include name="**"/>
+			</fileset>
+		</jar>
+		
+		<jar destfile="${src.dir}/../webapps/tutorial/WEB-INF/lib/tutorial.jar">
+			<fileset dir="${src.dir}/../webapps/tutorial/WEB-INF/classes">
+				<include name="**"/>
+			</fileset>
+		</jar>
+	</target>
+
+	<target name="dist" description="Make Binary Distribution" depends="clean, jar, javadoc">
+		<copy todir="${dist.dir}/doc">
+			<fileset dir="doc"/>
+		</copy>
+		<copy todir="${dist.dir}/lib">
+			<fileset dir="lib"/>
+		</copy>
+		<copy todir="${dist.dir}/conf">
+			<fileset dir="conf"/>
+		</copy>
+		<copy todir="${dist.dir}/webapps">
+			<fileset dir="webapps">
+				<include name="**"/>
+				<exclude name="**/classes/**"/>
+				<exclude name="**/src/**"/>
+			</fileset>
+		</copy>
+		<copy todir="${dist.dir}">
+			<fileset dir="./">
+				<include name="red5.jar"/>
+				<include name="red5.bat"/>
+				<include name="red5.sh"/>
+				<include name="license.txt"/>
+			</fileset>
+		</copy>
+	</target>
+
+	<target name="installerdist" description="Make Installer Distribution" depends="dist">
+		<copy todir="${dist.dir}">
+			<fileset dir="./">
+				<include name=".classpath"/>
+				<include name=".project"/>
+				<include name=".springBeans"/>
+				<include name="build.xml"/>
+			</fileset>
+		</copy>
+		<copy todir="${dist.dir}/src">
+			<fileset dir="src"/>
+		</copy>
+		<copy todir="${dist.dir}/swf">
+			<fileset dir="swf"/>
+		</copy>
+		<copy todir="${dist.dir}/webapps">
+			<fileset dir="webapps">
+				<include name="**/src/**"/>
+			</fileset>
+		</copy>
+	</target>
+
+	<target name="server" depends="compile">
+		<java classname="org.red5.server.Standalone" fork="true">
+			<classpath>
+				<pathelement location="${config.dir}"/>
+				<pathelement location="${classes.dir}"/>
+				<path refid="full.classpath"/>
+			</classpath>
+			<jvmarg value="-Djava.security.manager"/>
+			<jvmarg value="-Djava.security.policy=${config.dir}/red5.policy"/>
+		</java>
+	</target>
+	
+	<!-- I have disabled this until we know its has been tested - Luke
+	<target name="webwar" depends="compile">
+		<delete dir="webdir"/>
+		<mkdir dir="webdir"/>
+		<mkdir dir="webdir/WEB-INF"/>
+		<mkdir dir="webdir/WEB-INF/lib"/>
+		<mkdir dir="webdir/conf"/>
+		<mkdir dir="webdir/hosts"/>
+		<copy todir="webdir/WEB-INF/lib">
+			<fileset dir="${lib.dir}">
+				<include name="cglib-nodep-2.1_2.jar"/>
+				<include name="commons*"/>
+				<include name="mina*"/>
+				<include name="jpda.jar"/>
+				<include name="log4j-1.2.9.jar"/>
+				<include name="slf4j-log4j12.jar"/>
+				<include name="spring.jar"/>
+			</fileset>
+			<fileset dir="./">
+				<include name="red5.jar"/>
+			</fileset>
+		</copy>
+		<copy todir="webdir/conf">
+			<fileset dir="./conf">
+				<include name="global.xml"/>
+				<include name="log4j.properties"/>
+				<include name="red5.properties"/>
+				<include name="red5_web.xml"/>
+			</fileset>
+		</copy>
+		<copy todir="webdir">
+			<fileset dir="./webapps/root">
+				<include name="index.html"/>
+			</fileset>
+		</copy>
+		<war destfile="Red5.war" webxml="conf/web-default.xml">
+			<fileset dir="webdir"/>
+			<lib dir="webdir/WEB-INF/lib"/>
+		</war>
+		<delete dir="webdir"/>
+	</target>
+	-->
+
+	<target name="run-tests"  if="junit.installed" depends="compiletests" description="Run JUnit tests and generate HTML reports">
+		<junit fork="true" haltonfailure="no" printsummary="no" showoutput="no" dir="${testreports.dir}">
+			<classpath>
+				<path refid="full.classpath"/>
+				<pathelement location="${testclass.dir}"/>
+			</classpath>
+			<formatter type="xml" />
+			<batchtest todir="${testreports.dir}">
+				<fileset dir="${testclass.dir}">
+					<include name="**/*Test.class"/>
+					<exclude name="**/Abstract*Test.class"/>
+					<exclude name="**/*AbstractTest.class"/>
+				</fileset>
+			</batchtest>
+		</junit>
+		<junitreport todir="${test.dir}">
+			<fileset dir="${testreports.dir}">
+				<include name="TEST-*.xml"/>
+			</fileset>
+			<report format="frames" todir="${testdoc.dir}"/>
+		</junitreport>
+	</target>
+
+	<target name="compiletests" depends="jar" if="junit.installed" description="Compiles junit test classes">
+		<javac srcdir="${test.dir}" destdir="${testclass.dir}">
+			<classpath>
+				<path refid="full.classpath"/>
+			</classpath>
+			<include name="**/*.java"/>
+		</javac>
+	</target>
+
+	<target name="all" depends="clean, prepare, compile, jar, javadoc"/>
+    
+    <target name="usage">
+        <echo message="Type ant -p for available targets" />
+    </target>
+
+</project>

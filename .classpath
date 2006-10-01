@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry excluding=".svn/*" kind="src" path="src"/>
+	<classpathentry excluding=".svn/*" kind="src" path="conf"/>
+	<classpathentry kind="lib" path="lib/log4j-1.2.9.jar"/>
+	<classpathentry kind="lib" path="lib/jpda.jar"/>
+	<classpathentry kind="lib" path="lib/commons-collections.jar"/>
+	<classpathentry kind="lib" path="lib/commons-beanutils.jar"/>
+	<classpathentry excluding=".svn/*" kind="src" path="test"/>
+	<classpathentry kind="lib" path="lib/quartz-1.5.2.jar"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="con" path="org.eclipse.jst.server.core.container/org.eclipse.jst.server.tomcat.runtimeTarget/Apache Tomcat v5.5"/>
+	<classpathentry kind="con" path="org.eclipse.jst.j2ee.internal.web.container"/>
+	<classpathentry kind="lib" path="lib/commons-codec-1.3.jar"/>
+	<classpathentry kind="lib" path="lib/commons-httpclient-3.0.1.jar"/>
+	<classpathentry kind="lib" path="lib/aopalliance.jar"/>
+	<classpathentry kind="lib" path="lib/asm-2.2.2.jar"/>
+	<classpathentry kind="lib" path="lib/bsh-2.0b5.jar"/>
+	<classpathentry kind="lib" path="lib/cglib-nodep-2.1_3.jar"/>
+	<classpathentry kind="lib" path="lib/commons-lang-2.1.jar"/>
+	<classpathentry kind="lib" path="lib/commons-modeler.jar"/>
+	<classpathentry kind="lib" path="lib/commons-pool-1.3.jar"/>
+	<classpathentry kind="lib" path="lib/groovy-all-1.0-JSR-06.jar"/>
+	<classpathentry kind="lib" path="lib/jacl.jar"/>
+	<classpathentry kind="lib" path="lib/jaskell-1.0.jar"/>
+	<classpathentry kind="lib" path="lib/jawk_ex.0_14.jar"/>
+	<classpathentry kind="lib" path="lib/jawk.0_14.jar"/>
+	<classpathentry kind="lib" path="lib/jfunutil.jar"/>
+	<classpathentry kind="lib" path="lib/jparsec.jar"/>
+	<classpathentry kind="lib" path="lib/jruby.jar"/>
+	<classpathentry kind="lib" path="lib/js.jar"/>
+	<classpathentry kind="lib" path="lib/jsr173_1.0_api.jar"/>
+	<classpathentry kind="lib" path="lib/jsr-223-1.0-pr.jar"/>
+	<classpathentry kind="lib" path="lib/judo.jar"/>
+	<classpathentry kind="lib" path="lib/jython.jar"/>
+	<classpathentry kind="lib" path="lib/mina-core-0.9.5.jar"/>
+	<classpathentry kind="lib" path="lib/mina-filter-compression-0.9.5.jar"/>
+	<classpathentry kind="lib" path="lib/mina-filter-ssl-0.9.5.jar"/>
+	<classpathentry kind="lib" path="lib/mina-integration-spring-0.9.5.jar"/>
+	<classpathentry kind="lib" path="lib/ognl-2.6.9.jar"/>
+	<classpathentry kind="lib" path="lib/spring-aop.jar"/>
+	<classpathentry kind="lib" path="lib/spring-beans.jar"/>
+	<classpathentry kind="lib" path="lib/spring-context.jar"/>
+	<classpathentry kind="lib" path="lib/spring-core.jar"/>
+	<classpathentry kind="lib" path="lib/spring-support.jar"/>
+	<classpathentry kind="lib" path="lib/spring-web.jar"/>
+	<classpathentry kind="lib" path="lib/tcljava.jar"/>
+	<classpathentry kind="lib" path="lib/whirlycache-1.0.1_lite.jar"/>
+	<classpathentry kind="lib" path="lib/xbean.jar"/>
+	<classpathentry kind="lib" path="lib/xercesImpl-2.8.1.jar"/>
+	<classpathentry kind="lib" path="lib/xmlParserAPIs-2.8.1.jar"/>
+	<classpathentry kind="lib" path="lib/commons-logging-1.1.jar"/>
+	<classpathentry kind="lib" path="lib/antlr-2.7.6.jar"/>
+	<classpathentry kind="lib" path="lib/commons-jexl-1.1.jar"/>
+	<classpathentry kind="lib" path="lib/ehcache-1.2.3.jar"/>
+	<classpathentry kind="output" path="bin"/>
+</classpath>

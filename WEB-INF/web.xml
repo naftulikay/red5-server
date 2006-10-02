@@ -8,7 +8,7 @@
   <display-name>Default WebApp</display-name>
 
   <listener>
-    <listener-class>org.gregoire.servlet.listeners.ConfigurationManager</listener-class>
+    <listener-class>org.red5.server.MainServlet</listener-class>
   </listener>
 
   <servlet>

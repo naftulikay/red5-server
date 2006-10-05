@@ -277,7 +277,7 @@ public class RemotingClient {
         try {
             int resultCode = client.executeMethod(post);
             if (resultCode / 100 != 2)
-            	throw new RuntimeException("Didn't receive success from remoting server."); 
+            	throw new RuntimeException("Server returned an error (" + resultCode + ") : " + post.getResponseBodyAsString()); 
             	
             resultBuffer = ByteBuffer.allocate((int) post.getResponseContentLength());
             ServletUtils.copy(post.getResponseBodyAsStream(), resultBuffer.asOutputStream());

@@ -21,7 +21,6 @@ package org.red5.server.net.servlet;
 
 import java.io.IOException;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 
 import javax.servlet.ServletException;
@@ -333,10 +332,10 @@ public class RTMPTServlet extends HttpServlet {
 		
 		// Execute the received RTMP messages
 		RTMPTHandler handler = (RTMPTHandler) getServletContext().getAttribute(RTMPTHandler.HANDLER_ATTRIBUTE);
-		Iterator it = messages.iterator();
-		while (it.hasNext()) {
+		while (!messages.isEmpty()) {
+			Object ob = messages.remove(0);
 			try {
-				handler.messageReceived(client, client.getState(), it.next());
+				handler.messageReceived(client, client.getState(), ob);
 			} catch (Exception e) {
 				log.error("Could not process message.", e);
 			}

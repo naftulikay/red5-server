@@ -139,6 +139,10 @@ public class Client extends AttributeStore
 		if (connToScope.isEmpty()) {
 			// This client is not connected to any scopes, remove from registry.
 			registry.removeClient(this);
+			// And also unregister from FCS
+			IFlowControlService fcs = (IFlowControlService) conn.getScope().getContext().getBean(
+					IFlowControlService.KEY);
+			fcs.releaseFlowControllable(this);
 		}
 	}
 	

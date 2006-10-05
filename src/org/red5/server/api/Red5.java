@@ -1,5 +1,7 @@
 package org.red5.server.api;
 
+import java.lang.ref.WeakReference;
+
 /*
  * RED5 Open Source Flash Server - http://www.osflash.org/red5
  * 
@@ -45,7 +47,7 @@ public final class Red5 {
 	 * Current connection thread. Each connection of Red5 application runs in a separate thread. 
 	 * This method returns thread object associated with current connection.
 	 */
-	private static ThreadLocal<IConnection> connThreadLocal = new ThreadLocal<IConnection>();
+	private static ThreadLocal<WeakReference<IConnection>> connThreadLocal = new ThreadLocal<WeakReference<IConnection>>();
 	
 	/**
 	 * Connection local to the current thread
@@ -71,7 +73,10 @@ public final class Red5 {
 	}
 
 	public static void setConnectionLocal(IConnection connection) {
-		connThreadLocal.set(connection);
+		if (connection != null)
+			connThreadLocal.set(new WeakReference<IConnection>(connection));
+		else
+			connThreadLocal.remove();
 	}
 
 	/**
@@ -83,7 +88,11 @@ public final class Red5 {
 	 * @return connection object
 	 */
 	public static IConnection getConnectionLocal() {
-		return connThreadLocal.get();
+		WeakReference<IConnection> ref = connThreadLocal.get();
+		if (ref != null)
+			return ref.get();
+		else
+			return null;
 	}
 
 	/**

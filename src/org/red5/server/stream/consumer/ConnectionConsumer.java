@@ -145,6 +145,10 @@ public class ConnectionConsumer implements IPushableConsumer,
 
 	public void onPipeConnectionEvent(PipeConnectionEvent event) {
 		// TODO close channels on pipe disconnect
+		if (event.getType() == PipeConnectionEvent.PROVIDER_DISCONNECT) {
+			videoData.release();
+			audioData.release();
+		}
 	}
 
 	public void onOOBControlMessage(IMessageComponent source, IPipe pipe, OOBControlMessage oobCtrlMsg) {

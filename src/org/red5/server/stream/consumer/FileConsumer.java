@@ -61,6 +61,7 @@ public class FileConsumer implements Constants, IPushableConsumer, IPipeConnecti
 	private int offset;
 	private int lastTimestamp;
 	private int startTimestamp;
+	private ITag tag = new Tag();
 
 	public FileConsumer(IScope scope, File file) {
 		this.scope = scope;
@@ -81,39 +82,48 @@ public class FileConsumer implements Constants, IPushableConsumer, IPipeConnecti
 			return;
 		}
 		if (!(message instanceof RTMPMessage)) return;
-		if (writer == null) {
-			try {
-				init();
-			} catch (Exception e) {
-				log.error("error init file consumer", e);
+		
+		synchronized (tag) {
+			if (writer == null) {
+				try {
+					init();
+				} catch (Exception e) {
+					log.error("error init file consumer", e);
+				}
 			}
-		}
-		RTMPMessage rtmpMsg = (RTMPMessage) message;
-		final IRTMPEvent msg = rtmpMsg.getBody();
-		if(startTimestamp == -1) {
-			startTimestamp = msg.getTimestamp();
-		}
-		int timestamp = msg.getTimestamp() - startTimestamp;
-		if(timestamp < 0) {
-			log.warn("Skipping message with negative timestamp.");
-			return;
-		}
-		lastTimestamp = timestamp;
 		
-		ITag tag = new Tag();
+			RTMPMessage rtmpMsg = (RTMPMessage) message;
+			final IRTMPEvent msg = rtmpMsg.getBody();
+			if(startTimestamp == -1) {
+				startTimestamp = msg.getTimestamp();
+			}
+			int timestamp = msg.getTimestamp() - startTimestamp;
+			if(timestamp < 0) {
+				log.warn("Skipping message with negative timestamp.");
+				return;
+			}
+			lastTimestamp = timestamp;
 		
-		tag.setDataType(msg.getDataType());
-		tag.setTimestamp(timestamp + offset);
-		if (msg instanceof IStreamData) {
-			ByteBuffer data = ((IStreamData) msg).getData().asReadOnlyBuffer();
-			tag.setBodySize(data.limit());
-			tag.setBody(data);
-		}
-		
-		try {
-			writer.writeTag(tag);
-		} catch (IOException e) {
-			log.error("error writing tag", e);
+			tag.setDataType(msg.getDataType());
+			tag.setTimestamp(timestamp + offset);
+			ByteBuffer data = null;
+			try {
+				if (msg instanceof IStreamData) {
+					data = ((IStreamData) msg).getData();
+					data.acquire();
+					tag.setBodySize(data.limit());
+					tag.setBody(data);
+				}
+				
+				try {
+					writer.writeTag(tag);
+				} catch (IOException e) {
+					log.error("error writing tag", e);
+				}
+			} finally {
+				if (data != null)
+					data.release();
+			}
 		}
 	}
 

@@ -244,19 +244,17 @@ public abstract class RTMPConnection extends BaseConnection implements
 	public void close() {
 		Red5.setConnectionLocal(this);
 		IStreamService streamService = null;
-		if (streamService != null) {
-			synchronized (streams) {
-				for (int i = 0; i < streams.length; i++) {
-					IClientStream stream = streams[i];
-					if (stream != null) {
-						if (streamService == null)
-							streamService = (IStreamService) getScopeService(scope,
-									IStreamService.STREAM_SERVICE, StreamService.class);
-						log.debug("Closing stream: " + stream.getStreamId());
-						streamService.deleteStream(this, stream.getStreamId());
-						streams[i] = null;
-						usedStreams--;
-					}
+		synchronized (streams) {
+			for (int i = 0; i < streams.length; i++) {
+				IClientStream stream = streams[i];
+				if (stream != null) {
+					if (streamService == null)
+						streamService = (IStreamService) getScopeService(scope,
+								IStreamService.STREAM_SERVICE, StreamService.class);
+					log.debug("Closing stream: " + stream.getStreamId());
+					streamService.deleteStream(this, stream.getStreamId());
+					streams[i] = null;
+					usedStreams--;
 				}
 			}
 		}
@@ -306,7 +304,6 @@ public abstract class RTMPConnection extends BaseConnection implements
 		if (bytesRead >= nextBytesRead) {
 			BytesRead sbr = new BytesRead((int) bytesRead);
 			getChannel((byte) 2).write((BytesRead) sbr);
-			log.info(sbr);
 			nextBytesRead += bytesReadInterval;
 		}
 	}

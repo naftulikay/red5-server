@@ -88,5 +88,6 @@ public class RTMPMinaConnection extends RTMPConnection {
 	public void close() {
 		super.close();
 		ioSession.close();
+		ioSession = null;
 	}
 }

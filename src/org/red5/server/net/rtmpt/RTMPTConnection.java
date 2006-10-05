@@ -210,7 +210,6 @@ public class RTMPTConnection extends RTMPConnection {
 		ByteBuffer result = ByteBuffer.allocate(2048);
 		result.setAutoExpand(true);
 		
-		log.debug("Returning " + this.pendingMessages.size() + " messages to client.");
 		this.noPendingMessages = 0;
 		this.pollingDelay = INITIAL_POLLING_DELAY;
 		while (result.limit() < targetSize) {

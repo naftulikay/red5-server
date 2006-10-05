@@ -19,7 +19,6 @@ package org.red5.server.net.rtmp.codec;
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA 
  */
 
-import java.util.Iterator;
 import java.util.List;
 
 import org.apache.mina.common.ByteBuffer;
@@ -49,9 +48,10 @@ public class RTMPMinaProtocolDecoder extends RTMPProtocolDecoder implements Prot
 		if (objects == null || objects.isEmpty())
 			return;
 			
-		Iterator it = objects.iterator();
-		while (it.hasNext())
-			out.write(it.next());
+		while (!objects.isEmpty()) {
+			Object ob = objects.remove(0);
+			out.write(ob);
+		}
     }
 	
 	public void dispose(IoSession ioSession) throws Exception {

@@ -97,6 +97,7 @@ public class ClientBroadcastStream extends AbstractClientStream implements
 		Map<Object, Object> recordParamMap = new HashMap<Object, Object>();
 		recordParamMap.put("record", null);
 		recordPipe.subscribe((IProvider) this, recordParamMap);
+		connMsgOut.subscribe((IProvider) this, recordParamMap);
 		setCodecInfo(new StreamCodecInfo());
 		sendStartNotify();
 		notifyBroadcastStart();
@@ -107,6 +108,7 @@ public class ClientBroadcastStream extends AbstractClientStream implements
 			livePipe.unsubscribe((IProvider) this);
 		}
 		recordPipe.unsubscribe((IProvider) this);
+		connMsgOut.unsubscribe((IProvider) this);
 		sendStopNotify();
 		notifyBroadcastClose();
 	}

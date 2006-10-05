@@ -34,7 +34,9 @@ import org.apache.commons.logging.LogFactory;
  */
 public class InMemoryPullPullPipe extends AbstractPipe {
 	private static final Log log = LogFactory.getLog(InMemoryPullPullPipe.class);
-	
+
+	private IPullableProvider[] providerArray = new IPullableProvider[]{};
+
 	public boolean subscribe(IConsumer consumer, Map paramMap) {
 		boolean success = super.subscribe(consumer, paramMap);
 		if (success) fireConsumerConnectionEvent(consumer, PipeConnectionEvent.CONSUMER_CONNECT_PULL, paramMap);
@@ -52,9 +54,8 @@ public class InMemoryPullPullPipe extends AbstractPipe {
 
 	public IMessage pullMessage() {
 		IMessage message = null;
-		IPullableProvider[] providerArray = null;
-		synchronized (providers) {
-			providerArray = providers.toArray(new IPullableProvider[]{});
+		synchronized (providerArray) {
+			providerArray = providers.toArray(providerArray);
 		}
 		for (IPullableProvider provider: providerArray) {
 			// choose the first available provider
@@ -70,9 +71,8 @@ public class InMemoryPullPullPipe extends AbstractPipe {
 
 	public IMessage pullMessage(long wait) {
 		IMessage message = null;
-		IPullableProvider[] providerArray = null;
-		synchronized (providers) {
-			providerArray = providers.toArray(new IPullableProvider[]{});
+		synchronized (providerArray) {
+			providerArray = providers.toArray(providerArray);
 		}
 		// divided evenly
 		long averageWait = providerArray.length > 0 ? wait / providerArray.length : 0;

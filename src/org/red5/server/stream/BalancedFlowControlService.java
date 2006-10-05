@@ -62,8 +62,6 @@ public class BalancedFlowControlService extends TimerTask implements
 	private Map<IFlowControllable, FcData> fcMap =
 		new HashMap<IFlowControllable, FcData>();
 	private List<FcData>[] fcListArray;
-	private FcData[][] sortedListArray = new FcData[maxDepth][];
-	private int[] sortedListArrayLengths = new int[maxDepth];
 	
 	private Timer timer;
 	private Thread cbThread = new Thread(new CallbackRunnable());
@@ -75,7 +73,6 @@ public class BalancedFlowControlService extends TimerTask implements
 		fcListArray = (List<FcData>[]) Array.newInstance(List.class, maxDepth);
 		for (int i = 0; i < maxDepth; i++) {
 			fcListArray[i] = new ArrayList<FcData>();
-			sortedListArray[i] = new FcData[]{};
 		}
 	}
 	
@@ -91,11 +88,15 @@ public class BalancedFlowControlService extends TimerTask implements
 	public void run() {
 		// re-sort the fc list
 		// use write lock to protect the structural modification
+		FcData[][] sortedListArray = new FcData[maxDepth][];
 		lock.writeLock().lock();
 		try {
 			for (int i = 0; i < maxDepth; i++) {
-				sortedListArray[i] = fcListArray[i].toArray(sortedListArray[i]);
-				sortedListArrayLengths[i] = fcListArray[i].size();
+				if (fcListArray[i].size() > 0) {
+					sortedListArray[i] = fcListArray[i].toArray(new FcData[]{});
+					Arrays.sort(sortedListArray[i]);
+				} else
+					sortedListArray[i] = null;
 			}
 		} finally {
 			lock.writeLock().unlock();
@@ -106,7 +107,10 @@ public class BalancedFlowControlService extends TimerTask implements
 		try {
 			for (int i = 0; i < maxDepth; i++) {
 				FcData[] fcList = sortedListArray[i];
-				for (int j = 0; j < sortedListArrayLengths[i]; j++) {
+				if (fcList == null)
+					continue;
+				
+				for (int j = 0; j < fcList.length; j++) {
 					FcData fcData = fcList[j];
 					if (fcData.hasBandwidthResource()) {
 						boolean gotToken = false;

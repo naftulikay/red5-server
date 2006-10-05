@@ -120,7 +120,9 @@ public class RTMPMinaIoHandler extends IoHandlerAdapter  {
 		try {
 			this.handler.connectionClosed(conn, rtmp);
 		} finally {
+			// Explicitly remove session attributes
 			session.setAttachment(null);
+			session.setAttribute(RTMP.SESSION_KEY, null);
 		}
 	}
 

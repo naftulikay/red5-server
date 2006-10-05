@@ -705,10 +705,6 @@ implements IPlaylistSubscriberStream {
 				msgIn.unsubscribe(this);
 				msgIn = null;
 			}
-			if (msgOut != null) {
-				msgOut.unsubscribe(this);
-				msgOut = null;
-			}
 			state = State.STOPPED;
 			releasePendingMessage();
 			getStreamFlow().reset();
@@ -719,6 +715,10 @@ implements IPlaylistSubscriberStream {
 			sendStopStatus(currentItem);
 			sendClearPing();
 			sendReset();
+			if (msgOut != null) {
+				msgOut.unsubscribe(this);
+				msgOut = null;
+			}
 		}
 		
 		synchronized public void close() {
@@ -734,8 +734,8 @@ implements IPlaylistSubscriberStream {
 			state = State.CLOSED;
 			getStreamFlow().reset();
 			clearWaitJobs();
-			sendClearPing();
 			if (msgOut != null) {
+				sendClearPing();
 				msgOut.unsubscribe(this);
 				msgOut = null;
 			}

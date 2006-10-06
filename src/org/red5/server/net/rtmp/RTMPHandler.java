@@ -144,7 +144,7 @@ public class RTMPHandler
 				if (((Notify) message).getData() != null && stream != null)
 					// Stream metadata
 					((IEventDispatcher) stream).dispatchEvent(message);
-				else
+				else if (((Notify) message).getCall() != null)
 					onInvoke(conn, channel, header, (Notify) message);
 				break;
 			case TYPE_PING:

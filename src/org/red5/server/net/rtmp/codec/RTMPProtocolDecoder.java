@@ -20,7 +20,6 @@ package org.red5.server.net.rtmp.codec;
  */
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -65,7 +64,6 @@ public class RTMPProtocolDecoder implements Constants, SimpleProtocolDecoder, IE
         LogFactory.getLog(RTMPProtocolDecoder.class.getName()+".in");
 	
 	private Deserializer deserializer = null;
-	private List<Object> decodedObjects = Collections.synchronizedList(new LinkedList<Object>());
 
 	public RTMPProtocolDecoder(){
 		
@@ -77,6 +75,8 @@ public class RTMPProtocolDecoder implements Constants, SimpleProtocolDecoder, IE
 	
     public List decodeBuffer(ProtocolState state, ByteBuffer buffer) {
 		
+    	List<Object> result = new LinkedList<Object>();
+    	
 		try {
 			while(true){
 			 	
@@ -86,7 +86,7 @@ public class RTMPProtocolDecoder implements Constants, SimpleProtocolDecoder, IE
 			   
 			    final Object decodedObject = decode( state, buffer );
 			    
-			    if(state.hasDecodedObject()) decodedObjects.add(decodedObject);
+			    if(state.hasDecodedObject()) result.add(decodedObject);
 			    else if( state.canContinueDecoding() ) 	continue; 
 			    else break;
 			    
@@ -102,7 +102,7 @@ public class RTMPProtocolDecoder implements Constants, SimpleProtocolDecoder, IE
 		finally {
 			buffer.compact();
 		}
-		return decodedObjects;
+		return result;
 	}
     
 	public Object decode(ProtocolState state, ByteBuffer in) throws ProtocolException {

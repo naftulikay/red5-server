@@ -89,10 +89,16 @@ public class RTMPTConnection extends RTMPConnection {
 			this.buffer.release();
 			this.buffer = null;
 		}
-		for (ByteBuffer buffer: pendingMessages) {
-			buffer.release();
+		synchronized (pendingMessages) {
+			for (ByteBuffer buffer: pendingMessages) {
+				try {
+					buffer.release();
+				} catch (Exception ex) {
+					log.error("Could not release buffer.", ex);
+				}
+			}
+			pendingMessages.clear();
 		}
-		pendingMessages.clear();
 		state.setState(RTMP.STATE_DISCONNECTED);
 		super.close();
 	}

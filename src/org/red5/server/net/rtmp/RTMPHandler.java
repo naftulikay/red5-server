@@ -103,7 +103,12 @@ public class RTMPHandler
 	}
 	
 	public void messageReceived(RTMPConnection conn, ProtocolState state, Object in) throws Exception {
-			
+		
+		if (!conn.isConnected()) {
+			log.warn("Received message " + in + " from disconnected connection " + conn);
+			return;
+		}
+		
 		IRTMPEvent message = null;
 		try {
 			

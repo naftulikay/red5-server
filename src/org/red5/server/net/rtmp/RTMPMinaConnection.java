@@ -70,7 +70,7 @@ public class RTMPMinaConnection extends RTMPConnection {
 	}
 
 	public boolean isConnected() {
-		return super.isConnected() && ioSession.isConnected();
+		return super.isConnected() && ioSession != null && ioSession.isConnected();
 	}
 	
 	public long getReadBytes() {

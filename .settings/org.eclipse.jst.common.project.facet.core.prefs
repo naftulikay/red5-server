@@ -1,4 +1,4 @@
-#Thu Sep 28 20:02:30 PDT 2006
+#Wed Oct 18 17:57:51 PDT 2006
 classpath.helper/org.eclipse.jdt.launching.JRE_CONTAINER\:\:org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType\:\:jdk1.5.0_08/owners=jst.java\:5.0
-classpath.helper/org.eclipse.jst.server.core.container\:\:org.eclipse.jst.server.tomcat.runtimeTarget\:\:Apache\ Tomcat\ v5.5/owners=jst.web\:2.4
+classpath.helper/org.eclipse.jst.server.core.container\:\:org.eclipse.jst.server.tomcat.runtimeTarget\:\:Apache\ Tomcat\ v5.5.20/owners=\#system\#;jst.web\:2.4
 eclipse.preferences.version=1

@@ -45,7 +45,7 @@ public class MainServlet extends HttpServlet implements ServletContextListener {
 	// Initialize Logging
 	protected static Log log = LogFactory.getLog(MainServlet.class.getName());
 
-	protected static String red5Config = "red5.xml";
+	protected static String red5Config = "/WEB-INF/red5.xml";
 
 	/* Handle to servlet context */
 	private static ServletContext context;
@@ -55,6 +55,9 @@ public class MainServlet extends HttpServlet implements ServletContextListener {
 	 */
 	//Notification that the web application is ready to process requests
 	public void contextInitialized(ServletContextEvent sce) {
+		if (null != context) {
+			return;
+		}
 		context = sce.getServletContext();
 		String prefix = context.getRealPath("/");
 
@@ -62,12 +65,13 @@ public class MainServlet extends HttpServlet implements ServletContextListener {
 
 		log.info("RED5 Server (http://www.osflash.org/red5)");
 		log.info("Loading red5 global context from: " + red5Config);
-
+		log.info("Path: " + prefix);
+		
 		try {
 			// Detect root of Red5 configuration and set as system property
 			String root;
 			String classpath = System.getProperty("java.class.path");
-			File fp = new File(red5Config);
+			File fp = new File(prefix + red5Config);
 			fp = fp.getCanonicalFile();
 			if (!fp.isFile()) {
 				// Given file does not exist, search it on the classpath
@@ -89,12 +93,16 @@ public class MainServlet extends HttpServlet implements ServletContextListener {
 			root = root.replace('\\', '/');
 			int idx = root.lastIndexOf('/');
 			root = root.substring(0, idx);
+			//update classpath
+			//System.setProperty("java.class.path", classpath + File.pathSeparatorChar + root);
+			log.info("New classpath: " + System.getProperty("java.class.path"));
+			//set configuration root
 			System.setProperty("red5.config_root", root);
 			log.info("Setting configuation root to " + root);
 
 			// Setup system properties so they can be evaluated by Jetty
 			Properties props = new Properties();
-			props.load(new FileInputStream(root + "/red5.properties"));
+			props.load(new FileInputStream(root + "/red5-web.properties"));
 			Iterator it = props.keySet().iterator();
 			while (it.hasNext()) {
 				String key = (String) it.next();
@@ -113,12 +121,12 @@ public class MainServlet extends HttpServlet implements ServletContextListener {
 			System.setProperty("red5.root", root);
 			log.info("Setting Red5 root to " + root);
 
-			ContextSingletonBeanFactoryLocator.getInstance(red5Config)
-					.useBeanFactory("red5.common");
+			//ContextSingletonBeanFactoryLocator.getInstance(red5Config).useBeanFactory("red5.common");
+			
 		} catch (Throwable e) {
 			log.error(e);
 		}
-
+		
 		long startupIn = System.currentTimeMillis() - time;
 		log.info("Startup done in: " + startupIn + " ms");
 

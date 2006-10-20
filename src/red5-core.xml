@@ -19,63 +19,14 @@
 	</bean>
 	
 	<bean id="placeholderConfig" class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
-	    <property name="location" value="red5-web.properties" />
+	    <property name="location" value="classpath:/red5.properties" />
 	</bean>
-
-	<!-- DEFAULT GLOBAL CONTEXT -->
-	
-	<bean id="global.clientRegistry" class="org.red5.server.ClientRegistry" />
-	
-	<bean id="global.serviceInvoker" class="org.red5.server.service.ServiceInvoker">
-		<property name="serviceResolvers">
-			<list>
-				<bean id="scopeServiceResolver" class="org.red5.server.service.ScopeServiceResolver"/>
-				<bean id="handlerServiceResolver" class="org.red5.server.service.HandlerServiceResolver"/>
-				<bean id="contextServiceResolver" class="org.red5.server.service.ContextServiceResolver"/>
-			</list>
-		</property>
-	</bean>
-	
-	<bean id="global.mappingStrategy" class="org.red5.server.MappingStrategy" />
-	
-	<bean id="global.context" class="org.red5.server.Context" autowire="byType" />
-
-	<bean id="global.handler" class="org.red5.server.CoreHandler" autowire="byType" />
-			
-	<bean id="global.scope" class="org.red5.server.GlobalScope"
-		 init-method="register">
-		<property name="server" ref="red5.server" />
-		<property name="name" value="default" />
-		<property name="context" ref="global.context" />
-		<property name="handler" ref="global.handler" />
-		<property name="persistenceClass">
-			<value>org.red5.server.persistence.FilePersistence</value>
-		</property>
-	</bean>
-	
-	<bean id="red5.scopeResolver" class="org.red5.server.ScopeResolver">
-		<property name="globalScope" ref="global.scope" />
-	</bean>
-	
-	<!-- DEFAULT WEB CONTEXT -->	
-	
-	<bean id="web.context" class="org.red5.server.Context" autowire="byType" />
-	
-	<bean id="web.scope" class="org.red5.server.WebScope"
-		 init-method="register">
-		<property name="server" ref="red5.server" />
-		<property name="parent" ref="global.scope" />
-		<property name="context" ref="web.context" />
-		<property name="handler" ref="web.handler" />
-		<property name="contextPath" value="${webapp.contextPath}" />
-		<property name="virtualHosts" value="${webapp.virtualHosts}" />
-	</bean>	
 	
 	<bean id="filterChainBuilder" 
         class="org.apache.mina.integration.spring.DefaultIoFilterChainBuilderFactoryBean">
 		<property name="filters">
 	    	<list>
-				<!-- mina with java5 executor class -->
+				<!-- mina 1.0 with java5 executor class -->
 				<bean class="org.red5.io.filter.ExecutorFilter">
 					<!-- int corePoolSize, int maximumPoolSize, long keepAliveTime (seconds) -->
 					<constructor-arg index="0" value="16" />
@@ -103,24 +54,16 @@
                <property name="sessionConfig.reuseAddress" value="true"/>
              </bean>
            </property>
-         </bean>
+         </bean>     
        </list>
      </property>
    </bean> 	
       
-	<bean id="rtmpHandler" class="org.red5.server.net.rtmp.RTMPHandler"
-		autowire="byType" />
+	<bean id="rtmpHandler" class="org.red5.server.net.rtmp.RTMPHandler" autowire="byType" />
 		
 	<bean id="rtmpMinaIoHandler" class="org.red5.server.net.rtmp.RTMPMinaIoHandler">
         <property name="handler" ref="rtmpHandler"/>
         <property name="codecFactory" ref="rtmpCodecFactory"/>
     </bean>
-
-<!--
-	<bean id="rtmptHandler" class="org.red5.server.net.rtmpt.RTMPTHandler"
-		autowire="byType">
-		<property name="codecFactory" ref="rtmpCodecFactory" />
-	</bean>
--->
 	
 </beans>

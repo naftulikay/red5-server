@@ -57,9 +57,7 @@ public class Context implements IContext, ApplicationContextAware {
 	private IPersistenceStore persistanceStore;
 
 	public Context() {
-		coreContext = ContextSingletonBeanFactoryLocator
-				.getInstance("red5.xml").useBeanFactory("red5.core")
-				.getFactory();
+		coreContext = ContextSingletonBeanFactoryLocator.getInstance("red5-core.xml").useBeanFactory("").getFactory();
 	}
 
 	public Context(ApplicationContext context, String contextPath) {

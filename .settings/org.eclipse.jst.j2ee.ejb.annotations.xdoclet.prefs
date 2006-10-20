@@ -1,7 +1,7 @@
-#Sun Oct 01 19:51:57 PDT 2006
-XDOCLETBUILDERACTIVE=true
+#Thu Oct 19 21:36:28 PDT 2006
+XDOCLETBUILDERACTIVE=false
 XDOCLETHOME=D\:\\dev\\shared\\xdoclet-1.2.3
-XDOCLETUSEGLOBAL=true
+XDOCLETUSEGLOBAL=false
 XDOCLETVERSION=1.2.3
 eclipse.preferences.version=1
 webdoclet.deploymentdescriptor.displayname=${web}

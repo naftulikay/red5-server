@@ -10,31 +10,33 @@
 	<!-- First we load the common context, its shared between all the other contexts -->
 	<!-- Global context serves are the parent to all child contexts. -->
 	<bean id="red5.common"
-  	    class="org.springframework.context.support.FileSystemXmlApplicationContext">
-    	<constructor-arg><list><value>/red5-common.xml</value></list></constructor-arg>
+  	    class="org.springframework.beans.factory.xml.XmlBeanFactory">
+    	<constructor-arg><bean class="org.springframework.core.io.ClassPathResource"><constructor-arg><value>red5-common.xml</value></constructor-arg></bean></constructor-arg>
 	</bean>
 	
 	<!-- Then we load the core context, with the common as parent --> 
 	<!-- Context holding all the networking, users should need to edit. -->
 	<bean id="red5.core"
-  	    class="org.springframework.context.support.FileSystemXmlApplicationContext">
-    	<constructor-arg><list><value>/red5-core.xml</value></list></constructor-arg>
-    	<constructor-arg><ref bean="red5.common" /></constructor-arg>
+  	    class="org.springframework.beans.factory.xml.XmlBeanFactory">
+    	<constructor-arg><bean class="org.springframework.core.io.ClassPathResource"><constructor-arg><value>red5-core.xml</value></constructor-arg></bean></constructor-arg>
+    	<constructor-arg ref="red5.common" />
+	</bean>
+
+	<bean id="red5.globals"
+  	    class="org.springframework.beans.factory.xml.XmlBeanFactory">
+    	<constructor-arg><bean class="org.springframework.core.io.ClassPathResource"><constructor-arg><value>red5-default.xml</value></constructor-arg></bean></constructor-arg>
+    	<constructor-arg ref="red5.common" />
 	</bean>
 
 <!-- 
+
+org.springframework.web.context.support.XmlWebApplicationContext
 	<bean id="context.loader" 
 		class="org.red5.server.ContextLoader"
 		init-method="init">
 		<property name="parentContext" ref="red5.common" />
-		<property name="contextsConfig" ref="red5.core" />
+		<property name="contextsConfig" value="red5.globals" />
 	</bean>	
 -->
  
-	<bean id="default.context"
-  	    class="org.springframework.context.support.FileSystemXmlApplicationContext">
-    	<constructor-arg><ref bean="red5.core" /></constructor-arg>
-    	<constructor-arg><ref bean="red5.common" /></constructor-arg>
-	</bean>
-
 </beans>

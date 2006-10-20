@@ -36,11 +36,11 @@
 	<classpathentry kind="lib" path="lib/mina-integration-spring-0.9.5.jar"/>
 	<classpathentry kind="lib" path="lib/ognl-2.6.9.jar"/>
 	<classpathentry kind="lib" path="lib/spring-aop.jar"/>
-	<classpathentry kind="lib" path="lib/spring-beans.jar"/>
-	<classpathentry kind="lib" path="lib/spring-context.jar"/>
-	<classpathentry kind="lib" path="lib/spring-core.jar"/>
-	<classpathentry kind="lib" path="lib/spring-support.jar"/>
-	<classpathentry kind="lib" path="lib/spring-web.jar"/>
+	<classpathentry kind="lib" path="lib/spring-beans.jar" sourcepath="D:/dev/shared/spring-framework-2.0/src"/>
+	<classpathentry kind="lib" path="lib/spring-context.jar" sourcepath="D:/dev/shared/spring-framework-2.0/src"/>
+	<classpathentry kind="lib" path="lib/spring-core.jar" sourcepath="D:/dev/shared/spring-framework-2.0/src"/>
+	<classpathentry kind="lib" path="lib/spring-support.jar" sourcepath="D:/dev/shared/spring-framework-2.0/src"/>
+	<classpathentry kind="lib" path="lib/spring-web.jar" sourcepath="D:/dev/shared/spring-framework-2.0/src"/>
 	<classpathentry kind="lib" path="lib/tcljava.jar"/>
 	<classpathentry kind="lib" path="lib/whirlycache-1.0.1_lite.jar"/>
 	<classpathentry kind="lib" path="lib/xbean.jar"/>

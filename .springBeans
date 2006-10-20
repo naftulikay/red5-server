@@ -4,7 +4,7 @@
 		<configExtension>xml</configExtension>
 	</configExtensions>
 	<configs>
-		<config>www/WEB-INF/red5.xml</config>
+		<config>www/WEB-INF/applicationContext.xml</config>
 		<config>conf/global.xml</config>
 	</configs>
 	<configSets>

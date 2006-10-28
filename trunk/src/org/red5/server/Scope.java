@@ -26,6 +26,10 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
+import org.acegisecurity.Authentication;
+import org.acegisecurity.context.SecurityContextHolder;
+import org.acegisecurity.context.SecurityContextImpl;
+import org.acegisecurity.providers.UsernamePasswordAuthenticationToken;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.red5.server.api.IBasicScope;
@@ -287,6 +291,10 @@ public class Scope extends BasicScope implements IScope {
 	public synchronized boolean connect(IConnection conn, Object[] params) {
 		//log.debug("Connect: "+conn+" to "+this);
 		//log.debug("has handler? "+hasHandler());
+		
+		// Setup Acegi Authentication
+		setAuthentication(params);
+		
 		if (hasParent() && !parent.connect(conn, params)) {
 			return false;
 		}
@@ -310,6 +318,32 @@ public class Scope extends BasicScope implements IScope {
 		}
 		addEventListener(conn);
 		return true;
+	}
+
+	/**
+	 * Acegi Security Authentication object is setup in a ThreadLocal 
+	 * to be used later on by Acegi Security AuthenticationManager
+	 * @param params
+	 * @return void
+	 */
+	private void setAuthentication(Object[] params) {
+		String username = null;
+		String password = null;
+		
+		// Check if the user passed valid parameters. 
+		if (params.length > 1) { 
+			log.debug("setAuthentication::Client didn't pass a username or password."); 
+			username = params[0].toString(); 
+			password = params[1].toString();
+		} 		
+		
+		// Setup Authentication object and pass into ThreadLocal
+		Authentication authRequest = new 
+		UsernamePasswordAuthenticationToken(username, password); 
+		SecurityContextImpl ctx = new SecurityContextImpl(); 
+		ctx.setAuthentication(authRequest); 
+		SecurityContextHolder.setContext(ctx); 
+		
 	}
 
 	public synchronized void disconnect(IConnection conn) {

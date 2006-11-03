@@ -167,6 +167,11 @@
 										<property name="contextPath" value="/tutorial" />
 										<property name="war" value="webapps/tutorial" />
 									</bean>
+									<bean
+										class="org.mortbay.jetty.webapp.WebAppContext">
+										<property name="contextPath" value="/security" />
+										<property name="war" value="webapps/security" />
+									</bean>
 									<!-- 
 									<bean
 										class="org.mortbay.jetty.webapp.WebAppContext">

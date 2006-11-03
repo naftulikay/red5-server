@@ -5,6 +5,7 @@
 	<classpathentry excluding=".svn/*" output="webapps/fitcDemo/WEB-INF/classes" kind="src" path="webapps/fitcDemo/WEB-INF/src"/>
 	<classpathentry excluding=".svn/*" output="webapps/oflaDemo/WEB-INF/classes" kind="src" path="webapps/oflaDemo/WEB-INF/src"/>
 	<classpathentry excluding=".svn/*" kind="src" path="conf"/>
+	<classpathentry output="webapps/security/WEB-INF/classes" kind="src" path="webapps/security/WEB-INF/src"/>
 	<classpathentry kind="lib" path="lib/slf4j-log4j12.jar"/>
 	<classpathentry kind="lib" path="lib/junit.jar"/>
 	<classpathentry kind="lib" path="lib/jpda.jar"/>
@@ -81,6 +82,7 @@
 	<classpathentry kind="lib" path="lib/jetty-util-6.0.1.jar"/>
 	<classpathentry kind="lib" path="lib/jetty-xbean-6.0.1.jar"/>
 	<classpathentry kind="lib" path="lib/jcl104-over-slf4j-1.0.1.jar"/>
-	<classpathentry kind="lib" path="lib/acegi-security-1.0.2.jar"/>
+	<classpathentry kind="lib" path="lib/acegi-security-1.0.0.jar"/>
+	<classpathentry kind="lib" path="lib/spring-dao.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

@@ -21,6 +21,8 @@ package org.red5.server.stream.consumer;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.red5.server.api.IBandwidthConfigure;
+import org.red5.server.api.IFlowControllable;
 import org.red5.server.api.stream.IClientStream;
 import org.red5.server.messaging.IMessage;
 import org.red5.server.messaging.IMessageComponent;
@@ -157,6 +159,23 @@ public class ConnectionConsumer implements IPushableConsumer,
 		
 		if ("pendingCount".equals(oobCtrlMsg.getServiceName())) {
 			oobCtrlMsg.setResult(conn.getPendingMessages());
+		} else if ("getWriteDelta".equals(oobCtrlMsg.getServiceName())) {
+			long maxStream = 0;
+			IFlowControllable fc = conn;
+			// Search FC containing valid BWC
+			while (fc != null && fc.getBandwidthConfigure() == null) {
+				fc = fc.getParentFlowControllable();
+			}
+			if (fc != null && fc.getBandwidthConfigure() != null) {
+				IBandwidthConfigure bw = fc.getBandwidthConfigure();
+				maxStream = bw.getDownstreamBandwidth();
+				if (maxStream == 0) 
+					maxStream = bw.getOverallBandwidth() / 2;
+			}
+			// Return the current delta between sent bytes and bytes the client
+			// reported to have received, and the interval the client should use
+			// for generating BytesRead messages.
+			oobCtrlMsg.setResult(new Long[]{conn.getWrittenBytes()-conn.getClientBytesRead(), maxStream, (long) conn.getLastPingTime()});
 		} else if ("pendingVideoCount".equals(oobCtrlMsg.getServiceName())) {
 			IClientStream stream = conn.getStreamByChannelId(video.getId());
 			if (stream != null)

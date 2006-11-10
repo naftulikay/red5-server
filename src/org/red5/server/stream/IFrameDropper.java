@@ -44,11 +44,11 @@ public interface IFrameDropper {
 	 * 
 	 * @param message
 	 * 			the message to check
-	 * @param pending
-	 * 			the number of pending messages
+	 * @param switchState
+	 * 			<code>true</code> if the dropping state can be changed, otherwise <code>false</code>
 	 * @return <code>true</code> if the packet may be sent, otherwise <code>false</code>
 	 */
-	boolean canSendPacket(RTMPMessage message, long pending);
+	boolean canSendPacket(RTMPMessage message, boolean switchState);
 
 	/**
 	 * Notify that a packet has been dropped.

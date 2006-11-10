@@ -139,6 +139,10 @@ public class ServletConnection extends AttributeStore implements IConnection {
 		return 0;
 	}
 
+	public long getClientBytesRead() {
+		return 0;
+	}
+
 	public void ping() {
 		notSupported();
 	}

@@ -70,7 +70,7 @@ public class VideoFrameDropper implements IFrameDropper {
 		this.state = state;
 	}
 	
-	public boolean canSendPacket(RTMPMessage message, long pending) {
+	public boolean canSendPacket(RTMPMessage message, boolean switchState) {
 		IRTMPEvent packet = message.getBody();
 		if (! (packet instanceof VideoData))
 			// We currently only drop video packets.
@@ -88,7 +88,7 @@ public class VideoFrameDropper implements IFrameDropper {
 		case SEND_INTERFRAMES:
 			// Only keyframes and interframes will be sent.
 			if (type == FrameType.KEYFRAME) {
-				if (pending == 0) {
+				if (switchState) {
 					// Send all frames from now on.
 					state = SEND_ALL;
 				}
@@ -100,7 +100,7 @@ public class VideoFrameDropper implements IFrameDropper {
 		case SEND_KEYFRAMES:
 			// Only keyframes will be sent.
 			result = (type == FrameType.KEYFRAME);
-			if (result && pending == 0)
+			if (result && switchState)
 				// Maybe switch back to SEND_INTERFRAMES after the next keyframe
 				state = SEND_KEYFRAMES_CHECK;
 			break;
@@ -108,7 +108,7 @@ public class VideoFrameDropper implements IFrameDropper {
 		case SEND_KEYFRAMES_CHECK:
 			// Only keyframes will be sent.
 			result = (type == FrameType.KEYFRAME);
-			if (result && pending == 0)
+			if (result && switchState)
 				// Continue with sending interframes as well
 				state = SEND_INTERFRAMES;
 			break;

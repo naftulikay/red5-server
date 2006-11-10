@@ -309,7 +309,10 @@ public abstract class RTMPConnection extends BaseConnection implements
 	}
 	
 	public void receivedBytesRead(int bytes) {
-		log.info("Client received " + bytes + " bytes, written " + getWrittenBytes() + " bytes, " + getPendingMessages() + " messages pending");
+		bytesRead = bytes;
+		log.info("Client received " + bytes + " bytes, written " + getWrittenBytes() +
+				" bytes, " + getPendingMessages() + " messages pending, write delta " +
+				(getWrittenBytes() - getClientBytesRead()));
 	}
 
 	public void invoke(IServiceCall call) {

@@ -73,6 +73,8 @@ implements IPlaylistSubscriberStream {
 		CLOSED
 	}
 	
+	private static long MAX_PING = 3;
+	
 	private IPlaylistController controller;
 	private IPlaylistController defaultController;
 	
@@ -470,6 +472,7 @@ implements IPlaylistSubscriberStream {
 		private ITokenBucket videoBucket;
 		private RTMPMessage pendingMessage;
 		private boolean isWaitingForToken = false;
+		private long lastDropTime;
 
 		// State machine for video frame dropping in live streams
 		private IFrameDropper videoFrameDropper = new VideoFrameDropper();
@@ -503,6 +506,7 @@ implements IPlaylistSubscriberStream {
 			boolean isPublishedStream = liveInput != null;
 			boolean isFileStream = vodInput != null;
 			boolean sendNotifications = true;
+			lastDropTime = 0;
 			
 			// decision: 0 for Live, 1 for File, 2 for Wait, 3 for N/A
 			
@@ -1083,22 +1087,42 @@ implements IPlaylistSubscriberStream {
 					if (videoCodec == null || videoCodec.canDropFrames()) {
 						// Only check for frame dropping if the codec supports it
 						long pendingVideos = pendingVideoMessages();
-						if (!videoFrameDropper.canSendPacket(rtmpMessage, pendingVideos)) {
-							//System.err.println("Dropping1: " + body + " " + pendingVideos);
+						long dropDelta = System.currentTimeMillis() - lastDropTime;
+						if (!videoFrameDropper.canSendPacket(rtmpMessage, (pendingVideos == 0) && (dropDelta < 5000))) {
+							//System.err.println("Dropping1: " + body + " " + pendingVideos + " " + dropDelta);
+							lastDropTime = System.currentTimeMillis();
 							return;
 						}
 						
-						boolean drop = !videoBucket.acquireToken(size, 0);
-						if (!receiveVideo || pendingVideos > 1 || drop) {
-							//System.err.println("Dropping2: " + receiveVideo + " " + pendingVideos + " " + videoBucket + " size: " + size + " drop: " + drop);
+						Long[] result = getWriteDelta();
+						long writeDelta = result[0];
+						long maxWriteDelta = (result[1] / 8);
+						if (result[2] / 1000 > MAX_PING)
+							// More than three seconds ping, drop earlier
+							maxWriteDelta /= 2;
+						if (!receiveVideo || pendingVideos > 1 || (maxWriteDelta > 0 && writeDelta > maxWriteDelta)) {
+							//System.err.println("---------------------> Dropping2: " + receiveVideo + " " + pendingVideos + " " + videoBucket + " size: " + size + " delta: " + writeDelta + " max: " + maxWriteDelta);
 							videoFrameDropper.dropPacket(rtmpMessage);
+							lastDropTime = System.currentTimeMillis();
+							return;
+						}
+						
+						if (!videoBucket.acquireToken(size, 0)) {
+							//System.err.println("=======================> Dropping3: " + receiveVideo + " " + pendingVideos + " " + videoBucket + " size: " + size);
+							videoFrameDropper.dropPacket(rtmpMessage);
+							lastDropTime = System.currentTimeMillis();
 							return;
 						}
 	
+						//System.err.println("---------------------------> Sending: " + receiveVideo + " " + pendingVideos + " " + videoBucket + " size: " + size);
 						videoFrameDropper.sendPacket(rtmpMessage);
 					}
 				} else if (body instanceof AudioData) {
-					if (!receiveAudio || !audioBucket.acquireToken(size, 0)) {
+					Long[] result = getWriteDelta();
+					long writeDelta = result[0];
+					long maxWriteDelta = (result[1] / 8);
+					if (!receiveAudio || /*(maxWriteDelta > 0 && writeDelta > maxWriteDelta) || */!audioBucket.acquireToken(size, 0)) {
+						//System.err.println("+++++++++++++++++++++++++++> Dropping audio");
 						return;
 					}
 				}
@@ -1135,6 +1159,18 @@ implements IPlaylistSubscriberStream {
 				return (Long) pendingRequest.getResult();
 			} else {
 				return 0;
+			}
+		}
+		
+		private Long[] getWriteDelta() {
+			OOBControlMessage deltaRequest = new OOBControlMessage();
+			deltaRequest.setTarget("ConnectionConsumer");
+			deltaRequest.setServiceName("getWriteDelta");
+			msgOut.sendOOBControlMessage(this, deltaRequest);
+			if (deltaRequest.getResult() != null) {
+				return (Long[]) deltaRequest.getResult();
+			} else {
+				return new Long[]{0L, 0L};
 			}
 		}
 		

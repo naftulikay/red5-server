@@ -48,6 +48,7 @@ public abstract class BaseConnection extends AttributeStore
 	protected long readMessages = 0;
 	protected long writtenMessages = 0;
 	protected long droppedMessages = 0;
+	protected long bytesRead = 0;
 	protected Map<String,String> params = null;
 	
 	protected IClient client = null;
@@ -214,7 +215,11 @@ public abstract class BaseConnection extends AttributeStore
 	public long getPendingVideoMessages(int streamId) {
 		return 0;
 	}
-	
+
+	public long getClientBytesRead() {
+		return bytesRead;
+	}
+
 	/* This is really a utility
 	public boolean switchScope(String contextPath) {
 		// At the moment this method is not dealing with tree schematics

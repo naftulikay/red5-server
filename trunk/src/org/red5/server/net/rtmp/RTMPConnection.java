@@ -22,6 +22,7 @@ package org.red5.server.net.rtmp;
 import static org.red5.server.api.ScopeUtils.getScopeService;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.UUID;
 
@@ -81,6 +82,7 @@ public abstract class RTMPConnection extends BaseConnection implements
 	protected Integer invokeId = Integer.valueOf(1);
 
 	protected HashMap<Integer, IPendingServiceCall> pendingCalls = new HashMap<Integer, IPendingServiceCall>();
+	protected HashSet<DeferredResult> deferredResults = new HashSet<DeferredResult>();
 
 	protected int lastPingTime = -1;
 
@@ -348,18 +350,23 @@ public abstract class RTMPConnection extends BaseConnection implements
 		invoke(call, (byte) 3);
 	}
 
+	protected synchronized int getInvokeId() {
+		return invokeId++;
+	}
+	
+	protected void registerPendingCall(int invokeId, IPendingServiceCall call) {
+		synchronized (pendingCalls) {
+			pendingCalls.put(invokeId, call);
+		}
+	}
+	
 	public void invoke(IServiceCall call, byte channel) {
 		// We need to use Invoke for all calls to the client
 		Invoke invoke = new Invoke();
 		invoke.setCall(call);
-		synchronized (invokeId) {
-			invoke.setInvokeId(invokeId);
-			if (call instanceof IPendingServiceCall) {
-				synchronized (pendingCalls) {
-					pendingCalls.put(invokeId, (IPendingServiceCall) call);
-				}
-			}
-			invokeId += 1;
+		invoke.setInvokeId(getInvokeId());
+		if (call instanceof IPendingServiceCall) {
+			registerPendingCall(invoke.getInvokeId(), (IPendingServiceCall) call);
 		}
 		getChannel(channel).write(invoke);
 	}
@@ -546,4 +553,11 @@ public abstract class RTMPConnection extends BaseConnection implements
 				+ getReadBytes() + ", out: " + getWrittenBytes() + ')';
 	}
 
+	protected void registerDeferredResult(DeferredResult result) {
+		deferredResults.add(result);
+	}
+	
+	protected void unregisterDeferredResult(DeferredResult result) {
+		deferredResults.remove(result);
+	}
 }

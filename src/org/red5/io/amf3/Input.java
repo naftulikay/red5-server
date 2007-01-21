@@ -290,6 +290,14 @@ public class Input extends org.red5.io.amf.Input implements org.red5.io.object.I
 			storeReference(resultMap);
 			switch (type & 0x03) {
 			case AMF3.TYPE_OBJECT_PROPERTY:
+				int count = type >> 2;
+				List<String> propertyNames = new ArrayList<String>(count);
+				for (int i=0; i<count; i++) {
+					propertyNames.add(readString());					
+				}
+				for (int i=0; i<count; i++) {
+					resultMap.put(propertyNames.get(i), deserializer.deserialize(this));					
+				}
 				break;
 			case AMF3.TYPE_OBJECT_ANONYMOUS_PROPERTY:
 				resultMap.put("", deserializer.deserialize(this));

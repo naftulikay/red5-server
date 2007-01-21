@@ -32,6 +32,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.mina.common.ByteBuffer;
 import org.red5.io.amf.AMF;
+import org.red5.io.object.RecordSet;
 import org.red5.io.object.Serializer;
 
 /**
@@ -325,6 +326,11 @@ public class Output extends org.red5.io.amf.Output implements org.red5.io.object
     /** {@inheritDoc} */
     public void writeObject(Map<Object, Object> map, Serializer serializer) {
     	writeMap(map, serializer);
+    }
+
+    /** {@inheritDoc} */
+    public void writeRecordSet(RecordSet recordset, Serializer serializer) {
+    	writeString("Not implemented.");
     }
 
     /** {@inheritDoc} */

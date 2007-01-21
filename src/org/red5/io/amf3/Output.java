@@ -242,9 +242,9 @@ public class Output extends org.red5.io.amf.Output implements org.red5.io.object
 
     /** {@inheritDoc} */
     public void writeMap(Map<Object, Object> map, Serializer serializer) {
+		writeAMF3();
+		buf.put(AMF3.TYPE_ARRAY);
     	if (hasReference(map)) {
-    		writeAMF3();
-    		buf.put(AMF3.TYPE_ARRAY);
     		putInteger(getReferenceId(map) << 1);
     		return;
     	}
@@ -260,8 +260,6 @@ public class Output extends org.red5.io.amf.Output implements org.red5.io.object
 			}
 		}
 		
-		writeAMF3();
-		buf.put(AMF3.TYPE_ARRAY);
 		amf3_mode += 1;
 		if (count == map.size()) {
 			// All integer keys starting from zero: serialize as regular array
@@ -296,7 +294,27 @@ public class Output extends org.red5.io.amf.Output implements org.red5.io.object
 
     /** {@inheritDoc} */
     public void writeMap(Collection array, Serializer serializer) {
-    	writeString("Not implemented.");
+		writeAMF3();
+		buf.put(AMF3.TYPE_ARRAY);
+    	if (hasReference(array)) {
+    		putInteger(getReferenceId(array) << 1);
+    		return;
+    	}
+    	
+    	// TODO: we could optimize this by storing the first integer
+    	//       keys after the key-value pairs
+		amf3_mode += 1;
+		putInteger(1);
+		int idx = 0;
+    	for (Object item: array) {
+    		if (item != null) {
+    			putString(String.valueOf(idx));
+    			serializer.serialize(this, item);
+    		}
+    		idx++;
+    	}
+    	amf3_mode -= 1;
+		putString("");
     }
 
     /** {@inheritDoc} */

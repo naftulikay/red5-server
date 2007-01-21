@@ -29,6 +29,7 @@ import org.red5.io.IoConstants;
 import org.red5.io.amf.Output;
 import org.red5.io.flv.FLVHeader;
 import org.red5.io.flv.IKeyFrameDataAnalyzer;
+import org.red5.io.object.Serializer;
 import org.red5.io.utils.IOUtils;
 
 import java.io.FileInputStream;
@@ -37,6 +38,7 @@ import java.nio.channels.FileChannel;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * A Reader is used to read the contents of a FLV file.
@@ -460,10 +462,9 @@ public class FLVReader implements IoConstants, ITagReader,
 		Output out = new Output(buf);
 
         // Duration property
-        out.writeString("onMetaData");
-		out.writeStartMap(3);
-		out.writePropertyName("duration");
-		out.writeNumber(duration / 1000.0);
+		out.writeString("onMetaData");
+		Map<String, Object> props = new HashMap<String, Object>();
+		props.put("duration", duration / 1000.0);
 		if (firstVideoTag != -1) {
 			long old = getCurrentPosition();
 			setCurrentPosition(firstVideoTag);
@@ -471,8 +472,7 @@ public class FLVReader implements IoConstants, ITagReader,
 			fillBuffer(1);
 			byte frametype = in.get();
             // Video codec id
-            out.writePropertyName("videocodecid");
-			out.writeNumber(frametype & MASK_VIDEO_CODEC);
+			props.put("videocodecid", frametype & MASK_VIDEO_CODEC);
 			setCurrentPosition(old);
 		}
 		if (firstAudioTag != -1) {
@@ -482,13 +482,11 @@ public class FLVReader implements IoConstants, ITagReader,
 			fillBuffer(1);
 			byte frametype = in.get();
             // Audio codec id
-            out.writePropertyName("audiocodecid");
-			out.writeNumber((frametype & MASK_SOUND_FORMAT) >> 4);
+            props.put("audiocodecid", (frametype & MASK_SOUND_FORMAT) >> 4);
 			setCurrentPosition(old);
 		}
-		out.writePropertyName("canSeekToEnd");
-		out.writeBoolean(true);
-		out.markEndMap();
+		props.put("canSeekToEnd", true);
+		out.writeObject(props, new Serializer());
 		buf.flip();
 
 		ITag result = new Tag(IoConstants.TYPE_METADATA, 0, buf.limit(), null,

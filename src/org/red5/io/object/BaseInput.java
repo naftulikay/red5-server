@@ -44,7 +44,7 @@ public class BaseInput {
 	 * Store an object into a map
 	 * @param obj  Object to store
 	 */
-	public void storeReference(Object obj) {
+	protected void storeReference(Object obj) {
 		refMap.put(Integer.valueOf(refId++), obj);
 	}
 

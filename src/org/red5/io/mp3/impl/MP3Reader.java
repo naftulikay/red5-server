@@ -29,6 +29,7 @@ import org.red5.io.IoConstants;
 import org.red5.io.amf.Output;
 import org.red5.io.flv.IKeyFrameDataAnalyzer;
 import org.red5.io.flv.impl.Tag;
+import org.red5.io.object.Serializer;
 
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -38,6 +39,7 @@ import java.nio.channels.FileChannel;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Read MP3 files
@@ -176,19 +178,14 @@ public class MP3Reader implements ITagReader, IKeyFrameDataAnalyzer {
 		buf.setAutoExpand(true);
 		Output out = new Output(buf);
 		out.writeString("onMetaData");
-		out.writeStartMap(3);
-		out.writePropertyName("duration");
-		out
-				.writeNumber(frameMeta.timestamps[frameMeta.timestamps.length - 1] / 1000.0);
-		out.writePropertyName("audiocodecid");
-		out.writeNumber(IoConstants.FLAG_FORMAT_MP3);
+		Map<String, Object> props = new HashMap<String, Object>();
+		props.put("duration", frameMeta.timestamps[frameMeta.timestamps.length - 1] / 1000.0);
+		props.put("audiocodecid", IoConstants.FLAG_FORMAT_MP3);
 		if (dataRate > 0) {
-			out.writePropertyName("audiodatarate");
-			out.writeNumber(dataRate);
+			props.put("audiodatarate", dataRate);
 		}
-		out.writePropertyName("canSeekToEnd");
-		out.writeBoolean(true);
-		out.markEndMap();
+		props.put("canSeekToEnd", true);
+		out.writeObject(props, new Serializer());
 		buf.flip();
 
 		ITag result = new Tag(IoConstants.TYPE_METADATA, 0, buf.limit(), null,

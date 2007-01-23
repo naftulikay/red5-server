@@ -463,7 +463,7 @@ public class FLVReader implements IoConstants, ITagReader,
 
         // Duration property
 		out.writeString("onMetaData");
-		Map<String, Object> props = new HashMap<String, Object>();
+		Map<Object, Object> props = new HashMap<Object, Object>();
 		props.put("duration", duration / 1000.0);
 		if (firstVideoTag != -1) {
 			long old = getCurrentPosition();
@@ -486,7 +486,7 @@ public class FLVReader implements IoConstants, ITagReader,
 			setCurrentPosition(old);
 		}
 		props.put("canSeekToEnd", true);
-		out.writeObject(props, new Serializer());
+		out.writeMap(props, new Serializer());
 		buf.flip();
 
 		ITag result = new Tag(IoConstants.TYPE_METADATA, 0, buf.limit(), null,

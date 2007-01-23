@@ -178,14 +178,14 @@ public class MP3Reader implements ITagReader, IKeyFrameDataAnalyzer {
 		buf.setAutoExpand(true);
 		Output out = new Output(buf);
 		out.writeString("onMetaData");
-		Map<String, Object> props = new HashMap<String, Object>();
+		Map<Object, Object> props = new HashMap<Object, Object>();
 		props.put("duration", frameMeta.timestamps[frameMeta.timestamps.length - 1] / 1000.0);
 		props.put("audiocodecid", IoConstants.FLAG_FORMAT_MP3);
 		if (dataRate > 0) {
 			props.put("audiodatarate", dataRate);
 		}
 		props.put("canSeekToEnd", true);
-		out.writeObject(props, new Serializer());
+		out.writeMap(props, new Serializer());
 		buf.flip();
 
 		ITag result = new Tag(IoConstants.TYPE_METADATA, 0, buf.limit(), null,

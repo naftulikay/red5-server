@@ -25,9 +25,7 @@ import org.apache.mina.common.ByteBuffer;
 import org.red5.io.object.Output;
 import org.red5.io.object.Serializer;
 import org.red5.io.utils.BufferUtils;
-import org.red5.server.api.IConnection;
 import org.red5.server.api.IConnection.Encoding;
-import org.red5.server.api.Red5;
 import org.red5.server.api.service.IPendingServiceCall;
 import org.red5.server.api.service.IServiceCall;
 import org.red5.server.net.protocol.ProtocolState;
@@ -68,19 +66,6 @@ public class RTMPProtocolEncoder implements SimpleProtocolEncoder, Constants,
      * Serializer object
      */
     private Serializer serializer;
-
-    /**
-     * Creates output object from byte buffer
-     * @param buffer
-     * @return
-     */
-    private Output getOutput(RTMP rtmp, ByteBuffer buffer) {
-		if (rtmp.getEncoding() == Encoding.AMF3) {
-			return new org.red5.io.amf3.Output(buffer);
-		} else {
-			return new org.red5.io.amf.Output(buffer);
-		}
-	}
 
 	/** {@inheritDoc} */
     public ByteBuffer encode(ProtocolState state, Object message)
@@ -249,6 +234,8 @@ public class RTMPProtocolEncoder implements SimpleProtocolEncoder, Constants,
 				return encodeAudioData((AudioData) message);
 			case TYPE_VIDEO_DATA:
 				return encodeVideoData((VideoData) message);
+			case TYPE_FLEX_SHARED_OBJECT:
+				return encodeFlexSharedObject((ISharedObjectMessage) message, rtmp);
 			case TYPE_SHARED_OBJECT:
 				return encodeSharedObject((ISharedObjectMessage) message, rtmp);
 			case TYPE_SERVER_BANDWIDTH:
@@ -258,6 +245,7 @@ public class RTMPProtocolEncoder implements SimpleProtocolEncoder, Constants,
 			case TYPE_FLEX_MESSAGE:
 				return encodeFlexMessage((FlexMessage) message, rtmp);
 			default:
+				log.warn("Unknown object type: " + header.getDataType());
 				return null;
 		}
 	}
@@ -293,11 +281,31 @@ public class RTMPProtocolEncoder implements SimpleProtocolEncoder, Constants,
 	}
 
 	/** {@inheritDoc} */
-    public ByteBuffer encodeSharedObject(ISharedObjectMessage so, RTMP rtmp) {
-
+    public ByteBuffer encodeFlexSharedObject(ISharedObjectMessage so, RTMP rtmp) {
 		final ByteBuffer out = ByteBuffer.allocate(128);
 		out.setAutoExpand(true);
-		final Output output = getOutput(rtmp, out);
+		out.put((byte) 0x00);
+    	doEncodeSharedObject(so, rtmp, out);
+    	return out;
+    }
+    
+	/** {@inheritDoc} */
+    public ByteBuffer encodeSharedObject(ISharedObjectMessage so, RTMP rtmp) {
+		final ByteBuffer out = ByteBuffer.allocate(128);
+		out.setAutoExpand(true);
+    	doEncodeSharedObject(so, rtmp, out);
+    	return out;
+    }
+
+    /**
+     * Perform the actual encoding of the shared object contents.
+     * 
+     * @param so
+     * @param rtmp
+     * @param out
+     */
+    public void doEncodeSharedObject(ISharedObjectMessage so, RTMP rtmp, ByteBuffer out) {
+		final Output output = new org.red5.io.amf.Output(out);
 
 		output.putString(so.getName());
 		// SO version
@@ -408,7 +416,6 @@ public class RTMPProtocolEncoder implements SimpleProtocolEncoder, Constants,
 
             }
         }
-        return out;
 	}
 
 	/** {@inheritDoc} */
@@ -468,7 +475,11 @@ public class RTMPProtocolEncoder implements SimpleProtocolEncoder, Constants,
 			// Response to initial connect, always use AMF0
 			output = new org.red5.io.amf.Output(out);
 		} else {
-			output = getOutput(rtmp, out);
+			if (rtmp.getEncoding() == Encoding.AMF3) {
+				output = new org.red5.io.amf3.Output(out);
+			} else {
+				output = new org.red5.io.amf.Output(out);
+			}
 		}
 		
 		if (!isPending && (invoke instanceof Invoke)) {

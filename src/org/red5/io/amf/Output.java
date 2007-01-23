@@ -122,10 +122,25 @@ public class Output extends BaseOutput implements org.red5.io.object.Output {
 		
 		storeReference(map);
 		buf.put(AMF.TYPE_MIXED_ARRAY);
-		buf.putInt(map.size());
+		int maxInt=-1;
+		for (int i=0; i<map.size(); i++) {
+			if (!map.containsKey(i))
+				break;
+			
+			maxInt = i;
+		}
+		buf.putInt(maxInt+1);
 		for (Map.Entry<Object, Object> entry : map.entrySet()) {
-			putString(entry.getKey().toString());
+			final String key = entry.getKey().toString(); 
+			if ("length".equals(key))
+				continue;
+			
+			putString(key);
 			serializer.serialize(this, entry.getValue());
+		}
+		if (maxInt >= 0) {
+			putString("length");
+			serializer.serialize(this, maxInt+1);
 		}
 		buf.put((byte) 0x00);
 		buf.put((byte) 0x00);
@@ -139,7 +154,7 @@ public class Output extends BaseOutput implements org.red5.io.object.Output {
 		
 		storeReference(array);
 		buf.put(AMF.TYPE_MIXED_ARRAY);
-		buf.putInt(array.size());
+		buf.putInt(array.size()+1);
 		int idx=0;
 		for (Object item: array) {
 			if (item != null) {
@@ -149,6 +164,8 @@ public class Output extends BaseOutput implements org.red5.io.object.Output {
 				idx++;
 			}
 		}
+		putString("length");
+		serializer.serialize(this, array.size()+1);
 		
 		buf.put((byte) 0x00);
 		buf.put((byte) 0x00);

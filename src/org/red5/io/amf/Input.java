@@ -325,10 +325,8 @@ public class Input extends BaseInput implements org.red5.io.object.Input {
 			log.debug("Read start mixed array: " + maxNumber);
 		}
 
-		boolean allNumbers = true;
 		Object result;
 		final Map<Object, Object> mixedResult = new LinkedHashMap<Object, Object>(maxNumber);
-		Object length = null;
 		while (hasMoreProperties()) {
 			String key = getString(buf);
 			if (log.isDebugEnabled()) {
@@ -338,34 +336,28 @@ public class Input extends BaseInput implements org.red5.io.object.Input {
 			if (log.isDebugEnabled()) {
 				log.debug("item: " + item);
 			}
-			try {
-				mixedResult.put(Integer.parseInt(key), item);
-			} catch (NumberFormatException err) {
-				if (length == null && "length".equals(key)) {
-					length = item;
-				} else {
-					mixedResult.put(key, item);
-					allNumbers = false;
-				}
-			}
+			mixedResult.put(key, item);
 		}
-		
-		if (allNumbers) {
+
+		if (mixedResult.size() <= maxNumber+1 && maxNumber == (Integer) mixedResult.get("length")) {
 			// MixedArray actually is a regular array
 			if (log.isDebugEnabled()) {
 				log.debug("mixed array is a regular array");
 			}
 			final List<Object> listResult = new ArrayList<Object>(maxNumber);
 			for (int i=0; i<maxNumber; i++) {
-				listResult.add(i, mixedResult.get(i));
+				listResult.add(i, mixedResult.get(String.valueOf(i)));
 			}
 			result = listResult;
 		} else {
+			// Convert initial indexes
+			mixedResult.remove("length");
+			for (int i=0; i<maxNumber; i++) {
+				final Object value = mixedResult.remove(String.valueOf(i));
+				mixedResult.put(i, value);
+			}
 			result = mixedResult;
-			if (length != null)
-				mixedResult.put("length", length);
 		}
-		
 		storeReference(result);
 		skipEndObject();
 		return result;

@@ -20,18 +20,25 @@ package org.red5.io.amf3;
  */
 
 import java.lang.reflect.Array;
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.util.Collection;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
+import org.apache.commons.collections.BeanMap;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.mina.common.ByteBuffer;
 import org.red5.io.amf.AMF;
 import org.red5.io.object.RecordSet;
 import org.red5.io.object.Serializer;
+import org.red5.io.object.SerializerOpts.SerializerOption;
 
 /**
  * AMF3 output writer
@@ -300,6 +307,7 @@ public class Output extends org.red5.io.amf.Output implements org.red5.io.object
     		return;
     	}
     	
+    	storeReference(array);
     	// TODO: we could optimize this by storing the first integer
     	//       keys after the key-value pairs
 		amf3_mode += 1;
@@ -317,13 +325,151 @@ public class Output extends org.red5.io.amf.Output implements org.red5.io.object
     }
 
     /** {@inheritDoc} */
+	protected void writeArbitraryObject(Object object, Serializer serializer) {
+        // If we need to serialize class information...
+		Class objectClass = object.getClass();
+        if (serializer.isOptEnabled(object, SerializerOption.SerializeClassName)) {
+			putString(objectClass.getName());
+		} else {
+			putString("");
+		}
+
+    	// Store key/value pairs
+    	amf3_mode += 1;
+		// Get public field values
+		Map<String, Object> values = new HashMap<String, Object>();
+        // Iterate thru fields of an object to build "name-value" map from it
+        for (Field field : objectClass.getFields()) {
+			int modifiers = field.getModifiers();
+			if (Modifier.isTransient(modifiers)) {
+				if (log.isDebugEnabled()) {
+					log.debug("Skipping " + field.getName() + " because its transient");
+				}
+				continue;
+			}
+			
+			Object value;
+			try {
+                // Get field value
+                value = field.get(object);
+			} catch (IllegalAccessException err) {
+                // Swallow on private and protected properties access exception
+                continue;
+			}
+            // Put field to the map of "name-value" pairs
+            values.put(field.getName(), value);
+		}
+
+		// Output public values
+		Iterator<Map.Entry<String, Object>> it = values.entrySet().iterator();
+        // Iterate thru map and write out properties with separators
+        while (it.hasNext()) {
+			Map.Entry<String, Object> entry = it.next();
+            // Write out prop name
+			putString(entry.getKey());
+            // Write out
+            serializer.serialize(this, entry.getValue());
+		}
+    	amf3_mode -= 1;
+        // Write out end of object marker
+		putString("");
+	}
+
+    /** {@inheritDoc} */
     public void writeObject(Object object, Serializer serializer) {
-    	writeString("Not implemented.");
+		writeAMF3();
+		buf.put(AMF3.TYPE_OBJECT);
+    	if (hasReference(object)) {
+    		putInteger(getReferenceId(object) << 1);
+    		return;
+    	}
+
+    	// We have an inline class that is not a reference.
+    	// We store the properties using key/value pairs
+    	int type = AMF3.TYPE_OBJECT_VALUE << 2 | 1 << 1 | 1;
+    	putInteger(type);
+    	
+        // Create new map out of bean properties
+        BeanMap beanMap = new BeanMap(object);
+        // Set of bean attributes
+        Set set = beanMap.entrySet();
+		if ((set.size() == 0) || (set.size() == 1 && beanMap.containsKey("class"))) {
+			// BeanMap is empty or can only access "class" attribute, skip it
+			writeArbitraryObject(object, serializer);
+			return;
+		}
+
+        // Write out either start of object marker for class name or "empty" start of object marker
+		Class objectClass = object.getClass();
+        if (serializer.isOptEnabled(object, SerializerOption.SerializeClassName)) {
+        	// classname
+        	putString(objectClass.getName());
+		} else {
+			putString("");
+		}
+        
+    	// Store key/value pairs
+    	amf3_mode += 1;
+		Iterator it = set.iterator();
+        while (it.hasNext()) {
+			BeanMap.Entry entry = (BeanMap.Entry) it.next();
+			String keyName = entry.getKey().toString();
+			if ("class".equals(keyName)) {
+				continue;
+			}
+
+			// Check if the Field corresponding to the getter/setter pair is transient
+			try {
+				Field field = objectClass.getDeclaredField(keyName);
+				int modifiers = field.getModifiers();
+				
+				if (Modifier.isTransient(modifiers)) {
+					if (log.isDebugEnabled()) {
+						log.debug("Skipping " + field.getName() + " because its transient");
+					}
+					continue;
+				}
+			} catch (NoSuchFieldException nfe) {
+				// Ignore this exception and use the default behaviour
+			}
+			
+			putString(buf, keyName);
+			serializer.serialize(this, entry.getValue());
+		}
+    	amf3_mode -= 1;
+    	
+    	// End of object marker
+    	putString("");
     }
 
     /** {@inheritDoc} */
     public void writeObject(Map<Object, Object> map, Serializer serializer) {
-    	writeMap(map, serializer);
+		writeAMF3();
+		buf.put(AMF3.TYPE_OBJECT);
+    	if (hasReference(map)) {
+    		putInteger(getReferenceId(map) << 1);
+    		return;
+    	}
+    	
+    	storeReference(map);
+    	// We have an inline class that is not a reference.
+    	// We store the properties using key/value pairs
+    	int type = AMF3.TYPE_OBJECT_VALUE << 2 | 1 << 1 | 1;
+    	putInteger(type);
+    	
+    	// No classname
+    	putString("");
+    	
+    	// Store key/value pairs
+    	amf3_mode += 1;
+    	for (Map.Entry<Object, Object> entry: map.entrySet()) {
+    		putString(entry.getKey().toString());
+    		serializer.serialize(this, entry.getValue());
+    	}
+    	amf3_mode -= 1;
+    	
+    	// End of object marker
+    	putString("");
     }
 
     /** {@inheritDoc} */

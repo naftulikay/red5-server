@@ -19,6 +19,7 @@ package org.red5.io.amf3;
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA 
  */
 
+import org.apache.commons.beanutils.BeanUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.mina.common.ByteBuffer;
@@ -282,41 +283,61 @@ public class Input extends org.red5.io.amf.Input implements org.red5.io.object.I
 		String className = readString();
 		Object result = null;
 		amf3_mode += 1;
-		if ("".equals(className)) {
-			// "anonymous" object, load as Map
-			Map<String, Object> resultMap = new ObjectMap<String, Object>();
-			storeReference(resultMap);
-			switch (type & 0x03) {
-			case AMF3.TYPE_OBJECT_PROPERTY:
-				int count = type >> 2;
-				List<String> propertyNames = new ArrayList<String>(count);
-				for (int i=0; i<count; i++) {
-					propertyNames.add(readString());					
-				}
-				for (int i=0; i<count; i++) {
-					resultMap.put(propertyNames.get(i), deserializer.deserialize(this));					
-				}
-				break;
-			case AMF3.TYPE_OBJECT_ANONYMOUS_PROPERTY:
-				resultMap.put("", deserializer.deserialize(this));
-				break;
-			case AMF3.TYPE_OBJECT_VALUE:
-				String key = readString();
-				while (!"".equals(key)) {
-					Object value = deserializer.deserialize(this);
-					resultMap.put(key, value);
-					key = readString();
-				}
-				break;
-			default:
-			case AMF3.TYPE_OBJECT_UNKNOWN:
-				throw new RuntimeException("Unknown object type: " + (type & 0x03));
+		// Load object properties into map
+		Map<String, Object> properties = new ObjectMap<String, Object>();
+		switch (type & 0x03) {
+		case AMF3.TYPE_OBJECT_PROPERTY:
+			int count = type >> 2;
+			List<String> propertyNames = new ArrayList<String>(count);
+			for (int i=0; i<count; i++) {
+				propertyNames.add(readString());					
 			}
-			result = resultMap;
-		} else {
-			throw new RuntimeException("Objects of type " + className + " not supported yet.");
+			for (int i=0; i<count; i++) {
+				properties.put(propertyNames.get(i), deserializer.deserialize(this));					
+			}
+			break;
+		case AMF3.TYPE_OBJECT_ANONYMOUS_PROPERTY:
+			properties.put("", deserializer.deserialize(this));
+			break;
+		case AMF3.TYPE_OBJECT_VALUE:
+			String key = readString();
+			while (!"".equals(key)) {
+				Object value = deserializer.deserialize(this);
+				properties.put(key, value);
+				key = readString();
+			}
+			break;
+		default:
+		case AMF3.TYPE_OBJECT_UNKNOWN:
+			throw new RuntimeException("Unknown object type: " + (type & 0x03));
 		}
 		amf3_mode -= 1;
+		
+		// Create result object based on classname
+		if ("".equals(className)) {
+			// "anonymous" object, load as Map
+			storeReference(properties);
+			result = properties;
+		} else if ("RecordSet".equals(className)) {
+			// TODO: how are RecordSet objects encoded?
+			throw new RuntimeException("Objects of type " + className + " not supported yet.");
+		} else if ("RecordSetPage".equals(className)) {
+			// TODO: how are RecordSetPage objects encoded?
+			throw new RuntimeException("Objects of type " + className + " not supported yet.");
+		} else {
+			// Apply properties to object
+			result = newInstance(className);
+			if (result != null) {
+				storeReference(properties);
+				for (Map.Entry<String, Object> entry: properties.entrySet()) {
+					try {
+						BeanUtils.setProperty(result, entry.getKey(), entry.getValue());
+					} catch (Exception e) {
+						log.error("Error mapping property: " + entry.getKey() + " (" + entry.getValue() + ")");
+					}
+				}
+			} // else fall through
+		}
 		return result;
     }
     

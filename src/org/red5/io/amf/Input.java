@@ -28,6 +28,7 @@ import org.red5.io.object.DataTypes;
 import org.red5.io.object.Deserializer;
 import org.red5.io.object.RecordSet;
 import org.red5.io.object.RecordSetPage;
+import org.red5.io.utils.ObjectMap;
 import org.red5.io.utils.XMLUtils;
 import org.w3c.dom.Document;
 
@@ -292,6 +293,14 @@ public class Input extends BaseInput implements org.red5.io.object.Input {
      */
     public Map<String, Object> readKeyValues(Deserializer deserializer) {
 		Map<String, Object> result = new HashMap<String, Object>();
+		readKeyValues(result, deserializer);
+		return result;
+    }
+	
+    /**
+     * Read key - value pairs into Map object
+     */
+	protected void readKeyValues(Map<String, Object> result, Deserializer deserializer) {
 		while (hasMoreProperties()) {
 			String name = readPropertyName();
 			if (log.isDebugEnabled()) {
@@ -307,7 +316,6 @@ public class Input extends BaseInput implements org.red5.io.object.Input {
 			}
 		}
 		skipEndObject();
-		return result;
     }
 
 	public Object readMap(Deserializer deserializer) {
@@ -434,7 +442,8 @@ public class Input extends BaseInput implements org.red5.io.object.Input {
 		if (log.isDebugEnabled()) {
 			log.debug("read map");
 		}
-		Map<String, Object> result = readKeyValues(deserializer);
+		Map<String, Object> result = new ObjectMap<String, Object>();
+		readKeyValues(result, deserializer);
 		storeReference(result);
 		return result;
 	}

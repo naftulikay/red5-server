@@ -27,16 +27,14 @@ import org.red5.io.object.DataTypes;
 import org.red5.io.object.Deserializer;
 import org.red5.io.object.RecordSet;
 import org.red5.io.object.RecordSetPage;
+import org.red5.io.utils.ObjectMap;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Date;
-import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.TimeZone;
 
 /**
  * Input for red5 data (AMF3) types
@@ -286,7 +284,7 @@ public class Input extends org.red5.io.amf.Input implements org.red5.io.object.I
 		amf3_mode += 1;
 		if ("".equals(className)) {
 			// "anonymous" object, load as Map
-			Map<String, Object> resultMap = new HashMap<String, Object>();
+			Map<String, Object> resultMap = new ObjectMap<String, Object>();
 			storeReference(resultMap);
 			switch (type & 0x03) {
 			case AMF3.TYPE_OBJECT_PROPERTY:

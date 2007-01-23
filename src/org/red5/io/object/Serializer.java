@@ -19,8 +19,10 @@ package org.red5.io.object;
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA 
  */
 
+import org.apache.commons.collections.BeanMap;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.red5.io.utils.ObjectMap;
 import org.red5.io.utils.XMLUtils;
 import org.w3c.dom.Document;
 
@@ -247,8 +249,10 @@ public class Serializer implements SerializerOpts {
 	 *         <code>false</code>
 	 */
 	protected boolean writeObjectType(Output out, Object obj) {
-		if (obj instanceof Map) {
+		if (obj instanceof ObjectMap || obj instanceof BeanMap) {
 			out.writeObject((Map) obj, this);
+		} else if (obj instanceof Map) {
+			out.writeMap((Map) obj, this);
 		} else if (obj instanceof RecordSet) {
 			out.writeRecordSet((RecordSet) obj, this);
 		} else {

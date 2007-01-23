@@ -433,7 +433,7 @@ public class Output extends org.red5.io.amf.Output implements org.red5.io.object
 				// Ignore this exception and use the default behaviour
 			}
 			
-			putString(buf, keyName);
+			putString(keyName);
 			serializer.serialize(this, entry.getValue());
 		}
     	amf3_mode -= 1;

@@ -19,6 +19,9 @@ package org.red5.server.net.rtmp.codec;
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA 
  */
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.red5.server.net.protocol.ProtocolState;
 import org.red5.server.net.rtmp.message.Header;
 import org.red5.server.net.rtmp.message.Packet;
@@ -40,18 +43,14 @@ public class RTMP extends ProtocolState {
 	private boolean mode = MODE_SERVER;
 	private boolean debug = false;
 	
-	private final static int MAX_STREAMS = 12;
-	
-	private byte lastReadChannel = 0x00;
-	private byte lastWriteChannel = 0x00;
-	private Header[] readHeaders = new Header[128]; 
-	private Header[] writeHeaders = new Header[128]; 
-	private Packet[] readPackets = new Packet[128];
-	private Packet[] writePackets = new Packet[128];
+	private int lastReadChannel = 0x00;
+	private int lastWriteChannel = 0x00;
+	private Map<Integer, Header> readHeaders = new HashMap<Integer, Header>(); 
+	private Map<Integer, Header> writeHeaders = new HashMap<Integer, Header>(); 
+	private Map<Integer, Packet> readPackets = new HashMap<Integer, Packet>();
+	private Map<Integer, Packet> writePackets = new HashMap<Integer, Packet>();
 	private int readChunkSize = DEFAULT_CHUNK_SIZE;
 	private int writeChunkSize = DEFAULT_CHUNK_SIZE;
-	
-	private int[] streamIds = new int[MAX_STREAMS];
 	
 	private long bytesRead = 0;
 	private long bytesWritten = 0; 
@@ -77,13 +76,14 @@ public class RTMP extends ProtocolState {
 		return state;
 	}
 	
-	private void freePackets(Packet[] packets) {
-		for (Packet packet: packets) {
+	private void freePackets(Map<Integer, Packet> packets) {
+		for (Packet packet : packets.values()) {
 			if (packet != null && packet.getData() != null) {
 				packet.getData().release();
 				packet.setData(null);
 			}
 		}
+		packets.clear();
 	}
 	
 	public void setState(byte state) {
@@ -95,57 +95,57 @@ public class RTMP extends ProtocolState {
 		}
 	}
 	
-	public void setLastReadHeader(byte channelId, Header header){
+	public void setLastReadHeader(int channelId, Header header){
 		lastReadChannel = channelId;
-		readHeaders[channelId] = header;
+		readHeaders.put(channelId, header);
 	}
 	
-	public Header getLastReadHeader(byte channelId){
-		return readHeaders[channelId];
+	public Header getLastReadHeader(int channelId){
+		return readHeaders.get(channelId);
 	}
 	
-	public void setLastWriteHeader(byte channelId, Header header){
+	public void setLastWriteHeader(int channelId, Header header){
 		lastWriteChannel = channelId;
-		writeHeaders[channelId] = header;
+		writeHeaders.put(channelId, header);
 	}
 	
-	public Header getLastWriteHeader(byte channelId){
-		return writeHeaders[channelId];
+	public Header getLastWriteHeader(int channelId){
+		return writeHeaders.get(channelId);
 	}
 
-	public void setLastReadPacket(byte channelId, Packet packet){
-		Packet prevPacket = readPackets[channelId];
+	public void setLastReadPacket(int channelId, Packet packet){
+		Packet prevPacket = readPackets.get(channelId);
 		if (prevPacket != null && prevPacket.getData() != null) {
 			prevPacket.getData().release();
 			prevPacket.setData(null);
 		}
 
-		readPackets[channelId] = packet;
+		readPackets.put(channelId, packet);
 	}
 	
-	public Packet getLastReadPacket(byte channelId){
-		return readPackets[channelId];
+	public Packet getLastReadPacket(int channelId){
+		return readPackets.get(channelId);
 	}
 	
-	public void setLastWritePacket(byte channelId, Packet packet){
-		Packet prevPacket = writePackets[channelId];
+	public void setLastWritePacket(int channelId, Packet packet){
+		Packet prevPacket = writePackets.get(channelId);
 		if (prevPacket != null && prevPacket.getData() != null) {
 			prevPacket.getData().release();
 			prevPacket.setData(null);
 		}
 
-		writePackets[channelId] = packet;
+		writePackets.put(channelId, packet);
 	}
 	
-	public Packet getLastWritePacket(byte channelId){
-		return writePackets[channelId];
+	public Packet getLastWritePacket(int channelId){
+		return writePackets.get(channelId);
 	}
 
-	public byte getLastReadChannel() {
+	public int getLastReadChannel() {
 		return lastReadChannel;
 	}
 
-	public byte getLastWriteChannel() {
+	public int getLastWriteChannel() {
 		return lastWriteChannel;
 	}
 

@@ -77,7 +77,7 @@ public class RTMPProtocolEncoder implements SimpleProtocolEncoder, Constants, IE
 	public ByteBuffer encodePacket(RTMP rtmp, Packet packet){
 
 		final Header header = packet.getHeader();
-		final byte channelId = header.getChannelId();
+		final int channelId = header.getChannelId();
 		final IRTMPEvent message = packet.getMessage();
 		ByteBuffer data;
 		
@@ -98,18 +98,25 @@ public class RTMPProtocolEncoder implements SimpleProtocolEncoder, Constants, IE
 			data.rewind();
 		header.setSize(data.limit());
 		
-		Header lastWriteHeader = rtmp.getLastWriteHeader(channelId);
+		ByteBuffer headers = encodeHeader(header, rtmp.getLastWriteHeader(channelId));
 		
 		rtmp.setLastWriteHeader(channelId, header);
 		rtmp.setLastWritePacket(channelId, packet);
 		
-		final int headerSize = calculateHeaderSize(header, lastWriteHeader);
 		final int chunkSize = rtmp.getWriteChunkSize();
+		int chunkHeaderSize = 1;
+		if (header.getChannelId() > 320)
+			chunkHeaderSize = 3;
+		else if (header.getChannelId() > 63)
+			chunkHeaderSize = 2;
 		final int numChunks = (int) Math.ceil(header.getSize() / (float) chunkSize);
-		final int bufSize = header.getSize() + headerSize + (numChunks - 1 * 1);
+		final int bufSize = header.getSize() + headers.limit()
+			+ (numChunks > 0 ? (numChunks - 1) * chunkHeaderSize : 0);
 		final ByteBuffer out = ByteBuffer.allocate(bufSize);
 		
-		encodeHeader(header, lastWriteHeader, out);
+		headers.flip();
+		out.put(headers);
+		headers.release();
 		
 		if(numChunks == 1){
 			// we can do it with a single copy
@@ -117,7 +124,7 @@ public class RTMPProtocolEncoder implements SimpleProtocolEncoder, Constants, IE
 		} else {
 			for(int i=0; i<numChunks-1; i++){
 				BufferUtils.put(out,data,chunkSize);
-				out.put(RTMPUtils.encodeHeaderByte(HEADER_CONTINUE, header.getChannelId()));
+				RTMPUtils.encodeHeaderByte(out, HEADER_CONTINUE, header.getChannelId());
 			}
 			BufferUtils.put(out,data,out.remaining());
 		}
@@ -128,50 +135,7 @@ public class RTMPProtocolEncoder implements SimpleProtocolEncoder, Constants, IE
 		return out;
 	}
 	
-	public int calculateHeaderSize(Header header, Header lastHeader) {
-		byte headerType = HEADER_NEW;
-		if(lastHeader==null || header.getStreamId() != lastHeader.getStreamId() || !header.isTimerRelative()){
-			headerType = HEADER_NEW;
-		} else if(header.getSize() != lastHeader.getSize() || header.getDataType() != lastHeader.getDataType()){
-			headerType = HEADER_SAME_SOURCE;
-		} else if(header.getTimer() != lastHeader.getTimer()){
-			headerType = HEADER_TIMER_CHANGE;
-		} else
-			headerType = HEADER_CONTINUE;
-		
-		int result = 0;
-		switch(headerType){
-		
-		case HEADER_NEW:
-			result = 12;
-			break;
-			
-		case HEADER_SAME_SOURCE:
-			result = 8;
-			break;
-			
-		case HEADER_TIMER_CHANGE:
-			result = 4;
-			break;
-			
-		case HEADER_CONTINUE:
-			result = 1;
-			break;
-		
-		}
-		
-		return result;
-	}
-
 	public ByteBuffer encodeHeader(Header header, Header lastHeader){
-		int size = calculateHeaderSize(header, lastHeader);
-		ByteBuffer buf = ByteBuffer.allocate(size);
-		encodeHeader(header, lastHeader, buf);
-		buf.flip();
-		return buf;
-	}
-
-	public void encodeHeader(Header header, Header lastHeader, ByteBuffer buf){
 		
 		byte headerType = HEADER_NEW;
 		if(lastHeader==null || header.getStreamId() != lastHeader.getStreamId() || !header.isTimerRelative()){
@@ -183,9 +147,13 @@ public class RTMPProtocolEncoder implements SimpleProtocolEncoder, Constants, IE
 		} else
 			headerType = HEADER_CONTINUE;
 		
-		final byte headerByte = RTMPUtils.encodeHeaderByte(headerType, header.getChannelId());
-		
-		buf.put(headerByte);
+		int channelIdAdd = 0;
+		if (header.getChannelId() > 320)
+			channelIdAdd = 2;
+		else if (header.getChannelId() > 63)
+			channelIdAdd = 1;
+		final ByteBuffer buf = ByteBuffer.allocate(RTMPUtils.getHeaderLength(headerType) + channelIdAdd);
+		RTMPUtils.encodeHeaderByte(buf, headerType, header.getChannelId());
 		
 		switch(headerType){
 		
@@ -210,6 +178,7 @@ public class RTMPProtocolEncoder implements SimpleProtocolEncoder, Constants, IE
 			break;
 		
 		}
+		return buf;
 	}
 	
 	public ByteBuffer encodeMessage(Header header, IRTMPEvent message){

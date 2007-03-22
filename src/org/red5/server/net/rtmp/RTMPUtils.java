@@ -131,18 +131,38 @@ public class RTMPUtils implements Constants {
 		return val;
 	}
 	
-	public static byte encodeHeaderByte(byte headerSize, byte channelId){
-		return (byte) ((headerSize << 6) + channelId);
+	public static void encodeHeaderByte(ByteBuffer out, byte headerSize, int channelId) {
+		if (channelId <= 63) {
+			out.put((byte) ((headerSize << 6) + channelId));
+		} else if (channelId <= 320) {
+			out.put((byte) (headerSize << 6));
+			out.put((byte) (channelId - 64));
+		} else {
+			out.put((byte) ((headerSize << 6) | 1));
+			channelId -= 64;
+			out.put((byte) (channelId & 0xff));
+			out.put((byte) (channelId >> 8));
+		}
 	}
 	
-	public static byte decodeChannelId(byte header) {
-		return (byte) (header & 0x3f);
+	public static int decodeChannelId(int header, int byteCount) {
+		if (byteCount == 1) {
+			return (header & 0x3f);
+		} else if (byteCount == 2) {
+			return 64 + (header & 0xff);
+		} else {
+			return 64 + ((header >> 8) & 0xff) + ((header & 0xff) << 8);
+		}
 	}
 
-	public static byte decodeHeaderSize(byte header) {
-		int headerInt = (header>=0) ? header : header+256;
-		byte size = (byte) (headerInt >> 6);
-		return size;
+	public static byte decodeHeaderSize(int header, int byteCount) {
+		if (byteCount == 1) {
+			return (byte) (header >> 6);
+		} else if (byteCount == 2) {
+			return (byte) (header >> 14);
+		} else {
+			return (byte) (header >> 22);
+		}
 	}
 	
 	public static int getHeaderLength(byte headerSize){

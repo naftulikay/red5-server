@@ -195,13 +195,27 @@ public class RTMPProtocolDecoder implements Constants, SimpleProtocolDecoder, IE
 		}
 		
 		final int position = in.position();
-		final byte headerByte = in.get();
-		final byte channelId = RTMPUtils.decodeChannelId(headerByte);
-	
+		byte headerByte = in.get();
+		int headerValue;
+		int byteCount;
+		if ((headerByte & 0x3f) == 0) {
+			// Two byte header
+			headerValue = ((int) headerByte & 0xff) << 8 | ((int) in.get() & 0xff); 
+			byteCount = 2;
+		} else if ((headerByte & 0x3f) == 1) {
+			// Three byte header
+			headerValue = ((int) headerByte & 0xff) << 16 | ((int) in.get() & 0xff) << 8 | ((int) in.get() & 0xff); 
+			byteCount = 3;
+		} else {
+			// Single byte header
+			headerValue = (int) headerByte & 0xff;
+			byteCount = 1;
+		}
+		final int channelId = RTMPUtils.decodeChannelId(headerValue, byteCount);
 		if(channelId<0) throw new ProtocolException("Bad channel id: "+channelId);
 		
 		// Get the header size and length
-		final byte headerSize = (byte) RTMPUtils.decodeHeaderSize(headerByte);
+		final byte headerSize = (byte) RTMPUtils.decodeHeaderSize(headerValue, byteCount);
 		int headerLength = RTMPUtils.getHeaderLength(headerSize);
 		
 		if(headerLength > remaining) {
@@ -267,9 +281,24 @@ public class RTMPProtocolDecoder implements Constants, SimpleProtocolDecoder, IE
 	
 	public Header decodeHeader(ByteBuffer in, Header lastHeader){
 		
-		final byte headerByte = in.get();
-		final byte channelId = RTMPUtils.decodeChannelId(headerByte);		
-		final byte headerSize = (byte) RTMPUtils.decodeHeaderSize(headerByte);
+		byte headerByte = in.get();
+		int headerValue;
+		int byteCount = 1;
+		if ((headerByte & 0x3f) == 0) {
+			// Two byte header
+			headerValue = ((int) headerByte & 0xff) << 8 | ((int) in.get() & 0xff); 
+			byteCount = 2;
+		} else if ((headerByte & 0x3f) == 1) {
+			// Three byte header
+			headerValue = ((int) headerByte & 0xff) << 16 | ((int) in.get() & 0xff) << 8 | ((int) in.get() & 0xff); 
+			byteCount = 3;
+		} else {
+			// Single byte header
+			headerValue = (int) headerByte & 0xff;
+			byteCount = 1;
+		}
+		final int channelId = RTMPUtils.decodeChannelId(headerValue, byteCount);
+		final int headerSize = RTMPUtils.decodeHeaderSize(headerValue, byteCount);
 		Header header = new Header();
 		header.setChannelId(channelId);
 		header.setTimerRelative(headerSize != HEADER_NEW);
@@ -499,7 +528,7 @@ public class RTMPProtocolDecoder implements Constants, SimpleProtocolDecoder, IE
 		}
 				
 		Object[] params = new Object[]{};
-
+		
 		if(in.hasRemaining()){
 			ArrayList paramList = new ArrayList();
 			
@@ -524,7 +553,7 @@ public class RTMPProtocolDecoder implements Constants, SimpleProtocolDecoder, IE
 					log.debug(" > "+i+": "+params[i]);
 				}
 			}
-		} 
+		}
 		
 		final int dotIndex = action.lastIndexOf(".");
 		String serviceName = (dotIndex==-1) ? null : action.substring(0,dotIndex);

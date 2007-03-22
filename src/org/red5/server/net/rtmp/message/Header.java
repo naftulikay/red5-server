@@ -21,18 +21,18 @@ package org.red5.server.net.rtmp.message;
 
 public class Header implements Constants {
 
-	private byte channelId = 0;
+	private int channelId = 0;
 	private int timer = 0;
 	private int size = 0;
 	private byte dataType = 0;
 	private int streamId = 0;
 	private boolean timerRelative = true;
 	
-	public byte getChannelId() {
+	public int getChannelId() {
 		return channelId;
 	}
 	
-	public void setChannelId(byte channelId) {
+	public void setChannelId(int channelId) {
 		this.channelId = channelId;
 	}
 	

@@ -37,10 +37,10 @@ public class Channel {
         LogFactory.getLog(Channel.class.getName());
 	
 	private RTMPConnection connection = null;
-	private byte id = 0;
+	private int id = 0;
 	//private Stream stream;
 
-	public Channel(RTMPConnection conn, byte channelId){
+	public Channel(RTMPConnection conn, int channelId){
 		connection = conn;
 		id = channelId;
 	}
@@ -49,7 +49,7 @@ public class Channel {
 		connection.closeChannel(id);
 	}
 	
-	public byte getId(){
+	public int getId(){
 		return id;
 	}
 	

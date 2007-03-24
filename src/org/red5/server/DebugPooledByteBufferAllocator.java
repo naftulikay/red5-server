@@ -290,10 +290,10 @@ public class DebugPooledByteBufferAllocator implements ByteBufferAllocator {
 		synchronized (stacks) {
 			for (Entry<UnexpandableByteBuffer, StackTraceElement[]> entry : stacks
 					.entrySet()) {
-				log.info("Stack for buffer " + entry.getKey());
+				System.err.println("Stack for buffer " + entry.getKey());
 				StackTraceElement[] stack = entry.getValue();
 				for (StackTraceElement element : stack) {
-					log.info("  " + element);
+					System.err.println("  " + element);
 				}
 			}
 		}
@@ -372,7 +372,7 @@ public class DebugPooledByteBufferAllocator implements ByteBufferAllocator {
 		PooledByteBuffer buf = allocateContainer();
 		buf.init(new UnexpandableByteBuffer(nioBuffer), false);
 		buf.buf.init();
-		//buf.setPooled(false);
+		buf.setPooled(false);
 		return buf;
 	}
 

@@ -19,9 +19,11 @@ package org.red5.server;
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA 
  */
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -42,6 +44,7 @@ public abstract class BaseConnection extends AttributeStore
 	protected String type;
 	protected String host;
 	protected String remoteAddress;
+	protected List<String> remoteAddresses;
 	protected int remotePort;
 	protected String path;
 	protected String sessionId;
@@ -59,6 +62,9 @@ public abstract class BaseConnection extends AttributeStore
 		this.type = type;
 		this.host = host;
 		this.remoteAddress = remoteAddress;
+		this.remoteAddresses = new ArrayList<String>();
+		this.remoteAddresses.add(remoteAddress);
+		this.remoteAddresses = Collections.unmodifiableList(this.remoteAddresses);
 		this.remotePort = remotePort;
 		this.path = path;
 		this.sessionId = sessionId;
@@ -88,6 +94,14 @@ public abstract class BaseConnection extends AttributeStore
 
 	public String getRemoteAddress() {
 		return remoteAddress;
+	}
+
+    /**
+    *
+    * @return
+    */
+	public List<String> getRemoteAddresses() {
+		return remoteAddresses;
 	}
 
 	public int getRemotePort() {

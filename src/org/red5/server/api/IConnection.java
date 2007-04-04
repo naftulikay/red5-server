@@ -20,6 +20,7 @@ package org.red5.server.api;
  */
 
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -115,6 +116,15 @@ public interface IConnection extends ICoreObject {
 	 * @return the ip address of the client
 	 */
 	public String getRemoteAddress();
+
+	/**
+	 * Get the IP addresses the client is connected from. If a client is connected
+	 * through RTMPT and uses a proxy to connect, this will contain all hosts the
+	 * client used to connect to the server.
+	 * 
+	 * @return The IP addresses of the client
+	 */
+	public List<String> getRemoteAddresses();
 
 	/**
 	 * Get the port the client is connected from.

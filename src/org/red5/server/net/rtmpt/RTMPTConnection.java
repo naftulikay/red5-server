@@ -34,6 +34,7 @@ import org.red5.server.net.rtmp.RTMPConnection;
 import org.red5.server.net.rtmp.RTMPHandler;
 import org.red5.server.net.rtmp.codec.RTMP;
 import org.red5.server.net.rtmp.message.Packet;
+import org.red5.server.net.servlet.ServletUtils;
 
 /**
  * A RTMPT client / session.
@@ -106,6 +107,7 @@ public class RTMPTConnection extends RTMPConnection {
 	public void setServletRequest(HttpServletRequest request) {
 		host = request.getLocalName();
 		remoteAddress = request.getRemoteAddr();
+		remoteAddresses = ServletUtils.getRemoteAddresses(request);
 		remotePort = request.getRemotePort();
 	}
 

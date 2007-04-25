@@ -5,8 +5,10 @@
 	<!-- Server bean -->
 	<bean id="red5.server" class="org.red5.server.Server"/>
 	<!-- JMX server -->
-	<bean id="jmxServer" class="org.red5.server.jmx.JMXServer" init-method="init">
+	<bean id="jmxFactory" class="org.red5.server.jmx.JMXFactory">
 		<property name="domain" value="org.red5.server"/>
+	</bean>
+	<bean id="jmxAgent" class="org.red5.server.jmx.JMXAgent" init-method="init">
 		<property name="htmlAdapterPort" value="8082"/>
 	</bean>
 	<!-- Serializes objects to AMF binary -->

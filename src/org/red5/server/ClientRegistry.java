@@ -28,13 +28,13 @@ import org.red5.server.api.IClient;
 import org.red5.server.api.IClientRegistry;
 import org.red5.server.exception.ClientNotFoundException;
 import org.red5.server.exception.ClientRejectedException;
-import org.red5.server.jmx.JMXServer;
+import org.red5.server.jmx.JMXFactory;
 
 /**
  * Registry for clients. Associates client with it's id so it's possible to get client by id
  * from whenever we need
  */
-public class ClientRegistry implements IClientRegistry {
+public class ClientRegistry implements IClientRegistry, ClientRegistryMBean {
 	/**
 	 * Clients map
 	 */
@@ -46,13 +46,8 @@ public class ClientRegistry implements IClientRegistry {
 	private int nextId = 0;
 
 	{
-		//register with the mbean service
-		try {
-			JMXServer.registerMBean(this, this.getClass().getName(),
-					ClientRegistryMBean.class);
-		} catch (Exception e) {
-			//logger.error("Error exposing ClientRegistry to JMX subsystem", e);
-		}
+		JMXFactory.registerMBean(this, this.getClass().getName(),
+				ClientRegistryMBean.class);
 	}
 
 	/**

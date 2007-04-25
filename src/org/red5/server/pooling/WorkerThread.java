@@ -1,12 +1,12 @@
 /*
  * Copyright 2004-2005 the original author.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -26,12 +26,12 @@ import org.apache.commons.logging.LogFactory;
  *         gets pooled for re-use. We should customize this for the desired
  *         behaviour.
  */
-public class WorkerThread extends Thread {
+public class WorkerThread extends Thread implements WorkerThreadMBean {
 
 	private static Log log = LogFactory.getLog(WorkerThread.class);
 
 	/** Constructs a new WorkerThread. */
-    public WorkerThread() {
+	public WorkerThread() {
 		// default constructor
 	}
 
@@ -236,13 +236,13 @@ public class WorkerThread extends Thread {
 
 	/**
 	 * execute
-	 * 
+	 *
 	 * @param clsName
 	 * @param methName
 	 * @param params
-     * @param paramTypes
+	 * @param paramTypes
 	 * @param synObj
-     * @param paramTypes
+	 * @param paramTypes
 	 */
 	public synchronized void execute(String clsName, String methName,
 			Object[] params, Class[] paramTypes, Object synObj) {
@@ -262,9 +262,10 @@ public class WorkerThread extends Thread {
 		}
 	}
 
-	/** {@inheritDoc} */ /*
+	/** {@inheritDoc} */
+	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see java.lang.Runnable#run()
 	 */
 	@Override
@@ -303,9 +304,9 @@ public class WorkerThread extends Thread {
 	 * that we can return the thread back to the pool. No need to use any
 	 * <code>wait()</code> or <code>notify()</code> methods. see :
 	 * <code>runAsyncTask()</code> method in PoolTester class.
-	 * 
+	 *
 	 * <pre>
-	 *   Example : 
+	 *   Example :
 	 *           ThreadPool pool = new ThreadPool(new ThreadObjectFactory());
 	 *           WorkerThread wt = (WorkerThread) pool.borrowObject();
 	 *           wt.setPool(pool);       wt.execute(.....) ;
@@ -336,7 +337,7 @@ public class WorkerThread extends Thread {
 
 	/**
 	 * getClass
-	 * 
+	 *
 	 * @param cls
 	 * @return Class
 	 * @throws ClassNotFoundException
@@ -361,7 +362,8 @@ public class WorkerThread extends Thread {
 					.getMethodName(), this.getMethodParams(), this
 					.getParmTypes());
 			if (log.isDebugEnabled()) {
-				log.debug(" #### Execution Result = " + result + " for : " + this);
+				log.debug(" #### Execution Result = " + result + " for : "
+						+ this);
 			}
 		} catch (ClassNotFoundException e) {
 			log.error("ClassNotFoundException - " + e);

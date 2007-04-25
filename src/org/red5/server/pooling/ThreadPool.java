@@ -1,12 +1,12 @@
 /*
  * Copyright 2004-2005 the original author.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -18,14 +18,15 @@ package org.red5.server.pooling;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.commons.pool.impl.GenericObjectPool;
+import org.red5.server.jmx.JMXFactory;
 
 /**
  * ThreadPool - Extends GenericObjectPool. Overrides some methods and provides
  * some helper methods.
- * 
+ *
  * @author Murali Kosaraju
  */
-public class ThreadPool extends GenericObjectPool {
+public class ThreadPool extends GenericObjectPool implements ThreadPoolMBean {
 	/**
 	 * Logger for this class
 	 */
@@ -34,7 +35,7 @@ public class ThreadPool extends GenericObjectPool {
 	/**
 	 * Constructor when there is no configuration available. Please refer
 	 * commons-pooling for more details on the configuration parameters.
-	 * 
+	 *
 	 * @param objFactory -
 	 *            The factory to be used for thread creation.
 	 */
@@ -46,13 +47,14 @@ public class ThreadPool extends GenericObjectPool {
 		this.setMinEvictableIdleTimeMillis(30000); // Evictor runs every 30
 		// secs.
 		this.setTestOnBorrow(true); // check if the thread is still valid
-		// this.setMaxWait(1000); // 1 second wait when threads are not
-		// available.
+
+		JMXFactory.registerMBean(this, this.getClass().getName(),
+				ThreadPoolMBean.class, "threadpool");
 	}
 
 	/**
 	 * Constructor to be used when there is a configuration available.
-	 * 
+	 *
 	 * @param objFactory -
 	 *            The factory to be used for thread creation..
 	 * @param config -
@@ -63,9 +65,10 @@ public class ThreadPool extends GenericObjectPool {
 		super(objFactory, config);
 	}
 
-	/** {@inheritDoc} */ /*
+	/** {@inheritDoc} */
+	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see org.apache.commons.pool.ObjectPool#borrowObject()
 	 */
 	@Override
@@ -74,9 +77,10 @@ public class ThreadPool extends GenericObjectPool {
 		return super.borrowObject();
 	}
 
-	/** {@inheritDoc} */ /*
+	/** {@inheritDoc} */
+	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see org.apache.commons.pool.ObjectPool#returnObject(java.lang.Object)
 	 */
 	@Override
@@ -91,7 +95,7 @@ public class ThreadPool extends GenericObjectPool {
 	 * borrowObjects - Helper method, use this carefully since this could be a
 	 * blocking call when the threads requested may not be avialable based on
 	 * the configuration being used.
-	 * 
+	 *
 	 * @param num
 	 * @return WorkerThread[]
 	 */

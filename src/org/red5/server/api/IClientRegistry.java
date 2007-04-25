@@ -19,7 +19,6 @@ package org.red5.server.api;
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  */
 
-import org.red5.server.ClientRegistryMBean;
 import org.red5.server.exception.ClientNotFoundException;
 import org.red5.server.exception.ClientRejectedException;
 
@@ -32,7 +31,7 @@ import org.red5.server.exception.ClientRejectedException;
  * @author The Red5 Project (red5@osflash.org)
  * @author Luke Hubbard (luke@codegent.com)
  */
-public interface IClientRegistry extends ClientRegistryMBean {
+public interface IClientRegistry {
 
 	/**
 	 * Check if a client with a given id exists.

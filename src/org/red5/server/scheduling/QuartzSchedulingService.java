@@ -32,7 +32,7 @@ import org.quartz.Trigger;
 import org.quartz.impl.StdSchedulerFactory;
 import org.red5.server.api.scheduling.IScheduledJob;
 import org.red5.server.api.scheduling.ISchedulingService;
-import org.red5.server.jmx.JMXServer;
+import org.red5.server.jmx.JMXFactory;
 
 /**
  * Scheduling service that uses Quartz as backend.
@@ -43,28 +43,28 @@ import org.red5.server.jmx.JMXServer;
 public class QuartzSchedulingService implements ISchedulingService,
 		QuartzSchedulingServiceMBean {
 
-    /**
-     * Creates schedulers
-     */
-    private static SchedulerFactory schedFact = new StdSchedulerFactory();
+	/**
+	 * Creates schedulers
+	 */
+	private static SchedulerFactory schedFact = new StdSchedulerFactory();
 
-    /**
-     * Service scheduler
-     */
-    private Scheduler scheduler;
+	/**
+	 * Service scheduler
+	 */
+	private Scheduler scheduler;
 
-    /**
-     * Number of job details
-     */
-    private long jobDetailCounter;
+	/**
+	 * Number of job details
+	 */
+	private long jobDetailCounter;
 
 	/** Constructs a new QuartzSchedulingService. */
-    public QuartzSchedulingService() {
+	public QuartzSchedulingService() {
 		try {
 			scheduler = schedFact.getScheduler();
 			scheduler.start();
 			//register with jmx server
-			JMXServer.registerMBean(this, this.getClass().getName(),
+			JMXFactory.registerMBean(this, this.getClass().getName(),
 					QuartzSchedulingServiceMBean.class);
 		} catch (SchedulerException ex) {
 			throw new RuntimeException(ex);
@@ -72,25 +72,25 @@ public class QuartzSchedulingService implements ISchedulingService,
 	}
 
 	/**
-     * Getter for job name.
-     *
-     * @return  Job name
-     */
+	 * Getter for job name.
+	 *
+	 * @return  Job name
+	 */
 	public synchronized String getJobName() {
 		String result = "ScheduledJob_" + jobDetailCounter;
 		jobDetailCounter++;
 		return result;
 	}
 
-    /**
-     * Schedules job
-     * @param name               Job name
-     * @param trigger            Job trigger
-     * @param job                Scheduled job object
-     *
-     * @see org.red5.server.api.scheduling.IScheduledJob
-     */
-    private void scheduleJob(String name, Trigger trigger, IScheduledJob job) {
+	/**
+	 * Schedules job
+	 * @param name               Job name
+	 * @param trigger            Job trigger
+	 * @param job                Scheduled job object
+	 *
+	 * @see org.red5.server.api.scheduling.IScheduledJob
+	 */
+	private void scheduleJob(String name, Trigger trigger, IScheduledJob job) {
 		// Store reference to applications job and service
 		JobDetail jobDetail = new JobDetail(name, null,
 				QuartzSchedulingServiceJob.class);
@@ -107,7 +107,7 @@ public class QuartzSchedulingService implements ISchedulingService,
 	}
 
 	/** {@inheritDoc} */
-    public String addScheduledJob(int interval, IScheduledJob job) {
+	public String addScheduledJob(int interval, IScheduledJob job) {
 		String result = getJobName();
 
 		// Create trigger that fires indefinitely every <interval> milliseconds
@@ -118,14 +118,14 @@ public class QuartzSchedulingService implements ISchedulingService,
 	}
 
 	/** {@inheritDoc} */
-    public String addScheduledOnceJob(long timeDelta, IScheduledJob job) {
+	public String addScheduledOnceJob(long timeDelta, IScheduledJob job) {
 		// Create trigger that fires once in <timeDelta> milliseconds
 		return addScheduledOnceJob(new Date(System.currentTimeMillis()
 				+ timeDelta), job);
 	}
 
 	/** {@inheritDoc} */
-    public String addScheduledOnceJob(Date date, IScheduledJob job) {
+	public String addScheduledOnceJob(Date date, IScheduledJob job) {
 		String result = getJobName();
 
 		// Create trigger that fires once at <date>
@@ -136,7 +136,7 @@ public class QuartzSchedulingService implements ISchedulingService,
 	}
 
 	/** {@inheritDoc} */
-    public void removeScheduledJob(String name) {
+	public void removeScheduledJob(String name) {
 		try {
 			scheduler.deleteJob(name, null);
 		} catch (SchedulerException ex) {
@@ -145,7 +145,7 @@ public class QuartzSchedulingService implements ISchedulingService,
 	}
 
 	/** {@inheritDoc} */
-    public List<String> getScheduledJobNames() {
+	public List<String> getScheduledJobNames() {
 		List<String> result = new ArrayList<String>();
 		try {
 			for (String name : scheduler.getJobNames(null)) {

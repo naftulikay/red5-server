@@ -19,11 +19,10 @@ package org.red5.server;
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  */
 
-import java.util.Collection;
+import java.util.List;
 import java.util.Set;
 
 import org.red5.server.api.IConnection;
-import org.red5.server.api.IScope;
 
 /**
  * MBean for Client.
@@ -38,9 +37,7 @@ public interface ClientMBean {
 
 	public Set<IConnection> getConnections();
 
-	public Set<IConnection> getConnections(IScope scope);
-
-	public Collection<IScope> getScopes();
+	public List<String> iterateScopeNameList();
 
 	public void disconnect();
 

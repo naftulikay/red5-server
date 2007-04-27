@@ -2,29 +2,29 @@ package org.red5.server.stream;
 
 /*
  * RED5 Open Source Flash Server - http://www.osflash.org/red5
- * 
+ *
  * Copyright (c) 2006-2007 by respective authors (see below). All rights reserved.
- * 
- * This library is free software; you can redistribute it and/or modify it under the 
- * terms of the GNU Lesser General Public License as published by the Free Software 
- * Foundation; either version 2.1 of the License, or (at your option) any later 
- * version. 
- * 
- * This library is distributed in the hope that it will be useful, but WITHOUT ANY 
- * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A 
+ *
+ * This library is free software; you can redistribute it and/or modify it under the
+ * terms of the GNU Lesser General Public License as published by the Free Software
+ * Foundation; either version 2.1 of the License, or (at your option) any later
+ * version.
+ *
+ * This library is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
  * PARTICULAR PURPOSE. See the GNU Lesser General Public License for more details.
- * 
- * You should have received a copy of the GNU Lesser General Public License along 
- * with this library; if not, write to the Free Software Foundation, Inc., 
- * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA 
+ *
+ * You should have received a copy of the GNU Lesser General Public License along
+ * with this library; if not, write to the Free Software Foundation, Inc.,
+ * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  */
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -62,140 +62,163 @@ import org.springframework.core.io.Resource;
 
 /**
  * An implementation for server side stream.
- * 
+ *
  * @author The Red5 Project (red5@osflash.org)
  * @author Steven Gong (steven.gong@gmail.com)
  */
 public class ServerStream extends AbstractStream implements IServerStream,
 		IFilter, IPushableConsumer, IPipeConnectionListener {
-    /**
-     * Logger
-     */
-    private static final Log log = LogFactory.getLog(ServerStream.class);
+	/**
+	 * Logger
+	 */
+	private static final Log log = LogFactory.getLog(ServerStream.class);
 
-    /**
-     * Enumeration for states
-     */
-    private enum State {
+	/**
+	 * Enumeration for states
+	 */
+	private enum State {
 		UNINIT, CLOSED, STOPPED, PLAYING
 	}
 
-    /**
-     * Current state
-     */
-    private State state;
-    /**
-     * Stream published name
-     */
+	/**
+	 * Current state
+	 */
+	private State state;
+
+	/**
+	 * Stream published name
+	 */
 	private String publishedName;
-    /**
-     * Actual playlist controller
-     */
+
+	/**
+	 * Actual playlist controller
+	 */
 	private IPlaylistController controller;
-    /**
-     * Default playlist controller
-     */
+
+	/**
+	 * Default playlist controller
+	 */
 	private IPlaylistController defaultController;
-    /**
-     * Rewind flag state
-     */
+
+	/**
+	 * Rewind flag state
+	 */
 	private boolean isRewind;
-    /**
-     * Random flag state
-     */
+
+	/**
+	 * Random flag state
+	 */
 	private boolean isRandom;
-    /**
-     * Repeat flag state
-     */
+
+	/**
+	 * Repeat flag state
+	 */
 	private boolean isRepeat;
-    /**
-     * List of items in this playlist
-     */
-	private List<IPlayItem> items;
-    /**
-     * Current item index
-     */
+
+	/**
+	 * List of items in this playlist
+	 */
+	private volatile List<IPlayItem> items;
+
+	/**
+	 * Current item index
+	 */
 	private int currentItemIndex;
-    /**
-     * Current item
-     */
+
+	/**
+	 * Current item
+	 */
 	private IPlayItem currentItem;
-    /**
-     * Message input
-     */
+
+	/**
+	 * Message input
+	 */
 	private IMessageInput msgIn;
-    /**
-     * Message output
-     */
+
+	/**
+	 * Message output
+	 */
 	private IMessageOutput msgOut;
-    /**
-     * Pipe for recording
-     */
+
+	/**
+	 * Pipe for recording
+	 */
 	private IPipe recordPipe;
+
 	/**
 	 * The filename we are recording to.
 	 */
 	private String recordingFilename;
-    /**
-     * Scheduling service
-     */
+
+	/**
+	 * Scheduling service
+	 */
 	private ISchedulingService scheduler;
-    /**
-     * Live broadcasting scheduled job name
-     */
+
+	/**
+	 * Live broadcasting scheduled job name
+	 */
 	private String liveJobName;
-    /**
-     * VOD scheduled job name
-     */
+
+	/**
+	 * VOD scheduled job name
+	 */
 	private String vodJobName;
-    /**
-     * VOD start timestamp
-     */
+
+	/**
+	 * VOD start timestamp
+	 */
 	private long vodStartTS;
-    /**
-     * Server start timestamp
-     */
+
+	/**
+	 * Server start timestamp
+	 */
 	private long serverStartTS;
-    /**
-     * Next msg's video timestamp
-     */
+
+	/**
+	 * Next msg's video timestamp
+	 */
 	private long nextVideoTS;
-    /**
-     * Next msg's audio timestamp
-     */
+
+	/**
+	 * Next msg's audio timestamp
+	 */
 	private long nextAudioTS;
-    /**
-     * Next msg's data timestamp
-     */
+
+	/**
+	 * Next msg's data timestamp
+	 */
 	private long nextDataTS;
-    /**
-     * Next msg's timestamp
-     */
+
+	/**
+	 * Next msg's timestamp
+	 */
 	private long nextTS;
-    /**
-     * Next RTMP message
-     */
+
+	/**
+	 * Next RTMP message
+	 */
 	private RTMPMessage nextRTMPMessage;
 
 	/** Constructs a new ServerStream. */
-    public ServerStream() {
+	public ServerStream() {
 		defaultController = new SimplePlaylistController();
-		items = new ArrayList<IPlayItem>();
+		items = new CopyOnWriteArrayList<IPlayItem>();
 		state = State.UNINIT;
 	}
 
 	/** {@inheritDoc} */
-    public synchronized void addItem(IPlayItem item) {
+	public void addItem(IPlayItem item) {
 		items.add(item);
 	}
 
 	/** {@inheritDoc} */
-    public synchronized void addItem(IPlayItem item, int index) {
+	public void addItem(IPlayItem item, int index) {
 		items.add(index, item);
 	}
 
 	/** {@inheritDoc} */
-    public synchronized void removeItem(int index) {
+	public void removeItem(int index) {
 		if (index < 0 || index >= items.size()) {
 			return;
 		}
@@ -203,27 +226,27 @@ public class ServerStream extends AbstractStream implements IServerStream,
 	}
 
 	/** {@inheritDoc} */
-    public synchronized void removeAllItems() {
+	public void removeAllItems() {
 		items.clear();
 	}
 
 	/** {@inheritDoc} */
-    public int getItemSize() {
+	public int getItemSize() {
 		return items.size();
 	}
 
 	/** {@inheritDoc} */
-    public int getCurrentItemIndex() {
+	public int getCurrentItemIndex() {
 		return currentItemIndex;
 	}
 
-    /** {@inheritDoc} */
-    public IPlayItem getCurrentItem() {
-        return currentItem;
-    }
+	/** {@inheritDoc} */
+	public IPlayItem getCurrentItem() {
+		return currentItem;
+	}
 
-    /** {@inheritDoc} */
-    public IPlayItem getItem(int index) {
+	/** {@inheritDoc} */
+	public IPlayItem getItem(int index) {
 		try {
 			return items.get(index);
 		} catch (IndexOutOfBoundsException e) {
@@ -232,7 +255,7 @@ public class ServerStream extends AbstractStream implements IServerStream,
 	}
 
 	/** {@inheritDoc} */
-    public synchronized void previousItem() {
+	public void previousItem() {
 		stop();
 		moveToPrevious();
 		if (currentItemIndex == -1) {
@@ -243,17 +266,17 @@ public class ServerStream extends AbstractStream implements IServerStream,
 	}
 
 	/** {@inheritDoc} */
-    public synchronized boolean hasMoreItems() {
-    	int nextItem = currentItemIndex + 1;
-    	if (nextItem >= items.size() && !isRepeat) {
-    		return false;
-    	} else {
-    		return true;
-    	}
-    }
+	public boolean hasMoreItems() {
+		int nextItem = currentItemIndex + 1;
+		if (nextItem >= items.size() && !isRepeat) {
+			return false;
+		} else {
+			return true;
+		}
+	}
 
 	/** {@inheritDoc} */
-    public synchronized void nextItem() {
+	public void nextItem() {
 		stop();
 		moveToNext();
 		if (currentItemIndex == -1) {
@@ -264,7 +287,7 @@ public class ServerStream extends AbstractStream implements IServerStream,
 	}
 
 	/** {@inheritDoc} */
-    public synchronized void setItem(int index) {
+	public void setItem(int index) {
 		if (index < 0 || index >= items.size()) {
 			return;
 		}
@@ -274,50 +297,51 @@ public class ServerStream extends AbstractStream implements IServerStream,
 	}
 
 	/** {@inheritDoc} */
-    public boolean isRandom() {
+	public boolean isRandom() {
 		return isRandom;
 	}
 
 	/** {@inheritDoc} */
-    public void setRandom(boolean random) {
+	public void setRandom(boolean random) {
 		isRandom = random;
 	}
 
 	/** {@inheritDoc} */
-    public boolean isRewind() {
+	public boolean isRewind() {
 		return isRewind;
 	}
 
 	/** {@inheritDoc} */
-    public void setRewind(boolean rewind) {
+	public void setRewind(boolean rewind) {
 		isRewind = rewind;
 	}
 
 	/** {@inheritDoc} */
-    public boolean isRepeat() {
+	public boolean isRepeat() {
 		return isRepeat;
 	}
 
 	/** {@inheritDoc} */
-    public void setRepeat(boolean repeat) {
+	public void setRepeat(boolean repeat) {
 		isRepeat = repeat;
 	}
 
 	/** {@inheritDoc} */
-    public void setPlaylistController(IPlaylistController controller) {
+	public void setPlaylistController(IPlaylistController controller) {
 		this.controller = controller;
 	}
 
 	/** {@inheritDoc} */
-    public void saveAs(String name, boolean isAppend)
+	public void saveAs(String name, boolean isAppend)
 			throws ResourceNotFoundException, ResourceExistException {
 		try {
 			IScope scope = getScope();
 			IStreamFilenameGenerator generator = (IStreamFilenameGenerator) ScopeUtils
-			.getScopeService(scope, IStreamFilenameGenerator.class,
-					DefaultStreamFilenameGenerator.class);
-			
-			String filename = generator.generateFilename(scope, name, ".flv", GenerationType.RECORD);
+					.getScopeService(scope, IStreamFilenameGenerator.class,
+							DefaultStreamFilenameGenerator.class);
+
+			String filename = generator.generateFilename(scope, name, ".flv",
+					GenerationType.RECORD);
 			Resource res = scope.getContext().getResource(filename);
 			if (!isAppend) {
 				if (res.exists()) {
@@ -366,6 +390,7 @@ public class ServerStream extends AbstractStream implements IServerStream,
 			recordPipe.subscribe(fc, paramMap);
 			recordingFilename = filename;
 		} catch (IOException e) {
+			log.warn("Save as exception", e);
 		}
 	}
 
@@ -375,17 +400,17 @@ public class ServerStream extends AbstractStream implements IServerStream,
 	}
 
 	/** {@inheritDoc} */
-    public IProvider getProvider() {
+	public IProvider getProvider() {
 		return this;
 	}
 
 	/** {@inheritDoc} */
-    public String getPublishedName() {
+	public String getPublishedName() {
 		return publishedName;
 	}
 
 	/** {@inheritDoc} */
-    public void setPublishedName(String name) {
+	public void setPublishedName(String name) {
 		publishedName = name;
 	}
 
@@ -422,10 +447,10 @@ public class ServerStream extends AbstractStream implements IServerStream,
 		nextItem();
 	}
 
-    /**
-     * Stop this server-side stream
-     */
-    public synchronized void stop() {
+	/**
+	 * Stop this server-side stream
+	 */
+	public synchronized void stop() {
 		if (state != State.PLAYING) {
 			return;
 		}
@@ -448,7 +473,7 @@ public class ServerStream extends AbstractStream implements IServerStream,
 	}
 
 	/** {@inheritDoc} */
-    public synchronized void close() {
+	public synchronized void close() {
 		if (state == State.PLAYING) {
 			stop();
 		}
@@ -460,25 +485,24 @@ public class ServerStream extends AbstractStream implements IServerStream,
 	}
 
 	/** {@inheritDoc} */
-    public void onOOBControlMessage(IMessageComponent source, IPipe pipe,
+	public void onOOBControlMessage(IMessageComponent source, IPipe pipe,
 			OOBControlMessage oobCtrlMsg) {
 	}
 
 	/** {@inheritDoc} */
-    public void pushMessage(IPipe pipe, IMessage message) {
+	public void pushMessage(IPipe pipe, IMessage message) {
 		pushMessage(message);
 	}
 
-
-    /**
-     * Pipe connection event handler. There are two types of pipe connection events so far,
-     * provider push connection event and provider disconnection event.
-     *
-     * Pipe events handling is the most common way of working with pipes.
-     *
-     * @param event        Pipe connection event context
-     */
-    public void onPipeConnectionEvent(PipeConnectionEvent event) {
+	/**
+	 * Pipe connection event handler. There are two types of pipe connection events so far,
+	 * provider push connection event and provider disconnection event.
+	 *
+	 * Pipe events handling is the most common way of working with pipes.
+	 *
+	 * @param event        Pipe connection event context
+	 */
+	public void onPipeConnectionEvent(PipeConnectionEvent event) {
 		switch (event.getType()) {
 			case PipeConnectionEvent.PROVIDER_CONNECT_PUSH:
 				if (event.getProvider() == this
@@ -501,18 +525,18 @@ public class ServerStream extends AbstractStream implements IServerStream,
 	 * Play a specific IPlayItem.
 	 * The strategy for now is VOD first, Live second.
 	 * Should be called in a synchronized context.
-     *
+	 *
 	 * @param item        Item to play
 	 */
 	private void play(IPlayItem item) {
-        // Return if already playing
-        if (state != State.STOPPED) {
+		// Return if already playing
+		if (state != State.STOPPED) {
 			return;
 		}
-        // Assume this is not live stream
-        boolean isLive = false;
-        // Get provider service from Spring bean factory
-        IProviderService providerService = (IProviderService) getScope()
+		// Assume this is not live stream
+		boolean isLive = false;
+		// Get provider service from Spring bean factory
+		IProviderService providerService = (IProviderService) getScope()
 				.getContext().getBean(IProviderService.BEAN_NAME);
 		msgIn = providerService.getVODProviderInput(getScope(), item.getName());
 		if (msgIn == null) {
@@ -533,7 +557,7 @@ public class ServerStream extends AbstractStream implements IServerStream,
 				liveJobName = scheduler.addScheduledOnceJob(item.getLength(),
 						new IScheduledJob() {
 							/** {@inheritDoc} */
-                            public void execute(ISchedulingService service) {
+							public void execute(ISchedulingService service) {
 								synchronized (ServerStream.this) {
 									if (liveJobName == null) {
 										return;
@@ -554,34 +578,34 @@ public class ServerStream extends AbstractStream implements IServerStream,
 		}
 	}
 
-    /**
-     * Play next item on item end
-     */
-    private void onItemEnd() {
+	/**
+	 * Play next item on item end
+	 */
+	private void onItemEnd() {
 		nextItem();
 	}
 
-    /**
-     * Push message
-     * @param message     Message
-     */
-    private void pushMessage(IMessage message) {
+	/**
+	 * Push message
+	 * @param message     Message
+	 */
+	private void pushMessage(IMessage message) {
 		msgOut.pushMessage(message);
 		recordPipe.pushMessage(message);
 	}
 
-    /**
-     * Send reset message
-     */
-    private void sendResetMessage() {
-        // Send new reset message
-        pushMessage(new ResetMessage());
+	/**
+	 * Send reset message
+	 */
+	private void sendResetMessage() {
+		// Send new reset message
+		pushMessage(new ResetMessage());
 	}
 
-    /**
-     * Begin VOD broadcasting
-     */
-    private void startBroadcastVOD() {
+	/**
+	 * Begin VOD broadcasting
+	 */
+	private void startBroadcastVOD() {
 		nextVideoTS = nextAudioTS = nextDataTS = 0;
 		nextRTMPMessage = null;
 		vodStartTS = 0;
@@ -602,16 +626,19 @@ public class ServerStream extends AbstractStream implements IServerStream,
 			return;
 		}
 
+		IRTMPEvent rtmpEvent = null;
+
 		if (first) {
+			rtmpEvent = nextRTMPMessage.getBody();
 			// FIXME hack the first Metadata Tag from FLVReader
 			// the FLVReader will issue a metadata tag of ts 0
 			// even if it is seeked to somewhere in the middle
 			// which will cause the stream to wait too long.
 			// Is this an FLVReader's bug?
-			if (!(nextRTMPMessage.getBody() instanceof VideoData)
-					&& !(nextRTMPMessage.getBody() instanceof AudioData)
-					&& nextRTMPMessage.getBody().getTimestamp() == 0) {
-				nextRTMPMessage.getBody().release();
+			if (!(rtmpEvent instanceof VideoData)
+					&& !(rtmpEvent instanceof AudioData)
+					&& rtmpEvent.getTimestamp() == 0) {
+				rtmpEvent.release();
 				nextRTMPMessage = getNextRTMPMessage();
 				if (nextRTMPMessage == null) {
 					onItemEnd();
@@ -620,7 +647,7 @@ public class ServerStream extends AbstractStream implements IServerStream,
 			}
 		}
 
-		IRTMPEvent rtmpEvent = nextRTMPMessage.getBody();
+		rtmpEvent = nextRTMPMessage.getBody();
 		if (rtmpEvent instanceof VideoData) {
 			nextVideoTS = rtmpEvent.getTimestamp();
 			nextTS = nextVideoTS;
@@ -639,7 +666,7 @@ public class ServerStream extends AbstractStream implements IServerStream,
 
 		vodJobName = scheduler.addScheduledOnceJob(delta, new IScheduledJob() {
 			/** {@inheritDoc} */
-            public void execute(ISchedulingService service) {
+			public void execute(ISchedulingService service) {
 				synchronized (ServerStream.this) {
 					if (vodJobName == null) {
 						return;
@@ -664,47 +691,47 @@ public class ServerStream extends AbstractStream implements IServerStream,
 	}
 
 	/**
-     * Getter for next RTMP message.
-     *
-     * @return  Next RTMP message
-     */
-    private RTMPMessage getNextRTMPMessage() {
+	 * Getter for next RTMP message.
+	 *
+	 * @return  Next RTMP message
+	 */
+	private RTMPMessage getNextRTMPMessage() {
 		IMessage message;
 		do {
-            // Pull message from message input object...
+			// Pull message from message input object...
 			try {
 				message = msgIn.pullMessage();
 			} catch (IOException err) {
 				log.error("Error while pulling message.", err);
 				message = null;
 			}
-            // If message is null then return null
-            if (message == null) {
+			// If message is null then return null
+			if (message == null) {
 				return null;
 			}
 		} while (!(message instanceof RTMPMessage));
-        // Cast and return
-        return (RTMPMessage) message;
+		// Cast and return
+		return (RTMPMessage) message;
 	}
 
-    /**
-     * Send VOD initialization control message
-     * @param msgIn            Message input
-     * @param start            Start timestamp
-     */
-    private void sendVODInitCM(IMessageInput msgIn, int start) {
-        // Create new out-of-band control message
-        OOBControlMessage oobCtrlMsg = new OOBControlMessage();
-        // Set passive type
-        oobCtrlMsg.setTarget(IPassive.KEY);
-        // Set service name of init
-        oobCtrlMsg.setServiceName("init");
-        // Create map for parameters
-        Map<Object, Object> paramMap = new HashMap<Object, Object>();
-        // Put start timestamp into Map of params
-        paramMap.put("startTS", start);
-        // Attach to OOB control message and send it
-        oobCtrlMsg.setServiceParamMap(paramMap);
+	/**
+	 * Send VOD initialization control message
+	 * @param msgIn            Message input
+	 * @param start            Start timestamp
+	 */
+	private void sendVODInitCM(IMessageInput msgIn, int start) {
+		// Create new out-of-band control message
+		OOBControlMessage oobCtrlMsg = new OOBControlMessage();
+		// Set passive type
+		oobCtrlMsg.setTarget(IPassive.KEY);
+		// Set service name of init
+		oobCtrlMsg.setServiceName("init");
+		// Create map for parameters
+		Map<Object, Object> paramMap = new HashMap<Object, Object>();
+		// Put start timestamp into Map of params
+		paramMap.put("startTS", start);
+		// Attach to OOB control message and send it
+		oobCtrlMsg.setServiceParamMap(paramMap);
 		msgIn.sendOOBControlMessage(this, oobCtrlMsg);
 	}
 

@@ -29,6 +29,7 @@ import org.mortbay.jetty.handler.ContextHandlerCollection;
 import org.mortbay.jetty.handler.DefaultHandler;
 import org.mortbay.jetty.handler.HandlerCollection;
 import org.mortbay.jetty.webapp.WebAppContext;
+import org.red5.server.jmx.JMXFactory;
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
@@ -37,60 +38,70 @@ import org.springframework.context.support.ClassPathXmlApplicationContext;
 /**
  *
  */
-public class JettyLoader implements ApplicationContextAware {
+public class JettyLoader implements ApplicationContextAware, LoaderMBean {
 
-    /**
-     *  Logger
-     */
-    protected static Log log = LogFactory.getLog(JettyLoader.class.getName());
-    /**
-     *  Jetty config path
-     */
+	/**
+	 *  Logger
+	 */
+	protected static Log log = LogFactory.getLog(JettyLoader.class.getName());
+
+	/**
+	 *  Jetty config path
+	 */
 	protected String jettyConfig = "classpath:/jetty.xml";
-    /**
-     *  Default web config filename
-     */
-    protected String defaultWebConfig = "web-default.xml";
-    /**
-     *  IServer implementation
-     */
+
+	/**
+	 *  Default web config filename
+	 */
+	protected String defaultWebConfig = "web-default.xml";
+
+	/**
+	 *  IServer implementation
+	 */
 	protected Server jetty;
 
 	// We store the application context in a ThreadLocal so we can access it
 	// from "org.red5.server.jetty.Red5WebPropertiesConfiguration" later.
-    /**
-     *
-     */
-    private static ThreadLocal<ApplicationContext> applicationContext = new ThreadLocal<ApplicationContext>();
+	/**
+	 *
+	 */
+	private static ThreadLocal<ApplicationContext> applicationContext = new ThreadLocal<ApplicationContext>();
 
-    /**
-     * App context
-     * @param context           App context
-     * @throws BeansException   Bean exception
-     */
+	{
+		JMXFactory.registerMBean(this, this.getClass().getName(),
+				LoaderMBean.class);
+	}
+
+	/**
+	 * App context
+	 * @param context           App context
+	 * @throws BeansException   Bean exception
+	 */
 	public void setApplicationContext(ApplicationContext context)
 			throws BeansException {
 		applicationContext.set(context);
 	}
 
-    /**
-     * Return app context
-     * @return                  App context
-     */
+	/**
+	 * Return app context
+	 * @return                  App context
+	 */
 	public static ApplicationContext getApplicationContext() {
 		return applicationContext.get();
 	}
 
-    /**
-     *
-     */
-	@SuppressWarnings("all") public void init() {
+	/**
+	 *
+	 */
+	@SuppressWarnings("all")
+	public void init() {
 		// So this class is left just starting jetty
 		try {
 			log.info("Loading jetty6 context from: " + jettyConfig);
-			ApplicationContext appCtx = new ClassPathXmlApplicationContext(jettyConfig);
-            // Get server bean from BeanFactory
-            Server jetty = (Server) appCtx.getBean("Server");
+			ApplicationContext appCtx = new ClassPathXmlApplicationContext(
+					jettyConfig);
+			// Get server bean from BeanFactory
+			jetty = (Server) appCtx.getBean("Server");
 
 			// root location for servlet container
 			String serverRoot = System.getProperty("red5.root");
@@ -103,36 +114,52 @@ public class JettyLoader implements ApplicationContextAware {
 
 			log.info("Starting jetty servlet engine");
 
-            // Get Red5 applications directory
-            String webAppRoot = System.getProperty("red5.webapp.root");
-			String[] handlersArr = new String[]{"org.mortbay.jetty.webapp.WebInfConfiguration",
+			// Get Red5 applications directory
+			String webAppRoot = System.getProperty("red5.webapp.root");
+			String[] handlersArr = new String[] {
+					"org.mortbay.jetty.webapp.WebInfConfiguration",
 					"org.mortbay.jetty.webapp.WebXmlConfiguration",
 					"org.mortbay.jetty.webapp.JettyWebXmlConfiguration",
 					"org.mortbay.jetty.webapp.TagLibConfiguration",
-					"org.red5.server.jetty.Red5WebPropertiesConfiguration"};
+					"org.red5.server.jetty.Red5WebPropertiesConfiguration" };
 
-
-            // Handler collection
-            HandlerCollection handlers = new HandlerCollection();
-			handlers.setHandlers(new Handler[]{new ContextHandlerCollection(), new DefaultHandler()});
+			// Handler collection
+			HandlerCollection handlers = new HandlerCollection();
+			handlers.setHandlers(new Handler[] {
+					new ContextHandlerCollection(), new DefaultHandler() });
 			jetty.setHandler(handlers);
 
 			try {
-                // Add web applications from web app root with web config
-				WebAppContext.addWebApplications(jetty, webAppRoot, defaultWebConfig, handlersArr, true, true);
+				// Add web applications from web app root with web config
+				WebAppContext.addWebApplications(jetty, webAppRoot,
+						defaultWebConfig, handlersArr, true, true);
 			} catch (IOException e) {
 				log.error(e);
 			} catch (Exception e) {
 				log.error(e);
 			}
 
-            // Start Jetty
-            jetty.start();
+			// Start Jetty
+			jetty.start();
 
 		} catch (Exception e) {
 			log.error("Error loading jetty", e);
 		}
 
+	}
+
+	/**
+	 * Shut server down
+	 */
+	public void shutdown() {
+		log.info("Shutting down jetty context");
+		try {
+			jetty.stop();
+			System.exit(0);
+		} catch (Exception e) {
+			log.warn("Jetty could not be stopped", e);
+			System.exit(1);
+		}
 	}
 
 }

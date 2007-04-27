@@ -2,21 +2,21 @@ package org.red5.server.adapter;
 
 /*
  * RED5 Open Source Flash Server - http://www.osflash.org/red5
- * 
+ *
  * Copyright (c) 2006-2007 by respective authors (see below). All rights reserved.
- * 
- * This library is free software; you can redistribute it and/or modify it under the 
- * terms of the GNU Lesser General Public License as published by the Free Software 
- * Foundation; either version 2.1 of the License, or (at your option) any later 
- * version. 
- * 
- * This library is distributed in the hope that it will be useful, but WITHOUT ANY 
- * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A 
+ *
+ * This library is free software; you can redistribute it and/or modify it under the
+ * terms of the GNU Lesser General Public License as published by the Free Software
+ * Foundation; either version 2.1 of the License, or (at your option) any later
+ * version.
+ *
+ * This library is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
  * PARTICULAR PURPOSE. See the GNU Lesser General Public License for more details.
- * 
- * You should have received a copy of the GNU Lesser General Public License along 
- * with this library; if not, write to the Free Software Foundation, Inc., 
- * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA 
+ *
+ * You should have received a copy of the GNU Lesser General Public License along
+ * with this library; if not, write to the Free Software Foundation, Inc.,
+ * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  */
 
 import static org.red5.server.api.ScopeUtils.getScopeService;
@@ -77,16 +77,16 @@ import org.red5.server.stream.StreamService;
  * ApplicationAdapter class serves as a base class for your Red5 applications.
  * It provides methods to work with SharedObjects and streams, as well as
  * connections and scheduling services.
- * 
+ *
  * ApplicationAdapter is an application level IScope. To handle streaming
  * processes in your application you should implement
  * {@link IStreamAwareScopeHandler} interface and implement handling methods.
- * 
+ *
  * Application adapter provides you with useful event handlers that can be used to intercept streams,
  * authorize users, etc. Also, all methods added in subclasses can be called from client side with NetConnection.call
  * method. Unlike to Flash Media server which requires you to keep methods on Client object at server side, Red5
  * offers much more convenient way to add methods for remote invocation to your applications.
- * 
+ *
  * <p><strong>EXAMPLE:</strong></p>
  * <p>
  * <code>
@@ -94,16 +94,16 @@ import org.red5.server.stream.StreamService;
  *   // Implementation goes here, say, use Red5 object to obtain scope and all it's streams<br />
  * }<br />
  * </code>
- * 
+ *
  * <p>This method added to ApplicationAdapter sublass can be called from client side with the following code:</p>
- * 
+ *
  * <code>
  * var nc:NetConnection = new NetConnection();<br />
  * nc.connect(...);<br />
  * nc.call("getLiveStreams", resultHandlerObj);<br />
  * </code>
  *
- * 
+ *
  *
  * <p>If you want to build a server-side framework this is a place to start and wrap it around ApplicationAdapter subclass.</p>
  * </p>
@@ -115,7 +115,8 @@ import org.red5.server.stream.StreamService;
 public class ApplicationAdapter extends StatefulScopeWrappingAdapter implements
 		ISharedObjectService, IBroadcastStreamService, IOnDemandStreamService,
 		ISubscriberStreamService, ISchedulingService, IStreamSecurityService,
-		ISharedObjectSecurityService, IStreamAwareScopeHandler {
+		ISharedObjectSecurityService, IStreamAwareScopeHandler,
+		ApplicationMBean {
 
 	/**
 	 * Logger object
@@ -128,46 +129,46 @@ public class ApplicationAdapter extends StatefulScopeWrappingAdapter implements
 	 */
 	private Set<IApplication> listeners = new HashSet<IApplication>();
 
-    /**
-     * Scheduling service. Uses Quartz. Adds and removes scheduled jobs.
-     */
-    protected ISchedulingService schedulingService;
+	/**
+	 * Scheduling service. Uses Quartz. Adds and removes scheduled jobs.
+	 */
+	protected ISchedulingService schedulingService;
 
-    /**
-     * Client time to live is max allowed ping return time, in seconds
-     */
-    private int clientTTL = 2;
+	/**
+	 * Client time to live is max allowed ping return time, in seconds
+	 */
+	private int clientTTL = 2;
 
-    /**
-     * Ghost connections (disconnected users listed as connected) cleanup period in seconds
-     */
-    private int ghostConnsCleanupPeriod = 5;
+	/**
+	 * Ghost connections (disconnected users listed as connected) cleanup period in seconds
+	 */
+	private int ghostConnsCleanupPeriod = 5;
 
-    /**
-     * Ghost connections cleanup job name. Needed to cancel this job.
-     */
-    private String ghostCleanupJobName;
+	/**
+	 * Ghost connections cleanup job name. Needed to cancel this job.
+	 */
+	private String ghostCleanupJobName;
 
-    /**
-     * List of handlers that protect stream publishing.
-     */
-    private Set<IStreamPublishSecurity> publishSecurity = new HashSet<IStreamPublishSecurity>();
+	/**
+	 * List of handlers that protect stream publishing.
+	 */
+	private Set<IStreamPublishSecurity> publishSecurity = new HashSet<IStreamPublishSecurity>();
 
-    /**
-     * List of handlers that protect stream playback.
-     */
-    private Set<IStreamPlaybackSecurity> playbackSecurity = new HashSet<IStreamPlaybackSecurity>();
+	/**
+	 * List of handlers that protect stream playback.
+	 */
+	private Set<IStreamPlaybackSecurity> playbackSecurity = new HashSet<IStreamPlaybackSecurity>();
 
-    /**
-     * List of handlers that protect shared objects.
-     */
-    private Set<ISharedObjectSecurity> sharedObjectSecurity = new HashSet<ISharedObjectSecurity>();
+	/**
+	 * List of handlers that protect shared objects.
+	 */
+	private Set<ISharedObjectSecurity> sharedObjectSecurity = new HashSet<ISharedObjectSecurity>();
 
-    /**
+	/**
 	 * Register listener that will get notified about application events. Please
 	 * note that return values (e.g. from {@link IApplication#appStart(IScope)})
 	 * will be ignored for listeners.
-	 * 
+	 *
 	 * @param listener
 	 * 			object to register
 	 */
@@ -178,7 +179,7 @@ public class ApplicationAdapter extends StatefulScopeWrappingAdapter implements
 	/**
 	 * Unregister handler that will not get notified about application events
 	 * any longer.
-	 * 
+	 *
 	 * @param listener
 	 * 			object to unregister
 	 */
@@ -188,7 +189,7 @@ public class ApplicationAdapter extends StatefulScopeWrappingAdapter implements
 
 	/**
 	 * Return handlers that get notified about application events.
-	 *  
+	 *
 	 * @return list of handlers
 	 */
 	public Set<IApplication> getListeners() {
@@ -204,7 +205,7 @@ public class ApplicationAdapter extends StatefulScopeWrappingAdapter implements
 	public void unregisterStreamPublishSecurity(IStreamPublishSecurity handler) {
 		publishSecurity.remove(handler);
 	}
-	
+
 	/** {@inheritDoc} */
 	public Set<IStreamPublishSecurity> getStreamPublishSecurity() {
 		return publishSecurity;
@@ -214,56 +215,56 @@ public class ApplicationAdapter extends StatefulScopeWrappingAdapter implements
 	public void registerStreamPlaybackSecurity(IStreamPlaybackSecurity handler) {
 		playbackSecurity.add(handler);
 	}
-	
+
 	/** {@inheritDoc} */
 	public void unregisterStreamPlaybackSecurity(IStreamPlaybackSecurity handler) {
 		playbackSecurity.remove(handler);
 	}
-	
+
 	/** {@inheritDoc} */
 	public Set<IStreamPlaybackSecurity> getStreamPlaybackSecurity() {
 		return playbackSecurity;
 	}
-	
+
 	/** {@inheritDoc} */
 	public void registerSharedObjectSecurity(ISharedObjectSecurity handler) {
 		sharedObjectSecurity.add(handler);
 	}
-	
+
 	/** {@inheritDoc} */
 	public void unregisterSharedObjectSecurity(ISharedObjectSecurity handler) {
 		sharedObjectSecurity.remove(handler);
 	}
-	
+
 	/** {@inheritDoc} */
 	public Set<ISharedObjectSecurity> getSharedObjectSecurity() {
 		return sharedObjectSecurity;
 	}
-	
+
 	/**
 	 * Reject the currently connecting client without a special error message.
 	 * This method throws {@link ClientRejectedException} exception.
 	 *
-     * @throws org.red5.server.exception.ClientRejectedException
-     *                  Thrown when client connection must be rejected by application logic
-     */
+	 * @throws org.red5.server.exception.ClientRejectedException
+	 *                  Thrown when client connection must be rejected by application logic
+	 */
 	protected void rejectClient() throws ClientRejectedException {
 		throw new ClientRejectedException();
 	}
 
 	/**
 	 * Reject the currently connecting client with an error message.
-	 * 
+	 *
 	 * The passed object will be available as "application" property of the
-	 * information object that is returned to the caller. 
-	 * 
+	 * information object that is returned to the caller.
+	 *
 	 * @param reason
 	 * 			Additional error message to return to client-side Flex/Flash application
-     *
-     * @throws org.red5.server.exception.ClientRejectedException
-     *                  Thrown when client connection must be rejected by application logic
+	 *
+	 * @throws org.red5.server.exception.ClientRejectedException
+	 *                  Thrown when client connection must be rejected by application logic
 	 */
-	protected void rejectClient(Object reason) throws ClientRejectedException{
+	protected void rejectClient(Object reason) throws ClientRejectedException {
 		throw new ClientRejectedException(reason);
 	}
 
@@ -274,7 +275,7 @@ public class ApplicationAdapter extends StatefulScopeWrappingAdapter implements
 	 * {@link ApplicationAdapter#appConnect(IConnection, Object[])} or
 	 * {@link ApplicationAdapter#roomConnect(IConnection, Object[])} in your
 	 * application to make it act the way you want.
-	 * 
+	 *
 	 * @param conn
 	 *            Connection object
 	 * @param scope
@@ -305,7 +306,7 @@ public class ApplicationAdapter extends StatefulScopeWrappingAdapter implements
 
 	/**
 	 * Starts scope. Scope can be both application or room level.
-	 * 
+	 *
 	 * @param scope
 	 *            Scope object
 	 * @return <code>true</code> if scope can be started, <code>false</code>
@@ -319,14 +320,15 @@ public class ApplicationAdapter extends StatefulScopeWrappingAdapter implements
 		}
 		if (isApp(scope)) {
 			return appStart(scope);
-		} else return isRoom(scope) && roomStart(scope);
-    }
+		} else
+			return isRoom(scope) && roomStart(scope);
+	}
 
 	/**
 	 * Returns disconnection result for given scope and parameters. Whether the
 	 * scope is room or app level scope, this method distinguishes it and acts
 	 * accordingly.
-	 * 
+	 *
 	 * @param conn
 	 *            Connection object
 	 * @param scope
@@ -348,7 +350,7 @@ public class ApplicationAdapter extends StatefulScopeWrappingAdapter implements
 	 * level scope and stops room handling if given scope has lower scope
 	 * level). This method calls {@link ApplicationAdapter#appStop(IScope)} or
 	 * {@link ApplicationAdapter#roomStop(IScope)} handlers respectively.
-	 * 
+	 *
 	 * @param scope
 	 *            Scope to stop
 	 */
@@ -368,7 +370,7 @@ public class ApplicationAdapter extends StatefulScopeWrappingAdapter implements
 	 * calls {@link ApplicationAdapter#appJoin(IClient, IScope)} or
 	 * {@link ApplicationAdapter#roomJoin(IClient, IScope)} handlers
 	 * respectively.
-	 * 
+	 *
 	 * @param client
 	 *            Client object
 	 * @param scope
@@ -381,8 +383,9 @@ public class ApplicationAdapter extends StatefulScopeWrappingAdapter implements
 		}
 		if (isApp(scope)) {
 			return appJoin(client, scope);
-		} else return isRoom(scope) && roomJoin(client, scope);
-    }
+		} else
+			return isRoom(scope) && roomJoin(client, scope);
+	}
 
 	/**
 	 * Disconnects client from scope. Can be applied to both application scope
@@ -390,7 +393,7 @@ public class ApplicationAdapter extends StatefulScopeWrappingAdapter implements
 	 * {@link ApplicationAdapter#appLeave(IClient, IScope)} or
 	 * {@link ApplicationAdapter#roomLeave(IClient, IScope)} handlers
 	 * respectively.
-	 * 
+	 *
 	 * @param client
 	 *            Client object
 	 * @param scope
@@ -408,12 +411,12 @@ public class ApplicationAdapter extends StatefulScopeWrappingAdapter implements
 	}
 
 	/**
-	 * Called once on scope (that is, application or application room) start. 
+	 * Called once on scope (that is, application or application room) start.
 	 * You override {@link ApplicationAdapter#appStart(IScope)} or
 	 * {@link ApplicationAdapter#roomStart(IScope)}} in your application to
 	 * make it act the way you want.
-	 * 
-     * @param app Application scope object
+	 *
+	 * @param app Application scope object
 	 * @return <code>true</code> if scope can be started, <code>false</code>
 	 *         otherwise
 	 */
@@ -429,7 +432,7 @@ public class ApplicationAdapter extends StatefulScopeWrappingAdapter implements
 
 	/**
 	 * Handler method. Called when application is stopped.
-	 * 
+	 *
 	 * @param app
 	 *            Scope object
 	 */
@@ -444,7 +447,7 @@ public class ApplicationAdapter extends StatefulScopeWrappingAdapter implements
 
 	/**
 	 * Handler method. Called when room scope is started.
-	 * 
+	 *
 	 * @param room
 	 *            Room scope
 	 * @return		Boolean value
@@ -462,7 +465,7 @@ public class ApplicationAdapter extends StatefulScopeWrappingAdapter implements
 
 	/**
 	 * Handler method. Called when room scope is stopped.
-	 * 
+	 *
 	 * @param room
 	 *            Room scope.
 	 */
@@ -479,20 +482,20 @@ public class ApplicationAdapter extends StatefulScopeWrappingAdapter implements
 	 * Handler method. Called every time new client connects (that is, new
 	 * IConnection object is created after call from a SWF movie) to the
 	 * application.
-	 * 
+	 *
 	 * You override this method to pass additional data from client to server
 	 * application using <code>NetConnection.connect</code> method.
-	 * 
-	 * <p><strong>EXAMPLE:</strong><br /> 
+	 *
+	 * <p><strong>EXAMPLE:</strong><br />
 	 * In this simple example we pass user's skin of choice identifier from
 	 * client to th server.</p>
-	 * 
+	 *
 	 * <p><strong>Client-side:</strong><br />
 	 * <code>NetConnection.connect("rtmp://localhost/killerred5app", "silver");</code></p>
-	 * 
-	 * <p><strong>Server-side:</strong><br /> 
+	 *
+	 * <p><strong>Server-side:</strong><br />
 	 * <code>if (params.length > 0) System.out.println("Theme selected: " + params[0]);</code></p>
-	 * 
+	 *
 	 * @param conn
 	 *            Connection object
 	 * @param params
@@ -514,13 +517,13 @@ public class ApplicationAdapter extends StatefulScopeWrappingAdapter implements
 	 * Handler method. Called every time new client connects (that is, new
 	 * IConnection object is created after call from a SWF movie) to the
 	 * application.
-	 * 
+	 *
 	 * You override this method to pass additional data from client to server
 	 * application using <code>NetConnection.connect</code> method.
-	 * 
+	 *
 	 * See {@link ApplicationAdapter#appConnect(IConnection, Object[])} for code
 	 * example.
-	 * 
+	 *
 	 * @param conn
 	 *            Connection object
 	 * @param params
@@ -540,7 +543,7 @@ public class ApplicationAdapter extends StatefulScopeWrappingAdapter implements
 	/**
 	 * Handler method. Called every time client disconnects from the
 	 * application.
-	 * 
+	 *
 	 * @param conn
 	 *            Disconnected connection object
 	 */
@@ -555,7 +558,7 @@ public class ApplicationAdapter extends StatefulScopeWrappingAdapter implements
 
 	/**
 	 * Handler method. Called every time client disconnects from the room.
-	 * 
+	 *
 	 * @param conn
 	 *            Disconnected connection object
 	 */
@@ -580,7 +583,7 @@ public class ApplicationAdapter extends StatefulScopeWrappingAdapter implements
 
 	/**
 	 * Handler method. Called every time client leaves application scope.
-	 * 
+	 *
 	 * @param client
 	 *            Client object that left
 	 * @param app
@@ -607,9 +610,9 @@ public class ApplicationAdapter extends StatefulScopeWrappingAdapter implements
 
 	/**
 	 * Handler method. Called every time client leaves room scope.
-	 * 
+	 *
 	 * @param client    Disconnected client object
-     * @param room      Room scope
+	 * @param room      Room scope
 	 */
 	public void roomLeave(IClient client, IScope room) {
 		if (log.isDebugEnabled()) {
@@ -622,7 +625,7 @@ public class ApplicationAdapter extends StatefulScopeWrappingAdapter implements
 
 	/**
 	 * Try to measure bandwidth of current connection.
-	 * 
+	 *
 	 * This is required for some FLV player to work because they require the
 	 * "onBWDone" method to be called on the connection.
 	 */
@@ -632,12 +635,12 @@ public class ApplicationAdapter extends StatefulScopeWrappingAdapter implements
 
 	/**
 	 * Try to measure bandwidth of given connection.
-	 * 
+	 *
 	 * This is required for some FLV player to work because they require the
 	 * "onBWDone" method to be called on the connection.
-	 * 
+	 *
 	 * @param conn
-	 * 			the connection to measure the bandwidth for 
+	 * 			the connection to measure the bandwidth for
 	 */
 	public void measureBandwidth(IConnection conn) {
 		// dummy for now, this makes flv player work
@@ -665,14 +668,14 @@ public class ApplicationAdapter extends StatefulScopeWrappingAdapter implements
 	 * Creates a new shared object for given scope. Server-side shared objects
 	 * (also known as Remote SO) are special kind of objects those variable are
 	 * synchronized between clients. To get an instance of RSO at client-side,
-	 * use <code>SharedObject.getRemote()</code>. 
-	 * 
+	 * use <code>SharedObject.getRemote()</code>.
+	 *
 	 * SharedObjects can be persistent and transient. Persistent RSO are
 	 * statuful, i.e. store their data between sessions. If you need to store
 	 * some data on server while clients go back and forth use persistent SO
 	 * (just use <code>true</code> ), otherwise perfer usage of transient for
 	 * extra performance.
-	 * 
+	 *
 	 * @param scope
 	 *            Scope that shared object belongs to
 	 * @param name
@@ -684,14 +687,14 @@ public class ApplicationAdapter extends StatefulScopeWrappingAdapter implements
 	public boolean createSharedObject(IScope scope, String name,
 			boolean persistent) {
 		ISharedObjectService service = (ISharedObjectService) getScopeService(
-				scope, ISharedObjectService.class,
-				SharedObjectService.class, false);
+				scope, ISharedObjectService.class, SharedObjectService.class,
+				false);
 		return service.createSharedObject(scope, name, persistent);
-    }
+	}
 
-    /**
+	/**
 	 * Returns shared object from given scope by name.
-	 * 
+	 *
 	 * @param scope
 	 *            Scope that shared object belongs to
 	 * @param name
@@ -700,14 +703,14 @@ public class ApplicationAdapter extends StatefulScopeWrappingAdapter implements
 	 */
 	public ISharedObject getSharedObject(IScope scope, String name) {
 		ISharedObjectService service = (ISharedObjectService) getScopeService(
-				scope, ISharedObjectService.class,
-				SharedObjectService.class, false);
+				scope, ISharedObjectService.class, SharedObjectService.class,
+				false);
 		return service.getSharedObject(scope, name);
 	}
 
 	/**
 	 * Returns shared object from given scope by name.
-	 * 
+	 *
 	 * @param scope
 	 *            Scope that shared object belongs to
 	 * @param name
@@ -719,27 +722,27 @@ public class ApplicationAdapter extends StatefulScopeWrappingAdapter implements
 	public ISharedObject getSharedObject(IScope scope, String name,
 			boolean persistent) {
 		ISharedObjectService service = (ISharedObjectService) getScopeService(
-				scope, ISharedObjectService.class,
-				SharedObjectService.class, false);
+				scope, ISharedObjectService.class, SharedObjectService.class,
+				false);
 		return service.getSharedObject(scope, name, persistent);
 	}
 
 	/**
 	 * Returns available SharedObject names as List
-	 * 
+	 *
 	 * @param scope
 	 *            Scope that SO belong to
 	 */
 	public Set<String> getSharedObjectNames(IScope scope) {
 		ISharedObjectService service = (ISharedObjectService) getScopeService(
-				scope, ISharedObjectService.class,
-				SharedObjectService.class, false);
+				scope, ISharedObjectService.class, SharedObjectService.class,
+				false);
 		return service.getSharedObjectNames(scope);
 	}
 
 	/**
 	 * Checks whether there's a SO with given scope and name
-	 * 
+	 *
 	 * @param scope
 	 *            Scope that SO belong to
 	 * @param name
@@ -747,37 +750,38 @@ public class ApplicationAdapter extends StatefulScopeWrappingAdapter implements
 	 */
 	public boolean hasSharedObject(IScope scope, String name) {
 		ISharedObjectService service = (ISharedObjectService) getScopeService(
-				scope, ISharedObjectService.class,
-				SharedObjectService.class, false);
+				scope, ISharedObjectService.class, SharedObjectService.class,
+				false);
 		return service.hasSharedObject(scope, name);
 	}
 
 	/* Wrapper around the stream interfaces */
 
 	/** {@inheritDoc} */
-    public boolean hasBroadcastStream(IScope scope, String name) {
+	public boolean hasBroadcastStream(IScope scope, String name) {
 		IProviderService service = (IProviderService) getScopeService(scope,
 				IProviderService.class, ProviderService.class);
 		return (service.getLiveProviderInput(scope, name, false) != null);
 	}
 
 	/** {@inheritDoc} */
-    public IBroadcastStream getBroadcastStream(IScope scope, String name) {
-		IStreamService service = (IStreamService) getScopeService(
-				scope, IStreamService.class,
-				StreamService.class);
+	public IBroadcastStream getBroadcastStream(IScope scope, String name) {
+		IStreamService service = (IStreamService) getScopeService(scope,
+				IStreamService.class, StreamService.class);
 		if (!(service instanceof StreamService))
 			return null;
-		
-		IBroadcastScope bs = ((StreamService) service).getBroadcastScope(scope, name);
-        return (IClientBroadcastStream) bs.getAttribute(IBroadcastScope.STREAM_ATTRIBUTE);
+
+		IBroadcastScope bs = ((StreamService) service).getBroadcastScope(scope,
+				name);
+		return (IClientBroadcastStream) bs
+				.getAttribute(IBroadcastScope.STREAM_ATTRIBUTE);
 	}
 
 	/**
 	 * Returns list of stream names broadcasted in <pre>scope</pre>. Broadcast stream name is somewhat different
 	 * from server stream name. Server stream name is just an ID assigned by Red5 to every created stream. Broadcast stream name
 	 * is the name that is being used to subscribe to the stream at client side, that is, in <code>NetStream.play</code> call.
-	 * 
+	 *
 	 * @param	scope	Scope to retrieve broadcasted stream names
 	 * @return	List of broadcasted stream names.
 	 */
@@ -789,12 +793,12 @@ public class ApplicationAdapter extends StatefulScopeWrappingAdapter implements
 
 	/**
 	 * Check whether scope has VOD stream with given name or not
-	 * 
+	 *
 	 * @param scope
 	 *            Scope
 	 * @param name
 	 *            VOD stream name
-	 * 
+	 *
 	 * @return <code>true</code> if scope has VOD stream with given name,
 	 *         <code>false</code> otherwise.
 	 */
@@ -806,40 +810,41 @@ public class ApplicationAdapter extends StatefulScopeWrappingAdapter implements
 
 	/**
 	 * Returns VOD stream with given name from specified scope.
-	 * 
+	 *
 	 * @param scope
 	 *            Scope object
 	 * @param name
 	 *            VOD stream name
-	 * 
+	 *
 	 * @return IOnDemandStream object that represents stream that can be played
 	 *         on demand, seekable and so forth. See {@link IOnDemandStream} for
 	 *         details.
 	 */
 	public IOnDemandStream getOnDemandStream(IScope scope, String name) {
-		log.warn("This won't work until the refactoring of the streaming code is complete.");
+		log
+				.warn("This won't work until the refactoring of the streaming code is complete.");
 		IOnDemandStreamService service = (IOnDemandStreamService) getScopeService(
-				scope, IOnDemandStreamService.class,
-				StreamService.class, false);
+				scope, IOnDemandStreamService.class, StreamService.class, false);
 		return service.getOnDemandStream(scope, name);
 	}
 
 	/**
 	 * Returns subscriber stream with given name from specified scope.
 	 * Subscriber stream is a stream that clients can subscribe to.
-	 * 
+	 *
 	 * @param scope
 	 *            Scope
 	 * @param name
 	 *            Stream name
-	 * 
+	 *
 	 * @return	ISubscriberStream object
 	 */
 	public ISubscriberStream getSubscriberStream(IScope scope, String name) {
-		log.warn("This won't work until the refactoring of the streaming code is complete.");
+		log
+				.warn("This won't work until the refactoring of the streaming code is complete.");
 		ISubscriberStreamService service = (ISubscriberStreamService) getScopeService(
-				scope, ISubscriberStreamService.class,
-				StreamService.class, false);
+				scope, ISubscriberStreamService.class, StreamService.class,
+				false);
 		return service.getSubscriberStream(scope, name);
 	}
 
@@ -847,80 +852,80 @@ public class ApplicationAdapter extends StatefulScopeWrappingAdapter implements
 	 * Wrapper around ISchedulingService, adds a scheduled job to be run
 	 * periodically. We store this service in the scope as it can be shared
 	 * across all rooms of the applications.
-	 * 
+	 *
 	 * @param interval
 	 *            Time inverval to run the scheduled job
 	 * @param job
 	 *            Scheduled job object
-	 * 
+	 *
 	 * @return	Name of the scheduled job
 	 */
 	public String addScheduledJob(int interval, IScheduledJob job) {
 		ISchedulingService service = (ISchedulingService) getScopeService(
-				scope, ISchedulingService.class,
-				QuartzSchedulingService.class, false);
+				scope, ISchedulingService.class, QuartzSchedulingService.class,
+				false);
 		return service.addScheduledJob(interval, job);
 	}
 
 	/**
 	 * Adds a scheduled job that's gonna be executed once. Please note that the
 	 * jobs are not saved if Red5 is restarted in the meantime.
-	 * 
+	 *
 	 * @param timeDelta
 	 *            Time offset in milliseconds from the current date when given
 	 *            job should be run
 	 * @param job
 	 *            Scheduled job object
-	 * 
+	 *
 	 * @return	Name of the scheduled job
 	 */
 	public String addScheduledOnceJob(long timeDelta, IScheduledJob job) {
 		ISchedulingService service = (ISchedulingService) getScopeService(
-				scope, ISchedulingService.class,
-				QuartzSchedulingService.class, false);
+				scope, ISchedulingService.class, QuartzSchedulingService.class,
+				false);
 		return service.addScheduledOnceJob(timeDelta, job);
 	}
 
 	/**
 	 * Adds a scheduled job that's gonna be executed once on given date. Please
 	 * note that the jobs are not saved if Red5 is restarted in the meantime.
-	 * 
+	 *
 	 * @param date
 	 *            When to run scheduled job
 	 * @param job
 	 *            Scheduled job object
-	 * 
+	 *
 	 * @return	Name of the scheduled job
 	 */
 	public String addScheduledOnceJob(Date date, IScheduledJob job) {
 		ISchedulingService service = (ISchedulingService) getScopeService(
-				scope, ISchedulingService.class,
-				QuartzSchedulingService.class, false);
+				scope, ISchedulingService.class, QuartzSchedulingService.class,
+				false);
 		return service.addScheduledOnceJob(date, job);
 	}
 
 	/**
 	 * Removes scheduled job from scheduling service list
-	 * 
+	 *
 	 * @param name
 	 *            Scheduled job name
 	 */
 	public void removeScheduledJob(String name) {
 		ISchedulingService service = (ISchedulingService) getScopeService(
-				scope, ISchedulingService.class,
-				QuartzSchedulingService.class, false);
+				scope, ISchedulingService.class, QuartzSchedulingService.class,
+				false);
 		service.removeScheduledJob(name);
 	}
 
 	/**
 	 * Retuns list of scheduled job names
-	 * 
+	 *
 	 * @return	List of scheduled job names as list of Strings.
 	 */
 	public List<String> getScheduledJobNames() {
 		ISchedulingService service = (ISchedulingService) getScopeService(
-				scope, ISchedulingService.class,
-				QuartzSchedulingService.class, false);
+				scope, ISchedulingService.class, QuartzSchedulingService.class,
+				false);
 		return service.getScheduledJobNames();
 	}
 
@@ -928,7 +933,7 @@ public class ApplicationAdapter extends StatefulScopeWrappingAdapter implements
 	/**
 	 * Returns stream length. This is a hook so do not count on this method
 	 * 'cause situation may one day.
-	 * 
+	 *
 	 * @param name
 	 *            Stream name
 	 * @return	Stream length in seconds (?)
@@ -964,151 +969,155 @@ public class ApplicationAdapter extends StatefulScopeWrappingAdapter implements
 	}
 
 	/** {@inheritDoc} */
-    public boolean clearSharedObjects(IScope scope, String name) {
+	public boolean clearSharedObjects(IScope scope, String name) {
 		ISharedObjectService service = (ISharedObjectService) getScopeService(
-                scope,
-                ISharedObjectService.class,
-                SharedObjectService.class,
-                false
-        );
+				scope, ISharedObjectService.class, SharedObjectService.class,
+				false);
 
-        return service.clearSharedObjects(scope, name);
-    }
+		return service.clearSharedObjects(scope, name);
+	}
 
-    /**
-     * Client time to live is max allowed connection ping return time in seconds
-     * @return              TTL value used in seconds
-     */
-    public long getClientTTL() {
-        return clientTTL;
-    }
+	/**
+	 * Client time to live is max allowed connection ping return time in seconds
+	 * @return              TTL value used in seconds
+	 */
+	public long getClientTTL() {
+		return clientTTL;
+	}
 
-    /**
-     * Client time to live is max allowed connection ping return time in seconds
-     * @param clientTTL     New TTL value in seconds
-     */
-    public void setClientTTL(int clientTTL) {
-        this.clientTTL = clientTTL;
-    }
+	/**
+	 * Client time to live is max allowed connection ping return time in seconds
+	 * @param clientTTL     New TTL value in seconds
+	 */
+	public void setClientTTL(int clientTTL) {
+		this.clientTTL = clientTTL;
+	}
 
-    /**
-     * Return period of ghost connections cleanup task call
-     * @return              Ghost connections cleanup period
-     */
-    public int getGhostConnsCleanupPeriod() {
-        return ghostConnsCleanupPeriod;
-    }
+	/**
+	 * Return period of ghost connections cleanup task call
+	 * @return              Ghost connections cleanup period
+	 */
+	public int getGhostConnsCleanupPeriod() {
+		return ghostConnsCleanupPeriod;
+	}
 
-    /**
-     * Set new ghost connections cleanup period
-     * @param ghostConnsCleanupPeriod      New ghost connections cleanup period
-     */
-    public void setGhostConnsCleanupPeriod(int ghostConnsCleanupPeriod) {
-        this.ghostConnsCleanupPeriod = ghostConnsCleanupPeriod;
-    }
+	/**
+	 * Set new ghost connections cleanup period
+	 * @param ghostConnsCleanupPeriod      New ghost connections cleanup period
+	 */
+	public void setGhostConnsCleanupPeriod(int ghostConnsCleanupPeriod) {
+		this.ghostConnsCleanupPeriod = ghostConnsCleanupPeriod;
+	}
 
-    /**
-     * Schedules new ghost connections cleanup using current cleanup period
-     */
-    public void scheduleGhostConnectionsCleanup() {
-        IScheduledJob job = new IScheduledJob(){
-            public void execute(ISchedulingService service) throws CloneNotSupportedException {
-                killGhostConnections();
-            }
-        };
+	/**
+	 * Schedules new ghost connections cleanup using current cleanup period
+	 */
+	public void scheduleGhostConnectionsCleanup() {
+		IScheduledJob job = new IScheduledJob() {
+			public void execute(ISchedulingService service)
+					throws CloneNotSupportedException {
+				killGhostConnections();
+			}
+		};
 
-        // Cancel previous if was scheduled
-        cancelGhostConnectionsCleanup();
+		// Cancel previous if was scheduled
+		cancelGhostConnectionsCleanup();
 
-        // Store name so we can cancel it later
-        ghostCleanupJobName = schedulingService.addScheduledJob( ghostConnsCleanupPeriod * 1000, job );
-    }
+		// Store name so we can cancel it later
+		ghostCleanupJobName = schedulingService.addScheduledJob(
+				ghostConnsCleanupPeriod * 1000, job);
+	}
 
-    /**
-     * Cancel ghost connections cleanup period
-     */
-    public void cancelGhostConnectionsCleanup() {
-        if( ghostCleanupJobName != null ){
-            schedulingService.removeScheduledJob( ghostCleanupJobName );
-        }
-    }
+	/**
+	 * Cancel ghost connections cleanup period
+	 */
+	public void cancelGhostConnectionsCleanup() {
+		if (ghostCleanupJobName != null) {
+			schedulingService.removeScheduledJob(ghostCleanupJobName);
+		}
+	}
 
-    /**
-     * Cleans up ghost connections
-     */
-    protected void killGhostConnections() {
-        Iterator iter = getConnectionsIter();
-        while(iter.hasNext()) {
-            IConnection conn = (IConnection) iter.next();
+	/**
+	 * Cleans up ghost connections
+	 */
+	protected void killGhostConnections() {
+		Iterator iter = getConnectionsIter();
+		while (iter.hasNext()) {
+			IConnection conn = (IConnection) iter.next();
 
-            // Ping client
-            conn.ping();
+			// Ping client
+			conn.ping();
 
-            // Time to live exceeded, disconnect
-            if( conn.getLastPingTime() > clientTTL * 1000 ){
-                disconnect( conn, scope );    
-            }
-        }
-    }
-    
-    /**
-     * Notification method that is sent by FME just before publishing starts.
-     * 
-     * @param streamName	Name of stream that is about to be published.
-     */
-    public void FCPublish(String streamName) {
-    	// Override if necessary.
-    }
-    
-    /**
-     * Notification method that is sent by FME when publishing of a stream ends.
-     */
-    public void FCUnpublish() {
-    	// Override if necessary.
-    }
+			// Time to live exceeded, disconnect
+			if (conn.getLastPingTime() > clientTTL * 1000) {
+				disconnect(conn, scope);
+			}
+		}
+	}
+
+	/**
+	 * Notification method that is sent by FME just before publishing starts.
+	 *
+	 * @param streamName	Name of stream that is about to be published.
+	 */
+	public void FCPublish(String streamName) {
+		// Override if necessary.
+	}
+
+	/**
+	 * Notification method that is sent by FME when publishing of a stream ends.
+	 */
+	public void FCUnpublish() {
+		// Override if necessary.
+	}
 
 	public void streamBroadcastClose(IBroadcastStream stream) {
-    	// Override if necessary.
+		// Override if necessary.
 	}
 
 	public void streamBroadcastStart(IBroadcastStream stream) {
-    	// Override if necessary.
+		// Override if necessary.
 	}
 
-	public void streamPlaylistItemPlay(IPlaylistSubscriberStream stream, IPlayItem item, boolean isLive) {
-    	// Override if necessary.
+	public void streamPlaylistItemPlay(IPlaylistSubscriberStream stream,
+			IPlayItem item, boolean isLive) {
+		// Override if necessary.
 	}
 
-	public void streamPlaylistItemStop(IPlaylistSubscriberStream stream, IPlayItem item) {
-    	// Override if necessary.
+	public void streamPlaylistItemStop(IPlaylistSubscriberStream stream,
+			IPlayItem item) {
+		// Override if necessary.
 	}
 
-	public void streamPlaylistVODItemPause(IPlaylistSubscriberStream stream, IPlayItem item, int position) {
-    	// Override if necessary.
+	public void streamPlaylistVODItemPause(IPlaylistSubscriberStream stream,
+			IPlayItem item, int position) {
+		// Override if necessary.
 	}
 
-	public void streamPlaylistVODItemResume(IPlaylistSubscriberStream stream, IPlayItem item, int position) {
-    	// Override if necessary.
+	public void streamPlaylistVODItemResume(IPlaylistSubscriberStream stream,
+			IPlayItem item, int position) {
+		// Override if necessary.
 	}
 
-	public void streamPlaylistVODItemSeek(IPlaylistSubscriberStream stream, IPlayItem item, int position) {
-    	// Override if necessary.
+	public void streamPlaylistVODItemSeek(IPlaylistSubscriberStream stream,
+			IPlayItem item, int position) {
+		// Override if necessary.
 	}
 
 	public void streamPublishStart(IBroadcastStream stream) {
-    	// Override if necessary.
+		// Override if necessary.
 	}
 
 	public void streamRecordStart(IBroadcastStream stream) {
-    	// Override if necessary.
+		// Override if necessary.
 	}
 
 	public void streamSubscriberClose(ISubscriberStream stream) {
-    	// Override if necessary.
+		// Override if necessary.
 	}
 
 	public void streamSubscriberStart(ISubscriberStream stream) {
-    	// Override if necessary.
+		// Override if necessary.
 	}
-    
+
 }

@@ -112,13 +112,12 @@ public class ProviderService implements IProviderService {
 		synchronized (scope) {
 			IBasicScope basicScope = scope.getBasicScope(IBroadcastScope.TYPE,
 					name);
+			if (basicScope == null) {
+				basicScope = new BroadcastScope(scope, name);
+				scope.addChildScope(basicScope);
+			}
 			if (basicScope instanceof IBroadcastScope) {
-				if (basicScope == null) {
-					basicScope = new BroadcastScope(scope, name);
-					scope.addChildScope(basicScope);
-				}
-				((IBroadcastScope) basicScope)
-						.subscribe(bs.getProvider(), null);
+				((IBroadcastScope) basicScope).subscribe(bs.getProvider(), null);
 				status = true;
 			}
 		}
@@ -170,12 +169,10 @@ public class ProviderService implements IProviderService {
 			}
 		}
 
-		IStreamFilenameGenerator filenameGenerator = (IStreamFilenameGenerator) ScopeUtils
-				.getScopeService(scope, IStreamFilenameGenerator.class,
-						DefaultStreamFilenameGenerator.class);
+		IStreamFilenameGenerator filenameGenerator = (IStreamFilenameGenerator)
+			ScopeUtils.getScopeService(scope, IStreamFilenameGenerator.class, DefaultStreamFilenameGenerator.class);
 
-		return filenameGenerator.generateFilename(scope, name,
-				GenerationType.PLAYBACK);
+		return filenameGenerator.generateFilename(scope, name, GenerationType.PLAYBACK);
 	}
 
 }

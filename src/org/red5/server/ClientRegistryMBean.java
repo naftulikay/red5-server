@@ -38,8 +38,6 @@ public interface ClientRegistryMBean {
 
 	public IClient lookupClient(String id) throws ClientNotFoundException;
 
-	public IClient newClient(Object[] params);
-
 	public List<Client> getClientList();
 
 	public Client getClient(String id) throws ClientNotFoundException;

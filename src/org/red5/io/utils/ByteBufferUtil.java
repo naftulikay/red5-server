@@ -32,17 +32,22 @@ import org.apache.mina.common.ByteBuffer;
 @SuppressWarnings("all")
 public class ByteBufferUtil {
 
-	public static void acquireIfPossible(Object message) {
-		if (message instanceof ByteBuffer) {
+    public static void acquireIfPossible( Object message )
+    {
+        if( message instanceof ByteBuffer )
+        {
 		}
 	}
 
-	public static void releaseIfPossible(Object message) {
-		if (message instanceof ByteBuffer) {
+    public static void releaseIfPossible( Object message )
+    {
+        if( message instanceof ByteBuffer )
+        {
 			//( ( ByteBuffer ) message ).release();
 		}
 	}
 
-	private ByteBufferUtil() {
+    private ByteBufferUtil()
+    {
 	}
 }

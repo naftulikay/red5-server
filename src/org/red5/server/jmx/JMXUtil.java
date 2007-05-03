@@ -10,6 +10,11 @@ import javax.management.ObjectName;
 
 import org.apache.log4j.Logger;
 
+/**
+ * Helper methods for working with ObjectName or MBean instances.
+ *
+ * @author Paul Gregoire (mondain@gmail.com)
+ */
 public class JMXUtil {
 
 	private static Logger log = Logger.getLogger(JMXUtil.class);

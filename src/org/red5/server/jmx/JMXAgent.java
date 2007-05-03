@@ -11,6 +11,11 @@ import org.apache.log4j.Logger;
 
 import com.sun.jdmk.comm.HtmlAdaptorServer;
 
+/**
+ * Provides the HTML adapter and registration of MBeans.
+ *
+ * @author Paul Gregoire (mondain@gmail.com)
+ */
 public class JMXAgent {
 
 	private static Logger log = Logger.getLogger(JMXAgent.class);

@@ -1,12 +1,22 @@
 package org.red5.server.jmx;
 
+import java.lang.management.ManagementFactory;
+
 import javax.management.MBeanServer;
-import javax.management.MBeanServerFactory;
 import javax.management.ObjectName;
 import javax.management.StandardMBean;
 
 import org.apache.log4j.Logger;
 
+/**
+ * Provides access to the platform MBeanServer as well as registration, unregistration, and creation of new MBean instances. Creation and registration is performed using StandardMBean wrappers.
+ *
+ * References:
+ * http://www.onjava.com/pub/a/onjava/2004/09/29/tigerjmx.html?page=1
+ * http://java.sun.com/developer/JDCTechTips/2005/tt0315.html#2
+ *
+ * @author Paul Gregoire (mondain@gmail.com)
+ */
 public class JMXFactory {
 
 	private static Logger log = Logger.getLogger(JMXFactory.class);
@@ -17,7 +27,8 @@ public class JMXFactory {
 
 	static {
 		// create the MBeanServer for our domain
-		mbs = MBeanServerFactory.createMBeanServer(domain);
+		//mbs = MBeanServerFactory.createMBeanServer(domain);
+		mbs = ManagementFactory.getPlatformMBeanServer();
 	}
 
 	public static ObjectName createMBean(String className, String attributes) {

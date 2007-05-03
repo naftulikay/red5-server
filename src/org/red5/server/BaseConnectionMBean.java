@@ -19,21 +19,13 @@ package org.red5.server;
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  */
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.red5.server.api.IBasicScope;
 import org.red5.server.api.IClient;
-import org.red5.server.api.IConnection;
 import org.red5.server.api.IScope;
-import org.red5.server.api.event.IEvent;
 
 /**
  * Base abstract class for connections. Adds connection specific functionality like work with clients
@@ -41,122 +33,124 @@ import org.red5.server.api.event.IEvent;
  */
 public interface BaseConnectionMBean {
 
-    /**
-     *
-     * @return
-     */
+	/**
+	 *
+	 * @return
+	 */
 	public String getType();
 
-    /**
-     *
-     * @return
-     */
+	/**
+	 *
+	 * @return
+	 */
 	public String getHost();
 
-    /**
-     *
-     * @return
-     */
+	/**
+	 *
+	 * @return
+	 */
 	public String getRemoteAddress();
 
-    /**
-    *
-    * @return
-    */
+	/**
+	 *
+	 * @return
+	 */
 	public List<String> getRemoteAddresses();
 
-    /**
-     *
-     * @return
-     */
+	/**
+	 *
+	 * @return
+	 */
 	public int getRemotePort();
-    /**
-     *
-     * @return
-     */
+
+	/**
+	 *
+	 * @return
+	 */
 	public String getPath();
 
-    /**
-     *
-     * @return
-     */
+	/**
+	 *
+	 * @return
+	 */
 	public String getSessionId();
 
-    /**
-     * Return connection parameters
-     * @return
-     */
+	/**
+	 * Return connection parameters
+	 * @return
+	 */
 	public Map<String, Object> getConnectParams();
-    /**
-     *
-     * @return
-     */
+
+	/**
+	 *
+	 * @return
+	 */
 	public IClient getClient();
 
-    /**
-     * Check whether connection is alive
-     * @return       true if connection is bound to scope, false otherwise
-     */
+	/**
+	 * Check whether connection is alive
+	 * @return       true if connection is bound to scope, false otherwise
+	 */
 	public boolean isConnected();
 
-    /**
-     *
-     * @return
-     */
+	/**
+	 *
+	 * @return
+	 */
 	public IScope getScope();
 
-    /**
-     *  Closes connection
-     */
+	/**
+	 *  Closes connection
+	 */
 	public void close();
 
-    /**
-     *
-     * @return
-     */
+	/**
+	 *
+	 * @return
+	 */
 	public Iterator<IBasicScope> getBasicScopes();
 
-    /**
-     *
-     * @return
-     */
+	/**
+	 *
+	 * @return
+	 */
 	public long getReadBytes();
 
-    /**
-     *
-     * @return
-     */
+	/**
+	 *
+	 * @return
+	 */
 	public long getWrittenBytes();
 
-    /**
-     *
-     * @return
-     */
+	/**
+	 *
+	 * @return
+	 */
 	public long getReadMessages();
 
-    /**
-     *
-     * @return
-     */
+	/**
+	 *
+	 * @return
+	 */
 	public long getWrittenMessages();
 
-    /**
-     *
-     * @return
-     */
+	/**
+	 *
+	 * @return
+	 */
 	public long getDroppedMessages();
 
-    /**
-     *
-     * @return
-     */
+	/**
+	 *
+	 * @return
+	 */
 	public long getPendingMessages();
 
-    /**
-     *
-     * @param streamId
-     * @return
-     */
+	/**
+	 *
+	 * @param streamId
+	 * @return
+	 */
 	public long getPendingVideoMessages(int streamId);
 
 }

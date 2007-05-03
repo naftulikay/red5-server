@@ -21,7 +21,6 @@ package org.red5.server;
 
 import java.io.IOException;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
@@ -39,7 +38,6 @@ import org.red5.server.api.IScope;
 import org.red5.server.api.IScopeAware;
 import org.red5.server.api.IScopeHandler;
 import org.red5.server.api.event.IEvent;
-import org.red5.server.api.persistence.IPersistable;
 import org.red5.server.api.persistence.PersistenceUtils;
 import org.red5.server.jmx.JMXFactory;
 import org.springframework.core.io.Resource;
@@ -73,6 +71,7 @@ public class Scope extends BasicScope implements IScope, ScopeMBean {
 	 * Scope type constant
 	 */
 	private static final String TYPE = "scope";
+
 	/**
 	 * Scope nesting depth, unset by default
 	 */
@@ -106,12 +105,13 @@ public class Scope extends BasicScope implements IScope, ScopeMBean {
 	/**
 	 * Child scopes map (child scopes are named)
 	 */
-	private Map<String, IBasicScope> children = new ConcurrentHashMap<String, IBasicScope>();
+	private volatile Map<String, IBasicScope> children = new ConcurrentHashMap<String, IBasicScope>();
 
 	/**
 	 * Clients and connection map
 	 */
-	private Map<IClient, Set<IConnection>> clients = new ConcurrentHashMap<IClient, Set<IConnection>>();
+	private volatile Map<IClient, Set<IConnection>> clients = new ConcurrentHashMap<IClient, Set<IConnection>>();
+
 	/**
 	 * Registered service handlers for this scope. The map is created on-demand only
 	 * if it's accessed for writing.
@@ -261,7 +261,9 @@ public class Scope extends BasicScope implements IScope, ScopeMBean {
 		}
 		if (hasHandler() && !getHandler().addChildScope(scope)) {
 			if (log.isDebugEnabled()) {
-				log.debug("Failed to add child scope: " + scope + " to " + this);
+				log
+						.debug("Failed to add child scope: " + scope + " to "
+								+ this);
 			}
 			return false;
 		}
@@ -269,7 +271,8 @@ public class Scope extends BasicScope implements IScope, ScopeMBean {
 			// start the scope
 			if (hasHandler() && !getHandler().start((IScope) scope)) {
 				if (log.isDebugEnabled()) {
-					log.debug("Failed to start child scope: " + scope + " in " + this);
+					log.debug("Failed to start child scope: " + scope + " in "
+							+ this);
 				}
 				return false;
 			}
@@ -853,23 +856,23 @@ public class Scope extends BasicScope implements IScope, ScopeMBean {
 	}
 
 	/**
-     * Return map of service handlers. The map is created if it doesn't exist yet.
+	 * Return map of service handlers. The map is created if it doesn't exist yet.
 	 * @return                Map of service handlers
 	 */
 	protected Map<String, Object> getServiceHandlers() {
 		return getServiceHandlers(true);
 	}
-	
-    /**
-     * Return map of service handlers and optionally created it if it doesn't exist.
-     * @param allowCreate     Should the map be created if it doesn't exist?
-     * @return                Map of service handlers
-     */
+
+	/**
+	 * Return map of service handlers and optionally created it if it doesn't exist.
+	 * @param allowCreate     Should the map be created if it doesn't exist?
+	 * @return                Map of service handlers
+	 */
 	protected Map<String, Object> getServiceHandlers(boolean allowCreate) {
 		if (serviceHandlers == null) {
 			if (!allowCreate)
 				return null;
-			
+
 			// Only synchronize if potentially needs to be created
 			if (serviceHandlers == null) {
 				serviceHandlers = new ConcurrentHashMap<String, Object>();
@@ -896,7 +899,7 @@ public class Scope extends BasicScope implements IScope, ScopeMBean {
 		Map<String, Object> serviceHandlers = getServiceHandlers(false);
 		if (serviceHandlers == null) {
 			return;
-	}
+		}
 		serviceHandlers.remove(name);
 	}
 
@@ -909,20 +912,20 @@ public class Scope extends BasicScope implements IScope, ScopeMBean {
 		Map<String, Object> serviceHandlers = getServiceHandlers(false);
 		if (serviceHandlers == null) {
 			return null;
-	}
+		}
 		return serviceHandlers.get(name);
 	}
 
 	/**
-     * Return set of service handler names. Removing entries from the
-     * set unregisters the corresponding service handler.
+	 * Return set of service handler names. Removing entries from the
+	 * set unregisters the corresponding service handler.
 	 * @return            Set of service handler names
 	 */
 	public Set<String> getServiceHandlerNames() {
 		Map<String, Object> serviceHandlers = getServiceHandlers(false);
 		if (serviceHandlers == null) {
 			return Collections.EMPTY_SET;
-	}	
+		}
 		return serviceHandlers.keySet();
 	}
 

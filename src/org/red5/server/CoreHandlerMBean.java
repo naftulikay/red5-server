@@ -19,16 +19,10 @@ package org.red5.server;
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA 
  */
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.red5.server.api.IBasicScope;
 import org.red5.server.api.IClient;
-import org.red5.server.api.IClientRegistry;
 import org.red5.server.api.IConnection;
-import org.red5.server.api.IContext;
 import org.red5.server.api.IScope;
-import org.red5.server.api.IScopeHandler;
-import org.red5.server.api.Red5;
 import org.red5.server.api.event.IEvent;
 import org.red5.server.api.service.IServiceCall;
 
@@ -37,15 +31,24 @@ import org.red5.server.api.service.IServiceCall;
  */
 public interface CoreHandlerMBean {
 
-    public boolean connect(IConnection conn, IScope scope);
-    public boolean connect(IConnection conn, IScope scope, Object[] params);
-    public void disconnect(IConnection conn, IScope scope);
-    public boolean join(IClient client, IScope scope);
-    public void leave(IClient client, IScope scope);
-    public void removeChildScope(IBasicScope scope);
-    public boolean serviceCall(IConnection conn, IServiceCall call);
-    public boolean start(IScope scope);
-    public void stop(IScope scope);
-    public boolean handleEvent(IEvent event);
+	public boolean connect(IConnection conn, IScope scope);
+
+	public boolean connect(IConnection conn, IScope scope, Object[] params);
+
+	public void disconnect(IConnection conn, IScope scope);
+
+	public boolean join(IClient client, IScope scope);
+
+	public void leave(IClient client, IScope scope);
+
+	public void removeChildScope(IBasicScope scope);
+
+	public boolean serviceCall(IConnection conn, IServiceCall call);
+
+	public boolean start(IScope scope);
+
+	public void stop(IScope scope);
+
+	public boolean handleEvent(IEvent event);
 
 }

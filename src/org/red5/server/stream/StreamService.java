@@ -57,7 +57,7 @@ public class StreamService implements IStreamService {
 	private static Logger logger = Logger.getLogger(StreamService.class);
 
 	/** {@inheritDoc} */
-    public void closeStream() {
+	public void closeStream() {
 		IConnection conn = Red5.getConnectionLocal();
 		if (!(conn instanceof IStreamCapableConnection)) {
 			return;
@@ -80,7 +80,7 @@ public class StreamService implements IStreamService {
 	}
 
 	/** {@inheritDoc} */
-    public int createStream() {
+	public int createStream() {
 		IConnection conn = Red5.getConnectionLocal();
 		if (!(conn instanceof IStreamCapableConnection)) {
 			return -1;
@@ -89,7 +89,7 @@ public class StreamService implements IStreamService {
 	}
 
 	/** {@inheritDoc} */
-    public void deleteStream(int streamId) {
+	public void deleteStream(int streamId) {
 		IConnection conn = Red5.getConnectionLocal();
 		if (!(conn instanceof IStreamCapableConnection)) {
 			return;
@@ -99,7 +99,7 @@ public class StreamService implements IStreamService {
 	}
 
 	/** {@inheritDoc} */
-    public void deleteStream(IStreamCapableConnection conn, int streamId) {
+	public void deleteStream(IStreamCapableConnection conn, int streamId) {
 		IClientStream stream = conn.getStreamById(streamId);
 		if (stream != null) {
 			if (stream instanceof IClientBroadcastStream) {
@@ -114,24 +114,24 @@ public class StreamService implements IStreamService {
 		}
 		conn.unreserveStreamId(streamId);
 	}
-    
-	/** {@inheritDoc} */
-    public void releaseStream(String streamName) {
-    	// XXX: what to do here?
-    }
 
 	/** {@inheritDoc} */
-    public void pause(boolean pausePlayback, int position) {
+	public void releaseStream(String streamName) {
+		// XXX: what to do here?
+	}
+
+	/** {@inheritDoc} */
+	public void pause(boolean pausePlayback, int position) {
 		pause(Boolean.valueOf(pausePlayback), position);
 	}
 
-    /**
-     * Pause at given position. Required as "pausePlayback" can be "null" if no flag is passed by the
+	/**
+	 * Pause at given position. Required as "pausePlayback" can be "null" if no flag is passed by the
 	 * client
-     * @param pausePlayback         Pause playback or not
-     * @param position              Pause position
-     */
-    public void pause(Boolean pausePlayback, int position) {
+	 * @param pausePlayback         Pause playback or not
+	 * @param position              Pause position
+	 */
+	public void pause(Boolean pausePlayback, int position) {
 		IConnection conn = Red5.getConnectionLocal();
 		if (!(conn instanceof IStreamCapableConnection)) {
 			return;
@@ -154,10 +154,10 @@ public class StreamService implements IStreamService {
 		}
 	}
 
-    /**
-     * {@inheritDoc}
-     */
-    public void play(String name, int start, int length, Object flushPlaylist) {
+	/**
+	 * {@inheritDoc}
+	 */
+	public void play(String name, int start, int length, Object flushPlaylist) {
 		if (flushPlaylist instanceof Boolean) {
 			play(name, start, length, ((Boolean) flushPlaylist).booleanValue());
 		} else {
@@ -166,7 +166,7 @@ public class StreamService implements IStreamService {
 	}
 
 	/** {@inheritDoc} */
-    public void play(String name, int start, int length, boolean flushPlaylist) {
+	public void play(String name, int start, int length, boolean flushPlaylist) {
 		IConnection conn = Red5.getConnectionLocal();
 		if (!(conn instanceof IStreamCapableConnection)) {
 			return;
@@ -174,25 +174,30 @@ public class StreamService implements IStreamService {
 		IScope scope = conn.getScope();
 		IStreamCapableConnection streamConn = (IStreamCapableConnection) conn;
 		int streamId = getCurrentStreamId();
-		IStreamSecurityService security = (IStreamSecurityService) ScopeUtils.getScopeService(scope, IStreamSecurityService.class);
+		IStreamSecurityService security = (IStreamSecurityService) ScopeUtils
+				.getScopeService(scope, IStreamSecurityService.class);
 		if (security != null) {
-			Set<IStreamPlaybackSecurity> handlers = security.getStreamPlaybackSecurity();
-			for (IStreamPlaybackSecurity handler: handlers) {
-				if (!handler.isPlaybackAllowed(scope, name, start, length, flushPlaylist)) {
+			Set<IStreamPlaybackSecurity> handlers = security
+					.getStreamPlaybackSecurity();
+			for (IStreamPlaybackSecurity handler : handlers) {
+				if (!handler.isPlaybackAllowed(scope, name, start, length,
+						flushPlaylist)) {
 					Status accessDenied = new Status(StatusCodes.NS_FAILED);
 					accessDenied.setClientid(streamId);
-					accessDenied.setDesciption("You are not allowed to play the stream.");
+					accessDenied
+							.setDesciption("You are not allowed to play the stream.");
 					accessDenied.setDetails(name);
 					accessDenied.setLevel("error");
 
 					// FIXME: there should be a direct way to send the status
-					Channel channel = ((RTMPConnection) streamConn).getChannel((byte) (4 + ((streamId-1) * 5)));
+					Channel channel = ((RTMPConnection) streamConn)
+							.getChannel((byte) (4 + ((streamId - 1) * 5)));
 					channel.sendStatus(accessDenied);
 					return;
 				}
 			}
 		}
-		
+
 		IClientStream stream = streamConn.getStreamById(streamId);
 		boolean created = false;
 		if (stream == null) {
@@ -235,28 +240,29 @@ public class StreamService implements IStreamService {
 			accessDenied.setLevel("error");
 
 			// FIXME: there should be a direct way to send the status
-			Channel channel = ((RTMPConnection) streamConn).getChannel((byte) (4 + ((streamId-1) * 5)));
+			Channel channel = ((RTMPConnection) streamConn)
+					.getChannel((byte) (4 + ((streamId - 1) * 5)));
 			channel.sendStatus(accessDenied);
 		}
 	}
 
 	/** {@inheritDoc} */
-    public void play(String name, int start, int length) {
+	public void play(String name, int start, int length) {
 		play(name, start, length, true);
 	}
 
 	/** {@inheritDoc} */
-    public void play(String name, int start) {
+	public void play(String name, int start) {
 		play(name, start, -1000, true);
 	}
 
 	/** {@inheritDoc} */
-    public void play(String name) {
+	public void play(String name) {
 		play(name, -2000, -1000, true);
 	}
 
 	/** {@inheritDoc} */
-    public void play(Boolean dontStop) {
+	public void play(Boolean dontStop) {
 		if (!dontStop) {
 			IConnection conn = Red5.getConnectionLocal();
 			if (!(conn instanceof IStreamCapableConnection)) {
@@ -272,7 +278,7 @@ public class StreamService implements IStreamService {
 	}
 
 	/** {@inheritDoc} */
-    public void publish(Boolean dontStop) {
+	public void publish(Boolean dontStop) {
 		if (!dontStop) {
 			IConnection conn = Red5.getConnectionLocal();
 			if (!(conn instanceof IStreamCapableConnection)) {
@@ -302,35 +308,40 @@ public class StreamService implements IStreamService {
 	}
 
 	/** {@inheritDoc} */
-    public void publish(String name, String mode) {
+	public void publish(String name, String mode) {
+		logger.debug("Publish - name: " + name + " mode: " + mode);
 		IConnection conn = Red5.getConnectionLocal();
 		if (!(conn instanceof IStreamCapableConnection)) {
 			return;
 		}
-		
+
 		IScope scope = conn.getScope();
 		IStreamCapableConnection streamConn = (IStreamCapableConnection) conn;
 		int streamId = getCurrentStreamId();
 
-		IStreamSecurityService security = (IStreamSecurityService) ScopeUtils.getScopeService(scope, IStreamSecurityService.class);
+		IStreamSecurityService security = (IStreamSecurityService) ScopeUtils
+				.getScopeService(scope, IStreamSecurityService.class);
 		if (security != null) {
-			Set<IStreamPublishSecurity> handlers = security.getStreamPublishSecurity();
-			for (IStreamPublishSecurity handler: handlers) {
+			Set<IStreamPublishSecurity> handlers = security
+					.getStreamPublishSecurity();
+			for (IStreamPublishSecurity handler : handlers) {
 				if (!handler.isPublishAllowed(scope, name, mode)) {
 					Status accessDenied = new Status(StatusCodes.NS_FAILED);
 					accessDenied.setClientid(streamId);
-					accessDenied.setDesciption("You are not allowed to publish the stream.");
+					accessDenied
+							.setDesciption("You are not allowed to publish the stream.");
 					accessDenied.setDetails(name);
 					accessDenied.setLevel("error");
 
 					// FIXME: there should be a direct way to send the status
-					Channel channel = ((RTMPConnection) streamConn).getChannel((byte) (4 + ((streamId-1) * 5)));
+					Channel channel = ((RTMPConnection) streamConn)
+							.getChannel((byte) (4 + ((streamId - 1) * 5)));
 					channel.sendStatus(accessDenied);
 					return;
 				}
 			}
 		}
-		
+
 		IBroadcastScope bsScope = getBroadcastScope(scope, name);
 		if (bsScope != null && !bsScope.getProviders().isEmpty()) {
 			// Another stream with that name is already published.
@@ -340,7 +351,8 @@ public class StreamService implements IStreamService {
 			badName.setLevel("error");
 
 			// FIXME: there should be a direct way to send the status
-			Channel channel = ((RTMPConnection) streamConn).getChannel((byte) (4 + ((streamId-1) * 5)));
+			Channel channel = ((RTMPConnection) streamConn)
+					.getChannel((byte) (4 + ((streamId - 1) * 5)));
 			channel.sendStatus(badName);
 			return;
 		}
@@ -362,8 +374,8 @@ public class StreamService implements IStreamService {
 			IProviderService providerService = (IProviderService) context
 					.getBean(IProviderService.BEAN_NAME);
 			// TODO handle registration failure
-			if (providerService.registerBroadcastStream(conn.getScope(),
-					name, bs)) {
+			if (providerService.registerBroadcastStream(conn.getScope(), name,
+					bs)) {
 				bsScope = getBroadcastScope(conn.getScope(), name);
 				bsScope.setAttribute(IBroadcastScope.STREAM_ATTRIBUTE, bs);
 				if (conn instanceof BaseConnection) {
@@ -383,12 +395,14 @@ public class StreamService implements IStreamService {
 		} catch (IOException e) {
 			Status accessDenied = new Status(StatusCodes.NS_RECORD_NOACCESS);
 			accessDenied.setClientid(streamId);
-			accessDenied.setDesciption("The file could not be created/written to.");
+			accessDenied
+					.setDesciption("The file could not be created/written to.");
 			accessDenied.setDetails(name);
 			accessDenied.setLevel("error");
 
 			// FIXME: there should be a direct way to send the status
-			Channel channel = ((RTMPConnection) streamConn).getChannel((byte) (4 + ((streamId-1) * 5)));
+			Channel channel = ((RTMPConnection) streamConn)
+					.getChannel((byte) (4 + ((streamId - 1) * 5)));
 			channel.sendStatus(accessDenied);
 			bs.close();
 			if (created)
@@ -400,12 +414,12 @@ public class StreamService implements IStreamService {
 	}
 
 	/** {@inheritDoc} */
-    public void publish(String name) {
+	public void publish(String name) {
 		publish(name, IClientStream.MODE_LIVE);
 	}
 
 	/** {@inheritDoc} */
-    public void seek(int position) {
+	public void seek(int position) {
 		IConnection conn = Red5.getConnectionLocal();
 		if (!(conn instanceof IStreamCapableConnection)) {
 			return;
@@ -426,13 +440,14 @@ public class StreamService implements IStreamService {
 			seekFailed.setLevel("error");
 
 			// FIXME: there should be a direct way to send the status
-			Channel channel = ((RTMPConnection) streamConn).getChannel((byte) (4 + ((streamId-1) * 5)));
+			Channel channel = ((RTMPConnection) streamConn)
+					.getChannel((byte) (4 + ((streamId - 1) * 5)));
 			channel.sendStatus(seekFailed);
 		}
 	}
 
 	/** {@inheritDoc} */
-    public void receiveVideo(boolean receive) {
+	public void receiveVideo(boolean receive) {
 		IConnection conn = Red5.getConnectionLocal();
 		if (!(conn instanceof IStreamCapableConnection)) {
 			return;
@@ -448,7 +463,7 @@ public class StreamService implements IStreamService {
 	}
 
 	/** {@inheritDoc} */
-    public void receiveAudio(boolean receive) {
+	public void receiveAudio(boolean receive) {
 		IConnection conn = Red5.getConnectionLocal();
 		if (!(conn instanceof IStreamCapableConnection)) {
 			return;
@@ -464,22 +479,22 @@ public class StreamService implements IStreamService {
 	}
 
 	/**
-     * Getter for current stream id.
-     *
-     * @return  Current stream id
-     */
-    private int getCurrentStreamId() {
+	 * Getter for current stream id.
+	 *
+	 * @return  Current stream id
+	 */
+	private int getCurrentStreamId() {
 		// TODO: this must come from the current connection!
 		return BaseRTMPHandler.getStreamId();
 	}
 
-    /**
-     * Return broadcast scope object for given scope and child scope name
-     * @param scope          Scope object
-     * @param name           Child scope name
-     * @return               Broadcast scope
-     */
-    public IBroadcastScope getBroadcastScope(IScope scope, String name) {
+	/**
+	 * Return broadcast scope object for given scope and child scope name
+	 * @param scope          Scope object
+	 * @param name           Child scope name
+	 * @return               Broadcast scope
+	 */
+	public IBroadcastScope getBroadcastScope(IScope scope, String name) {
 		synchronized (scope) {
 			IBasicScope basicScope = scope.getBasicScope(IBroadcastScope.TYPE,
 					name);

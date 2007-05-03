@@ -332,23 +332,24 @@ public class ServerStream extends AbstractStream implements IServerStream,
 	}
 
 	/** {@inheritDoc} */
-	public void saveAs(String name, boolean isAppend)
-			throws IOException, ResourceNotFoundException, ResourceExistException {
+	public void saveAs(String name, boolean isAppend) throws IOException,
+			ResourceNotFoundException, ResourceExistException {
 		try {
 			IScope scope = getScope();
 			IStreamFilenameGenerator generator = (IStreamFilenameGenerator) ScopeUtils
 					.getScopeService(scope, IStreamFilenameGenerator.class,
 							DefaultStreamFilenameGenerator.class);
 
-		String filename = generator.generateFilename(scope, name, ".flv", GenerationType.RECORD);
+			String filename = generator.generateFilename(scope, name, ".flv",
+					GenerationType.RECORD);
 			Resource res = scope.getContext().getResource(filename);
 			if (!isAppend) {
 				if (res.exists()) {
 					// Per livedoc of FCS/FMS:
 					// When "live" or "record" is used,
 					// any previously recorded stream with the same stream URI is deleted.
-				if (!res.getFile().delete())
-					throw new IOException("file could not be deleted");
+					if (!res.getFile().delete())
+						throw new IOException("file could not be deleted");
 				}
 			} else {
 				if (!res.exists()) {
@@ -378,6 +379,10 @@ public class ServerStream extends AbstractStream implements IServerStream,
 			}
 
 			if (!res.exists()) {
+				if (!res.getFile().canWrite()) {
+					log.warn("File cannot be written to "
+							+ res.getFile().getCanonicalPath());
+				}
 				res.getFile().createNewFile();
 			}
 			FileConsumer fc = new FileConsumer(scope, res.getFile());
@@ -386,6 +391,9 @@ public class ServerStream extends AbstractStream implements IServerStream,
 				paramMap.put("mode", "append");
 			} else {
 				paramMap.put("mode", "record");
+			}
+			if (null == recordPipe) {
+				recordPipe = new InMemoryPushPushPipe();
 			}
 			recordPipe.subscribe(fc, paramMap);
 			recordingFilename = filename;
@@ -490,7 +498,7 @@ public class ServerStream extends AbstractStream implements IServerStream,
 	}
 
 	/** {@inheritDoc} */
-    public void pushMessage(IPipe pipe, IMessage message) throws IOException {
+	public void pushMessage(IPipe pipe, IMessage message) throws IOException {
 		pushMessage(message);
 	}
 
@@ -589,7 +597,7 @@ public class ServerStream extends AbstractStream implements IServerStream,
 	 * Push message
 	 * @param message     Message
 	 */
-    private void pushMessage(IMessage message) throws IOException {
+	private void pushMessage(IMessage message) throws IOException {
 		msgOut.pushMessage(message);
 		recordPipe.pushMessage(message);
 	}
@@ -599,11 +607,11 @@ public class ServerStream extends AbstractStream implements IServerStream,
 	 */
 	private void sendResetMessage() {
 		// Send new reset message
-    	try {
-		pushMessage(new ResetMessage());
-    	} catch (IOException err) {
-    		log.error("Error while sending reset message.", err);
-    	}
+		try {
+			pushMessage(new ResetMessage());
+		} catch (IOException err) {
+			log.error("Error while sending reset message.", err);
+		}
 	}
 
 	/**
@@ -677,10 +685,10 @@ public class ServerStream extends AbstractStream implements IServerStream,
 					}
 					vodJobName = null;
 					try {
-					pushMessage(nextRTMPMessage);
-			    	} catch (IOException err) {
-			    		log.error("Error while sending message.", err);
-			    	}
+						pushMessage(nextRTMPMessage);
+					} catch (IOException err) {
+						log.error("Error while sending message.", err);
+					}
 					nextRTMPMessage.getBody().release();
 					long start = currentItem.getStart();
 					if (start < 0) {

@@ -64,18 +64,6 @@ public interface ScopeMBean {
 	public void setAutoStart(boolean autoStart);
 
 	/**
-	 * Setter for context
-	 * @param context           Context object
-	 */
-	public void setContext(IContext context);
-
-	/**
-	 * Setter for scope event handler
-	 * @param handler           Event handler
-	 */
-	public void setHandler(IScopeHandler handler);
-
-	/**
 	 * Initialization actions, start if autostart is set to <code>true</code>
 	 */
 	public void init();

@@ -3,9 +3,7 @@ package net.sziebert.red5.adapter;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.red5.server.api.IConnection;
-import org.red5.server.api.stream.IServerStream;
-import org.red5.server.api.stream.support.SimplePlayItem;
-import org.red5.server.api.stream.support.StreamUtils;
+import org.red5.server.stream.ClientBroadcastStream;
 
 /**
  * <code>StreamManager</code> provides services for snapshotting and recording
@@ -18,6 +16,8 @@ public class StreamManager {
 	@SuppressWarnings("unused")
 	private Application app;
 
+	private ClientBroadcastStream broadcastStream;
+
 	/**
 	 * Start recording the publishing stream for the specified
 	 * <code>IConnection</code>.
@@ -27,18 +27,16 @@ public class StreamManager {
 	public void recordShow(IConnection conn) {
 		log.debug("Recording show for: " + conn.getScope().getContextPath());
 		// Create the recorded stream name.
-		String streamName = conn.getScope().getContextPath() + "-" + 1;
-		// Create the server stream.
-		IServerStream stream = StreamUtils.createServerStream(conn.getScope(),
-				streamName);
-		// Create the play list and play the publishing stream into it.
-		SimplePlayItem item = new SimplePlayItem();
-		//		item.setName("hostStream");
-		//		stream.addItem(item);
-		//		stream.start();
-		//		// Set the name of the recorded stream.
-		//		stream.setPublishedName(streamName);
-		// TODO: Tell the server stream to record itself.
+		String streamName = conn.getScope().getContextPath() + "-"
+				+ System.currentTimeMillis();
+		// get a ref to the broadcasting stream
+		broadcastStream = (ClientBroadcastStream) app.getBroadcastStream(conn
+				.getScope(), "hostStream");
+		try {
+			broadcastStream.saveAs(streamName, false);
+		} catch (Exception e) {
+			log.error("Error saving stream", e);
+		}
 	}
 
 	/**
@@ -50,13 +48,9 @@ public class StreamManager {
 	public void stopRecordingShow(IConnection conn) {
 		log.debug("Stop recording show for: "
 				+ conn.getScope().getContextPath());
-		// Create the recorded stream name.
-		String streamName = conn.getScope().getContextPath() + "-" + 1;
-		// Get the server stream.
-		IServerStream stream = StreamUtils.getServerStream(conn.getScope(),
-				streamName);
-		// TODO: Get a reference to the previously created server stream
+		// Get a reference to the previously created server stream
 		// and tell it to stop recording.
+		broadcastStream.stopRecording();
 	}
 
 	/* ----- Spring injected dependencies ----- */

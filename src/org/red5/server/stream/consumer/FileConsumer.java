@@ -55,44 +55,51 @@ import org.red5.server.stream.message.StatusMessage;
  */
 public class FileConsumer implements Constants, IPushableConsumer,
 		IPipeConnectionListener {
-    /**
-     * Logger
-     */
-    private static final Log log = LogFactory.getLog(FileConsumer.class);
-    /**
-     * Scope
-     */
+	/**
+	 * Logger
+	 */
+	private static final Log log = LogFactory.getLog(FileConsumer.class);
+
+	/**
+	 * Scope
+	 */
 	private IScope scope;
-    /**
-     * File
-     */
+
+	/**
+	 * File
+	 */
 	private File file;
-    /**
-     * Tag writer
-     */
+
+	/**
+	 * Tag writer
+	 */
 	private ITagWriter writer;
-    /**
-     * Operation mode
-     */
+
+	/**
+	 * Operation mode
+	 */
 	private String mode;
-    /**
-     * Offset
-     */
+
+	/**
+	 * Offset
+	 */
 	private int offset;
-    /**
-     * Last write timestamp
-     */
+
+	/**
+	 * Last write timestamp
+	 */
 	private int lastTimestamp;
-    /**
-     * Start timestamp
-     */
+
+	/**
+	 * Start timestamp
+	 */
 	private int startTimestamp;
 
-    /**
-     * Creates file consumer
-     * @param scope        Scope of consumer
-     * @param file         File
-     */
+	/**
+	 * Creates file consumer
+	 * @param scope        Scope of consumer
+	 * @param file         File
+	 */
 	public FileConsumer(IScope scope, File file) {
 		this.scope = scope;
 		this.file = file;
@@ -101,14 +108,15 @@ public class FileConsumer implements Constants, IPushableConsumer,
 		startTimestamp = -1;
 	}
 
-    /**
-     * Push message through pipe
-     * Synchronize this method to avoid FLV corruption from abrupt disconnection
-     * @param pipe         Pipe
-     * @param message      Message to push
-     * @throws IOException if message could not be written
-     */
-    synchronized public void pushMessage(IPipe pipe, IMessage message) throws IOException {
+	/**
+	 * Push message through pipe
+	 * Synchronize this method to avoid FLV corruption from abrupt disconnection
+	 * @param pipe         Pipe
+	 * @param message      Message to push
+	 * @throws IOException if message could not be written
+	 */
+	synchronized public void pushMessage(IPipe pipe, IMessage message)
+			throws IOException {
 		if (message instanceof ResetMessage) {
 			startTimestamp = -1;
 			offset += lastTimestamp;
@@ -151,23 +159,23 @@ public class FileConsumer implements Constants, IPushableConsumer,
 		}
 	}
 
-    /**
-     * Out-of-band control message handler
-     *
-     * @param source            Source of message
-     * @param pipe              Pipe that is used to transmit OOB message
-     * @param oobCtrlMsg        OOB control message
-     */
-    public void onOOBControlMessage(IMessageComponent source, IPipe pipe,
+	/**
+	 * Out-of-band control message handler
+	 *
+	 * @param source            Source of message
+	 * @param pipe              Pipe that is used to transmit OOB message
+	 * @param oobCtrlMsg        OOB control message
+	 */
+	public void onOOBControlMessage(IMessageComponent source, IPipe pipe,
 			OOBControlMessage oobCtrlMsg) {
 		// TODO Auto-generated method stub
 	}
 
-    /**
-     * Pipe connection event handler
-     * @param event       Pipe connection event
-     */
-    public void onPipeConnectionEvent(PipeConnectionEvent event) {
+	/**
+	 * Pipe connection event handler
+	 * @param event       Pipe connection event
+	 */
+	public void onPipeConnectionEvent(PipeConnectionEvent event) {
 		switch (event.getType()) {
 			case PipeConnectionEvent.CONSUMER_CONNECT_PUSH:
 				if (event.getConsumer() != this) {
@@ -192,12 +200,12 @@ public class FileConsumer implements Constants, IPushableConsumer,
 		}
 	}
 
-    /**
-     * Initialization
-     *
-     * @throws IOException          I/O exception
-     */
-    private void init() throws IOException {
+	/**
+	 * Initialization
+	 *
+	 * @throws IOException          I/O exception
+	 */
+	private void init() throws IOException {
 		IStreamableFileFactory factory = (IStreamableFileFactory) ScopeUtils
 				.getScopeService(scope, IStreamableFileFactory.class,
 						StreamableFileFactory.class);
@@ -208,9 +216,9 @@ public class FileConsumer implements Constants, IPushableConsumer,
 		if (!file.isFile()) {
 			// Maybe the (previously existing) file has been deleted
 			file.createNewFile();
-		} else if (!file.canWrite())
+		} else if (!file.canWrite()) {
 			throw new IOException("the file is read-only");
-
+		}
 		IStreamableFileService service = factory.getService(file);
 		IStreamableFile flv = service.getStreamableFile(file);
 		if (mode == null || mode.equals(IClientStream.MODE_RECORD)) {
@@ -222,10 +230,10 @@ public class FileConsumer implements Constants, IPushableConsumer,
 		}
 	}
 
-    /**
-     * Reset
-     */
-    synchronized private void uninit() {
+	/**
+	 * Reset
+	 */
+	synchronized private void uninit() {
 		if (writer != null) {
 			writer.close();
 			writer = null;

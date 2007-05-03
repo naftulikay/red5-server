@@ -68,18 +68,14 @@ public abstract class AbstractPipe implements IPipe {
 	public boolean subscribe(IConsumer consumer, Map paramMap) {
 		// Pipe is possibly used by dozens of Threads at once (like many subscribers for one server stream)
 		// so make it synchronized
-		//synchronized (consumers) {
 		// Can't add one consumer twice
 		if (consumers.contains(consumer)) {
 			return false;
 		}
 		consumers.add(consumer);
-		//}
 		// If consumer is listener object register it as listener
 		if (consumer instanceof IPipeConnectionListener) {
-			//synchronized (listeners) {
 			listeners.add((IPipeConnectionListener) consumer);
-			//}
 		}
 		return true;
 	}
@@ -94,17 +90,13 @@ public abstract class AbstractPipe implements IPipe {
 	 */
 	public boolean subscribe(IProvider provider, Map paramMap) {
 		// Shared between possibly dozens of Threads so make it synchronized
-		//synchronized (providers) {
 		if (providers.contains(provider)) {
 			return false;
 		}
 		providers.add(provider);
-		//}
 		// Register event listener if given
 		if (provider instanceof IPipeConnectionListener) {
-			//synchronized (listeners) {
 			listeners.add((IPipeConnectionListener) provider);
-			//}
 		}
 		return true;
 	}
@@ -115,18 +107,14 @@ public abstract class AbstractPipe implements IPipe {
 	 * @return                 <code>true</code> on success, <code>false</code> otherwise
 	 */
 	public boolean unsubscribe(IProvider provider) {
-		//synchronized (providers) {
 		if (!providers.contains(provider)) {
 			return false;
 		}
 		providers.remove(provider);
-		//}
 		fireProviderConnectionEvent(provider,
 				PipeConnectionEvent.PROVIDER_DISCONNECT, null);
 		if (provider instanceof IPipeConnectionListener) {
-			//synchronized (listeners) {
 			listeners.remove(provider);
-			//}
 		}
 		return true;
 	}
@@ -137,18 +125,14 @@ public abstract class AbstractPipe implements IPipe {
 	 * @return                 <code>true</code> on success, <code>false</code> otherwise
 	 */
 	public boolean unsubscribe(IConsumer consumer) {
-		//synchronized (consumers) {
 		if (!consumers.contains(consumer)) {
 			return false;
 		}
 		consumers.remove(consumer);
-		//}
 		fireConsumerConnectionEvent(consumer,
 				PipeConnectionEvent.CONSUMER_DISCONNECT, null);
 		if (consumer instanceof IPipeConnectionListener) {
-			//synchronized (listeners) {
 			listeners.remove(consumer);
-			//}
 		}
 		return true;
 	}
@@ -158,9 +142,7 @@ public abstract class AbstractPipe implements IPipe {
 	 * @param listener      Listener
 	 */
 	public void addPipeConnectionListener(IPipeConnectionListener listener) {
-		//synchronized (listeners) {
 		listeners.add(listener);
-		//}
 	}
 
 	/**
@@ -168,10 +150,7 @@ public abstract class AbstractPipe implements IPipe {
 	 * @param listener      Listener
 	 */
 	public void removePipeConnectionListener(IPipeConnectionListener listener) {
-		//synchronized (listeners) {
 		listeners.remove(listener);
-		//}
-
 	}
 
 	/**
@@ -185,9 +164,7 @@ public abstract class AbstractPipe implements IPipe {
 		IConsumer[] consumerArray = null;
 		// XXX: synchronizing this sometimes causes deadlocks in the code that
 		//      passes the ChunkSize message to the subscribers of a stream
-		//synchronized (consumers) {
 		consumerArray = consumers.toArray(new IConsumer[] {});
-		//}
 		for (IConsumer consumer : consumerArray) {
 			try {
 				consumer.onOOBControlMessage(provider, this, oobCtrlMsg);
@@ -209,9 +186,7 @@ public abstract class AbstractPipe implements IPipe {
 	public void sendOOBControlMessage(IConsumer consumer,
 			OOBControlMessage oobCtrlMsg) {
 		IProvider[] providerArray = null;
-		//synchronized (providers) {
 		providerArray = providers.toArray(new IProvider[] {});
-		//}
 		for (IProvider provider : providerArray) {
 			try {
 				provider.onOOBControlMessage(consumer, this, oobCtrlMsg);
@@ -300,9 +275,7 @@ public abstract class AbstractPipe implements IPipe {
 	 */
 	protected void firePipeConnectionEvent(PipeConnectionEvent event) {
 		IPipeConnectionListener[] listenerArray = null;
-		//synchronized (listeners) {
 		listenerArray = listeners.toArray(new IPipeConnectionListener[] {});
-		//}
 		for (IPipeConnectionListener element : listenerArray) {
 			try {
 				element.onPipeConnectionEvent(event);

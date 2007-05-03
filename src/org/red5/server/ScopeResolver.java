@@ -28,64 +28,61 @@ import org.red5.server.exception.ScopeNotFoundException;
  * Resolves scopes from path
  */
 public class ScopeResolver implements IScopeResolver {
-    /**
-     *  Default host constant
-     */
+	/**
+	 *  Default host constant
+	 */
 	public static final String DEFAULT_HOST = "";
-    /**
-     *  Global scope
-     */
+
+	/**
+	 *  Global scope
+	 */
 	protected IGlobalScope globalScope;
 
-    /**
-     * Getter for global scope
-     * @return      Global scope
-     */
+	/**
+	 * Getter for global scope
+	 * @return      Global scope
+	 */
 	public IGlobalScope getGlobalScope() {
-		return globalScope;  
+		return globalScope;
 	}
 
-    /**
-     * Setter for global scope
-     * @param root        Global scope
-     */
+	/**
+	 * Setter for global scope
+	 * @param root        Global scope
+	 */
 	public void setGlobalScope(IGlobalScope root) {
 		this.globalScope = root;
 	}
 
-    /**
-     * Return scope associated with given path
-     *
-     * @param path        Scope path
-     * @return            Scope object
-     */
+	/**
+	 * Return scope associated with given path
+	 *
+	 * @param path        Scope path
+	 * @return            Scope object
+	 */
 	public IScope resolveScope(String path) {
-        // Start from global scope
-        IScope scope = globalScope;
-        // If there's no path return global scope (e.i. root path scope)
-        if (path == null) {
+		// Start from global scope
+		IScope scope = globalScope;
+		// If there's no path return global scope (e.i. root path scope)
+		if (path == null) {
 			return scope;
 		}
-        // Split path to parts
-        final String[] parts = path.split("/");
-        // Iterate thru them, skip empty parts
-        for (String element : parts) {
-			final String room = element;
+		// Split path to parts
+		final String[] parts = path.split("/");
+		// Iterate thru them, skip empty parts
+		for (String room : parts) {
 			if (room.equals("")) {
 				// Skip empty path elements
 				continue;
 			}
-
 			// Prevent the same subscope from getting created twice
-			synchronized (scope) {
-				if (scope.hasChildScope(room)) {
-					scope = scope.getScope(room);
-				} else if (!scope.equals(globalScope)
-						&& scope.createChildScope(room)) {
-					scope = scope.getScope(room);
-				} else {
-					throw new ScopeNotFoundException(scope, element);
-				}
+			if (scope.hasChildScope(room)) {
+				scope = scope.getScope(room);
+			} else if (!scope.equals(globalScope)
+					&& scope.createChildScope(room)) {
+				scope = scope.getScope(room);
+			} else {
+				throw new ScopeNotFoundException(scope, room);
 			}
 		}
 		return scope;

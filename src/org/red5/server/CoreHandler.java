@@ -64,7 +64,6 @@ public class CoreHandler implements IScopeHandler, CoreHandlerMBean {
 	 * @return                      true if client was registred within scope, false otherwise
 	 */
 	public boolean connect(IConnection conn, IScope scope, Object[] params) {
-
 		log.debug("Connect to core handler ?");
 
 		// Get session id

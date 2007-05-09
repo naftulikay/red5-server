@@ -478,6 +478,8 @@ public class ServerStream extends AbstractStream implements IServerStream,
 				nextRTMPMessage.getBody().release();
 				nextRTMPMessage = null;
 			}
+			ResetMessage reset = new ResetMessage();
+			msgOut.pushMessage(reset);
 			scheduleNextMessage();
 		}
 	}

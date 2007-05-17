@@ -20,5 +20,6 @@
 		<nature>org.eclipse.jdt.core.javanature</nature>
 		<nature>com.jutils.lint4j.core.Nature</nature>
 		<nature>net.sourceforge.metrics.nature</nature>
+		<nature>org.terracotta.dso.ProjectNature</nature>
 	</natures>
 </projectDescription>

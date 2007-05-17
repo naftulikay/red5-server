@@ -77,7 +77,7 @@
 				<property name="maxThreads" value="100" />
 			</bean>
 		</property>
-
+<!-- 
 		<property name="connectors">
 			<list>
 				<bean id="Connector"
@@ -94,7 +94,7 @@
 				</bean>
 			</list>
 		</property>
-
+-->
 		<property name="userRealms">
 			<list>
 				<bean

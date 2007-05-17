@@ -186,7 +186,7 @@ public class RTMPMinaTransport implements RTMPMinaTransportMBean {
 
 		SocketAcceptorConfig config = acceptor.getDefaultConfig();
 		config.setThreadModel(ThreadModel.MANUAL);
-		config.setReuseAddress(true);
+		config.setReuseAddress(false);
 		config.setBacklog(100);
 
 		log.info("TCP No Delay: " + tcpNoDelay);
@@ -205,12 +205,18 @@ public class RTMPMinaTransport implements RTMPMinaTransportMBean {
 			IoFilter filter = new LoggingFilter();
 			acceptor.getFilterChain().addFirst("LoggingFilter", filter);
 		}
-
-		SocketAddress socketAddress = (address == null) ? new InetSocketAddress(
-				port)
-				: new InetSocketAddress(address, port);
-		acceptor.bind(socketAddress, ioHandler);
-
+		
+		SocketAddress socketAddress = null;
+		while (true) {
+			try {
+				socketAddress = (address == null) ? new InetSocketAddress(port) : new InetSocketAddress(address, port);
+				acceptor.bind(socketAddress, ioHandler);
+				break;
+			} catch (Exception e) {
+				port++;
+			}
+		}
+		
 		log.info("RTMP Mina Transport bound to " + socketAddress.toString());
 
 		//create a new mbean for this instance

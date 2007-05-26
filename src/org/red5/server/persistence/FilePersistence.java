@@ -51,7 +51,7 @@ public class FilePersistence extends RamPersistence {
     /**
      * Logger
      */
-    private Log log = LogFactory.getLog(FilePersistence.class.getName());
+    private static Log log = LogFactory.getLog(FilePersistence.class.getName());
     /**
      * Files path
      */

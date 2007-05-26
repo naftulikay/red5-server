@@ -1,4 +1,3 @@
-<?xml version="1.0" encoding="UTF-8"?>
 <con:tc-config xmlns:con="http://www.terracotta.org/config">
   <servers>
     <server name="localhost">
@@ -15,80 +14,8 @@
     <dso>
       <instrumented-classes>
         <include>
-          <class-expression>org.red5.server.GlobalScope</class-expression>
+          <class-expression>org.red5..*</class-expression>
           <honor-transient>true</honor-transient>
-        </include>
-        <include>
-          <class-expression>org.red5.server.Scope</class-expression>
-        </include>
-        <include>
-          <class-expression>org.red5.server.BasicScope</class-expression>
-        </include>
-        <include>
-          <class-expression>org.red5.server.PersistableAttributeStore</class-expression>
-        </include>
-        <include>
-          <class-expression>org.red5.server.AttributeStore</class-expression>
-        </include>
-        <include>
-          <class-expression>org.red5.server.ClientRegistry</class-expression>
-        </include>
-        <include>
-          <class-expression>org.red5.server.Client</class-expression>
-        </include>
-        <include>
-          <class-expression>org.red5.server.CoreHandler</class-expression>
-        </include>
-        <include>
-          <class-expression>org.red5.server.WebScope</class-expression>
-        </include>
-        <include>
-          <class-expression>org.red5.server.Server</class-expression>
-        </include>
-        <include>
-          <class-expression>org.red5.server.net.rtmp.RTMPMinaConnection</class-expression>
-          <honor-transient>true</honor-transient>
-        </include>
-        <include>
-          <class-expression>org.red5.server.net.rtmp.Channel</class-expression>
-        </include>
-        <include>
-          <class-expression>org.red5.server.BaseConnection</class-expression>
-        </include>
-        <include>
-          <class-expression>org.red5.server.net.rtmp.RTMPConnection</class-expression>
-          <honor-transient>true</honor-transient>
-        </include>
-        <include>
-          <class-expression>org.red5.server.stream.ClientBroadcastStream</class-expression>
-        </include>
-        <include>
-          <class-expression>org.red5.server.stream.AbstractClientStream</class-expression>
-        </include>
-        <include>
-          <class-expression>org.red5.server.stream.AbstractStream</class-expression>
-        </include>
-        <include>
-          <class-expression>org.red5.server.stream.PlaylistSubscriberStream</class-expression>
-        </include>
-        <include>
-          <class-expression>org.red5.server.stream.PlaylistSubscriberStream$PlayEngine</class-expression>
-        </include>
-        <include>
-          <class-expression>org.red5.server.messaging.InMemoryPullPullPipe</class-expression>
-        </include>
-        <include>
-          <class-expression>org.red5.server.messaging.AbstractPipe</class-expression>
-          <honor-transient>true</honor-transient>
-          <on-load>
-            <execute>self.listeners = new ArrayList();</execute>
-          </on-load>
-        </include>
-        <include>
-          <class-expression>org.red5.server.messaging.InMemoryPushPushPipe</class-expression>
-        </include>
-        <include>
-          <class-expression>org.red5.server.Context</class-expression>
         </include>
       </instrumented-classes>
       <transient-fields>
@@ -96,13 +23,20 @@
         <field-name>org.red5.server.net.rtmp.RTMPMinaConnection.ioSession</field-name>
         <field-name>org.red5.server.net.rtmp.RTMPConnection.bwContext</field-name>
         <field-name>org.red5.server.messaging.AbstractPipe.listeners</field-name>
-        <field-name>org.red5.server.Server.applicationContext</field-name>
-        <field-name>org.red5.server.Context.applicationContext</field-name>
+        <field-name>org.red5.server.WebScope.servletContext</field-name>
       </transient-fields>
-      <distributed-methods>
-        <method-expression>void org.red5.server.messaging.AbstractPipe.firePipeConnectionEvent(org.red5.server.messaging.PipeConnectionEvent)</method-expression>
-        <method-expression>void org.red5.server.stream.PlaylistSubscriberStream$PlayEngine.pushMessage(org.red5.server.messaging.IPipe, org.red5.server.messaging.IMessage)</method-expression>
-      </distributed-methods>
+      <locks>
+        <named-lock>
+          <method-expression>int org.red5.server.Scope.*etDepth(..)</method-expression>
+          <lock-name>ScopeDepth</lock-name>
+          <lock-level>write</lock-level>
+        </named-lock>
+        <named-lock>
+          <method-expression>* org.red5.server.webapp.oflaDemo.Application.app*(..)</method-expression>
+          <lock-name>oflaDemo</lock-name>
+          <lock-level>write</lock-level>
+        </named-lock>
+      </locks>
     </dso>
     <spring>
       <jee-application name="*">
@@ -113,32 +47,32 @@
             </paths>
             <beans>
               <bean name="global.scope"/>
-              <bean name="global.context"/>
+              <bean name="global.context">
+                <non-distributed-field>applicationContext</non-distributed-field>
+                <non-distributed-field>coreContext</non-distributed-field>
+              </bean>
               <bean name="global.handler"/>
               <bean name="global.clientRegistry"/>
               <bean name="global.serviceInvoker"/>
               <bean name="global.mappingStrategy"/>
               <bean name="red5.scopeResolver"/>
+              <bean name="red5.server">
+                <non-distributed-field>applicationContext</non-distributed-field>
+              </bean>
             </beans>
           </application-context>
-          <application-context>
-            <paths>
-              <path>*/red5-common.xml</path>
-            </paths>
-            <beans>
-              <bean name="red5.server"/>
-            </beans>
-          </application-context>
-          <application-context>
+          <!--<application-context>
             <paths>
               <path>*/red5-web.xml</path>
             </paths>
             <beans>
-              <bean name="web.scope"/>
               <bean name="web.handler"/>
-              <bean name="web.context"/>
+              <bean name="web.context">
+              	<non-distributed-field>applicationContext</non-distributed-field>
+              	<non-distributed-field>coreContext</non-distributed-field>
+              </bean>
             </beans>
-          </application-context>
+          </application-context>-->
         </application-contexts>
       </jee-application>
     </spring>

@@ -67,7 +67,7 @@
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="lib" path="lib/mina-integration-spring-1.1.0.jar"/>
 	<classpathentry kind="lib" path="lib/mina-filter-ssl-1.1.0.jar"/>
-	<classpathentry kind="lib" path="lib/mina-core-1.1.0.jar"/>
+	<classpathentry kind="lib" path="lib/mina-core-1.1.0.jar" sourcepath="C:/steven/mina-1.1.0/core/src/main/java"/>
 	<classpathentry kind="lib" path="lib/jmxtools.jar"/>
 	<classpathentry kind="lib" path="lib/jmxremote.jar"/>
 	<classpathentry kind="lib" path="lib/rmissl.jar"/>

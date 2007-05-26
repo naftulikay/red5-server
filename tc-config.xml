@@ -17,6 +17,10 @@
           <class-expression>org.red5..*</class-expression>
           <honor-transient>true</honor-transient>
         </include>
+        <include>
+          <class-expression>javax.management..*</class-expression>
+          <honor-transient>true</honor-transient>
+        </include>
       </instrumented-classes>
       <transient-fields>
         <field-name>org.red5.server.Scope.serviceHandlers</field-name>
@@ -24,16 +28,70 @@
         <field-name>org.red5.server.net.rtmp.RTMPConnection.bwContext</field-name>
         <field-name>org.red5.server.messaging.AbstractPipe.listeners</field-name>
         <field-name>org.red5.server.WebScope.servletContext</field-name>
+        <field-name>org.red5.server.PersistableAttributeStore.store</field-name>
+        <field-name>org.red5.server.AttributeStore.attributes</field-name>
+        <field-name>org.red5.server.AttributeStore.hashes</field-name>
+        <field-name>org.red5.server.net.rtmp.RTMPConnection.waitForHandshakeService</field-name>
+        <field-name>org.red5.server.net.rtmp.RTMPConnection.waitForHandshakeJob</field-name>
+        <field-name>org.red5.server.net.rtmp.RTMPConnection.oName</field-name>
+        <field-name>org.red5.server.net.rtmp.RTMPConnection.keepAliveJobName</field-name>
+        <field-name>org.red5.server.net.rtmp.RTMPConnection.lastPingSent</field-name>
+        <field-name>org.red5.server.net.rtmp.RTMPConnection.lastPongReceived</field-name>
+        <field-name>org.red5.server.net.rtmp.RTMPConnection.lastBytesRead</field-name>
+        <field-name>org.red5.server.net.rtmp.RTMPConnection.clientBytesRead</field-name>
+        <field-name>org.red5.server.net.rtmp.RTMPConnection.lastPingTime</field-name>
+        <field-name>org.red5.server.net.rtmp.RTMPConnection.usedStreams</field-name>
+        <field-name>org.red5.server.net.rtmp.RTMPConnection.streamBuffers</field-name>
+        <field-name>org.red5.server.BaseConnection.readMessages</field-name>
+        <field-name>org.red5.server.BaseConnection.writtenMessages</field-name>
+        <field-name>org.red5.server.BaseConnection.droppedMessages</field-name>
+        <field-name>org.red5.server.stream.PlaylistSubscriberStream.executor</field-name>
+        <field-name>org.red5.server.stream.PlaylistSubscriberStream.bwController</field-name>
+        <field-name>org.red5.server.stream.PlaylistSubscriberStream.bwContext</field-name>
+        <field-name>org.red5.server.stream.PlaylistSubscriberStream.items</field-name>
+        <field-name>org.red5.server.stream.PlaylistSubscriberStream$PlayEngine.schedulingService</field-name>
+        <field-name>org.red5.server.stream.PlaylistSubscriberStream$PlayEngine.audioBucket</field-name>
+        <field-name>org.red5.server.stream.PlaylistSubscriberStream$PlayEngine.videoBucket</field-name>
+        <field-name>org.red5.server.stream.PlaylistSubscriberStream$PlayEngine.lastMessage</field-name>
+        <field-name>org.red5.server.stream.PlaylistSubscriberStream$PlayEngine.pullAndPushFuture</field-name>
+        <field-name>org.red5.server.stream.PlaylistSubscriberStream$PlayEngine.pendingMessage</field-name>
+        <field-name>org.red5.server.stream.AbstractClientStream.conn</field-name>
+        <field-name>org.red5.server.stream.provider.FileProvider.reader</field-name>
       </transient-fields>
       <locks>
         <named-lock>
-          <method-expression>int org.red5.server.Scope.*etDepth(..)</method-expression>
+          <method-expression>* org.red5.server.Scope.*etDepth(..)</method-expression>
           <lock-name>ScopeDepth</lock-name>
+          <lock-level>write</lock-level>
+        </named-lock>
+        <named-lock>
+          <method-expression>* org.red5.server.Scope.*connect(..)</method-expression>
+          <lock-name>ScopeConnections</lock-name>
           <lock-level>write</lock-level>
         </named-lock>
         <named-lock>
           <method-expression>* org.red5.server.webapp.oflaDemo.Application.app*(..)</method-expression>
           <lock-name>oflaDemo</lock-name>
+          <lock-level>write</lock-level>
+        </named-lock>
+        <named-lock>
+          <method-expression>* org.red5.server.BasicScope.*EventListener(..)</method-expression>
+          <lock-name>ScopeEvents</lock-name>
+          <lock-level>write</lock-level>
+        </named-lock>
+        <named-lock>
+          <method-expression>* org.red5.server.service.PendingCall.*Result(..)</method-expression>
+          <lock-name>PendingCallResult</lock-name>
+          <lock-level>write</lock-level>
+        </named-lock>
+        <named-lock>
+          <method-expression>* org.red5.server.stream.PlaylistSubscriberStream$PlayEngine.*(..)</method-expression>
+          <lock-name>PlayEngine</lock-name>
+          <lock-level>write</lock-level>
+        </named-lock>
+        <named-lock>
+          <method-expression>* org.red5.server.stream.AbstractClientStream.setClientBufferDuration(..)</method-expression>
+          <lock-name>clientBufferDuration</lock-name>
           <lock-level>write</lock-level>
         </named-lock>
       </locks>
@@ -61,18 +119,6 @@
               </bean>
             </beans>
           </application-context>
-          <!--<application-context>
-            <paths>
-              <path>*/red5-web.xml</path>
-            </paths>
-            <beans>
-              <bean name="web.handler"/>
-              <bean name="web.context">
-              	<non-distributed-field>applicationContext</non-distributed-field>
-              	<non-distributed-field>coreContext</non-distributed-field>
-              </bean>
-            </beans>
-          </application-context>-->
         </application-contexts>
       </jee-application>
     </spring>

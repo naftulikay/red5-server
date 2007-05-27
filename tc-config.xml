@@ -49,6 +49,8 @@
         <field-name>org.red5.server.BaseConnection.writtenMessages</field-name>
         <field-name>org.red5.server.BaseConnection.droppedMessages</field-name>
         <field-name>org.red5.server.BaseConnection.client</field-name>
+        <field-name>org.red5.server.BaseConnection.basicScopes</field-name>
+        <field-name>org.red5.server.BaseConnection.scope</field-name>
         <field-name>org.red5.server.stream.AbstractStream.codecInfo</field-name>
         <field-name>org.red5.server.stream.PlaylistSubscriberStream.executor</field-name>
         <field-name>org.red5.server.stream.PlaylistSubscriberStream.bwController</field-name>
@@ -66,7 +68,6 @@
         <field-name>org.red5.server.stream.BroadcastScope.compCounter</field-name>
         <field-name>org.red5.server.stream.BroadcastScope.hasRemoved</field-name>
         <field-name>org.red5.server.stream.ClientBroadcastStream.livePipe</field-name>
-        <field-name>org.red5.server.BaseConnection.basicScopes</field-name>
         <field-name>org.red5.server.stream.ClientBroadcastStream.videoCodecFactory</field-name>
         <field-name>org.red5.server.stream.ClientBroadcastStream.checkVideoCodec</field-name>
         <field-name>org.red5.server.stream.ClientBroadcastStream.firstPacketTime</field-name>
@@ -82,6 +83,12 @@
         <field-name>org.red5.server.stream.ClientBroadcastStream.creationTime</field-name>
         <field-name>org.red5.server.stream.ClientBroadcastStream.sendStartNotification</field-name>
         <field-name>org.red5.server.stream.ClientBroadcastStream.recordingFile</field-name>
+        <field-name>org.red5.server.Client.oName</field-name>
+        <field-name>org.red5.server.so.SharedObjectScope.serverListeners</field-name>
+        <field-name>org.red5.server.so.SharedObjectScope.securityHandlers</field-name>
+        <field-name>org.red5.server.so.SharedObjectScope.log</field-name>
+        <field-name>org.red5.server.net.rtmp.RTMPConnection.deferredResults</field-name>
+        <field-name>org.red5.server.so.SharedObject.listeners</field-name>
       </transient-fields>
       <locks>
         <named-lock>

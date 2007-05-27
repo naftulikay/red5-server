@@ -27,6 +27,8 @@
         <field-name>org.red5.server.net.rtmp.RTMPMinaConnection.ioSession</field-name>
         <field-name>org.red5.server.net.rtmp.RTMPConnection.bwContext</field-name>
         <field-name>org.red5.server.messaging.AbstractPipe.listeners</field-name>
+        <field-name>org.red5.server.messaging.AbstractPipe.providers</field-name>
+        <field-name>org.red5.server.messaging.AbstractPipe.consumers</field-name>        
         <field-name>org.red5.server.WebScope.servletContext</field-name>
         <field-name>org.red5.server.PersistableAttributeStore.store</field-name>
         <field-name>org.red5.server.AttributeStore.attributes</field-name>
@@ -42,9 +44,12 @@
         <field-name>org.red5.server.net.rtmp.RTMPConnection.lastPingTime</field-name>
         <field-name>org.red5.server.net.rtmp.RTMPConnection.usedStreams</field-name>
         <field-name>org.red5.server.net.rtmp.RTMPConnection.streamBuffers</field-name>
+        <field-name>org.red5.server.net.rtmp.RTMPConnection.nextBytesRead</field-name>
         <field-name>org.red5.server.BaseConnection.readMessages</field-name>
         <field-name>org.red5.server.BaseConnection.writtenMessages</field-name>
         <field-name>org.red5.server.BaseConnection.droppedMessages</field-name>
+        <field-name>org.red5.server.BaseConnection.client</field-name>
+        <field-name>org.red5.server.stream.AbstractStream.codecInfo</field-name>
         <field-name>org.red5.server.stream.PlaylistSubscriberStream.executor</field-name>
         <field-name>org.red5.server.stream.PlaylistSubscriberStream.bwController</field-name>
         <field-name>org.red5.server.stream.PlaylistSubscriberStream.bwContext</field-name>
@@ -57,6 +62,26 @@
         <field-name>org.red5.server.stream.PlaylistSubscriberStream$PlayEngine.pendingMessage</field-name>
         <field-name>org.red5.server.stream.AbstractClientStream.conn</field-name>
         <field-name>org.red5.server.stream.provider.FileProvider.reader</field-name>
+        <field-name>org.red5.server.stream.ClientBroadcastStream.publishedName</field-name>
+        <field-name>org.red5.server.stream.BroadcastScope.compCounter</field-name>
+        <field-name>org.red5.server.stream.BroadcastScope.hasRemoved</field-name>
+        <field-name>org.red5.server.stream.ClientBroadcastStream.livePipe</field-name>
+        <field-name>org.red5.server.BaseConnection.basicScopes</field-name>
+        <field-name>org.red5.server.stream.ClientBroadcastStream.videoCodecFactory</field-name>
+        <field-name>org.red5.server.stream.ClientBroadcastStream.checkVideoCodec</field-name>
+        <field-name>org.red5.server.stream.ClientBroadcastStream.firstPacketTime</field-name>
+        <field-name>org.red5.server.stream.ClientBroadcastStream.audioTime</field-name>
+        <field-name>org.red5.server.stream.ClientBroadcastStream.videoTime</field-name>
+        <field-name>org.red5.server.stream.ClientBroadcastStream.dataTime</field-name>
+        <field-name>org.red5.server.stream.ClientBroadcastStream.connMsgOut</field-name>
+        <field-name>org.red5.server.stream.ClientBroadcastStream.recordPipe</field-name>
+        <field-name>org.red5.server.stream.ClientBroadcastStream.recording</field-name>
+        <field-name>org.red5.server.stream.ClientBroadcastStream.recordingFilename</field-name>
+        <field-name>org.red5.server.stream.ClientBroadcastStream.closed</field-name>
+        <field-name>org.red5.server.stream.ClientBroadcastStream.bytesReceived</field-name>
+        <field-name>org.red5.server.stream.ClientBroadcastStream.creationTime</field-name>
+        <field-name>org.red5.server.stream.ClientBroadcastStream.sendStartNotification</field-name>
+        <field-name>org.red5.server.stream.ClientBroadcastStream.recordingFile</field-name>
       </transient-fields>
       <locks>
         <named-lock>

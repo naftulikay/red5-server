@@ -1,0 +1,75 @@
+<?xml version="1.0"?>
+<project name="AS3 Compile" default="launch" basedir="./">
+	<property file="build.properties"/>
+
+	<target name="launch" depends="build">
+		<condition property="runtarget" value="launchtab">
+			<equals arg1="${launchmethod}" arg2="tab" />
+		</condition>
+		<condition property="runtarget" value="launchstandalone">
+			<equals arg1="${launchmethod}" arg2="ext" />
+		</condition>
+		<condition property="runtarget" value="launchie">
+			<equals arg1="${launchmethod}" arg2="ie" />
+		</condition>
+		<condition property="runtarget" value="launchfirefox">
+			<equals arg1="${launchmethod}" arg2="ff" />
+		</condition>
+		
+		<antcall target="${runtarget}" />
+	</target>
+	
+	<target name="build" depends="compile">
+		<basename file="${output.file}" property="basefilename" suffix=".swf"/>
+		<!-- remove following line to avoid creation of html file -->
+		<antcall target="copyhtml" />
+	</target>
+	
+	<target name="compile">
+	    <exec executable="${flex2.dir}/${compiler}">
+			<!-- comment out following line to remove this dir from your classpath -->
+			<!-- you can also add additional class paths or any other mxmlc command line option here -->
+			<arg line="-source-path='D:/FlashDevelop_AS3/Library'" />
+	    	<arg line="-default-frame-rate=${framerate}" />
+	    	<arg line="-default-background-color=0x${background.color}" />
+			<arg line="-default-size ${width} ${height}" />
+		    <arg line="'${basedir}/${source.dir}/${source.file}'" />
+			<arg line="-o=${deploy.dir}/${output.file}"/>
+	    </exec>
+	</target>
+	
+	<target name="copyhtml">
+		<delete file="${basedir}/${deploy.dir}/${basefilename}.html" />
+		<filter token="basefilename" value="${basefilename}" />
+		<filter token="width" value="${width}" />
+		<filter token="height" value="${height}" />
+		<filter token="color" value="${background.color}" />
+		<copy file="html_template/template.html" tofile="${basedir}/${deploy.dir}/${basefilename}.html" filtering="true" />
+		<copy file="html_template/AC_OETags.js" tofile="${basedir}/${deploy.dir}/AC_OETags.js" />
+	</target>
+	
+	<target name="launchtab">
+		<exec executable="${flashdevelop}" spawn="true">
+			<arg line="'${basedir}\${deploy.dir}\${output.file}'" />
+		</exec>
+	</target>
+	
+	<target name="launchstandalone">
+		<exec executable="${flex2.dir}/${saplayer}" spawn="true">
+			<arg line="${basedir}\${deploy.dir}\${output.file}" />
+		</exec>
+	</target>	
+
+	<target name="launchie">
+		<exec executable="${ie}" spawn="true">
+			<arg line="${basedir}\${deploy.dir}\${basefilename}.html" />
+		</exec>
+	</target>
+	
+	<target name="launchfirefox">
+		<exec executable="${firefox}" spawn="true">
+			<arg line="${deploy.dir}\${basefilename}.html" />
+		</exec>
+	</target>
+	
+</project>

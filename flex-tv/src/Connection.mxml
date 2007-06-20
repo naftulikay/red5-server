@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" width="100%" height="100%" xmlns:MyComp="*" creationComplete="createConnection();">
+	<mx:ViewStack id="vsMain"  width="100%" height="100%" x="0" y="0" backgroundColor="#000000"> 
+	
+		<mx:Canvas id="pnlInit" backgroundColor="#000000">
+			<mx:Panel x="0" y="0" width="100%" height="100%" layout="absolute" cornerRadius="0" title="Info" backgroundColor="#808080">
+				<mx:ProgressBar x="10" y="86" indeterminate="true" label="Connecting to media server..." labelPlacement="center" height="22" width="280" alpha="0.6" borderColor="#808080" themeColor="#c0c0c0"/>
+			</mx:Panel>
+        </mx:Canvas>
+		<mx:Canvas id="pnlConnFailed" backgroundColor="#000000" >
+			<mx:Panel x="0" y="0" width="100%" height="100%" layout="absolute" cornerRadius="0" title="Alert" backgroundColor="#808080">
+				<mx:Text x="35" y="33" text="Connection to remote server failed. Server is probably down." fontSize="15" textAlign="center" height="99" width="230" color="#ffffff"/>
+				<mx:Text x="84" y="114" text="Reconnecting.... 5 sec." id="txt_conn_failed_reconnect" color="#ffffff" fontSize="10"/>
+			</mx:Panel>
+		</mx:Canvas>
+        <mx:Canvas id="pnlConnClosed" cornerRadius="0" backgroundColor="#000000">
+        	<mx:Panel x="0" y="0" width="100%" height="100%" layout="absolute" cornerRadius="0" title="Alert"  backgroundColor="#808080">
+        		<mx:Text x="60" y="36" id="txt_connClosed" text="Connection closed by remote server" fontSize="15" textAlign="center" height="50" width="180" color="#ffffff"/>
+        		<mx:Text x="84" y="94" text="Reconnecting.... 5 sec." id="txt_conn_closed_reconnect" color="#ffffff" fontSize="10"/>
+        	</mx:Panel>
+        </mx:Canvas>
+        <mx:Canvas id="pnlReklama" label="Reklama" width="100%" height="100%">
+        	<mx:VideoDisplay x="0" y="0" width="100%" height="100%" source="rtmp://127.0.0.1/tv" />
+        
+        </mx:Canvas>
+		<mx:Canvas id="pnlVideo"  backgroundColor="#000000" >
+			 <MyComp:VideoPod  nc="{ nc }" streamName="live0" id="idPod" /> 
+		</mx:Canvas>
+		
+	</mx:ViewStack>
+	<mx:Script>
+		<![CDATA[
+			import flash.profiler.showRedrawRegions;
+			import flash.events.TimerEvent;
+    		import flash.utils.Timer;
+			import mx.collections.ArrayCollection;
+            import mx.controls.Alert;
+            import flash.net.NetConnection;
+
+            [Bindable]
+          	public var appName:String;
+          	public var _tv:tv;
+          	private var timerVar:int;
+          	private var minuteTimer:Timer;
+          	
+            [Bindable]
+            public var nc:NetConnection;
+            
+            public function init():void
+            {
+            	
+            }
+			public function createConnection():void
+            {
+            	timerVar = 5;
+            	nc = new NetConnection();
+            	minuteTimer = new Timer(1000, 5);
+            	minuteTimer.addEventListener(TimerEvent.TIMER, onTick);
+            	minuteTimer.addEventListener(TimerEvent.TIMER_COMPLETE, onTimerComplete);
+            	//createConnection();
+            	vsMain.selectedChild = pnlInit;
+                nc.addEventListener( NetStatusEvent.NET_STATUS, netStatusHandler );
+                nc.addEventListener( AsyncErrorEvent.ASYNC_ERROR, asyncStatusHandler );
+                nc.objectEncoding = flash.net.ObjectEncoding.AMF3;
+                nc.connect( "rtmp://127.0.0.1/tv");
+                //nc.connect( "rtmp://10.2.0.10/tv");
+            }        
+            
+            /*public function getCurrentFLV():void
+            {
+            	nc.call("Service.getCurrentFLV", res);
+                res = new Responder(response, null);
+            }*/
+            
+            public function response(res:Array):void
+            {
+            	/*txt_currentFLV_name.text = res[0]+"";  
+            	txt_currentFLV_length.text = res[1]+"";   */     	
+            }
+            
+            public function asyncStatusHandler( event:AsyncErrorEvent ):void
+            {
+            	
+            }
+           
+			public function netStatusHandler( event:NetStatusEvent ):void
+			{                      
+				switch( event.info.code ) 
+				{
+					case "NetConnection.Connect.Success":
+						//remLab.initSO(nc);
+						vsMain.selectedChild = pnlVideo;
+						try
+						{
+							idPod.init();
+						} catch (err:Error){}
+					break;
+					case "NetConnection.Connect.Closed":
+						vsMain.selectedChild = pnlConnClosed;
+						minuteTimer.start();
+						//txt_conn_closed_reconnect.text="Reconnecting.... 5 sec."
+					break;
+					case "NetConnection.Connect.Failed":
+						vsMain.selectedChild = pnlConnFailed;
+						minuteTimer.start();
+						//txt_conn_failed_reconnect.text="Reconnecting.... 5 sec."
+					break;                    
+				}
+			}
+			
+			
+			private function onTick(evt:TimerEvent):void
+			{
+				timerVar--;
+				try
+				{
+				txt_conn_closed_reconnect.text="Reconnecting.... "+ (timerVar)+" sec.";
+				} catch(err:Error){}
+				try 
+				{
+				txt_conn_failed_reconnect.text="Reconnecting.... "+ (timerVar)+" sec.";
+				} catch(err:Error){}
+			}
+			
+			private function onTimerComplete(evt:TimerEvent):void
+			{
+				//timerVar = 5;
+				minuteTimer.reset();
+				try
+				{
+				txt_conn_closed_reconnect.text="Reconnecting.... 5 sec.";
+				} catch(err:Error){}
+				try 
+				{
+				txt_conn_failed_reconnect.text="Reconnecting.... 5 sec.";
+				} catch(err:Error){}
+				createConnection();
+				
+			}
+			
+			private function back2Login():void
+			{
+				//minuteTimer.reset();
+				//timerVar = 5;
+				//remLab.viewstack.selectedChild=remLab.can_conn;
+			}
+	            
+		]]>
+	</mx:Script>
+	
+</mx:Canvas>

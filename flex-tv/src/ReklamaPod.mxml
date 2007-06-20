@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas  xmlns:mx="http://www.adobe.com/2006/mxml" 
+    xmlns="*"
+    
+    creationComplete="init()"
+      borderColor="#ffffff" backgroundColor="#ffffff">
+    <mx:Script>
+        <![CDATA[
+            import flash.media.Video;
+			import flash.display.StageDisplayState;
+			import flash.events.*;
+			
+            private var microphone:Microphone;
+            private var camera:Camera;
+            private var video:Video;
+            private var isFullscreen:Boolean;
+            [Bindable]
+            public var userItem:Object;
+            public var nc:NetConnection;
+            private var ns:NetStream;
+            
+            [Bindable]
+            public var isSender:Boolean;
+            
+            
+        	
+            private function init():void
+            {
+            	
+                ns = new NetStream( nc );
+                nc.addEventListener( NetStatusEvent.NET_STATUS, netStatusHandler );
+                
+                video = new Video( 320, 240 );
+            
+                if( isSender ) {
+                    camera = Camera.getCamera();
+                    // 2k bytes (or ~16kbps) of bandwidth
+                    camera.setQuality( 16384 / 4, 0 );
+                    camera.setMode( 160, 120, 15, false );
+                    // Set loopback as compressed
+                    camera.setLoopback( true );            
+                    video.attachCamera( camera );
+                    ns.attachCamera( camera );
+                    microphone = Microphone.getMicrophone();
+                    ns.attachAudio( microphone );
+                    ns.publish( userItem.identifier );                        
+                } else {
+                    video.attachNetStream( ns );    
+                    //Logger.debug( "VIDEOCHATPOD: play(" + userItem.identifier + ")" );
+                    ns.play( "live0", -1 ); 
+                                     
+                }
+                videoDisplay.video = video;
+               	stage.addEventListener( FullScreenEvent.FULL_SCREEN, fullScreenHandler );
+                
+            }
+            
+            public function netStatusHandler( event:NetStatusEvent ):void
+            {
+               // Logger.debug( "MAIN:connectionSuccess:Success" );   
+               txt_length.text = event.info.code;     
+               switch(event.info.code)
+               {
+               		case "NetConnection.Connect.Closed":
+               			txt_length.text = "Poustim reklamu..";
+               			break;
+               } 
+
+            }
+            
+            private function toggle():void{
+            	if(!isFullscreen){
+                	this.goFullScreen();	
+            	} else {
+                	this.exitFullScreen();
+            	}
+        	}
+        
+       	 	private function goFullScreen():void {
+               stage.displayState = StageDisplayState.FULL_SCREEN;       
+        	}
+        	
+        	private function exitFullScreen():void {
+               stage.displayState = StageDisplayState.NORMAL;
+        	}
+
+        	private function fullScreenHandler( event:FullScreenEvent ) :void
+        	{
+        		if(!event.fullScreen)
+        		{
+        			videoDisplay.width=320;
+                	videoDisplay.height=240;
+                	btn_fullscreen.label = "Fullscreen";
+                	isFullscreen = false;
+        		}
+        		else
+        		{
+        			videoDisplay.width=stage.width;
+                	videoDisplay.height=stage.height;
+                	btn_fullscreen.label = "Normal";
+                	isFullscreen = true;
+        		}
+        	}
+        		
+        	
+			
+        ]]>
+    </mx:Script>
+    <VideoContainer
+        id="videoDisplay"
+          width="320" height="240"/>
+    <mx:Button x="10" y="10" label="Fullscreen" alpha="0.70" id="btn_fullscreen" click="{toggle();}"/>
+    <mx:TextInput x="10" y="40" id="txt_length"/>
+    
+</mx:Canvas>

@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas  xmlns:mx="http://www.adobe.com/2006/mxml" xmlns="*" creationComplete="init()" borderColor="#ffffff" backgroundColor="#000000">
+    <mx:Script>
+        <![CDATA[
+        	import mx.controls.Menu;
+        	import mx.events.SliderEvent;
+            import flash.media.Video;
+			import flash.display.StageDisplayState;
+			import flash.events.*;
+			import mx.events.SliderEvent;
+            import mx.controls.sliderClasses.Slider;
+			import flash.media.Sound;
+    		import flash.media.SoundChannel;
+    		import flash.media.SoundTransform;
+
+
+            private var microphone:Microphone;
+            private var camera:Camera;
+            private var video:Video;
+            private var isFullscreen:Boolean;
+            [Bindable]            
+            public var nc:NetConnection;
+            public var streamName:String;
+            private var ns:NetStream;
+            private var st:SoundTransform;
+            private var isMenu:Boolean = true;
+            
+            
+            
+        	
+            public function init():void
+            {            	
+                ns = new NetStream( nc );
+                nc.addEventListener( NetStatusEvent.NET_STATUS, netStatusHandler );                
+                video = new Video( 320, 240 );
+                video.attachNetStream( ns ); 
+                initVolume(80);
+                ns.play( streamName ); 
+                videoDisplay.video = video;
+               	stage.addEventListener( FullScreenEvent.FULL_SCREEN, fullScreenHandler );
+               	
+            }
+            
+           	
+
+            
+            private function updateVolume(event:SliderEvent):void
+            {
+            	var st:SoundTransform = ns.soundTransform;
+				st.volume = (volume.value)*0.01;
+				ns.soundTransform = st;
+				
+
+            }
+            private function initVolume(vol:Number):void
+            {
+            	var st:SoundTransform = ns.soundTransform;
+				st.volume = vol*0.01;
+				ns.soundTransform = st;
+				volume.value = vol;
+            }
+            public function netStatusHandler( event:NetStatusEvent ):void
+            {
+               switch(event.info.code)
+               {
+               		case "NetConnection.Connect.Closed":
+               			break;
+               } 
+
+            }
+            
+            private function toggle():void{
+            	if(!isFullscreen){
+                	this.goFullScreen();	
+            	} else {
+                	this.exitFullScreen();
+            	}
+        	}
+        
+       	 	private function goFullScreen():void {
+               stage.displayState = StageDisplayState.FULL_SCREEN;       
+        	}
+        	
+        	private function exitFullScreen():void {
+               stage.displayState = StageDisplayState.NORMAL;
+        	}
+        	
+
+        	private function fullScreenHandler( event:FullScreenEvent ) :void
+        	{
+        		if(!event.fullScreen)
+        		{
+        			videoDisplay.width=320;
+                	videoDisplay.height=240;
+                	btn_fullscreen.label = "Fullscreen";
+                	isFullscreen = false;
+        		}
+        		else
+        		{
+        			videoDisplay.width=stage.width;
+                	videoDisplay.height=stage.height;
+                	btn_fullscreen.label = "Normal";
+                	isFullscreen = true;
+        		}
+        	}
+        	
+        	private function moveImage():void {
+                if (isMenu) {
+                	myMove.end();
+                	myMove.xTo=-270; 
+                	myMove.play();
+                	isMenu = false;
+                }
+                else 
+                {
+                	myMove.end();
+                	myMove.xTo=0; 
+                	myMove.play();
+                	isMenu = true;
+                }
+            }
+        	
+			
+        ]]>
+    </mx:Script>
+    <VideoContainer id="videoDisplay" width="320" height="240"/>
+    <mx:Move id="myMove" target="{idController}"/>
+    <mx:Canvas x="0" y="0" width="290"  backgroundColor="#c0c0c0" cornerRadius="0" backgroundAlpha="0.17" alpha="1.0" id="idController" height="22">
+    	<mx:Button label="Fullscreen" alpha="0.70" id="btn_fullscreen" click="{toggle();}" y="0" x="0"/>
+    	<mx:HSlider x="96" y="0" id="volume" liveDragging="true" change="{updateVolume(event);}" minimum="0" maximum="100" snapInterval="1" height="20"/>
+    	<mx:Canvas x="270" y="0" width="20" id="idDrzatko" mouseDown="moveImage();" height="22" backgroundColor="#8000ff" backgroundAlpha="0.26">
+    	</mx:Canvas>
+     </mx:Canvas>
+</mx:Canvas>

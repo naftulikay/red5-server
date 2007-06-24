@@ -19,6 +19,7 @@ package org.red5.server.net.remoting.codec;
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  */
 
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -32,6 +33,7 @@ import org.red5.io.object.Deserializer;
 import org.red5.io.object.BaseInput.ReferenceMode;
 import org.red5.server.net.protocol.ProtocolState;
 import org.red5.server.net.protocol.SimpleProtocolDecoder;
+import org.red5.server.net.remoting.FlexMessagingService;
 import org.red5.server.net.remoting.message.RemotingCall;
 import org.red5.server.net.remoting.message.RemotingPacket;
 
@@ -151,24 +153,22 @@ public class RemotingProtocolDecoder implements SimpleProtocolDecoder {
 				throw new RuntimeException("AMF0 array type expected but found " + type);
 			}
 			int elements = in.getInt();
-			if (elements != 1) {
-				throw new RuntimeException("Array containing one element expected but found " + elements + " elements");
+			boolean isAMF3 = false;
+			List<Object> values = new ArrayList<Object>();
+			for (int j=0; j<elements; j++) {
+				byte amf3Check = in.get();
+				in.position(in.position()-1);
+				isAMF3 = (amf3Check == AMF.TYPE_AMF3_OBJECT);
+				if (isAMF3) {
+					input = new org.red5.io.amf3.Input(in);
+				} else {
+					input = new Input(in);
+				}
+				// Prepare remoting mode
+				input.reset(ReferenceMode.MODE_REMOTING);
+				
+				values.add(deserializer.deserialize(input));
 			}
-			
-			byte amf3Check = in.get();
-			in.position(in.position()-1);
-			boolean isAMF3 = (amf3Check == AMF.TYPE_AMF3_OBJECT);
-			if (isAMF3) {
-				input = new org.red5.io.amf3.Input(in);
-			} else {
-				input = new Input(in);
-			}
-			// Prepare remoting mode
-			input.reset(ReferenceMode.MODE_REMOTING);
-			
-			Object value = deserializer.deserialize(input);
-
-			// log.info(value);
 
 			String serviceName;
 			String serviceMethod;
@@ -182,10 +182,19 @@ public class RemotingProtocolDecoder implements SimpleProtocolDecoder {
 				serviceMethod = serviceString;
 			}
 
+			boolean isMessaging = false;
+			if ("".equals(serviceName) && "null".equals(serviceMethod)) {
+				// Use fixed service and method name for Flex messaging requests,
+				// this probably will change in the future.
+				serviceName = FlexMessagingService.SERVICE_NAME;
+				serviceMethod = "handleRequest";
+				isMessaging = true;
+			}
+			
 			if (log.isDebugEnabled()) {
 				log.debug("Service: " + serviceName + " Method: " + serviceMethod);
 			}
-			Object[] args = new Object[] { value };
+			Object[] args = (Object[]) values.toArray(new Object[values.size()]);
 			if (log.isDebugEnabled()) {
 				for (Object element : args) {
 					log.debug("> " + element);
@@ -193,7 +202,7 @@ public class RemotingProtocolDecoder implements SimpleProtocolDecoder {
 			}
 
 			// Add the call to the list
-			calls.add(new RemotingCall(serviceName, serviceMethod, args, clientCallback, isAMF3));
+			calls.add(new RemotingCall(serviceName, serviceMethod, args, clientCallback, isAMF3, isMessaging));
 		}
 		return calls;
 	}

@@ -24,7 +24,7 @@ package org.red5.samples.publisher.events
 	import org.red5.samples.publisher.control.DashboardController;
 	
 	/**
-	 * 
+	 * @copy org.red5.samples.publisher.command.ChangeSettingsViewCommand
 	 * @author Thijs Triemstra
 	 */	
 	public class ChangeSettingsViewEvent extends CairngormEvent 

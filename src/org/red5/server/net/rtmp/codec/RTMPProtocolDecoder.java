@@ -37,6 +37,7 @@ import org.red5.server.api.IContext;
 import org.red5.server.api.IScope;
 import org.red5.server.api.Red5;
 import org.red5.server.api.IConnection.Encoding;
+import org.red5.server.net.protocol.HandshakeFailedException;
 import org.red5.server.net.protocol.ProtocolException;
 import org.red5.server.net.protocol.ProtocolState;
 import org.red5.server.net.protocol.SimpleProtocolDecoder;
@@ -131,6 +132,14 @@ public class RTMPProtocolDecoder implements Constants, SimpleProtocolDecoder,
 					break;
 				}
 			}
+		} catch (HandshakeFailedException hfe) {
+			IConnection conn = Red5.getConnectionLocal();
+			if (conn != null) {
+				conn.close();
+			} else {
+				log.error("Handshake validation failed but no current connection!?");
+			}
+			return null;
 		} catch (ProtocolException pvx) {
 			log.error("Error decoding buffer", pvx);
 		} catch (Exception ex) {
@@ -178,12 +187,16 @@ public class RTMPProtocolDecoder implements Constants, SimpleProtocolDecoder,
 					return decodePacket(rtmp, in);
 				case RTMP.STATE_ERROR:
 					// attempt to correct error
+					return null;
 				case RTMP.STATE_CONNECT:
 				case RTMP.STATE_HANDSHAKE:
 					return decodeHandshake(rtmp, in);
 				default:
 					return null;
 			}
+		} catch (ProtocolException pe) {
+			// Raise to caller unmodified
+			throw pe;
 		} catch (RuntimeException e) {
 			log.error("Error in packet at " + start, e);
 			throw new ProtocolException("Error during decoding");
@@ -221,7 +234,9 @@ public class RTMPProtocolDecoder implements Constants, SimpleProtocolDecoder,
 			}
 
 			if (rtmp.getState() == RTMP.STATE_HANDSHAKE) {
-				log.debug("Handshake reply");
+				if (log.isDebugEnabled()) {
+					log.debug("Handshake reply");
+				}
 				if (remaining < HANDSHAKE_SIZE) {
 					if (log.isDebugEnabled()) {
 						log.debug("Handshake reply too small, buffering. remaining: " + remaining);
@@ -229,6 +244,14 @@ public class RTMPProtocolDecoder implements Constants, SimpleProtocolDecoder,
 					rtmp.bufferDecoding(HANDSHAKE_SIZE);
 					return null;
 				} else {
+					if (!rtmp.validateHandshakeReply(in, 0, HANDSHAKE_SIZE)) {
+						if (log.isDebugEnabled()) {
+							log.debug("Handshake reply validation failed, disconnecting client.");
+						}
+						in.skip(HANDSHAKE_SIZE);
+						rtmp.setState(RTMP.STATE_ERROR);
+						throw new HandshakeFailedException("Handshake validation failed");
+					}
 					in.skip(HANDSHAKE_SIZE);
 					rtmp.setState(RTMP.STATE_CONNECTED);
 					rtmp.continueDecoding();
@@ -703,15 +726,14 @@ public class RTMPProtocolDecoder implements Constants, SimpleProtocolDecoder,
 
 		if (in.hasRemaining()) {
 			setupClassLoader();
-			ArrayList paramList = new ArrayList();
+			List<Object> paramList = new ArrayList<Object>();
 
 			final Object obj = deserializer.deserialize(input);
 
 			if (obj instanceof Map) {
 				// Before the actual parameters we sometimes (connect) get a map
 				// of parameters, this is usually null, but if set should be
-				// passed
-				// to the connection object.
+				// passed to the connection object.
 				final Map connParams = (Map) obj;
 				notify.setConnectionParams(connParams);
 			} else if (obj != null) {

@@ -10,6 +10,10 @@
 	default="build"
 	basedir=".">
 	
+	<!-- Flex SDK settings -->
+	<property file="../flex.properties" />
+
+	<!-- Project settings -->
 	<property file="./build.properties" />
   	
 	<!-- dirs -->
@@ -25,7 +29,7 @@
 	<!-- files -->
 	<property 
 		name="mxmlc.jar" 
-		location="${flex.sdk.dir}/lib/mxmlc.jar"/>
+		location="${FLEX_HOME}/lib/mxmlc.jar"/>
 	<property 
 		name="main.application.release.out" 
 		location="${release.build.dir}/${output.swf.name}.swf"/>
@@ -35,7 +39,7 @@
 	<!-- wrapper -->
 	<property 
 		name="wrapper.dir" 
-		location="${flex.sdk.dir}/resources/html-templates/express-installation-with-history"/>
+		location="${FLEX_HOME}/resources/html-templates/express-installation-with-history"/>
 	<property 
 		name="output.debug.html" 
 		location="${debug.build.dir}/${output.swf.name}-debug.html"/>
@@ -216,7 +220,7 @@
         		failonerror="true">
         		<arg line="-source-path ${src.dir}"/>
         		<arg value="-library-path+=${lib.swc}"/>
-        		<arg value="+flexlib=${flex.sdk.dir}/frameworks"/>
+        		<arg value="+flexlib=${FLEX_HOME}/frameworks"/>
         		<arg value="-load-config=@{config}"/>
         		<arg value="-output=@{out}"/>
         		<arg line="@{additional}"/>

@@ -43,12 +43,12 @@ package org.red5.samples.publisher.command
 	 	/**
 	 	* 
 	 	*/	 	
-	 	private var monitorTransaction : MonitorTransaction = model.monitorTransaction;
+	 	private var main : Main = model.main;
 	 	
 	 	/**
 	 	* 
 	 	*/	 	
-	 	private var netStreamDelegate : NetStreamDelegate = monitorTransaction.ns_delegate;
+	 	private var netStreamDelegate : NetStreamDelegate = main.ns_delegate;
 	 	
 	 	/**
 	 	* 
@@ -64,8 +64,10 @@ package org.red5.samples.publisher.command
 	    	var event : PlayStreamEvent = PlayStreamEvent( cgEvent );
 	    	var bufferTime : int = event.bufferTime;
 	    	var streamName : String = event.streamName;
+	    	var enableVideo : Boolean = event.enableVideo;
+	    	var enableAudio : Boolean = event.enableAudio;
 			// Use Delegate to playback the NetStream.
-	      	netStreamDelegate.startPlayback( bufferTime, streamName );
+	      	netStreamDelegate.startPlayback( bufferTime, streamName, enableVideo, enableAudio );
 		}
 				
 	}

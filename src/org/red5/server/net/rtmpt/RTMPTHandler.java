@@ -68,7 +68,10 @@ public class RTMPTHandler extends RTMPHandler implements Constants {
 		}
 		
 		out.put((byte)0x03);
-		out.fill((byte)0x00,Constants.HANDSHAKE_SIZE);
+		// TODO: the first four bytes of the handshake reply seem to be the
+		//       server uptime - send something better here...
+		out.putInt(0x01);
+		out.fill((byte)0x00,Constants.HANDSHAKE_SIZE-4);
 		out.put(in).flip();
 		
 		conn.rawWrite(out);

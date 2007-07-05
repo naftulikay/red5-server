@@ -24,12 +24,12 @@ import static org.red5.server.api.so.ISharedObject.TYPE;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.CopyOnWriteArraySet;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -66,9 +66,9 @@ public class SharedObject implements IPersistable, Constants {
 	protected long lastModified = -1;
 	
 	private SharedObjectMessage ownerMessage;
-	private LinkedList<ISharedObjectEvent> syncEvents = new LinkedList<ISharedObjectEvent>();
+	private List<ISharedObjectEvent> syncEvents = new LinkedList<ISharedObjectEvent>();
 	
-	protected HashSet<IEventListener> listeners = new HashSet<IEventListener>();
+	protected Set<IEventListener> listeners = new CopyOnWriteArraySet<IEventListener>();
 	private IEventListener source = null;
 
 	public SharedObject() {
@@ -354,7 +354,7 @@ public class SharedObject implements IPersistable, Constants {
 		}
 	}
 
-	public HashSet getListeners() {
+	public Set getListeners() {
 		return listeners;
 	}
 

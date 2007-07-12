@@ -21,6 +21,7 @@ package org.red5.server;
 
 import java.io.IOException;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
@@ -257,7 +258,7 @@ public class Scope extends BasicScope implements IScope, IScopeStatistics,
 	/**
 	 * Currently connecting clients and connection map
 	 */
-	private volatile Map<IClient, Set<IConnection>> connectingClients = new ConcurrentHashMap<IClient, Set<IConnection>>();
+	private volatile Map<IClient, Set<IConnection>> connectingClients = new HashMap<IClient, Set<IConnection>>();
 
 	/**
 	 * Statistics about clients connected to the scope.

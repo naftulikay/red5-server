@@ -283,40 +283,42 @@ public abstract class BaseConnection extends AttributeStore implements
 	/**
 	 *  Closes connection
 	 */
-	public synchronized void close() {
-
-		if (scope != null) {
-
-			log.debug("Close, disconnect from scope, and children");
-			try {
-				// Unregister all child scopes first
-				Set<IBasicScope> tmpScopes = new HashSet<IBasicScope>(
-						basicScopes);
-				for (IBasicScope basicScope : tmpScopes) {
-					unregisterBasicScope(basicScope);
-				}
-			} catch (Exception err) {
-				log.error("Error while unregistering basic scopes.", err);
+	public void close() {
+		IScope tmpScope;
+		synchronized (this) {
+			if (scope == null) {
+				log.debug("Close, not connected nothing to do.");
+				return;
 			}
-
-			// Disconnect
-			try {
-				scope.disconnect(this);
-			} catch (Exception err) {
-				log.error("Error while disconnecting from scope " + scope, err);
-			}
-
-			// Unregister client
-			if (client != null && client instanceof Client) {
-				((Client) client).unregister(this);
-				client = null;
-			}
-
+			
+			tmpScope = scope;
 			scope = null;
-		} else {
-			log.debug("Close, not connected nothing to do.");
 		}
 
+		log.debug("Close, disconnect from scope, and children");
+		try {
+			// Unregister all child scopes first
+			Set<IBasicScope> tmpScopes = new HashSet<IBasicScope>(
+					basicScopes);
+			for (IBasicScope basicScope : tmpScopes) {
+				unregisterBasicScope(basicScope);
+			}
+		} catch (Exception err) {
+			log.error("Error while unregistering basic scopes.", err);
+		}
+
+		// Disconnect
+		try {
+			tmpScope.disconnect(this);
+		} catch (Exception err) {
+			log.error("Error while disconnecting from scope " + tmpScope, err);
+		}
+
+		// Unregister client
+		if (client != null && client instanceof Client) {
+			((Client) client).unregister(this);
+			client = null;
+		}
 	}
 
 	/**

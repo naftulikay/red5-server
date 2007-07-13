@@ -121,6 +121,11 @@ public abstract class BaseConnection extends AttributeStore implements
 	protected Set<IBasicScope> basicScopes;
 
 	/**
+	 * Is the connection closed?
+	 */
+	protected boolean closed;
+	
+	/**
 	 *
 	 * @param type                Connection type
 	 * @param host                Host
@@ -284,15 +289,13 @@ public abstract class BaseConnection extends AttributeStore implements
 	 *  Closes connection
 	 */
 	public void close() {
-		IScope tmpScope;
 		synchronized (this) {
-			if (scope == null) {
+			if (closed || scope == null) {
 				log.debug("Close, not connected nothing to do.");
 				return;
 			}
 			
-			tmpScope = scope;
-			scope = null;
+			closed = true;
 		}
 
 		log.debug("Close, disconnect from scope, and children");
@@ -309,9 +312,9 @@ public abstract class BaseConnection extends AttributeStore implements
 
 		// Disconnect
 		try {
-			tmpScope.disconnect(this);
+			scope.disconnect(this);
 		} catch (Exception err) {
-			log.error("Error while disconnecting from scope " + tmpScope, err);
+			log.error("Error while disconnecting from scope " + scope, err);
 		}
 
 		// Unregister client
@@ -319,6 +322,7 @@ public abstract class BaseConnection extends AttributeStore implements
 			((Client) client).unregister(this);
 			client = null;
 		}
+		scope = null;
 	}
 
 	/**

@@ -256,11 +256,6 @@ public class Scope extends BasicScope implements IScope, IScopeStatistics,
 	private volatile Map<IClient, Set<IConnection>> clients = new ConcurrentHashMap<IClient, Set<IConnection>>();
 
 	/**
-	 * Currently connecting clients and connection map
-	 */
-	private volatile Map<IClient, Set<IConnection>> connectingClients = new HashMap<IClient, Set<IConnection>>();
-
-	/**
 	 * Statistics about clients connected to the scope.
 	 */
 	private StatisticsCounter clientStats = new StatisticsCounter();
@@ -406,47 +401,29 @@ public class Scope extends BasicScope implements IScope, IScopeStatistics,
 			return false;
 		}
 		final IClient client = conn.getClient();
-		Set<IConnection> conns;
-		synchronized (connectingClients) {
-			// Synchronize so client is only added once
-			conns = connectingClients.get(client);
-			if (conns == null) {
-				conns = new HashSet<IConnection>();
-				connectingClients.put(client, conns);
-			}
-			conns.add(conn);
-		}
-		if (hasHandler() && !getHandler().join(client, this)) {
-			synchronized (connectingClients) {
-				conns.remove(conn);
-				if (conns.isEmpty()) {
-					// Was only connection for this client, remove 
-					connectingClients.remove(client);
-				}
-			}
+		if (!conn.isConnected()) {
+			// Timeout while connecting client
 			return false;
 		}
 		
-		synchronized (connectingClients) {
-			Set<IConnection> clientConns;
-			// Add client to "real" clients list
-			synchronized (clients) {
-				clientConns = clients.get(client);
-				if (clientConns == null) {
-					clientConns = new CopyOnWriteArraySet<IConnection>();
-					clients.put(client, clientConns);
-				}
-				
-				clientConns.add(conn);
+		if (hasHandler() && !getHandler().join(client, this)) {
+			return false;
+		}
+		if (!conn.isConnected()) {
+			// Timeout while connecting client
+			return false;
+		}
+		
+		synchronized (clients) {
+			Set<IConnection> conns = clients.get(client);
+			if (conns == null) {
+				conns = new CopyOnWriteArraySet<IConnection>();
+				clients.put(client, conns);
 			}
 			
-			// Remove connection from "pending" connections
-			conns.remove(conn);
-			if (conns.isEmpty()) {
-				// Was only connection for this client, remove 
-				connectingClients.remove(client);
-			}
+			conns.add(conn);
 		}
+			
 		clientStats.increment();
 		addEventListener(conn);
 		connectionStats.increment();

@@ -21,8 +21,6 @@ package org.red5.server;
 
 import java.io.IOException;
 import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.NoSuchElementException;
@@ -473,6 +471,8 @@ public class Scope extends BasicScope implements IScope, IScopeStatistics,
 		final IClient client = conn.getClient();
 		if (client == null) {
 			// Early bail out
+			removeEventListener(conn);
+			connectionStats.decrement();
 			if (hasParent()) {
 				parent.disconnect(conn);
 			}

@@ -1,6 +1,6 @@
 <con:tc-config xmlns:con="http://www.terracotta.org/config">
   <servers>
-    <server name="localhost">
+    <server host="localhost" name="localhost">
       <dso-port>9510</dso-port>
       <jmx-port>9520</jmx-port>
       <data>terracotta/server-data</data>
@@ -14,148 +14,183 @@
     <dso>
       <instrumented-classes>
         <include>
-          <class-expression>org.red5..*</class-expression>
-          <honor-transient>true</honor-transient>
+          <class-expression>org.red5.server.GlobalScope</class-expression>
         </include>
         <include>
-          <class-expression>javax.management..*</class-expression>
-          <honor-transient>true</honor-transient>
+          <class-expression>org.red5.server.api.IScope+</class-expression>
+        </include>
+        <include>
+          <class-expression>org.red5.server.WebScope</class-expression>
+          <on-load>
+            <execute>self.internalInit()</execute>
+          </on-load>
+        </include>
+        <include>
+          <class-expression>org.red5.server.BasicScope</class-expression>
+          <on-load>
+            <execute>self.internalInit()</execute>
+          </on-load>
+        </include>
+        <include>
+          <class-expression>org.red5.server.PersistableAttributeStore</class-expression>
+        </include>
+        <include>
+          <class-expression>org.red5.server.AttributeStore</class-expression>
+        </include>
+        <include>
+          <class-expression>org.red5.server.so.SharedObjectService</class-expression>
+        </include>
+        <include>
+          <class-expression>org.red5.server.adapter..*</class-expression>
+        </include>
+        <include>
+          <class-expression>org.red5.server.persistence.RamPersistence</class-expression>
+        </include>
+        <include>
+          <class-expression>org.red5.server.so.SharedObject</class-expression>
+          <on-load>
+            <execute>self.internalInit()</execute>
+          </on-load>
+        </include>
+        <include>
+          <class-expression>org.red5.server.so.SharedObjectScope</class-expression>
+          <on-load>
+            <execute>self.internalInit()</execute>
+          </on-load>
+        </include>
+        <include>
+          <class-expression>org.red5.server.net.rtmp.event.BaseEvent</class-expression>
+        </include>
+        <include>
+          <class-expression>org.red5.io.utils.ObjectMap</class-expression>
+        </include>
+        <include>
+          <class-expression>org.red5.server.stream.StreamService</class-expression>
+        </include>
+        <include>
+          <class-expression>org.red5.server.Scope</class-expression>
+          <on-load>
+            <execute>self.internalInit()</execute>
+          </on-load>
+        </include>
+        <include>
+          <class-expression>org.red5.server.so.SharedObjectEvent</class-expression>
+        </include>
+        <include>
+          <class-expression>org.red5.server.so.SharedObjectMessage</class-expression>
+        </include>
+        <include>
+          <class-expression>org.red5.server.so.ISharedObject+</class-expression>
         </include>
       </instrumented-classes>
-      <transient-fields>
-        <field-name>org.red5.server.Scope.serviceHandlers</field-name>
-        <field-name>org.red5.server.net.rtmp.RTMPMinaConnection.ioSession</field-name>
-        <field-name>org.red5.server.net.rtmp.RTMPConnection.bwContext</field-name>
-        <field-name>org.red5.server.messaging.AbstractPipe.listeners</field-name>
-        <field-name>org.red5.server.messaging.AbstractPipe.providers</field-name>
-        <field-name>org.red5.server.messaging.AbstractPipe.consumers</field-name>        
-        <field-name>org.red5.server.WebScope.servletContext</field-name>
-        <field-name>org.red5.server.PersistableAttributeStore.store</field-name>
-        <field-name>org.red5.server.AttributeStore.attributes</field-name>
-        <field-name>org.red5.server.AttributeStore.hashes</field-name>
-        <field-name>org.red5.server.net.rtmp.RTMPConnection.waitForHandshakeService</field-name>
-        <field-name>org.red5.server.net.rtmp.RTMPConnection.waitForHandshakeJob</field-name>
-        <field-name>org.red5.server.net.rtmp.RTMPConnection.oName</field-name>
-        <field-name>org.red5.server.net.rtmp.RTMPConnection.keepAliveJobName</field-name>
-        <field-name>org.red5.server.net.rtmp.RTMPConnection.lastPingSent</field-name>
-        <field-name>org.red5.server.net.rtmp.RTMPConnection.lastPongReceived</field-name>
-        <field-name>org.red5.server.net.rtmp.RTMPConnection.lastBytesRead</field-name>
-        <field-name>org.red5.server.net.rtmp.RTMPConnection.clientBytesRead</field-name>
-        <field-name>org.red5.server.net.rtmp.RTMPConnection.lastPingTime</field-name>
-        <field-name>org.red5.server.net.rtmp.RTMPConnection.usedStreams</field-name>
-        <field-name>org.red5.server.net.rtmp.RTMPConnection.streamBuffers</field-name>
-        <field-name>org.red5.server.net.rtmp.RTMPConnection.nextBytesRead</field-name>
-        <field-name>org.red5.server.BaseConnection.readMessages</field-name>
-        <field-name>org.red5.server.BaseConnection.writtenMessages</field-name>
-        <field-name>org.red5.server.BaseConnection.droppedMessages</field-name>
-        <field-name>org.red5.server.BaseConnection.client</field-name>
-        <field-name>org.red5.server.BaseConnection.basicScopes</field-name>
-        <field-name>org.red5.server.BaseConnection.scope</field-name>
-        <field-name>org.red5.server.stream.AbstractStream.codecInfo</field-name>
-        <field-name>org.red5.server.stream.PlaylistSubscriberStream.executor</field-name>
-        <field-name>org.red5.server.stream.PlaylistSubscriberStream.bwController</field-name>
-        <field-name>org.red5.server.stream.PlaylistSubscriberStream.bwContext</field-name>
-        <field-name>org.red5.server.stream.PlaylistSubscriberStream.items</field-name>
-        <field-name>org.red5.server.stream.PlaylistSubscriberStream$PlayEngine.schedulingService</field-name>
-        <field-name>org.red5.server.stream.PlaylistSubscriberStream$PlayEngine.audioBucket</field-name>
-        <field-name>org.red5.server.stream.PlaylistSubscriberStream$PlayEngine.videoBucket</field-name>
-        <field-name>org.red5.server.stream.PlaylistSubscriberStream$PlayEngine.lastMessage</field-name>
-        <field-name>org.red5.server.stream.PlaylistSubscriberStream$PlayEngine.pullAndPushFuture</field-name>
-        <field-name>org.red5.server.stream.PlaylistSubscriberStream$PlayEngine.pendingMessage</field-name>
-        <field-name>org.red5.server.stream.AbstractClientStream.conn</field-name>
-        <field-name>org.red5.server.stream.provider.FileProvider.reader</field-name>
-        <field-name>org.red5.server.stream.ClientBroadcastStream.publishedName</field-name>
-        <field-name>org.red5.server.stream.BroadcastScope.compCounter</field-name>
-        <field-name>org.red5.server.stream.BroadcastScope.hasRemoved</field-name>
-        <field-name>org.red5.server.stream.ClientBroadcastStream.livePipe</field-name>
-        <field-name>org.red5.server.stream.ClientBroadcastStream.videoCodecFactory</field-name>
-        <field-name>org.red5.server.stream.ClientBroadcastStream.checkVideoCodec</field-name>
-        <field-name>org.red5.server.stream.ClientBroadcastStream.firstPacketTime</field-name>
-        <field-name>org.red5.server.stream.ClientBroadcastStream.audioTime</field-name>
-        <field-name>org.red5.server.stream.ClientBroadcastStream.videoTime</field-name>
-        <field-name>org.red5.server.stream.ClientBroadcastStream.dataTime</field-name>
-        <field-name>org.red5.server.stream.ClientBroadcastStream.connMsgOut</field-name>
-        <field-name>org.red5.server.stream.ClientBroadcastStream.recordPipe</field-name>
-        <field-name>org.red5.server.stream.ClientBroadcastStream.recording</field-name>
-        <field-name>org.red5.server.stream.ClientBroadcastStream.recordingFilename</field-name>
-        <field-name>org.red5.server.stream.ClientBroadcastStream.closed</field-name>
-        <field-name>org.red5.server.stream.ClientBroadcastStream.bytesReceived</field-name>
-        <field-name>org.red5.server.stream.ClientBroadcastStream.creationTime</field-name>
-        <field-name>org.red5.server.stream.ClientBroadcastStream.sendStartNotification</field-name>
-        <field-name>org.red5.server.stream.ClientBroadcastStream.recordingFile</field-name>
-        <field-name>org.red5.server.Client.oName</field-name>
-        <field-name>org.red5.server.so.SharedObjectScope.serverListeners</field-name>
-        <field-name>org.red5.server.so.SharedObjectScope.securityHandlers</field-name>
-        <field-name>org.red5.server.so.SharedObjectScope.log</field-name>
-        <field-name>org.red5.server.net.rtmp.RTMPConnection.deferredResults</field-name>
-        <field-name>org.red5.server.so.SharedObject.listeners</field-name>
-      </transient-fields>
+      <roots>
+        <root>
+          <field-name>org.red5.server.GlobalScope.myChildren</field-name>
+        </root>
+      </roots>
       <locks>
-        <named-lock>
-          <method-expression>* org.red5.server.Scope.*etDepth(..)</method-expression>
-          <lock-name>ScopeDepth</lock-name>
+        <autolock>
+          <method-expression>boolean org.red5.server.GlobalScope.addChildScope(org.red5.server.api.IBasicScope)</method-expression>
           <lock-level>write</lock-level>
+        </autolock>
+        <autolock auto-synchronized="true">
+          <method-expression>int org.red5.server.Scope.getDepth()</method-expression>
+          <lock-level>write</lock-level>
+        </autolock>
+        <autolock auto-synchronized="true">
+          <method-expression>boolean org.red5.server.Scope.hasParent()</method-expression>
+          <lock-level>write</lock-level>
+        </autolock>
+        <autolock>
+          <method-expression>void org.red5.server.Scope.init()</method-expression>
+          <lock-level>write</lock-level>
+        </autolock>
+        <autolock>
+          <method-expression>boolean org.red5.server.Scope.addChildScope(org.red5.server.api.IBasicScope)</method-expression>
+          <lock-level>write</lock-level>
+        </autolock>
+        <named-lock>
+          <method-expression>void org.red5.server.Scope.init()</method-expression>
+          <lock-level>write</lock-level>
+          <lock-name>scope_init</lock-name>
         </named-lock>
         <named-lock>
-          <method-expression>* org.red5.server.Scope.*connect(..)</method-expression>
-          <lock-name>ScopeConnections</lock-name>
+          <method-expression>void org.red5.server.WebScope.register()</method-expression>
           <lock-level>write</lock-level>
+          <lock-name>webscope_register</lock-name>
         </named-lock>
         <named-lock>
-          <method-expression>* org.red5.server.webapp.oflaDemo.Application.app*(..)</method-expression>
-          <lock-name>oflaDemo</lock-name>
+          <method-expression>boolean org.red5.server.AttributeStore.setAttribute(java.lang.String, java.lang.Object)</method-expression>
           <lock-level>write</lock-level>
+          <lock-name>attribute_store_setAttribute</lock-name>
         </named-lock>
-        <named-lock>
-          <method-expression>* org.red5.server.BasicScope.*EventListener(..)</method-expression>
-          <lock-name>ScopeEvents</lock-name>
+        <autolock auto-synchronized="true">
+          <method-expression>void org.red5.server.so.SharedObject.*(..)</method-expression>
           <lock-level>write</lock-level>
-        </named-lock>
-        <named-lock>
-          <method-expression>* org.red5.server.service.PendingCall.*Result(..)</method-expression>
-          <lock-name>PendingCallResult</lock-name>
+        </autolock>
+        <autolock>
+          <method-expression>java.util.Iterator org.red5.server.GlobalScope.iterator()</method-expression>
           <lock-level>write</lock-level>
-        </named-lock>
-        <named-lock>
-          <method-expression>* org.red5.server.stream.PlaylistSubscriberStream$PlayEngine.*(..)</method-expression>
-          <lock-name>PlayEngine</lock-name>
+        </autolock>
+        <autolock>
+          <method-expression>void org.red5.server.GlobalScope.removeChildScope(org.red5.server.api.IBasicScope)</method-expression>
           <lock-level>write</lock-level>
-        </named-lock>
-        <named-lock>
-          <method-expression>* org.red5.server.stream.AbstractClientStream.setClientBufferDuration(..)</method-expression>
-          <lock-name>clientBufferDuration</lock-name>
+        </autolock>
+        <autolock>
+          <method-expression>boolean org.red5.server.GlobalScope.hasChildScope(java.lang.String)</method-expression>
           <lock-level>write</lock-level>
-        </named-lock>
+        </autolock>
+        <autolock>
+          <method-expression>boolean org.red5.server.GlobalScope.hasChildScope(java.lang.String, java.lang.String)</method-expression>
+          <lock-level>write</lock-level>
+        </autolock>
+        <autolock>
+          <method-expression>java.util.Iterator org.red5.server.GlobalScope.getScopeNames()</method-expression>
+          <lock-level>write</lock-level>
+        </autolock>
+        <autolock>
+          <method-expression>org.red5.server.api.IScope org.red5.server.GlobalScope.getScope(java.lang.String)</method-expression>
+          <lock-level>write</lock-level>
+        </autolock>
+        <autolock>
+          <method-expression>java.util.Iterator org.red5.server.GlobalScope.getBasicScopeNames(java.lang.String)</method-expression>
+          <lock-level>write</lock-level>
+        </autolock>
+        <autolock>
+          <method-expression>org.red5.server.api.IBasicScope org.red5.server.GlobalScope.getBasicScope(java.lang.String, java.lang.String)</method-expression>
+          <lock-level>write</lock-level>
+        </autolock>
       </locks>
+      <transient-fields>
+        <field-name>org.red5.server.WebScope.servletContext</field-name>
+        <field-name>org.red5.server.WebScope.server</field-name>
+        <field-name>org.red5.server.WebScope.global</field-name>
+        <field-name>org.red5.server.Scope.handler</field-name>
+        <field-name>org.red5.server.Scope.subscopeStats</field-name>
+        <field-name>org.red5.server.Scope.clientStats</field-name>
+        <field-name>org.red5.server.Scope.connectionStats</field-name>
+        <field-name>org.red5.server.Scope.context</field-name>
+        <field-name>org.red5.server.GlobalScope.server</field-name>
+        <field-name>org.red5.server.Scope.serviceHandlers</field-name>
+        <field-name>org.red5.server.Scope.clients</field-name>
+        <field-name>org.red5.server.BasicScope.listeners</field-name>
+        <field-name>org.red5.server.PersistableAttributeStore.store</field-name>
+        <field-name>org.red5.server.so.SharedObjectService.log</field-name>
+        <field-name>org.red5.server.so.SharedObject.listenerStats</field-name>
+        <field-name>org.red5.server.so.SharedObject.changeStats</field-name>
+        <field-name>org.red5.server.so.SharedObject.deleteStats</field-name>
+        <field-name>org.red5.server.so.SharedObject.listeners</field-name>
+        <field-name>org.red5.server.so.SharedObject.sendStats</field-name>
+        <field-name>org.red5.server.so.SharedObject.source</field-name>
+        <field-name>org.red5.server.so.SharedObject.log</field-name>
+        <field-name>org.red5.server.so.SharedObjectScope.log</field-name>
+        <field-name>org.red5.server.so.SharedObjectScope.serverListeners</field-name>
+        <field-name>org.red5.server.so.SharedObjectScope.handlers</field-name>
+        <field-name>org.red5.server.so.SharedObjectScope.securityHandlers</field-name>
+      </transient-fields>
+      <distributed-methods>
+        <method-expression>void org.red5.server.so.SharedObject.sendSyncEvents(java.util.LinkedList)</method-expression>
+      </distributed-methods>
     </dso>
-    <spring>
-      <jee-application name="*">
-        <application-contexts>
-          <application-context>
-            <paths>
-              <path>*/red5-default.xml</path>
-            </paths>
-            <beans>
-              <bean name="global.scope"/>
-              <bean name="global.context">
-                <non-distributed-field>applicationContext</non-distributed-field>
-                <non-distributed-field>coreContext</non-distributed-field>
-              </bean>
-              <bean name="global.handler"/>
-              <bean name="global.clientRegistry"/>
-              <bean name="global.serviceInvoker"/>
-              <bean name="global.mappingStrategy"/>
-              <bean name="red5.scopeResolver"/>
-              <bean name="red5.server">
-                <non-distributed-field>applicationContext</non-distributed-field>
-              </bean>
-            </beans>
-          </application-context>
-        </application-contexts>
-      </jee-application>
-    </spring>
   </application>
-  <system>
-    <configuration-model>development</configuration-model>
-  </system>
 </con:tc-config>

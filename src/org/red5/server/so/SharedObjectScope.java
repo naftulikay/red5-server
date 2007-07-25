@@ -105,6 +105,13 @@ public class SharedObjectScope extends BasicScope implements ISharedObject, Stat
 			so.setPath(path);
 		}
 	}
+	
+	public void internalInit() {
+		super.internalInit();
+		handlers = new ConcurrentHashMap<String, Object>();
+		securityHandlers = new CopyOnWriteArraySet<ISharedObjectSecurity>();
+		serverListeners = new CopyOnWriteArraySet<ISharedObjectListener>();
+	}
 
 	/** {@inheritDoc} */
 	public void registerSharedObjectSecurity(ISharedObjectSecurity handler) {

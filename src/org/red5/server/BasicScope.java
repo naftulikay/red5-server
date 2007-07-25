@@ -72,6 +72,10 @@ public abstract class BasicScope extends PersistableAttributeStore implements
 		this.listeners = new HashSet<IEventListener>();
 	}
 
+	public void internalInit() {
+		this.listeners = new HashSet<IEventListener>();
+	}
+	
     /**
      * {@inheritDoc}
      */
@@ -85,12 +89,12 @@ public abstract class BasicScope extends PersistableAttributeStore implements
 	public IScope getParent() {
 		return parent;
 	}
-
+	
     /**
      *{@inheritDoc}
      */
 	public int getDepth() {
-		return parent.getDepth() + 1;
+		return getParent().getDepth() + 1;
 	}
 
     /**
@@ -98,7 +102,7 @@ public abstract class BasicScope extends PersistableAttributeStore implements
      */
 	@Override
 	public String getPath() {
-		return parent.getPath() + '/' + parent.getName();
+		return getParent().getPath() + '/' + getParent().getName();
 	}
 
     /**
@@ -117,7 +121,7 @@ public abstract class BasicScope extends PersistableAttributeStore implements
 		listeners.remove(listener);
 		if (!keepOnDisconnect && ScopeUtils.isRoom(this) && listeners.isEmpty()) {
 			// Delete empty rooms
-			parent.removeChildScope(this);
+			getParent().removeChildScope(this);
 		}
 	}
 

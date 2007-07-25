@@ -316,6 +316,14 @@ public class Scope extends BasicScope implements IScope, IScopeStatistics,
 		super(null, TYPE, name, false);
 		creationTime = System.currentTimeMillis();
 	}
+	
+	public void internalInit() {
+		super.internalInit();
+		clients = new ConcurrentHashMap<IClient, Set<IConnection>>();
+		clientStats = new StatisticsCounter();
+		connectionStats = new StatisticsCounter();
+		subscopeStats = new StatisticsCounter();
+	}
 
 	/**
 	 * Add child scope to this scope
@@ -385,7 +393,7 @@ public class Scope extends BasicScope implements IScope, IScopeStatistics,
 	public synchronized boolean connect(IConnection conn, Object[] params) {
 		//log.debug("Connect: "+conn+" to "+this);
 		//log.debug("has handler? "+hasHandler());
-		if (hasParent() && !parent.connect(conn, params)) {
+		if (hasParent() && !getParent().connect(conn, params)) {
 			return false;
 		}
 		if (hasHandler() && !getHandler().connect(conn, this, params)) {
@@ -436,7 +444,7 @@ public class Scope extends BasicScope implements IScope, IScopeStatistics,
 	 */
 	public void destory() {
 		if (hasParent()) {
-			parent.removeChildScope(this);
+			getParent().removeChildScope(this);
 		}
 		if (hasHandler()) {
 			handler.stop(this);
@@ -492,7 +500,7 @@ public class Scope extends BasicScope implements IScope, IScopeStatistics,
 			}
 		}
 		if (hasParent()) {
-			parent.disconnect(conn);
+			getParent().disconnect(conn);
 		}
 	}
 
@@ -579,7 +587,7 @@ public class Scope extends BasicScope implements IScope, IScopeStatistics,
 	public IContext getContext() {
 		if (!hasContext() && hasParent()) {
 			log.debug("returning parent context");
-			return parent.getContext();
+			return getParent().getContext();
 		} else {
 			log.debug("returning context");
 			return context;
@@ -594,7 +602,7 @@ public class Scope extends BasicScope implements IScope, IScopeStatistics,
 		if (hasContext()) {
 			return "";
 		} else if (hasParent()) {
-			return parent.getContextPath() + '/' + name;
+			return getParent().getContextPath() + '/' + name;
 		} else {
 			return null;
 		}
@@ -613,7 +621,7 @@ public class Scope extends BasicScope implements IScope, IScopeStatistics,
 	public int getDepth() {
 		if (depth == UNSET) {
 			if (hasParent()) {
-				depth = parent.getDepth() + 1;
+				depth = getParent().getDepth() + 1;
 			} else {
 				depth = 0;
 			}
@@ -666,7 +674,7 @@ public class Scope extends BasicScope implements IScope, IScopeStatistics,
 	@Override
 	public String getPath() {
 		if (hasParent()) {
-			return parent.getPath() + '/' + parent.getName();
+			return getParent().getPath() + '/' + getParent().getName();
 		} else {
 			return "";
 		}
@@ -844,7 +852,7 @@ public class Scope extends BasicScope implements IScope, IScopeStatistics,
 	 */
 	@Override
 	public boolean hasParent() {
-		return (parent != null);
+		return (getParent() != null);
 	}
 
 	/**
@@ -852,8 +860,8 @@ public class Scope extends BasicScope implements IScope, IScopeStatistics,
 	 */
 	public void init() {
 		if (hasParent()) {
-			if (!parent.hasChildScope(name)) {
-				if (!parent.addChildScope(this)) {
+			if (!getParent().hasChildScope(name)) {
+				if (!getParent().addChildScope(this)) {
 					return;
 				}
 			}

@@ -246,6 +246,14 @@ public class SharedObject implements ISharedObjectStatistics, IPersistable, Cons
         creationTime = System.currentTimeMillis();
 	}
 
+    public void internalInit() {
+    	listeners = new HashSet<IEventListener>();
+    	listenerStats = new StatisticsCounter(); 
+        changeStats = new AtomicInteger();
+        deleteStats = new AtomicInteger();
+        sendStats = new AtomicInteger();
+    }
+    
 	/** {@inheritDoc} */
     public String getName() {
 		return name;
@@ -323,38 +331,41 @@ public class SharedObject implements ISharedObjectStatistics, IPersistable, Cons
 		}
 		
 		if (!syncEvents.isEmpty()) {
-			// Synchronize updates with all registered clients of this shared
-
-			for (IEventListener listener : listeners) {
-
-				if (listener == source) {
-					// Don't re-send update to active client
-					log.debug("Skipped " + source);
-					continue;
-				}
-
-				if (!(listener instanceof RTMPConnection)) {
-					log.warn("Can't send sync message to unknown connection "
-							+ listener);
-					continue;
-				}
-
-				// Create a new sync message for every client to avoid
-				// concurrent access through multiple threads
-				// TODO: perhaps we could cache the generated message
-				SharedObjectMessage syncMessage = new SharedObjectMessage(null,
-						name, version, isPersistentObject());
-				syncMessage.addEvents(syncEvents);
-
-				Channel c = ((RTMPConnection) listener).getChannel((byte) 3);
-				log.debug("Send to " + c);
-				c.write(syncMessage);
-			}
+			LinkedList<ISharedObjectEvent> events = new LinkedList<ISharedObjectEvent>(syncEvents);
+			sendSyncEvents(events);
 			// Clear list of sync events
 			syncEvents.clear();
 		}
 	}
 
+    public void sendSyncEvents(LinkedList<ISharedObjectEvent> syncEvents) {
+		for (IEventListener listener : listeners) {
+
+			if (listener == source) {
+				// Don't re-send update to active client
+				log.debug("Skipped " + source);
+				continue;
+			}
+
+			if (!(listener instanceof RTMPConnection)) {
+				log.warn("Can't send sync message to unknown connection "
+						+ listener);
+				continue;
+			}
+
+			// Create a new sync message for every client to avoid
+			// concurrent access through multiple threads
+			// TODO: perhaps we could cache the generated message
+			SharedObjectMessage syncMessage = new SharedObjectMessage(null,
+					name, version, isPersistentObject());
+			syncMessage.addEvents(syncEvents);
+
+			Channel c = ((RTMPConnection) listener).getChannel((byte) 3);
+			log.debug("Send to " + c);
+			c.write(syncMessage);
+		}
+    }
+    
     /**
      * Update hashes
      */

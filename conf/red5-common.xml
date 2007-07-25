@@ -13,7 +13,7 @@
 	</bean>
 	<bean id="jmxAgent" class="org.red5.server.jmx.JMXAgent" init-method="init">
 		<!-- The RMI adapter allows remote connections to the MBeanServer -->
-		<property name="enableRmiAdapter" value="true" />
+		<property name="enableRmiAdapter" value="false" />
 		<property name="rmiAdapterPort" value="9999"/>
 		<!-- SSL
 			To use jmx with ssl you must also supply the location of the keystore and its password

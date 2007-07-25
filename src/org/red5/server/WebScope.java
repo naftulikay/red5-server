@@ -24,6 +24,7 @@ import javax.servlet.ServletContext;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.red5.server.api.IGlobalScope;
+import org.red5.server.api.IScope;
 import org.red5.server.api.IServer;
 import org.springframework.web.context.ServletContextAware;
 
@@ -64,6 +65,8 @@ public class WebScope extends Scope implements ServletContextAware {
      * Hostnames
      */
 	protected String[] hostnames;
+	
+	protected IScope global;
 
     /**
      * Setter for global scope. Sets persistence class.
@@ -72,7 +75,7 @@ public class WebScope extends Scope implements ServletContextAware {
      */
 	public void setGlobalScope(IGlobalScope globalScope) {
 		// XXX: this is called from nowhere, remove?
-		super.setParent(globalScope);
+		setParent(globalScope);
 		try {
 			setPersistenceClass(globalScope.getStore().getClass().getName());
 		} catch (Exception error) {
@@ -95,6 +98,14 @@ public class WebScope extends Scope implements ServletContextAware {
 				"Cannot set parent, you must set global scope");
 	}
 
+	public IScope getParent() {
+		return global;
+	}
+	
+	public void setParent(IScope parent) {
+		global = parent;
+	}
+	
     /**
      * Setter for server
      * @param server            Server instance
@@ -109,6 +120,10 @@ public class WebScope extends Scope implements ServletContextAware {
      */
 	public void setServletContext(ServletContext servletContext) {
 		this.servletContext = servletContext;
+	}
+	
+	public ServletContext getServletContext() {
+		return this.servletContext;
 	}
 
     /**
@@ -153,6 +168,15 @@ public class WebScope extends Scope implements ServletContextAware {
     /** {@inheritDoc} */
 	public IServer getServer() {
 		return server;
+	}
+	
+	public void init() {
+		if (hasParent()) {
+			if (!getParent().addChildScope(this)) {
+				return;
+			}
+		}
+		start();
 	}
 
 }

@@ -76,7 +76,7 @@ public class RTMPTHandler extends RTMPHandler {
      * @param state       Protocol state
      * @param in          Byte buffer with input raw data
      */
-    private void rawBufferRecieved(RTMPConnection conn, ProtocolState state,
+    protected void rawBufferRecieved(RTMPConnection conn, ProtocolState state,
 			ByteBuffer in) {
 		final RTMP rtmp = (RTMP) state;
 

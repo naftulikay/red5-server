@@ -19,6 +19,10 @@ package org.red5.server.net.remoting.message;
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA 
  */
 
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
+
 import org.red5.compatibility.flex.messaging.messages.ErrorMessage;
 import org.red5.server.service.PendingCall;
 
@@ -45,6 +49,8 @@ public class RemotingCall extends PendingCall {
 	public boolean isAMF3;
 	
 	public boolean isMessaging;
+	
+	public RemotingCall() {}
 	
     /**
      * Create remoting call from service name, method name, list of arguments and callback name
@@ -92,6 +98,22 @@ public class RemotingCall extends PendingCall {
      */
     public Object getClientResult() {
 		return isSuccess() ? getResult() : getException();
+	}
+
+	@Override
+	public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
+		super.readExternal(in);
+		clientCallback = (String) in.readObject();
+		isMessaging = in.readBoolean();
+		isAMF3 = in.readBoolean();
+	}
+
+	@Override
+	public void writeExternal(ObjectOutput out) throws IOException {
+		super.writeExternal(out);
+		out.writeObject(clientCallback);
+		out.writeBoolean(isMessaging);
+		out.writeBoolean(isAMF3);
 	}
 
 }

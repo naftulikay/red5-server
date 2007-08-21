@@ -1,10 +1,16 @@
 package org.red5.server.net.rtmp.event;
 
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
+
 /**
  * Client bandwidth event
  */
 public class ClientBW extends BaseEvent {
-    /**
+	private static final long serialVersionUID = 5848656135751336839L;
+
+	/**
      * Bandwidth
      */
 	private int bandwidth;
@@ -14,8 +20,12 @@ public class ClientBW extends BaseEvent {
      */
     private byte value2;
 
+    public ClientBW() {
+    	super(Type.STREAM_CONTROL);
+    }
+    
 	public ClientBW(int bandwidth, byte value2) {
-		super(Type.STREAM_CONTROL);
+		this();
 		this.bandwidth = bandwidth;
 		this.value2 = value2;
 	}
@@ -72,6 +82,20 @@ public class ClientBW extends BaseEvent {
     @Override
 	protected void releaseInternal() {
 
+	}
+
+	@Override
+	public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
+		super.readExternal(in);
+		bandwidth = in.readInt();
+		value2 = in.readByte();
+	}
+
+	@Override
+	public void writeExternal(ObjectOutput out) throws IOException {
+		super.writeExternal(out);
+		out.writeInt(bandwidth);
+		out.writeByte(value2);
 	}
 
 }

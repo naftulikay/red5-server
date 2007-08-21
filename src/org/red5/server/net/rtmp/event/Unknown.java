@@ -19,6 +19,10 @@ package org.red5.server.net.rtmp.event;
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA 
  */
 
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
+
 import org.apache.mina.common.ByteBuffer;
 import org.red5.io.utils.HexDump;
 
@@ -26,7 +30,8 @@ import org.red5.io.utils.HexDump;
  * Unknown event
  */
 public class Unknown extends BaseEvent {
-    /**
+	private static final long serialVersionUID = -1352770037962252975L;
+	/**
      * Event data
      */
 	protected ByteBuffer data;
@@ -35,6 +40,8 @@ public class Unknown extends BaseEvent {
      */
 	protected byte dataType;
 
+	public Unknown() {}
+	
     /**
      * Create new unknown event with given data and data type
      * @param dataType             Data type
@@ -77,6 +84,29 @@ public class Unknown extends BaseEvent {
 		if (data != null) {
 			data.release();
 			data = null;
+		}
+	}
+
+	@Override
+	public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
+		super.readExternal(in);
+		dataType = in.readByte();
+		byte[] byteBuf = (byte[]) in.readObject();
+		if (byteBuf != null) {
+			data = ByteBuffer.allocate(0);
+			data.setAutoExpand(true);
+			SerializeUtils.ByteArrayToByteBuffer(byteBuf, data);
+		}
+	}
+
+	@Override
+	public void writeExternal(ObjectOutput out) throws IOException {
+		super.writeExternal(out);
+		out.writeByte(dataType);
+		if (data != null) {
+			out.writeObject(SerializeUtils.ByteBufferToByteArray(data));
+		} else {
+			out.writeObject(null);
 		}
 	}
 

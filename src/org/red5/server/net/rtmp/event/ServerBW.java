@@ -1,5 +1,9 @@
 package org.red5.server.net.rtmp.event;
 
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
+
 /*
  * RED5 Open Source Flash Server - http://www.osflash.org/red5
  *
@@ -23,11 +27,14 @@ package org.red5.server.net.rtmp.event;
  * Server bandwidth event
  */
 public class ServerBW extends BaseEvent {
-    /**
+	private static final long serialVersionUID = 24487902555977210L;
+	/**
      * Bandwidth
      */
 	private int bandwidth;
 
+	public ServerBW() {}
+	
     /**
      * Server bandwidth event
      * @param bandwidth      Bandwidth
@@ -71,6 +78,18 @@ public class ServerBW extends BaseEvent {
     @Override
 	protected void releaseInternal() {
 
+	}
+
+	@Override
+	public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
+		super.readExternal(in);
+		bandwidth = in.readInt();
+	}
+
+	@Override
+	public void writeExternal(ObjectOutput out) throws IOException {
+		super.writeExternal(out);
+		out.writeInt(bandwidth);
 	}
 
 }

@@ -23,23 +23,23 @@
 	<!-- Context holding all the networking, users should need to edit. -->
 	<bean id="red5.core"
   	    class="org.springframework.context.support.FileSystemXmlApplicationContext">
-    	<constructor-arg><list><value>classpath:/red5-origin-core.xml</value></list></constructor-arg>
+    	<constructor-arg><list><value>classpath:/red5-edge-core.xml</value></list></constructor-arg>
     	<constructor-arg><ref bean="red5.common" /></constructor-arg>
 	</bean>
 
-	<!-- Then we load the global contexts, note its important this happens before app container loads -->
+	<!-- Then we load the global contexts, note its important this happens before app container loads 
 	<bean id="context.loader" 
 		class="org.red5.server.ContextLoader"
 		init-method="init">
 		<property name="parentContext" ref="red5.common" />
 		<property name="contextsConfig" value="red5.globals" />
-	</bean>	
+	</bean>	-->
 	
-	<!-- Now we can load the servlet engine, this has to happen after the context are loaded -->
+	<!-- Now we can load the servlet engine, this has to happen after the context are loaded 
 
  	<bean id="jetty6.server" class="org.red5.server.JettyLoader" init-method="init" autowire="byType" depends-on="context.loader">
 		<property name="webappFolder" value="${red5.root}/webapps" />
-	</bean>
+	</bean> -->
 
 <!--
 	<bean id="tomcat.server" class="org.red5.server.TomcatLoader" init-method="init" destroy-method="shutdown" autowire="byType" depends-on="context.loader">

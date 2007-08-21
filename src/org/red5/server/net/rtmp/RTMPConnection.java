@@ -82,7 +82,7 @@ public abstract class RTMPConnection extends BaseConnection implements
 	/**
 	 * Logger
 	 */
-	protected static Log log = LogFactory
+	private static Log log = LogFactory
 			.getLog(RTMPConnection.class.getName());
 
 	/**
@@ -803,7 +803,7 @@ public abstract class RTMPConnection extends BaseConnection implements
 	/**
 	 * Increases number of read messages by one. Updates number of bytes read.
 	 */
-	protected void messageReceived() {
+	public void messageReceived() {
 		readMessages++;
 
 		// Trigger generation of BytesRead messages
@@ -815,7 +815,7 @@ public abstract class RTMPConnection extends BaseConnection implements
 	 *
 	 * @param message           Message to mark
 	 */
-	protected void messageSent(Packet message) {
+	public void messageSent(Packet message) {
 		if (message.getMessage() instanceof VideoData) {
 			int streamId = message.getHeader().getStreamId();
 			synchronized (pendingVideos) {

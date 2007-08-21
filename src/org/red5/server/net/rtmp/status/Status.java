@@ -1,5 +1,10 @@
 package org.red5.server.net.rtmp.status;
 
+import java.io.Externalizable;
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
+
 import org.red5.io.object.Flag;
 import org.red5.io.object.ICustomSerializable;
 import org.red5.io.object.ISerializerOptionAware;
@@ -29,8 +34,10 @@ import org.red5.io.object.SerializerOption;
 /**
  * Represents status object that are transferred between server and client
  */
-public class Status implements StatusCodes, ISerializerOptionAware, ICustomSerializable {
-    /**
+public class Status
+implements StatusCodes, ISerializerOptionAware, ICustomSerializable, Externalizable {
+	private static final long serialVersionUID = -5501563718489586136L;
+	/**
      * Error constant
      */
 	public static final String ERROR = "error";
@@ -219,5 +226,21 @@ public class Status implements StatusCodes, ISerializerOptionAware, ICustomSeria
     	output.putString("clientid");
     	output.writeNumber(getClientid());
     }
+
+	public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
+		clientid = in.readInt();
+		code = (String) in.readObject();
+		description = (String) in.readObject();
+		details = (String) in.readObject();
+		level = (String) in.readObject();
+	}
+
+	public void writeExternal(ObjectOutput out) throws IOException {
+		out.writeInt(clientid);
+		out.writeObject(code);
+		out.writeObject(description);
+		out.writeObject(details);
+		out.writeObject(level);
+	}
 
 }

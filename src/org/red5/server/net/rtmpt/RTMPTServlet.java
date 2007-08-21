@@ -75,7 +75,7 @@ public class RTMPTServlet extends HttpServlet {
 	/**
 	 * Holds a map of client id -> client object.
 	 */
-	protected HashMap<Integer, RTMPTConnection> rtmptClients = new HashMap<Integer, RTMPTConnection>();
+	protected static HashMap<Integer, RTMPTConnection> rtmptClients = new HashMap<Integer, RTMPTConnection>();
 
     /**
      * Web app context
@@ -86,7 +86,7 @@ public class RTMPTServlet extends HttpServlet {
      * Reference to RTMPT handler;
      */
     private static RTMPTHandler handler;
-    
+        
     /**
      * Set the RTMPTHandler to use in this servlet.
      * 
@@ -243,11 +243,13 @@ public class RTMPTServlet extends HttpServlet {
 		ByteBuffer data = client.getPendingMessages(RESPONSE_TARGET_SIZE);
 		if (data == null) {
 			// no more messages to send...
-			if (client.isClosing())
+			if (client.isClosing()) {
 				// Tell client to close connection 
 				returnMessage((byte) 0, resp);
-			else
+			} else {
+				log.debug("No pending messages, sending polling delay...");
 				returnMessage(client.getPollingDelay(), resp);
+			}
 			return;
 		}
 
@@ -447,5 +449,10 @@ public class RTMPTServlet extends HttpServlet {
 		appCtx = (WebApplicationContext) getServletContext().getAttribute(
 				WebApplicationContext.ROOT_WEB_APPLICATION_CONTEXT_ATTRIBUTE);
 	}
+    
+    public RTMPTConnection lookupConnection(int clientId) {
+    	log.debug("Lookup client " + clientId + " from " + rtmptClients.hashCode() + "(" + rtmptClients.size() + ")");
+    	return rtmptClients.get(new Integer(clientId));
+    }
 	
 }

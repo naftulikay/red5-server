@@ -1,6 +1,7 @@
 package org.red5.server.net.mrtmp;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -15,8 +16,11 @@ public class SimpleMRTMPOriginManager implements IMRTMPOriginManager {
 	private Map<Integer, IMRTMPConnection> clientToConnMap;
 	
 	public SimpleMRTMPOriginManager() {
+		// XXX Use HashMap instead of WeakHashMap temporarily
+		// to avoid package routing issue before Terracotta
+		// integration.
 		clientToConnMap = Collections.synchronizedMap(
-				new WeakHashMap<Integer, IMRTMPConnection>());
+				new HashMap<Integer, IMRTMPConnection>());
 	}
 	
 	public void setAfinity(IMRTMPConnection conn, int clientId) {

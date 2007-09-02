@@ -266,7 +266,7 @@ public abstract class RTMPConnection extends BaseConnection implements
 	 * @param sessionId        Connection session id
 	 * @param params           Params passed from client
 	 */
-	public void setup(String host, String path, String sessionId,
+	synchronized public void setup(String host, String path, String sessionId,
 			Map<String, Object> params) {
 		this.host = host;
 		this.path = path;
@@ -281,7 +281,7 @@ public abstract class RTMPConnection extends BaseConnection implements
 	 * Return AMF protocol encoding used by this connection
 	 * @return                  AMF encoding used by connection
 	 */
-	public Encoding getEncoding() {
+	synchronized public Encoding getEncoding() {
 		return encoding;
 	}
 
@@ -511,7 +511,7 @@ public abstract class RTMPConnection extends BaseConnection implements
 
 	/** {@inheritDoc} */
 	@Override
-	public void close() {
+	synchronized public void close() {
 		if (keepAliveJobName != null) {
 			ISchedulingService schedulingService = (ISchedulingService) getScope()
 					.getContext().getBean(ISchedulingService.BEAN_NAME);
@@ -846,7 +846,7 @@ public abstract class RTMPConnection extends BaseConnection implements
 	}
 
 	/** {@inheritDoc} */
-	public void ping() {
+	synchronized public void ping() {
 		Ping pingRequest = new Ping();
 		pingRequest.setValue1((short) Ping.PING_CLIENT);
 		lastPingSent = System.currentTimeMillis();
@@ -860,14 +860,14 @@ public abstract class RTMPConnection extends BaseConnection implements
 	 * Marks that pingback was recieved
 	 * @param pong            Ping object
 	 */
-	protected void pingReceived(Ping pong) {
+	synchronized protected void pingReceived(Ping pong) {
 		lastPongReceived = System.currentTimeMillis();
 		int now = (int) (lastPongReceived & 0xffffffff);
 		lastPingTime = now - pong.getValue2();
 	}
 
 	/** {@inheritDoc} */
-	public int getLastPingTime() {
+	synchronized public int getLastPingTime() {
 		return lastPingTime;
 	}
 
@@ -876,7 +876,7 @@ public abstract class RTMPConnection extends BaseConnection implements
 	 *
 	 * @param pingInterval Interval in ms to ping clients. Set to <code>0</code> to disable ghost detection code.
 	 */
-	public void setPingInterval(int pingInterval) {
+	synchronized public void setPingInterval(int pingInterval) {
 		this.pingInterval = pingInterval;
 	}
 
@@ -892,7 +892,7 @@ public abstract class RTMPConnection extends BaseConnection implements
 	/**
 	 * Starts measurement
 	 */
-	public void startRoundTripMeasurement() {
+	synchronized public void startRoundTripMeasurement() {
 		if (pingInterval <= 0)
 			// Ghost detection code disabled
 			return;
@@ -962,22 +962,24 @@ public abstract class RTMPConnection extends BaseConnection implements
 
 		/** {@inheritDoc} */
 		public void execute(ISchedulingService service) {
-			long thisRead = getReadBytes();
-			if (thisRead > lastBytesRead) {
-				// Client sent data since last check and thus is not dead. No need to ping.
-				lastBytesRead = thisRead;
-				return;
-			}
-
-			if (lastPingSent - lastPongReceived > maxInactivity) {
-				// Client didn't send response to ping command for too long, disconnect
-				service.removeScheduledJob(keepAliveJobName);
-				keepAliveJobName = null;
-				log.warn("Closing " + RTMPConnection.this
-						+ " due to too much inactivity ("
-						+ (lastPingSent - lastPongReceived) + ").");
-				onInactive();
-				return;
+			synchronized (RTMPConnection.this) {
+				long thisRead = getReadBytes();
+				if (thisRead > lastBytesRead) {
+					// Client sent data since last check and thus is not dead. No need to ping.
+					lastBytesRead = thisRead;
+					return;
+				}
+	
+				if (lastPingSent - lastPongReceived > maxInactivity) {
+					// Client didn't send response to ping command for too long, disconnect
+					service.removeScheduledJob(keepAliveJobName);
+					keepAliveJobName = null;
+					log.warn("Closing " + RTMPConnection.this
+							+ " due to too much inactivity ("
+							+ (lastPingSent - lastPongReceived) + ").");
+					onInactive();
+					return;
+				}
 			}
 
 			// Send ping command to client to trigger sending of data.

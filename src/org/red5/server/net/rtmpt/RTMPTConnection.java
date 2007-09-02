@@ -89,7 +89,7 @@ public class RTMPTConnection extends RTMPConnection {
     /**
      * List of pending messages
      */
-	protected List<ByteBuffer> pendingMessages = new LinkedList<ByteBuffer>();
+	protected List<byte[]> pendingMessages = new LinkedList<byte[]>();
     /**
      * List of notification messages
      */
@@ -131,20 +131,32 @@ public class RTMPTConnection extends RTMPConnection {
      * @param handler  Handler
      */
     void setRTMPTHandle(RTMPTHandler handler) {
-		this.state = new RTMP(RTMP.MODE_SERVER);
+    	synchronized (this) {
+    		this.state = new RTMP(RTMP.MODE_SERVER);
+    		// Use internal (Java) id of object to make guessing of client ids
+    		// more difficult.
+    		clientId = hashCode();
+    	}
 		this.buffer = ByteBuffer.allocate(2048);
 		this.buffer.setAutoExpand(true);
 		this.handler = handler;
 		this.decoder = handler.getCodecFactory().getSimpleDecoder();
 		this.encoder = handler.getCodecFactory().getSimpleEncoder();
-		// Use internal (Java) id of object to make guessing of client ids
-		// more difficult.
-		clientId = hashCode();
 	}
-
+    
+    public void internalInit() {
+		this.buffer = ByteBuffer.allocate(2048);
+		this.buffer.setAutoExpand(true);
+		// XXX hack to find the handler for terracotta
+		this.handler = RTMPTServlet.handler;
+		this.decoder = RTMPTServlet.handler.getCodecFactory().getSimpleDecoder();
+		this.encoder = RTMPTServlet.handler.getCodecFactory().getSimpleEncoder();
+		notifyMessages = new LinkedList<Object>();
+    }
+    
 	/** {@inheritDoc} */
     @Override
-	public void close() {
+	synchronized public void close() {
 		// Defer actual closing so we can send back pending messages to the client.
 		closing = true;
 	}
@@ -154,7 +166,7 @@ public class RTMPTConnection extends RTMPConnection {
      *
      * @return Value for property 'closing'.
      */
-    public boolean isClosing() {
+    synchronized public boolean isClosing() {
 		return closing;
 	}
 
@@ -165,17 +177,17 @@ public class RTMPTConnection extends RTMPConnection {
 		if (!isClosing())
 			return;
 
+		super.close();
+		
 		if (buffer != null) {
 			buffer.release();
 			buffer = null;
 		}
 		notifyMessages.clear();
-		state.setState(RTMP.STATE_DISCONNECTED);
-		super.close();
-		for (ByteBuffer buf: pendingMessages) {
-			buf.release();
+		synchronized (this) {
+			state.setState(RTMP.STATE_DISCONNECTED);
+			pendingMessages.clear();
 		}
-		pendingMessages.clear();
 	}
 
 	/** {@inheritDoc} */
@@ -190,7 +202,7 @@ public class RTMPTConnection extends RTMPConnection {
      *
      * @param request  Servlet request
      */
-    public void setServletRequest(HttpServletRequest request) {
+    synchronized public void setServletRequest(HttpServletRequest request) {
 		host = request.getLocalName();
 		remoteAddress = request.getRemoteAddr();
 		remoteAddresses = ServletUtils.getRemoteAddresses(request);
@@ -202,7 +214,7 @@ public class RTMPTConnection extends RTMPConnection {
 	 *
 	 * @return the client id
 	 */
-	public int getId() {
+    synchronized public int getId() {
 		return clientId;
 	}
 
@@ -211,7 +223,7 @@ public class RTMPTConnection extends RTMPConnection {
 	 *
 	 * @return the current decoder state.
 	 */
-	public RTMP getState() {
+    synchronized public RTMP getState() {
 		return this.state;
 	}
 
@@ -220,7 +232,7 @@ public class RTMPTConnection extends RTMPConnection {
 	 *
 	 * @return the polling delay
 	 */
-	public byte getPollingDelay() {
+	synchronized public byte getPollingDelay() {
 		if (state.getState() == RTMP.STATE_DISCONNECTED) {
 			// Special value to notify client about a closed connection.
 			return (byte) 0;
@@ -281,7 +293,9 @@ public class RTMPTConnection extends RTMPConnection {
 	@Override
 	public void rawWrite(ByteBuffer packet) {
 		synchronized (this.pendingMessages) {
-			this.pendingMessages.add(packet);
+			byte[] buf = new byte[packet.remaining()];
+			packet.get(buf);
+			this.pendingMessages.add(buf);
 		}
 	}
 
@@ -294,37 +308,42 @@ public class RTMPTConnection extends RTMPConnection {
 	 *         pending
 	 */
 	public ByteBuffer getPendingMessages(int targetSize) {
-		if (this.pendingMessages.isEmpty()) {
-			this.noPendingMessages += 1;
-			if (this.noPendingMessages > INCREASE_POLLING_DELAY_COUNT) {
-				if (this.pollingDelay == 0) {
-					this.pollingDelay = 1;
+		synchronized (this.pendingMessages) {
+			if (this.pendingMessages.isEmpty()) {
+				this.noPendingMessages += 1;
+				if (this.noPendingMessages > INCREASE_POLLING_DELAY_COUNT) {
+					if (this.pollingDelay == 0) {
+						this.pollingDelay = 1;
+					}
+					this.pollingDelay = (byte) (this.pollingDelay * 2);
+					if (this.pollingDelay > MAX_POLLING_DELAY) {
+						this.pollingDelay = MAX_POLLING_DELAY;
+					}
 				}
-				this.pollingDelay = (byte) (this.pollingDelay * 2);
-				if (this.pollingDelay > MAX_POLLING_DELAY) {
-					this.pollingDelay = MAX_POLLING_DELAY;
-				}
+				return null;
 			}
-			return null;
 		}
 
 		ByteBuffer result = ByteBuffer.allocate(2048);
 		result.setAutoExpand(true);
 
 		if (log.isDebugEnabled()) {
-			log.debug("Returning " + this.pendingMessages.size() + " messages to client.");
+			synchronized (this.pendingMessages) {
+				log.debug("Returning " + this.pendingMessages.size() + " messages to client.");
+			}
 		}
 		this.noPendingMessages = 0;
-		this.pollingDelay = INITIAL_POLLING_DELAY;
+		synchronized (this) {
+			this.pollingDelay = INITIAL_POLLING_DELAY;
+		}
 		while (result.limit() < targetSize) {
-			if (this.pendingMessages.isEmpty()) {
-				break;
-			}
-
 			synchronized (this.pendingMessages) {
-				for (ByteBuffer buffer: this.pendingMessages) {
+				if (this.pendingMessages.isEmpty()) {
+					break;
+				}
+
+				for (byte[] buffer: this.pendingMessages) {
 					result.put(buffer);
-					buffer.release();
 				}
 
 				this.pendingMessages.clear();
@@ -370,7 +389,9 @@ public class RTMPTConnection extends RTMPConnection {
 	/** {@inheritDoc} */
     @Override
 	public long getPendingMessages() {
-		return pendingMessages.size();
+    	synchronized (this.pendingMessages) {
+    		return pendingMessages.size();
+    	}
 	}
 
 }

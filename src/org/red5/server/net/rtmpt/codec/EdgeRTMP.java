@@ -1,7 +1,6 @@
 package org.red5.server.net.rtmpt.codec;
 
 import org.red5.server.net.rtmp.codec.RTMP;
-import org.red5.server.net.rtmp.event.Invoke;
 
 public class EdgeRTMP extends RTMP {
 	public static final byte EDGE_CONNECTED = 0x10;
@@ -11,4 +10,5 @@ public class EdgeRTMP extends RTMP {
 	public EdgeRTMP(boolean mode) {
 		super(mode);
 	}
+
 }

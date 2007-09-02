@@ -85,7 +85,7 @@ public class RTMPTServlet extends HttpServlet {
     /**
      * Reference to RTMPT handler;
      */
-    private static RTMPTHandler handler;
+    public static RTMPTHandler handler;
         
     /**
      * Set the RTMPTHandler to use in this servlet.
@@ -206,14 +206,16 @@ public class RTMPTServlet extends HttpServlet {
 	 * @return                   RTMP client connection
 	 */
 	protected RTMPTConnection getClient(HttpServletRequest req) {
-		Integer id = getClientId(req);
-		if (id == null || !rtmptClients.containsKey(id)) {
-			if (log.isDebugEnabled()) {
-				log.debug("Unknown client id: " + id);
+		synchronized (rtmptClients) {
+			Integer id = getClientId(req);
+			if (id == null || !rtmptClients.containsKey(id)) {
+				if (log.isDebugEnabled()) {
+					log.debug("Unknown client id: " + id);
+				}
+				return null;
 			}
-			return null;
+			return rtmptClients.get(id);
 		}
-		return rtmptClients.get(id);
 	}
 
 	/**
@@ -277,8 +279,9 @@ public class RTMPTServlet extends HttpServlet {
 			returnMessage((byte) 0, resp);
 			return;
 		}
-		rtmptClients.put(client.getId(), client);
-
+		synchronized (rtmptClients) {
+			rtmptClients.put(client.getId(), client);
+		}
 		// Return connection id to client
 		returnMessage(client.getId() + "\n", resp);
 	}
@@ -302,7 +305,9 @@ public class RTMPTServlet extends HttpServlet {
 			handleBadRequest("Unknown client.", resp);
 			return;
 		}
-		rtmptClients.remove(client.getId());
+		synchronized (rtmptClients) {
+			rtmptClients.remove(client.getId());
+		}
 
 		client.setServletRequest(req);
 		handler.connectionClosed(client, client.getState());
@@ -327,7 +332,9 @@ public class RTMPTServlet extends HttpServlet {
 			handleBadRequest("Unknown client.", resp);
 			return;
 		} else if (client.getState().getState() == RTMP.STATE_DISCONNECTED) {
-			rtmptClients.remove(client.getId());
+			synchronized (rtmptClients) {
+				rtmptClients.remove(client.getId());
+			}
 			handleBadRequest("Connection already closed.", resp);
 			return;
 		}
@@ -389,7 +396,9 @@ public class RTMPTServlet extends HttpServlet {
 			client.realClose();
 			return;
 		} else if (client.getState().getState() == RTMP.STATE_DISCONNECTED) {
-			rtmptClients.remove(client.getId());
+			synchronized (rtmptClients) {
+				rtmptClients.remove(client.getId());
+			}
 			handleBadRequest("Connection already closed.", resp);
 			return;
 		}
@@ -451,8 +460,12 @@ public class RTMPTServlet extends HttpServlet {
 	}
     
     public RTMPTConnection lookupConnection(int clientId) {
-    	log.debug("Lookup client " + clientId + " from " + rtmptClients.hashCode() + "(" + rtmptClients.size() + ")");
-    	return rtmptClients.get(new Integer(clientId));
+    	synchronized (rtmptClients) {
+    		if (log.isDebugEnabled()) {
+    			log.debug("Lookup client " + clientId + " from " + rtmptClients.hashCode() + "(" + rtmptClients.size() + ")");
+    		}
+    		return rtmptClients.get(new Integer(clientId));
+    	}
     }
 	
 }

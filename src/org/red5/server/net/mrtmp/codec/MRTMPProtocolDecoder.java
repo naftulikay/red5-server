@@ -115,10 +115,10 @@ public class MRTMPProtocolDecoder implements ProtocolDecoder {
 					rtmpBody.setRtmpPacket(packet);
 				} catch (IOException e) {
 					// XXX should not happen
-					log.error(e);
+					log.error("", e);
 				} catch (ClassNotFoundException e) {
 					// XXX should not happen
-					log.error(e);
+					log.error("", e);
 				}
 				break;
 			default:

@@ -74,10 +74,6 @@ public class RTMP extends ProtocolState {
      */
 	private boolean mode = MODE_SERVER;
     /**
-     * Debug flag
-     */
-	private boolean debug;
-    /**
      * Last read channel
      */
 	private int lastReadChannel = 0x00;
@@ -125,32 +121,19 @@ public class RTMP extends ProtocolState {
 	public RTMP(boolean mode) {
 		this.mode = mode;
 	}
+	
+	public void internalInit() {
+		readPackets = new HashMap<Integer, Packet>();
+		writePackets = new HashMap<Integer, Packet>();
+	}
 
 	/**
      * Return current mode
      *
      * @return  Current mode
      */
-    public boolean getMode() {
+    synchronized public boolean getMode() {
 		return mode;
-	}
-
-	/**
-     * Getter for debug
-     *
-     * @return  Debug state
-     */
-    public boolean isDebug() {
-		return debug;
-	}
-
-	/**
-     * Setter for debug
-     *
-     * @param debug  Debug flag new value
-     */
-    public void setDebug(boolean debug) {
-		this.debug = debug;
 	}
 
 	/**
@@ -158,7 +141,7 @@ public class RTMP extends ProtocolState {
      *
      * @return  State
      */
-    public byte getState() {
+    synchronized public byte getState() {
 		return state;
 	}
 
@@ -181,7 +164,7 @@ public class RTMP extends ProtocolState {
      *
      * @param state  New state
      */
-    public void setState(byte state) {
+    synchronized public void setState(byte state) {
 		this.state = state;
 		if (state == STATE_DISCONNECTED) {
 			// Free temporary packets
@@ -197,7 +180,7 @@ public class RTMP extends ProtocolState {
      * @param channelId            Channel id
      * @param header               Header
      */
-    public void setLastReadHeader(int channelId, Header header) {
+    synchronized public void setLastReadHeader(int channelId, Header header) {
 		lastReadChannel = channelId;
 		readHeaders.put(channelId, header);
 	}
@@ -207,7 +190,7 @@ public class RTMP extends ProtocolState {
      * @param channelId             Channel id
      * @return                      Last read header
      */
-	public Header getLastReadHeader(int channelId) {
+	synchronized public Header getLastReadHeader(int channelId) {
 		return readHeaders.get(channelId);
 	}
 
@@ -216,7 +199,7 @@ public class RTMP extends ProtocolState {
      * @param channelId             Channel id
      * @param header                Header
      */
-	public void setLastWriteHeader(int channelId, Header header) {
+	synchronized public void setLastWriteHeader(int channelId, Header header) {
 		lastWriteChannel = channelId;
 		writeHeaders.put(channelId, header);
 	}
@@ -226,7 +209,7 @@ public class RTMP extends ProtocolState {
      * @param channelId             Channel id
      * @return                      Last written header
      */
-	public Header getLastWriteHeader(int channelId) {
+	synchronized public Header getLastWriteHeader(int channelId) {
 		return writeHeaders.get(channelId);
 	}
 
@@ -282,7 +265,7 @@ public class RTMP extends ProtocolState {
      *
      * @return  Last read channel
      */
-    public int getLastReadChannel() {
+    synchronized public int getLastReadChannel() {
 		return lastReadChannel;
 	}
 
@@ -291,7 +274,7 @@ public class RTMP extends ProtocolState {
      *
      * @return  Last write channel
      */
-    public int getLastWriteChannel() {
+    synchronized public int getLastWriteChannel() {
 		return lastWriteChannel;
 	}
 
@@ -300,7 +283,7 @@ public class RTMP extends ProtocolState {
      *
      * @return  Read chunk size
      */
-    public int getReadChunkSize() {
+    synchronized public int getReadChunkSize() {
 		return readChunkSize;
 	}
 
@@ -309,7 +292,7 @@ public class RTMP extends ProtocolState {
      *
      * @param readChunkSize Value to set for property 'readChunkSize'.
      */
-    public void setReadChunkSize(int readChunkSize) {
+    synchronized public void setReadChunkSize(int readChunkSize) {
 		this.readChunkSize = readChunkSize;
 	}
 
@@ -318,7 +301,7 @@ public class RTMP extends ProtocolState {
      *
      * @return  Write chunk size
      */
-    public int getWriteChunkSize() {
+    synchronized public int getWriteChunkSize() {
 		return writeChunkSize;
 	}
 
@@ -327,7 +310,7 @@ public class RTMP extends ProtocolState {
      *
      * @param writeChunkSize  Write chunk size
      */
-    public void setWriteChunkSize(int writeChunkSize) {
+    synchronized public void setWriteChunkSize(int writeChunkSize) {
 		this.writeChunkSize = writeChunkSize;
 	}
 
@@ -336,7 +319,7 @@ public class RTMP extends ProtocolState {
      * 
      * @return Encoding version
      */
-    public Encoding getEncoding() {
+    synchronized public Encoding getEncoding() {
     	return encoding;
     }
     
@@ -345,7 +328,7 @@ public class RTMP extends ProtocolState {
      * 
      * @param encoding	Encoding version
      */
-    public void setEncoding(Encoding encoding) {
+    synchronized public void setEncoding(Encoding encoding) {
     	this.encoding = encoding;
     }
     
@@ -355,7 +338,7 @@ public class RTMP extends ProtocolState {
      * @param data    Handshake data
      * @param length  Length of handshake to store
      */
-    public void setHandshake(ByteBuffer data, int start, int length) {
+    synchronized public void setHandshake(ByteBuffer data, int start, int length) {
     	handshake = new byte[length];
     	int old = data.position();
     	data.position(start);
@@ -370,7 +353,7 @@ public class RTMP extends ProtocolState {
      * @param length
      * @return
      */
-    public boolean validateHandshakeReply(ByteBuffer data, int start, int length) {
+    synchronized public boolean validateHandshakeReply(ByteBuffer data, int start, int length) {
     	if (handshake == null || length != handshake.length) {
     		return false;
     	}

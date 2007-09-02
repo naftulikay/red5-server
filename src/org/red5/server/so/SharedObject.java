@@ -608,8 +608,12 @@ public class SharedObject implements ISharedObjectStatistics, IPersistable, Cons
 			ownerMessage.addEvent(Type.CLIENT_CLEAR_DATA, null, null);
 		}
 		if (!data.isEmpty()) {
+			// XXX not put ConcurrentHashMap to avoid
+			// serialization id mismatch on Terracotta
+			HashMap<String, Object> map = new HashMap<String, Object>();
+			map.putAll(getData());
 			ownerMessage.addEvent(new SharedObjectEvent(
-					Type.CLIENT_UPDATE_DATA, null, getData()));
+					Type.CLIENT_UPDATE_DATA, null, map));
 		}
 
 		// we call notifyModified here to send response if we're not in a

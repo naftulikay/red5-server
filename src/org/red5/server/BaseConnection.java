@@ -167,7 +167,7 @@ public abstract class BaseConnection extends AttributeStore implements
 	 *
 	 * @return
 	 */
-	public String getType() {
+	synchronized public String getType() {
 		return type;
 	}
 
@@ -175,7 +175,7 @@ public abstract class BaseConnection extends AttributeStore implements
 	 *
 	 * @return
 	 */
-	public String getHost() {
+	synchronized public String getHost() {
 		return host;
 	}
 
@@ -183,7 +183,7 @@ public abstract class BaseConnection extends AttributeStore implements
 	 *
 	 * @return
 	 */
-	public String getRemoteAddress() {
+	synchronized public String getRemoteAddress() {
 		return remoteAddress;
 	}
 
@@ -191,7 +191,7 @@ public abstract class BaseConnection extends AttributeStore implements
 	 *
 	 * @return
 	 */
-	public List<String> getRemoteAddresses() {
+	synchronized public List<String> getRemoteAddresses() {
 		return remoteAddresses;
 	}
 
@@ -199,7 +199,7 @@ public abstract class BaseConnection extends AttributeStore implements
 	 *
 	 * @return
 	 */
-	public int getRemotePort() {
+	synchronized public int getRemotePort() {
 		return remotePort;
 	}
 
@@ -207,7 +207,7 @@ public abstract class BaseConnection extends AttributeStore implements
 	 *
 	 * @return
 	 */
-	public String getPath() {
+	synchronized public String getPath() {
 		return path;
 	}
 
@@ -215,7 +215,7 @@ public abstract class BaseConnection extends AttributeStore implements
 	 *
 	 * @return
 	 */
-	public String getSessionId() {
+	synchronized public String getSessionId() {
 		return sessionId;
 	}
 
@@ -223,7 +223,7 @@ public abstract class BaseConnection extends AttributeStore implements
 	 * Return connection parameters
 	 * @return
 	 */
-	public Map<String, Object> getConnectParams() {
+	synchronized public Map<String, Object> getConnectParams() {
 		return Collections.unmodifiableMap(params);
 	}
 

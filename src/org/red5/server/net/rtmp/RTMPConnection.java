@@ -236,6 +236,10 @@ public abstract class RTMPConnection extends BaseConnection implements
 		super(type, null, null, 0, null, null, null);
 	}
 
+	public void internalInit() {
+		channels = new ConcurrentHashMap<Integer, Channel>();
+	}
+	
 	@Override
 	public boolean connect(IScope newScope, Object[] params) {
 		boolean success = super.connect(newScope, params);

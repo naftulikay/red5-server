@@ -283,12 +283,18 @@
         </include>
         <include>
           <class-expression>org.red5.server.net.rtmp.codec.RTMP</class-expression>
+          <on-load>
+            <execute>self.internalInit()</execute>
+          </on-load>
         </include>
         <include>
           <class-expression>org.red5.server.net.protocol.ProtocolState</class-expression>
         </include>
         <include>
           <class-expression>org.red5.server.net.rtmpt.codec.EdgeRTMP</class-expression>
+          <on-load>
+            <execute>self.internalInit()</execute>
+          </on-load>
         </include>
         <include>
           <class-expression>org.red5.server.net.rtmp.message.Header</class-expression>

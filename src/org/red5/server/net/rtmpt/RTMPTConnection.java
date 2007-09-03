@@ -145,6 +145,7 @@ public class RTMPTConnection extends RTMPConnection {
 	}
     
     public void internalInit() {
+    	super.internalInit();
 		this.buffer = ByteBuffer.allocate(2048);
 		this.buffer.setAutoExpand(true);
 		// XXX hack to find the handler for terracotta

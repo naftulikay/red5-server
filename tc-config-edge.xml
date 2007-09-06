@@ -65,7 +65,7 @@
         </autolock>
         <autolock>
           <method-expression>int org.red5.server.net.rtmp.RTMPConnection.getLastPingTime()</method-expression>
-          <lock-level>read</lock-level>
+          <lock-level>write</lock-level>
         </autolock>
         <autolock>
           <method-expression>void org.red5.server.net.rtmp.RTMPConnection.setPingInterval(int)</method-expression>
@@ -81,51 +81,51 @@
         </autolock>
         <autolock>
           <method-expression>java.lang.String org.red5.server.BaseConnection.getType()</method-expression>
-          <lock-level>read</lock-level>
+          <lock-level>write</lock-level>
         </autolock>
         <autolock>
           <method-expression>java.lang.String org.red5.server.BaseConnection.getHost()</method-expression>
-          <lock-level>read</lock-level>
+          <lock-level>write</lock-level>
         </autolock>
         <autolock>
           <method-expression>java.lang.String org.red5.server.BaseConnection.getRemoteAddress()</method-expression>
-          <lock-level>read</lock-level>
+          <lock-level>write</lock-level>
         </autolock>
         <autolock>
           <method-expression>java.util.List org.red5.server.BaseConnection.getRemoteAddresses()</method-expression>
-          <lock-level>read</lock-level>
+          <lock-level>write</lock-level>
         </autolock>
         <autolock>
           <method-expression>int org.red5.server.BaseConnection.getRemotePort()</method-expression>
-          <lock-level>read</lock-level>
+          <lock-level>write</lock-level>
         </autolock>
         <autolock>
           <method-expression>java.lang.String org.red5.server.BaseConnection.getPath()</method-expression>
-          <lock-level>read</lock-level>
+          <lock-level>write</lock-level>
         </autolock>
         <autolock>
           <method-expression>java.lang.String org.red5.server.BaseConnection.getSessionId()</method-expression>
-          <lock-level>read</lock-level>
+          <lock-level>write</lock-level>
         </autolock>
         <autolock>
           <method-expression>java.util.Map org.red5.server.BaseConnection.getConnectParams()</method-expression>
-          <lock-level>read</lock-level>
+          <lock-level>write</lock-level>
         </autolock>
         <autolock>
           <method-expression>java.util.Set org.red5.server.AttributeStore.getAttributeNames()</method-expression>
-          <lock-level>read</lock-level>
+          <lock-level>write</lock-level>
         </autolock>
         <autolock>
           <method-expression>java.util.Map org.red5.server.AttributeStore.getAttributes()</method-expression>
-          <lock-level>read</lock-level>
+          <lock-level>write</lock-level>
         </autolock>
         <autolock>
           <method-expression>java.lang.Object org.red5.server.AttributeStore.getAttribute(..)</method-expression>
-          <lock-level>read</lock-level>
+          <lock-level>write</lock-level>
         </autolock>
         <autolock>
           <method-expression>boolean org.red5.server.AttributeStore.hasAttribute(..)</method-expression>
-          <lock-level>read</lock-level>
+          <lock-level>write</lock-level>
         </autolock>
         <autolock>
           <method-expression>boolean org.red5.server.AttributeStore.setAttribute(..)</method-expression>
@@ -149,7 +149,7 @@
         </autolock>
         <autolock>
           <method-expression>boolean org.red5.server.net.rtmpt.RTMPTConnection.isClosing()</method-expression>
-          <lock-level>read</lock-level>
+          <lock-level>write</lock-level>
         </autolock>
         <autolock>
           <method-expression>void org.red5.server.net.rtmpt.RTMPTConnection.realClose()</method-expression>
@@ -161,15 +161,15 @@
         </autolock>
         <autolock>
           <method-expression>int org.red5.server.net.rtmpt.RTMPTConnection.getId()</method-expression>
-          <lock-level>read</lock-level>
+          <lock-level>write</lock-level>
         </autolock>
         <autolock>
           <method-expression>org.red5.server.net.rtmp.codec.RTMP org.red5.server.net.rtmpt.RTMPTConnection.getState()</method-expression>
-          <lock-level>read</lock-level>
+          <lock-level>write</lock-level>
         </autolock>
         <autolock>
           <method-expression>byte org.red5.server.net.rtmpt.RTMPTConnection.getPollingDelay()</method-expression>
-          <lock-level>read</lock-level>
+          <lock-level>write</lock-level>
         </autolock>
         <autolock>
           <method-expression>void org.red5.server.net.rtmpt.RTMPTConnection.rawWrite(org.apache.mina.common.ByteBuffer)</method-expression>
@@ -181,7 +181,7 @@
         </autolock>
         <autolock>
           <method-expression>long org.red5.server.net.rtmpt.RTMPTConnection.getPendingMessages()</method-expression>
-          <lock-level>read</lock-level>
+          <lock-level>write</lock-level>
         </autolock>
         <autolock>
           <method-expression>void org.red5.server.net.rtmpt.EdgeRTMPTConnection.setRTMPTHandle(org.red5.server.net.rtmpt.RTMPTHandler)</method-expression>
@@ -189,12 +189,12 @@
         </autolock>
         <autolock>
           <method-expression>boolean org.red5.server.net.rtmp.codec.RTMP.getMode()</method-expression>
-          <lock-level>read</lock-level>
-        </autolock>
+          <lock-level>write</lock-level>
+        </autolock><!-- 
         <autolock>
           <method-expression>byte org.red5.server.net.rtmp.codec.RTMP.getState()</method-expression>
-          <lock-level>read</lock-level>
-        </autolock>
+          <lock-level>write</lock-level>
+        </autolock>-->
         <autolock>
           <method-expression>void org.red5.server.net.rtmp.codec.RTMP.setState(byte)</method-expression>
           <lock-level>write</lock-level>
@@ -205,7 +205,7 @@
         </autolock>
         <autolock>
           <method-expression>org.red5.server.net.rtmp.message.Header org.red5.server.net.rtmp.codec.RTMP.getLastReadHeader(..)</method-expression>
-          <lock-level>read</lock-level>
+          <lock-level>write</lock-level>
         </autolock>
         <autolock>
           <method-expression>void org.red5.server.net.rtmp.codec.RTMP.setLastWriteHeader(..)</method-expression>
@@ -213,19 +213,19 @@
         </autolock>
         <autolock>
           <method-expression>org.red5.server.net.rtmp.message.Header org.red5.server.net.rtmp.codec.RTMP.getLastWriteHeader(..)</method-expression>
-          <lock-level>read</lock-level>
+          <lock-level>write</lock-level>
         </autolock>
         <autolock>
           <method-expression>int org.red5.server.net.rtmp.codec.RTMP.getLastReadChannel()</method-expression>
-          <lock-level>read</lock-level>
+          <lock-level>write</lock-level>
         </autolock>
         <autolock>
           <method-expression>int org.red5.server.net.rtmp.codec.RTMP.getLastWriteChannel()</method-expression>
-          <lock-level>read</lock-level>
+          <lock-level>write</lock-level>
         </autolock>
         <autolock>
           <method-expression>int org.red5.server.net.rtmp.codec.RTMP.getReadChunkSize()</method-expression>
-          <lock-level>read</lock-level>
+          <lock-level>write</lock-level>
         </autolock>
         <autolock>
           <method-expression>void org.red5.server.net.rtmp.codec.RTMP.setReadChunkSize(int)</method-expression>
@@ -233,7 +233,7 @@
         </autolock>
         <autolock>
           <method-expression>int org.red5.server.net.rtmp.codec.RTMP.getWriteChunkSize()</method-expression>
-          <lock-level>read</lock-level>
+          <lock-level>write</lock-level>
         </autolock>
         <autolock>
           <method-expression>void org.red5.server.net.rtmp.codec.RTMP.setWriteChunkSize(int)</method-expression>
@@ -241,7 +241,7 @@
         </autolock>
         <autolock>
           <method-expression>org.red5.server.api.IConnection$Encoding org.red5.server.net.rtmp.codec.RTMP.getEncoding()</method-expression>
-          <lock-level>read</lock-level>
+          <lock-level>write</lock-level>
         </autolock>
         <autolock>
           <method-expression>void org.red5.server.net.rtmp.codec.RTMP.setEncoding(..)</method-expression>
@@ -253,7 +253,7 @@
         </autolock>
         <autolock>
           <method-expression>boolean org.red5.server.net.rtmp.codec.RTMP.validateHandshakeReply(..)</method-expression>
-          <lock-level>read</lock-level>
+          <lock-level>write</lock-level>
         </autolock>
       </locks>
       <instrumented-classes>

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <con:tc-config xmlns:con="http://www.terracotta.org/config">
   <servers>
-    <server host="localhost" name="localhost">
+    <server host="localhost" name="server">
       <dso-port>9510</dso-port>
       <jmx-port>9520</jmx-port>
       <data>terracotta/server-data</data>
@@ -19,6 +19,10 @@
         </root>
       </roots>
       <locks>
+        <autolock>
+	  <method-expression>* org.red5.server.net.rtmp.codec.RTMPProtocolEncoder.encodePacket(..)</method-expression>
+	  <lock-level>write</lock-level>
+        </autolock>
         <autolock>
           <method-expression>void org.red5.server.net.rtmpt.RTMPTServlet.handleOpen(..)</method-expression>
           <lock-level>write</lock-level>
@@ -257,6 +261,9 @@
         </autolock>
       </locks>
       <instrumented-classes>
+        <include>
+	  <class-expression>org.red5.server.net.rtmp.codec.RTMPProtocolEncoder</class-expression>
+	</include>
         <include>
           <class-expression>org.red5.server.net.rtmpt.RTMPTConnection</class-expression>
           <on-load>

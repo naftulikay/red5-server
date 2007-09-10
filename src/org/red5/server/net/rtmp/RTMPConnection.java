@@ -238,6 +238,7 @@ public abstract class RTMPConnection extends BaseConnection implements
 
 	public void internalInit() {
 		channels = new ConcurrentHashMap<Integer, Channel>();
+		pendingVideos = new ConcurrentHashMap<Integer, Integer>();
 	}
 	
 	@Override

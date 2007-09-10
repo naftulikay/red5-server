@@ -63,6 +63,11 @@ public class RTMPOriginConnection extends RTMPConnection {
 	@Override
 	public void write(Packet packet) {
 		IMRTMPConnection conn = mrtmpManager.lookupMRTMPConnection(clientId);
+		if (conn == null) {
+			// the connect is gone
+			log.debug("Client " + clientId + " is gone!");
+			return;
+		}
 		mrtmpManager.setAfinity(conn, clientId);
 		log.debug("Origin writing packet to client " + clientId + ":" + packet.getMessage());
 		conn.write(clientId, packet);

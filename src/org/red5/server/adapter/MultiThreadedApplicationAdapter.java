@@ -338,7 +338,9 @@ public class MultiThreadedApplicationAdapter extends StatefulScopeWrappingAdapte
 	 */
 	@Override
 	public void disconnect(IConnection conn, IScope scope) {
-		log.debug("disconnect");
+		if (log.isDebugEnabled()) {
+			log.debug("disconnect: " + conn + " << " + scope);
+		}
 		if (isApp(scope)) {
 			appDisconnect(conn);
 		} else if (isRoom(scope)) {
@@ -404,7 +406,9 @@ public class MultiThreadedApplicationAdapter extends StatefulScopeWrappingAdapte
 	 */
 	@Override
 	public void leave(IClient client, IScope scope) {
-		log.debug("leave");
+		if (log.isDebugEnabled()) {
+			log.debug("leave: " + client + " << " + scope);
+		}
 		if (isApp(scope)) {
 			appLeave(client, scope);
 		} else if (isRoom(scope)) {

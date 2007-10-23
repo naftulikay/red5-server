@@ -109,10 +109,11 @@ import org.red5.server.stream.StreamService;
  * </p>
  *
  *
- * @author Joachim Bauch
+ * @author The Red5 Project (red5@osflash.org)
+ * @author Joachim Bauch (jojo@struktur.de)
  * @author Michael Klishin
  */
-public class ApplicationAdapter extends StatefulScopeWrappingAdapter implements
+public class MultiThreadedApplicationAdapter extends StatefulScopeWrappingAdapter implements
 		ISharedObjectService, IBroadcastStreamService, IOnDemandStreamService,
 		ISubscriberStreamService, ISchedulingService, IStreamSecurityService,
 		ISharedObjectSecurityService, IStreamAwareScopeHandler,
@@ -121,7 +122,7 @@ public class ApplicationAdapter extends StatefulScopeWrappingAdapter implements
 	/**
 	 * Logger object
 	 */
-	protected static Log log = LogFactory.getLog(ApplicationAdapter.class
+	protected static Log log = LogFactory.getLog(MultiThreadedApplicationAdapter.class
 			.getName());
 
 	/**

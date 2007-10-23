@@ -1044,9 +1044,9 @@ public class MultiThreadedApplicationAdapter extends StatefulScopeWrappingAdapte
      * Cleans up ghost connections
      */
     protected void killGhostConnections() {
-        Iterator iter = getConnectionsIter();
-        while(iter.hasNext()) {
-            IConnection conn = (IConnection) iter.next();
+        Iterator<IConnection> iter = getConnectionsIter();
+        while (iter.hasNext()) {
+            IConnection conn = iter.next();
 
             // Ping client
             conn.ping();

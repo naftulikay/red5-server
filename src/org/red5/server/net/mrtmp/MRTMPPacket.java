@@ -4,18 +4,22 @@ import org.apache.mina.common.ByteBuffer;
 import org.red5.server.net.rtmp.message.Packet;
 
 public class MRTMPPacket {
-	public static final int CONNECT = 0;
-	public static final int CLOSE = 1;
-	public static final int RTMP = 2;
+	public static final short CONNECT = 0;
+	public static final short CLOSE = 1;
+	public static final short RTMP = 2;
 	
-	public static final int COMMON_HEADER_LENGTH = 16;
-	public static final int RTMP_HEADER_LENGTH = 20;
+	public static final short JAVA_ENCODING = 0;
+	
+	public static final int COMMON_HEADER_LENGTH = 20;
+	public static final int RTMP_HEADER_LENGTH = COMMON_HEADER_LENGTH + 4;
 	
 	private Header header;
 	private Body body;
 	
 	static public class Header {
-		private int type;
+		private short type;
+		private short bodyEncoding;
+		private boolean dynamic;
 		private int clientId;
 		private int headerLength;
 		private int bodyLength;
@@ -44,13 +48,30 @@ public class MRTMPPacket {
 			this.headerLength = headerLength;
 		}
 		
-		public int getType() {
+		public short getType() {
 			return type;
 		}
 		
-		public void setType(int type) {
+		public void setType(short type) {
 			this.type = type;
 		}
+
+		public short getBodyEncoding() {
+			return bodyEncoding;
+		}
+
+		public void setBodyEncoding(short bodyEncoding) {
+			this.bodyEncoding = bodyEncoding;
+		}
+
+		public boolean isDynamic() {
+			return dynamic;
+		}
+
+		public void setDynamic(boolean dynamic) {
+			this.dynamic = dynamic;
+		}
+		
 	}
 	
 	static public class Body {
@@ -123,6 +144,7 @@ public class MRTMPPacket {
 			default:
 				break;
 		}
+		buf.append(",isDynamic=" + header.isDynamic());
 		buf.append(",clientId=" + header.getClientId());
 		if (header.getType() == RTMP) {
 			RTMPHeader rtmpHeader = (RTMPHeader) header;

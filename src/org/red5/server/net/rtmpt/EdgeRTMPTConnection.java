@@ -12,7 +12,7 @@ public class EdgeRTMPTConnection extends RTMPTConnection {
     	synchronized (this) {
     		this.state = new EdgeRTMP(RTMP.MODE_SERVER);
     		// FIXME use cluster-wide unique method to generate client id
-    		clientId = hashCode();
+    		setId(hashCode());
     	}
 		this.buffer = ByteBuffer.allocate(2048);
 		this.buffer.setAutoExpand(true);

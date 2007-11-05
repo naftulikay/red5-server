@@ -37,7 +37,10 @@ public class MRTMPProtocolEncoder implements ProtocolEncoder {
 		if (buf == null) {
 			return;
 		}
-		buf.putInt(header.getType());
+		buf.putShort(header.getType());
+		buf.putShort(MRTMPPacket.JAVA_ENCODING);
+		int preserved = header.isDynamic() ? 0x80000000 : 0;
+		buf.putInt(preserved);
 		buf.putInt(header.getClientId());
 		if (header.getType() == MRTMPPacket.CONNECT ||
 				header.getType() == MRTMPPacket.CLOSE) {

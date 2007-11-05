@@ -120,7 +120,7 @@
                 									<list>
 							                           <bean class="org.mortbay.jetty.servlet.ServletHolder">
 							                               <property name="name" value="RTMPTServlet" />
-							                               <property name="className" value="org.red5.server.net.rtmpt.RTMPTServlet" />
+							                               <property name="className" value="org.red5.server.net.rtmpt.EdgeRTMPTServlet" />
 							                           </bean>
 							                           <bean class="org.mortbay.jetty.servlet.ServletHolder">
 							                               <property name="name" value="RedirectHTTPServlet" />

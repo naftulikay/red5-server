@@ -178,10 +178,10 @@ public class EdgeRTMPTHandler extends RTMPTHandler {
 	}
 	
 	protected void sendConnectMessage(EdgeRTMPTConnection conn) {
-		mrtmpManager.lookupMRTMPConnection(conn.getId()).connect(conn.getId());
+		mrtmpManager.lookupMRTMPConnection(conn).connect(conn.getId());
 	}
 	
 	protected void forwardPacket(EdgeRTMPTConnection conn, Packet packet) {
-		mrtmpManager.lookupMRTMPConnection(conn.getId()).write(conn.getId(), packet);
+		mrtmpManager.lookupMRTMPConnection(conn).write(conn.getId(), packet);
 	}
 }

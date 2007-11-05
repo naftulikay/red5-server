@@ -22,16 +22,25 @@ import org.red5.server.net.rtmp.message.Packet;
 public class RTMPOriginConnection extends RTMPConnection {
 	private static final Log log = LogFactory.getLog(RTMPOriginConnection.class);
 	
-	private int clientId;
+	private int ioSessionId;
 	private IMRTMPOriginManager mrtmpManager;
 	private OriginMRTMPHandler handler;
 	private RTMP state;
 
-	public RTMPOriginConnection(int clientId) {
-		super(PERSISTENT);
-		this.clientId = clientId;
+	public RTMPOriginConnection(String type, int clientId) {
+		this(type, clientId, 0);
+	}
+
+	public RTMPOriginConnection(String type, int clientId, int ioSessionId) {
+		super(type);
+		setId(clientId);
+		this.ioSessionId = ioSessionId;
 		state = new RTMP(RTMP.MODE_SERVER);
 		state.setState(RTMP.STATE_CONNECTED);
+	}
+	
+	public int getIoSessionId() {
+		return ioSessionId;
 	}
 
 	public void setMrtmpManager(IMRTMPOriginManager mrtmpManager) {
@@ -62,15 +71,17 @@ public class RTMPOriginConnection extends RTMPConnection {
 
 	@Override
 	public void write(Packet packet) {
-		IMRTMPConnection conn = mrtmpManager.lookupMRTMPConnection(clientId);
+		IMRTMPConnection conn = mrtmpManager.lookupMRTMPConnection(this);
 		if (conn == null) {
 			// the connect is gone
-			log.debug("Client " + clientId + " is gone!");
+			log.debug("Client " + getId() + " is gone!");
 			return;
 		}
-		mrtmpManager.setAfinity(conn, clientId);
-		log.debug("Origin writing packet to client " + clientId + ":" + packet.getMessage());
-		conn.write(clientId, packet);
+		if (!type.equals(PERSISTENT)) {
+			mrtmpManager.associate(this, conn);
+		}
+		log.debug("Origin writing packet to client " + getId() + ":" + packet.getMessage());
+		conn.write(getId(), packet);
 	}
 
 	@Override
@@ -86,7 +97,7 @@ public class RTMPOriginConnection extends RTMPConnection {
 
 	@Override
 	public void close() {
-		handler.closeConnection(clientId);
+		handler.closeConnection(this);
 	}
 	
 	synchronized public void realClose() {

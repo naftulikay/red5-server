@@ -65,7 +65,9 @@ public class MRTMPProtocolDecoder implements ProtocolDecoder {
 	}
 	
 	public MRTMPPacket.Header decodeHeader(ByteBuffer buffer) {
-		int type = buffer.getInt();
+		short type = buffer.getShort();
+		short bodyEncoding = buffer.getShort();
+		int preserved = buffer.getInt();
 		int clientId = buffer.getInt();
 		int headerLength = buffer.getInt();
 		int bodyLength = buffer.getInt();
@@ -87,6 +89,8 @@ public class MRTMPProtocolDecoder implements ProtocolDecoder {
 			buffer.skip(headerLength - MRTMPPacket.COMMON_HEADER_LENGTH);
 		}
 		header.setType(type);
+		header.setBodyEncoding(bodyEncoding);
+		header.setDynamic((preserved & 0x8000000) != 0);
 		header.setClientId(clientId);
 		header.setHeaderLength(headerLength);
 		header.setBodyLength(bodyLength);

@@ -12,6 +12,7 @@ import org.apache.mina.common.IoSession;
 import org.apache.mina.filter.LoggingFilter;
 import org.apache.mina.filter.codec.ProtocolCodecFactory;
 import org.apache.mina.filter.codec.ProtocolCodecFilter;
+import org.red5.server.api.IConnection;
 import org.red5.server.net.rtmp.IRTMPHandler;
 import org.red5.server.net.rtmp.RTMPOriginConnection;
 
@@ -21,8 +22,10 @@ public class OriginMRTMPHandler extends IoHandlerAdapter {
 	private IMRTMPOriginManager mrtmpManager;
 	private ProtocolCodecFactory codecFactory;
 	private IRTMPHandler handler;
-	private Map<Integer, RTMPOriginConnection> connMap =
+	private Map<Integer, RTMPOriginConnection> dynConnMap =
 		new HashMap<Integer, RTMPOriginConnection>();
+	private Map<StaticConnId, RTMPOriginConnection> statConnMap =
+		new HashMap<StaticConnId, RTMPOriginConnection>();
 	private ReadWriteLock lock = new ReentrantReadWriteLock();
 	
 	
@@ -47,46 +50,79 @@ public class OriginMRTMPHandler extends IoHandlerAdapter {
 			log.debug(packet);
 		}
 		int clientId = header.getClientId();
+		int sessionId = getSessionId(session);
 		MRTMPOriginConnection mrtmpConn = (MRTMPOriginConnection) session.getAttachment();
-		// set the afinity so that the follow-up packets can be sent
-		// via this mrtmp connection.
-		mrtmpManager.setAfinity(mrtmpConn, clientId);
+		RTMPOriginConnection conn = null;
 		switch (packet.getHeader().getType()) {
 			case MRTMPPacket.CONNECT:
 				lock.writeLock().lock();
 				try {
-					if (!connMap.containsKey(clientId)) {
-						RTMPOriginConnection conn = new RTMPOriginConnection(header.getClientId());
-						conn.setMrtmpManager(mrtmpManager);
-						conn.setHandler(this);
-						connMap.put(clientId, conn);
+					if (header.isDynamic()) {
+						if (!dynConnMap.containsKey(clientId)) {
+							conn = new RTMPOriginConnection(
+									IConnection.POLLING,
+									header.getClientId()
+									);
+							conn.setMrtmpManager(mrtmpManager);
+							conn.setHandler(this);
+							dynConnMap.put(clientId, conn);
+						} else {
+							log.warn("Open an already existing RTMPT origin connection!");
+						}
 					} else {
-						log.warn("Open an already existing origin connection!");
+						StaticConnId connId = new StaticConnId();
+						connId.clientId = header.getClientId();
+						connId.sessionId = sessionId;
+						if (!statConnMap.containsKey(connId)) {
+							conn = new RTMPOriginConnection(
+									IConnection.PERSISTENT,
+									header.getClientId(),
+									sessionId
+									);
+							conn.setMrtmpManager(mrtmpManager);
+							conn.setHandler(this);
+							statConnMap.put(connId, conn);
+						} else {
+							log.warn("Open an already existing RTMP origin connection!");
+						}
 					}
 				} finally {
 					lock.writeLock().unlock();
 				}
 				break;
 			case MRTMPPacket.CLOSE:
-				closeConnection(clientId);
-				break;
 			case MRTMPPacket.RTMP:
 				lock.readLock().lock();
 				try {
-					if (connMap.containsKey(clientId)) {
-						RTMPOriginConnection conn = connMap.get(clientId);
-						MRTMPPacket.RTMPBody rtmpBody = (MRTMPPacket.RTMPBody) body;
-						handler.messageReceived(conn, conn.getState(), rtmpBody.getRtmpPacket());
+					if (header.isDynamic()) {
+						conn = dynConnMap.get(clientId);
 					} else {
-						log.warn("Handle on a non-existent origin connection!");
+						StaticConnId connId = new StaticConnId();
+						connId.clientId = header.getClientId();
+						connId.sessionId = sessionId;
+						conn = statConnMap.get(connId);
 					}
 				} finally {
 					lock.readLock().unlock();
+				}
+				if (conn != null) {
+					if (packet.getHeader().getType() == MRTMPPacket.CLOSE) {
+						closeConnection(conn);
+						conn = null;
+					} else {
+						MRTMPPacket.RTMPBody rtmpBody = (MRTMPPacket.RTMPBody) body;
+						handler.messageReceived(conn, conn.getState(), rtmpBody.getRtmpPacket());
+					}
+				} else {
+					log.warn("Handle on a non-existent origin connection!");
 				}
 				break;
 			default:
 				log.warn("Unknown mrtmp packet received!");
 				break;
+		}
+		if (conn != null) {
+			mrtmpManager.associate(conn, mrtmpConn);
 		}
 	}
 
@@ -119,18 +155,70 @@ public class OriginMRTMPHandler extends IoHandlerAdapter {
 		log.debug("Created MRTMP Origin Connection " + conn);
 	}
 
-	public void closeConnection(int clientId) {
+	public void closeConnection(RTMPOriginConnection conn) {
+		boolean dynamic = !conn.getType().equals(IConnection.PERSISTENT);
 		lock.writeLock().lock();
 		try {
-			if (connMap.containsKey(clientId)) {
-				RTMPOriginConnection conn = connMap.get(clientId);
-				connMap.remove(clientId);
-				conn.realClose();
+			if (dynamic) {
+				if (dynConnMap.containsKey(conn.getId())) {
+					dynConnMap.remove(conn.getId());
+					conn.realClose();
+				} else {
+					log.warn("Close a non-existent origin connection!");
+				}
 			} else {
-				log.warn("Close a non-existent origin connection!");
+				StaticConnId connId = new StaticConnId();
+				connId.clientId = conn.getId();
+				connId.sessionId = conn.getIoSessionId();
+				if (statConnMap.containsKey(connId)) {
+					statConnMap.remove(connId);
+					conn.realClose();
+				} else {
+					log.warn("Close a non-existent origin connection!");
+				}
 			}
 		} finally {
 			lock.writeLock().unlock();
 		}
+		mrtmpManager.dissociate(conn);
+	}
+	
+	protected int getSessionId(IoSession session) {
+		MRTMPOriginConnection mrtmpConn = (MRTMPOriginConnection) session.getAttachment();
+		if (mrtmpConn != null) {
+			return mrtmpConn.hashCode();
+		}
+		return 0;
+	}
+	
+	private class StaticConnId {
+		public int sessionId;
+		public int clientId;
+		
+		@Override
+		public int hashCode() {
+			final int PRIME = 31;
+			int result = 1;
+			result = PRIME * result + clientId;
+			result = PRIME * result + sessionId;
+			return result;
+		}
+		
+		@Override
+		public boolean equals(Object obj) {
+			if (this == obj)
+				return true;
+			if (obj == null)
+				return false;
+			if (getClass() != obj.getClass())
+				return false;
+			final StaticConnId other = (StaticConnId) obj;
+			if (clientId != other.clientId)
+				return false;
+			if (sessionId != other.sessionId)
+				return false;
+			return true;
+		}
+		
 	}
 }

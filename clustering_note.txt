@@ -1,0 +1,11 @@
+1. event object serialization support
+2. add id to RTMPConnection
+3. put raw buffer handling to a common place
+RTMPHandler is designed to handle non-raw buffer
+Enhance RTMPHandler to handle raw buffer or override it to handle
+raw buffer?
+4. Use a common object to manage connections:
+create/delete connections
+get connection object by id
+inject the RTMPServlet and RTMPMinaIoHandler to use this common obj
+5. Use Enum for the type of connection

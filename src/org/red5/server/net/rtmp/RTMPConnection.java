@@ -53,6 +53,7 @@ import org.red5.server.api.stream.IPlaylistSubscriberStream;
 import org.red5.server.api.stream.ISingleItemSubscriberStream;
 import org.red5.server.api.stream.IStreamCapableConnection;
 import org.red5.server.api.stream.IStreamService;
+import org.red5.server.net.rtmp.codec.RTMP;
 import org.red5.server.net.rtmp.event.BytesRead;
 import org.red5.server.net.rtmp.event.ClientBW;
 import org.red5.server.net.rtmp.event.Invoke;
@@ -225,6 +226,10 @@ public abstract class RTMPConnection extends BaseConnection implements
 	 */
 	private int maxHandshakeTimeout = 5000;
 	
+	private int clientId;
+	
+	protected RTMP state;
+	
 	/**
 	 * Creates anonymous RTMP connection without scope
 	 * @param type          Connection type
@@ -241,6 +246,22 @@ public abstract class RTMPConnection extends BaseConnection implements
 		pendingVideos = new ConcurrentHashMap<Integer, Integer>();
 	}
 	
+	public int getId() {
+		return clientId;
+	}
+
+	public void setId(int clientId) {
+		this.clientId = clientId;
+	}
+
+	public RTMP getState() {
+		return state;
+	}
+
+	public void setState(RTMP state) {
+		this.state = state;
+	}
+
 	@Override
 	public boolean connect(IScope newScope, Object[] params) {
 		boolean success = super.connect(newScope, params);

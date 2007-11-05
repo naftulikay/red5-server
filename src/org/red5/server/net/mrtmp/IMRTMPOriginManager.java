@@ -1,14 +1,24 @@
 package org.red5.server.net.mrtmp;
 
+import org.red5.server.net.rtmp.RTMPConnection;
+
 public interface IMRTMPOriginManager extends IMRTMPManager {
 	/**
-	 * Set the afinity of a RTMPT client with a MRTMP connection
-	 * so that the specified MRTMP connection will get higher
-	 * priority for selection as the output for packets.
-	 * Note it is implementation specific to choose which MRTMP
-	 * connection for which RTMPT client.
-	 * @param conn
+	 * Associate the client to a MRTMP connection so that the packet
+	 * will be sent via this MRTMP connection.
+	 * The association has different impacts on persistent and polling
+	 * connections. For persistent connection, the mapping is static while
+	 * for polling connection, the mapping is dynamic and might not be
+	 * honored.
 	 * @param clientId
+	 * @param conn
 	 */
-	void setAfinity(IMRTMPConnection conn, int clientId);
+	void associate(RTMPConnection rtmpConn, IMRTMPConnection mrtmpConn);
+	
+	/**
+	 * Deassociate the client from the MRTMP connection previously
+	 * associated to.
+	 * @param rtmpConn
+	 */
+	void dissociate(RTMPConnection rtmpConn);
 }

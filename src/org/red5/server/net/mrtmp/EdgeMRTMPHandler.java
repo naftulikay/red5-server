@@ -9,9 +9,10 @@ import org.apache.mina.filter.codec.ProtocolCodecFactory;
 import org.apache.mina.filter.codec.ProtocolCodecFilter;
 import org.red5.server.net.mrtmp.MRTMPPacket.RTMPBody;
 import org.red5.server.net.mrtmp.MRTMPPacket.RTMPHeader;
+import org.red5.server.net.rtmp.IRTMPConnManager;
+import org.red5.server.net.rtmp.RTMPConnection;
 import org.red5.server.net.rtmp.event.Invoke;
 import org.red5.server.net.rtmp.message.Constants;
-import org.red5.server.net.rtmpt.EdgeRTMPTConnection;
 import org.red5.server.net.rtmpt.codec.EdgeRTMP;
 import org.red5.server.service.Call;
 
@@ -19,6 +20,7 @@ public class EdgeMRTMPHandler extends IoHandlerAdapter
 implements Constants {
 	private static final Log log = LogFactory.getLog(EdgeMRTMPHandler.class);
 
+	private IRTMPConnManager rtmpConnManager;
 	private IMRTMPEdgeManager mrtmpManager;
 	private ProtocolCodecFactory codecFactory;
 	
@@ -26,15 +28,19 @@ implements Constants {
 		this.codecFactory = codecFactory;
 	}
 
-	public void setMrtmpMananger(IMRTMPEdgeManager mrtmpMananger) {
-		this.mrtmpManager = mrtmpMananger;
+	public void setMrtmpManager(IMRTMPEdgeManager mrtmpManager) {
+		this.mrtmpManager = mrtmpManager;
+	}
+
+	public void setRtmpConnManager(IRTMPConnManager rtmpConnManager) {
+		this.rtmpConnManager = rtmpConnManager;
 	}
 
 	@Override
 	public void messageReceived(IoSession session, Object message) throws Exception {
 		MRTMPPacket mrtmpPacket = (MRTMPPacket) message;
 		int clientId = mrtmpPacket.getHeader().getClientId();
-		EdgeRTMPTConnection conn = mrtmpManager.lookupRTMPTConnection(clientId);
+		RTMPConnection conn = rtmpConnManager.getConnection(clientId);
 		if (conn == null) {
 			log.debug("Client " + clientId + " is already closed.");
 			return;

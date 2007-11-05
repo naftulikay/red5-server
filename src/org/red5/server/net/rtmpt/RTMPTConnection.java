@@ -64,11 +64,6 @@ public class RTMPTConnection extends RTMPConnection {
 	protected static final byte MAX_POLLING_DELAY = 32;
 
     /**
-     * RTMP protocol state
-     */
-    protected RTMP state;
-
-    /**
      * Protocol decoder
      */
     protected SimpleProtocolDecoder decoder;
@@ -115,10 +110,6 @@ public class RTMPTConnection extends RTMPConnection {
      * Closing flag
      */
 	protected boolean closing;
-    /**
-     * Connection client id
-     */
-	protected int clientId;
 
 	/** Constructs a new RTMPTConnection. */
     RTMPTConnection() {
@@ -135,7 +126,7 @@ public class RTMPTConnection extends RTMPConnection {
     		this.state = new RTMP(RTMP.MODE_SERVER);
     		// Use internal (Java) id of object to make guessing of client ids
     		// more difficult.
-    		clientId = hashCode();
+    		setId(hashCode());
     	}
 		this.buffer = ByteBuffer.allocate(2048);
 		this.buffer.setAutoExpand(true);
@@ -211,21 +202,12 @@ public class RTMPTConnection extends RTMPConnection {
 	}
 
 	/**
-	 * Return the client id for this connection.
-	 *
-	 * @return the client id
-	 */
-    synchronized public int getId() {
-		return clientId;
-	}
-
-	/**
 	 * Return the current decoder state.
 	 *
 	 * @return the current decoder state.
 	 */
     synchronized public RTMP getState() {
-		return this.state;
+		return super.getState();
 	}
 
 	/**

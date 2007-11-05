@@ -242,20 +242,17 @@ implements ApplicationContextAware {
 		}
 
 		// moved protocol state from connection object to rtmp object
-		session.setAttribute(ProtocolState.SESSION_KEY, new RTMP(mode));
+		RTMP rtmp = createRTMP(mode);
+		session.setAttribute(ProtocolState.SESSION_KEY, rtmp);
 
 		session.getFilterChain().addFirst("protocolFilter",
 				new ProtocolCodecFilter(this.codecFactory));
 		if (log.isDebugEnabled()) {
 			session.getFilterChain().addLast("logger", new LoggingFilter());
 		}
-		RTMPMinaConnection conn;
-		if (appCtx != null) {
-			conn = (RTMPMinaConnection) appCtx.getBean("rtmpMinaConnection");
-		} else {
-			conn = new RTMPMinaConnection();
-		}
+		RTMPMinaConnection conn = createRTMPMinaConnection();
 		conn.setIoSession(session);
+		conn.setState(rtmp);
 		session.setAttachment(conn);
 	}
 
@@ -264,4 +261,15 @@ implements ApplicationContextAware {
 		this.appCtx = appCtx;
 	}
 
+    protected RTMPMinaConnection createRTMPMinaConnection() {
+		if (appCtx != null) {
+			return (RTMPMinaConnection) appCtx.getBean("rtmpMinaConnection");
+		} else {
+			return new RTMPMinaConnection();
+		}
+    }
+    
+    protected RTMP createRTMP(boolean mode) {
+    	return new RTMP(mode);
+    }
 }

@@ -48,10 +48,9 @@ implements Constants {
 		EdgeRTMP rtmpState = (EdgeRTMP) conn.getState();
 		switch (mrtmpPacket.getHeader().getType()) {
 			case MRTMPPacket.CLOSE:
-				// TODO current impl uses a private field
-				// closing to indicate the "closing" state
-				// we need to use EdgeRTMP state to track
-				// the connection state consistently.
+				synchronized (rtmpState) {
+					rtmpState.setState(EdgeRTMP.EDGE_DISCONNECTING);
+				}
 				conn.close();
 				break;
 			case MRTMPPacket.RTMP:

@@ -22,7 +22,7 @@ implements IRTMPConnManager, ApplicationContextAware {
 			return null;
 		}
 		try {
-			RTMPConnection conn = (RTMPConnection) connCls.newInstance();
+			RTMPConnection conn = (RTMPConnection) createConnectionInstance(connCls);
 			lock.writeLock().lock();
 			try {
 				int offset = 0;

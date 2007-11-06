@@ -7,6 +7,7 @@ import org.red5.server.api.service.IPendingServiceCall;
 import org.red5.server.api.service.IServiceCall;
 import org.red5.server.net.mrtmp.IMRTMPManager;
 import org.red5.server.net.protocol.ProtocolState;
+import org.red5.server.net.rtmp.codec.RTMP;
 import org.red5.server.net.rtmp.event.BytesRead;
 import org.red5.server.net.rtmp.event.IRTMPEvent;
 import org.red5.server.net.rtmp.event.Invoke;
@@ -175,5 +176,11 @@ public class EdgeRTMPHandler extends RTMPHandler {
 	
 	protected void forwardPacket(RTMPConnection conn, Packet packet) {
 		mrtmpManager.lookupMRTMPConnection(conn).write(conn.getId(), packet);
+	}
+
+	@Override
+	public void connectionClosed(RTMPConnection conn, RTMP state) {
+		// the state change will be maintained inside connection object.
+		conn.close();
 	}
 }

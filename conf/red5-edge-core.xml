@@ -17,7 +17,7 @@
 			</map>
 		</property>
 	</bean>
-	
+
 	<bean id="placeholderConfig"
 		class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
 		<property name="location" value="classpath:/red5.properties" />
@@ -65,6 +65,7 @@
 		<property name="maxInactivity" value="${rtmp.max_inactivity}" />
 		<!-- Max. time in milliseconds to wait for a valid handshake. -->
 		<property name="maxHandshakeTimeout" value="5000" />
+		<property name="mrtmpManager" ref="mrtmpEdgeManager" />
 	</bean>
 	
 	<bean id="mrtmpCodecFactory"

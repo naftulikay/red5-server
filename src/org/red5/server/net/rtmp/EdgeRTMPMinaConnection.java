@@ -1,8 +1,44 @@
 package org.red5.server.net.rtmp;
 
 import org.red5.server.api.scheduling.ISchedulingService;
+import org.red5.server.net.mrtmp.IMRTMPConnection;
+import org.red5.server.net.mrtmp.IMRTMPEdgeManager;
+import org.red5.server.net.rtmp.codec.RTMP;
+import org.red5.server.net.rtmpt.codec.EdgeRTMP;
 
 public class EdgeRTMPMinaConnection extends RTMPMinaConnection {
+	private IMRTMPEdgeManager mrtmpManager;
+	
+	public void setMrtmpManager(IMRTMPEdgeManager mrtmpManager) {
+		this.mrtmpManager = mrtmpManager;
+	}
+
+	@Override
+	public void close() {
+		boolean needNotifyOrigin = false;
+		EdgeRTMP state = (EdgeRTMP) getState();
+		synchronized (state) {
+			if (state.getState() == EdgeRTMP.STATE_CONNECTED) {
+				needNotifyOrigin = true;
+				// now we are disconnecting ourselves
+				state.setState(EdgeRTMP.EDGE_DISCONNECTING);
+			}
+		}
+		if (needNotifyOrigin) {
+			IMRTMPConnection conn = mrtmpManager.lookupMRTMPConnection(this);
+			if (conn != null) {
+				conn.disconnect(getId());
+			}
+		}
+		synchronized (state) {
+			if (state.getState() == RTMP.STATE_DISCONNECTED) {
+				return;
+			} else {
+				state.setState(RTMP.STATE_DISCONNECTED);
+			}
+		}
+		super.close();
+	}
 
 	@Override
 	protected void startWaitForHandshake(ISchedulingService service) {

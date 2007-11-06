@@ -96,7 +96,14 @@ public class RTMPOriginConnection extends RTMPConnection {
 	}
 
 	@Override
-	public void close() {
+	synchronized public void close() {
+		if (state.getState() == RTMP.STATE_DISCONNECTED) {
+			return;
+		}
+		IMRTMPConnection conn = mrtmpManager.lookupMRTMPConnection(this);
+		if (conn != null) {
+			conn.disconnect(getId());
+		}
 		handler.closeConnection(this);
 	}
 	

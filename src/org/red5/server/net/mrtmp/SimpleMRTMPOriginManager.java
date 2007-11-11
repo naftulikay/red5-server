@@ -1,21 +1,29 @@
 package org.red5.server.net.mrtmp;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
+import java.util.Map.Entry;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.red5.server.api.IConnection;
 import org.red5.server.net.rtmp.RTMPConnection;
+import org.red5.server.net.rtmp.RTMPOriginConnection;
 
 public class SimpleMRTMPOriginManager implements IMRTMPOriginManager {
+	private static final Log log = LogFactory.getLog(SimpleMRTMPOriginManager.class);
 	
 	private ReadWriteLock lock = new ReentrantReadWriteLock();
 	private Set<IMRTMPConnection> connSet = new HashSet<IMRTMPConnection>();
 	private Map<RTMPConnection, IMRTMPConnection> clientToConnMap;
+	private OriginMRTMPHandler originMRTMPHandler;
 	
 	public SimpleMRTMPOriginManager() {
 		// XXX Use HashMap instead of WeakHashMap temporarily
@@ -23,6 +31,10 @@ public class SimpleMRTMPOriginManager implements IMRTMPOriginManager {
 		// integration.
 		clientToConnMap = Collections.synchronizedMap(
 				new HashMap<RTMPConnection, IMRTMPConnection>());
+	}
+
+	public void setOriginMRTMPHandler(OriginMRTMPHandler originMRTMPHandler) {
+		this.originMRTMPHandler = originMRTMPHandler;
 	}
 
 	public boolean registerConnection(IMRTMPConnection conn) {
@@ -35,12 +47,28 @@ public class SimpleMRTMPOriginManager implements IMRTMPOriginManager {
 	}
 
 	public boolean unregisterConnection(IMRTMPConnection conn) {
+		boolean ret;
+		ArrayList<RTMPConnection> list = new ArrayList<RTMPConnection>();
 		lock.writeLock().lock();
 		try {
-			return connSet.remove(conn);
+			ret = connSet.remove(conn);
+			if (ret) {
+				for (Iterator<Entry<RTMPConnection, IMRTMPConnection>> iter = clientToConnMap.entrySet().iterator(); iter.hasNext(); ) {
+					Entry<RTMPConnection, IMRTMPConnection> entry = iter.next();
+					if (entry.getValue() == conn) {
+						list.add(entry.getKey());
+					}
+				}
+			}
 		} finally {
 			lock.writeLock().unlock();
 		}
+		// close all RTMPOriginConnections
+		for (RTMPConnection rtmpConn : list) {
+			log.debug("Close RTMPOriginConnection " + rtmpConn.getId() + " due to MRTMP Connection closed!");
+			originMRTMPHandler.closeConnection((RTMPOriginConnection) rtmpConn);
+		}
+		return ret;
 	}
 
 	public void associate(RTMPConnection rtmpConn, IMRTMPConnection mrtmpConn) {

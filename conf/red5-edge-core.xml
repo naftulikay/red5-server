@@ -86,6 +86,7 @@
 	
 	<bean id="mrtmpEdgeManager"
 		class="org.red5.server.net.mrtmp.SimpleMRTMPEdgeManager">
+		<property name="rtmpConnManager" ref="rtmpConnManager" />
 	</bean>
 	
 	<!-- RTMPT Handler -->

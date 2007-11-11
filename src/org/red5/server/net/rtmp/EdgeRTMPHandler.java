@@ -5,6 +5,7 @@ import java.util.Map;
 import org.apache.mina.common.ByteBuffer;
 import org.red5.server.api.service.IPendingServiceCall;
 import org.red5.server.api.service.IServiceCall;
+import org.red5.server.net.mrtmp.IMRTMPConnection;
 import org.red5.server.net.mrtmp.IMRTMPManager;
 import org.red5.server.net.protocol.ProtocolState;
 import org.red5.server.net.rtmp.codec.RTMP;
@@ -171,11 +172,17 @@ public class EdgeRTMPHandler extends RTMPHandler {
 	}
 	
 	protected void sendConnectMessage(RTMPConnection conn) {
-		mrtmpManager.lookupMRTMPConnection(conn).connect(conn.getId());
+		IMRTMPConnection mrtmpConn = mrtmpManager.lookupMRTMPConnection(conn);
+		if (mrtmpConn != null) {
+			mrtmpConn.connect(conn.getId());
+		}
 	}
 	
 	protected void forwardPacket(RTMPConnection conn, Packet packet) {
-		mrtmpManager.lookupMRTMPConnection(conn).write(conn.getId(), packet);
+		IMRTMPConnection mrtmpConn = mrtmpManager.lookupMRTMPConnection(conn);
+		if (mrtmpConn != null) {
+			mrtmpManager.lookupMRTMPConnection(conn).write(conn.getId(), packet);
+		}
 	}
 
 	@Override

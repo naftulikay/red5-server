@@ -93,10 +93,6 @@ implements Constants {
 	@Override
 	public void sessionClosed(IoSession session) throws Exception {
 		MRTMPEdgeConnection conn = (MRTMPEdgeConnection) session.getAttachment();
-		// TODO we need to notify all the Edge RTMPT connections that
-		// are assigned to this Origin so that the RTMPT connections
-		// (1) Be closed, or
-		// (2) Reassigned to another Origin
 		mrtmpManager.unregisterConnection(conn);
 		conn.close();
 		log.debug("Closed MRTMP Edge Connection " + conn);
@@ -115,5 +111,4 @@ implements Constants {
 		}
 		log.debug("Created MRTMP Edge Connection " + conn);
 	}
-
 }

@@ -1,5 +1,7 @@
 package org.red5.server.net.rtmp;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.locks.ReadWriteLock;
@@ -58,9 +60,20 @@ implements IRTMPConnManager, ApplicationContextAware {
 	}
 
 	public RTMPConnection removeConnection(int clientId) {
-		lock.writeLock();
+		lock.writeLock().lock();
 		try {
 			return connMap.remove(clientId);
+		} finally {
+			lock.writeLock().unlock();
+		}
+	}
+	
+	public Collection<RTMPConnection> removeConnections() {
+		ArrayList<RTMPConnection> list = new ArrayList<RTMPConnection>();
+		lock.writeLock().lock();
+		try {
+			list.addAll(connMap.values());
+			return list;
 		} finally {
 			lock.writeLock().unlock();
 		}

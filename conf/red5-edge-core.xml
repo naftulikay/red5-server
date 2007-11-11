@@ -113,10 +113,10 @@
 		<property name="maxHandshakeTimeout" value="5000" />
 	</bean>
 	
-	<!-- Jetty RTMPT Container -->
+	<!-- Jetty RTMPT Container 
 	<bean id="rtmpt.server"
 		class="org.red5.server.net.rtmpt.RTMPTLoader" init-method="init"
-		autowire="byType" />
+		autowire="byType" /> -->
 		
 	<!-- Tomcat Container -->
 	<!--  

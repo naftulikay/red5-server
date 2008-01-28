@@ -1,0 +1,63 @@
+Atom: type = ftyp size = 24
+org.red5.io.mp4.MP4Atom@15e83f9[size=24,type=1718909296,uuid=<null>,readed=8,children=[],version=0,flags=0,entryCount=0,chunks=[],handlerType=0,creationTime=<null>,modificationTime=<null>,timeScale=0,duration=0,sampleSize=0,sampleCount=0,samples=[],fieldSize=0,records=[],width=0,height=0,esd_descriptor=<null>]
+
+Atom: type = mvhd size = 108
+
+Atom: type = tkhd size = 92
+Atom: type = edts size = 36
+Atom: type = mdhd size = 32
+Atom: type = hdlr size = 58
+Atom: type = smhd size = 16
+Atom: type = dref size = 28
+Atom: type = dinf size = 36
+Atom: type = esds size = 51
+Atom: type = mp4a size = 87
+Atom: type = stsd size = 103
+Atom: type = stts size = 24
+Atom: type = stsc size = 13612
+Atom: type = stsz size = 41240
+Atom: type = stco size = 4548
+Atom: type = stbl size = 59535
+Atom: type = minf size = 59595
+Atom: type = mdia size = 59693
+Atom: type = trak size = 59829
+
+Atom: type = tkhd size = 92
+Atom: type = edts size = 36
+Atom: type = mdhd size = 32
+Atom: type = hdlr size = 58
+Atom: type = vmhd size = 20
+Atom: type = dref size = 28
+Atom: type = dinf size = 36
+Atom: type = avc1 size = 132
+Atom: type = stsd size = 148
+Atom: type = stts size = 24
+Atom: type = ctts size = 30384
+Atom: type = stss size = 272
+Atom: type = sdtp size = 5749
+Atom: type = stsc size = 11500
+Atom: type = stsz size = 22968
+Atom: type = stco size = 3844
+Atom: type = stbl size = 74897
+Atom: type = minf size = 74961
+Atom: type = mdia size = 75059
+Atom: type = trak size = 75195
+
+Atom: type = moov size = 135140
+
+org.red5.io.mp4.MP4Atom@18e8541[size=135140,type=1836019574,uuid=<null>,readed=135140,children=[mvhd, trak, trak],version=0,flags=0,entryCount=0,chunks=[],handlerType=0,creationTime=<null>,modificationTime=<null>,timeScale=0,duration=0,sampleSize=0,sampleCount=0,samples=[],fieldSize=0,records=[],width=0,height=0,esd_descriptor=<null>]
+
+Atom: type = free size = 8
+
+org.red5.io.mp4.MP4Atom@988707[size=8,type=1718773093,uuid=<null>,readed=8,children=[],version=0,flags=0,entryCount=0,chunks=[],handlerType=0,creationTime=<null>,modificationTime=<null>,timeScale=0,duration=0,sampleSize=0,sampleCount=0,samples=[],fieldSize=0,records=[],width=0,height=0,esd_descriptor=<null>]
+
+Atom: type = free size = 8
+
+org.red5.io.mp4.MP4Atom@18488ef[size=8,type=1718773093,uuid=<null>,readed=8,children=[],version=0,flags=0,entryCount=0,chunks=[],handlerType=0,creationTime=<null>,modificationTime=<null>,timeScale=0,duration=0,sampleSize=0,sampleCount=0,samples=[],fieldSize=0,records=[],width=0,height=0,esd_descriptor=<null>]
+
+Atom: type = mdat size = 50829061
+
+org.red5.io.mp4.MP4Atom@18f7386[size=50829061,type=1835295092,uuid=<null>,readed=8,children=[],version=0,flags=0,entryCount=0,chunks=[],handlerType=0,creationTime=<null>,modificationTime=<null>,timeScale=0,duration=0,sampleSize=0,sampleCount=0,samples=[],fieldSize=0,records=[],width=0,height=0,esd_descriptor=<null>]
+
+Buffer size: 50964241 position: 50964241 remaining: 0
+New position exceeds limit

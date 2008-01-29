@@ -166,14 +166,14 @@ public class MP4Atom {
 			readed = atom.create_compact_sample_size_atom(bitstream);
 		} else if(type == MP4SampleToChunkAtomType){
 			readed = atom.create_sample_to_chunk_atom(bitstream);
-/*			
+			
 		} else if(type == MP4SoundMediaHeaderAtomType){
 			readed = atom.create_sound_media_header_atom(bitstream);
 		} else if(type == MP4TrackHeaderAtomType){
 			readed = atom.create_track_header_atom(bitstream);
 		} else if(type == MP4VideoMediaHeaderAtomType){
 			readed = atom.create_video_media_header_atom(bitstream);
-*/			
+			
 		} else if(type == MP4VisualSampleEntryAtomType){
 			readed = atom.create_visual_sample_entry_atom(bitstream);
 		} else if(type == MP4ESDAtomType) {
@@ -552,14 +552,13 @@ public class MP4Atom {
 		return readed;		
 	}
 
-/*
 	protected int balance;
 
 	/**
 	 * Loads MP4SoundMediaHeaderAtom atom from the input bitstream.
 	 * @param bitstream the input bitstream
 	 * @return the number of bytes which was being loaded.
-	 /
+	 */
 	public long create_sound_media_header_atom(MP4DataStream bitstream) throws IOException {
 		create_full_atom(bitstream);
 		balance = (int)bitstream.readBytes(2);
@@ -576,7 +575,7 @@ public class MP4Atom {
 	 * Loads MP4TrackHeaderAtom atom from the input bitstream.
 	 * @param bitstream the input bitstream
 	 * @return the number of bytes which was being loaded.
-	 /
+	 */
 	public long create_track_header_atom(MP4DataStream bitstream) throws IOException {
 		create_full_atom(bitstream);
 		if(version == 1) {
@@ -623,7 +622,7 @@ public class MP4Atom {
 	 * Loads MP4VideoMediaHeaderAtom atom from the input bitstream.
 	 * @param bitstream the input bitstream
 	 * @return the number of bytes which was being loaded.
-	 /
+	 */
 	public long create_video_media_header_atom(MP4DataStream bitstream) throws IOException {
 		create_full_atom(bitstream);
 		if((size - readed) == 8) {
@@ -635,7 +634,7 @@ public class MP4Atom {
 		}
 		return readed;		
 	}
-*/
+
 	protected int width;
 	protected int height;
 

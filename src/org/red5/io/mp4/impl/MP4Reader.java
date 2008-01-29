@@ -28,6 +28,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Vector;
 
 import org.apache.commons.lang.builder.ToStringBuilder;
 import org.apache.mina.common.ByteBuffer;
@@ -42,7 +43,6 @@ import org.red5.io.flv.IKeyFrameDataAnalyzer;
 import org.red5.io.flv.impl.Tag;
 import org.red5.io.mp4.MP4Atom;
 import org.red5.io.mp4.MP4DataStream;
-import org.red5.io.mp4.MP4Descriptor;
 import org.red5.io.mp4.MP4Header;
 import org.red5.io.object.Serializer;
 import org.red5.io.utils.IOUtils;
@@ -125,6 +125,11 @@ public class MP4Reader implements IoConstants, ITagReader,
 	/** The header of this MP4 file. */
 	private MP4Header header;
 	
+    /**
+     * File metadata
+     */
+	private ITag fileMeta;
+	
 	/** Constructs a new MP4Reader. */
 	MP4Reader() {
 	}
@@ -154,7 +159,6 @@ public class MP4Reader implements IoConstants, ITagReader,
 		this.generateMetadata = generateMetadata;
 		channel = fis.getChannel();
 		
-		
 		try {
 			//the first atom will/should be the type
 			MP4Atom type = MP4Atom.createAtom(fis);
@@ -163,12 +167,57 @@ public class MP4Reader implements IoConstants, ITagReader,
 			while (i < 6) {
 				MP4Atom atom = MP4Atom.createAtom(fis);
 				log.debug("{}", ToStringBuilder.reflectionToString(atom));
+				Vector children = atom.getChildren();
+				for (int v = 0; v < children.size(); v++) {
+					MP4Atom at = (MP4Atom) children.get(v);
+					if (at.getType() == MP4Atom.typeToInt("mvhd")) {
+						log.debug("----------- Got movie header");
+						duration = at.getDuration();
+						log.debug("Children {}", at.getChildren());
+						log.debug("Esd Descriptor {}", at.getEsd_descriptor());
+						log.debug("Time scale {}", at.getTimeScale());
+						log.debug("Duration {}", duration);
+					} else if (at.getType() == MP4Atom.typeToInt("trak")) {
+						log.debug("----------- Got track");
+						log.debug("Children {}", at.getChildren());
+						log.debug("Esd Descriptor {}", at.getEsd_descriptor());
+
+						Vector children2 = at.getChildren();
+						for (int v2 = 0; v2 < children2.size(); v2++) {
+							MP4Atom at2 = (MP4Atom) children2.get(v2);
+							//tkhd, edts, mdia
+							log.debug("Children 2 {}", at2.getChildren());
+							
+							if (at2.getType() == MP4Atom.typeToInt("mdia")) {
+								log.debug("----------- Got Media");
+								Vector children3 = at2.getChildren();
+								for (int v3 = 0; v3 < children3.size(); v3++) {
+									MP4Atom at3 = (MP4Atom) children3.get(v3);
+									//mdhd, hdlr, minf
+									log.debug("Children 3 {}", at3.getChildren());
+									//smhd, dinf, stbl
+									//vmhd, dinf, stbl
+									
+									if (at3.getType() == MP4Atom.typeToInt("minf")) {
+										log.debug("----------- Got Media Information");
+									
+										log.debug("Width {}", at3.getWidth());
+										log.debug("Height {}", at3.getHeight());
+									}
+								}
+							}
+						}
+					} 
+				}
 				i++;
 			}
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+		
+        // Create file metadata object
+        fileMeta = createFileMeta();		
 		
 //		try {
 //			MP4Descriptor descriptor = MP4Descriptor.createDescriptor(fis);
@@ -530,6 +579,24 @@ public class MP4Reader implements IoConstants, ITagReader,
     /**
      * Create tag for metadata event.
 	 *
+	 * Info from http://www.kaourantin.net/2007/08/what-just-happened-to-video-on-web_20.html
+	 * <pre>
+		duration - Obvious. But unlike for FLV files this field will always be present.
+		videocodecid - For H.264 we report 'avc1'.
+        audiocodecid - For AAC we report 'mp4a', for MP3 we report '.mp3'.
+        avcprofile - 66, 77, 88, 100, 110, 122 or 144 which corresponds to the H.264 profiles.
+        avclevel - A number between 10 and 51. Consult this list to find out more.
+        aottype - Either 0, 1 or 2. This corresponds to AAC Main, AAC LC and SBR audio types.
+        moovposition - The offset in bytes of the moov atom in a file.
+        trackinfo - An array of objects containing various infomation about all the tracks in a file.
+        chapters - As mentioned above information about chapters in audiobooks.
+        seekpoints - As mentioned above times you can directly feed into NetStream.seek();
+        videoframerate - The frame rate of the video if a monotone frame rate is used. Most videos will have a monotone frame rate.
+        audiosamplerate - The original sampling rate of the audio track.
+        audiochannels - The original number of channels of the audio track.
+        tags - As mentioned above ID3 like tag information.
+	 * </pre>
+	 *
      * @return         Metadata event tag
      */
     private ITag createFileMeta() {
@@ -544,8 +611,21 @@ public class MP4Reader implements IoConstants, ITagReader,
 		props.put("duration", duration / 1000.0);
         // Video codec id
 		props.put("videocodecid", MP4Atom.typeToInt("avc1"));
-        // Audio codec id
+		props.put("avcprofile", "");
+        props.put("avclevel", "");
+        props.put("videoframerate", "");
+		// Audio codec id - watch for mp3 instead of aac
         props.put("audiocodecid", MP4Atom.typeToInt("mp4a"));
+        props.put("aottype", "");
+        props.put("audiosamplerate", "");
+        props.put("audiochannels", "");
+        
+        props.put("moovposition", "");
+        props.put("trackinfo", "");
+        props.put("chapters", "");
+        props.put("seekpoints", "");
+        props.put("tags", "");
+   
 		props.put("canSeekToEnd", false);
 		out.writeMap(props, new Serializer());
 		buf.flip();

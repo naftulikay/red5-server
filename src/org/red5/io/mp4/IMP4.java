@@ -38,7 +38,7 @@ import org.red5.server.api.cache.ICacheStore;
 public interface IMP4 extends IStreamableFile {
 
 	/**
-	 * Returns a boolean stating whether the flv has metadata
+	 * Returns a boolean stating whether the mp4 has metadata
 	 * 
 	 * @return boolean        <code>true</code> if file has injected metadata, <code>false</code> otherwise
 	 */
@@ -70,14 +70,14 @@ public interface IMP4 extends IStreamableFile {
 	public IMetaData getMetaData() throws FileNotFoundException;
 
 	/**
-	 * Returns a boolean stating whether a flv has keyframedata
+	 * Returns a boolean stating whether a mp4 has keyframedata
 	 * 
 	 * @return boolean                   <code>true</code> if file has keyframe metadata, <code>false</code> otherwise
 	 */
 	public boolean hasKeyFrameData();
 
 	/**
-	 * Sets the keyframe data of a flv file
+	 * Sets the keyframe data of a mp4 file
 	 * 
 	 * @param keyframedata              Keyframe metadata
 	 */
@@ -91,7 +91,7 @@ public interface IMP4 extends IStreamableFile {
 	public Map getKeyFrameData();
 
 	/**
-	 * Refreshes the headers. Usually used after data is added to the flv file
+	 * Refreshes the headers. Usually used after data is added to the mp4 file
 	 * 
 	 * @throws IOException              Any I/O exception
 	 */

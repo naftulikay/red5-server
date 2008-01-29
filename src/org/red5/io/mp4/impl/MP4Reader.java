@@ -156,8 +156,11 @@ public class MP4Reader implements IoConstants, ITagReader,
 		
 		
 		try {
+			//the first atom will/should be the type
+			MP4Atom type = MP4Atom.createAtom(fis);
+			log.debug("Type {}", type.getType());
 			int i = 0;
-			while (i < 10) {
+			while (i < 6) {
 				MP4Atom atom = MP4Atom.createAtom(fis);
 				log.debug("{}", ToStringBuilder.reflectionToString(atom));
 				i++;

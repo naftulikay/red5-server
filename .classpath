@@ -5,14 +5,7 @@
 	<classpathentry excluding=".svn/*" kind="src" path="test"/>
 	<classpathentry excluding=".svn/*" kind="src" path="conf"/>
 	<classpathentry excluding=".svn/*|org/red5/server/script/rhino/" kind="src" path="src"/>
-	<classpathentry excluding=".svn/*" kind="src" path="webapps/admin/WEB-INF/src"/>
-	<classpathentry excluding=".svn/*" kind="src" path="webapps/echo/WEB-INF/src"/>
-	<classpathentry excluding=".svn/*" kind="src" path="webapps/tutorial/WEB-INF/src"/>
-	<classpathentry excluding=".svn/*" kind="src" path="webapps/fitcDemo/WEB-INF/src"/>
 	<classpathentry excluding=".svn/*" kind="src" path="webapps/oflaDemo/WEB-INF/src"/>
-	<classpathentry excluding=".svn/*" kind="src" path="webapps/test/WEB-INF/src"/>
-	<classpathentry excluding=".svn/*" kind="src" path="webapps/midiDemo/WEB-INF/src"/>
-	<classpathentry excluding=".svn/*" kind="src" path="webapps/adminPanel/WEB-INF/src"/>
 	<classpathentry kind="lib" path="lib/acegi-security-1.0.4.jar"/>
 	<classpathentry kind="lib" path="lib/activation-1.1.jar"/>
 	<classpathentry kind="lib" path="lib/annotations-api-.jar"/>
@@ -68,16 +61,11 @@
 	<classpathentry kind="lib" path="lib/xmlrpc-2.0.1.jar"/>
 	<classpathentry kind="lib" path="lib/commons-beanutils-1.8.0-BETA.jar"/>
 	<classpathentry kind="lib" path="lib/commons-httpclient-3.1.jar"/>
-	<classpathentry kind="lib" path="lib/groboutils-.jar"/>
 	<classpathentry kind="lib" path="lib/jruby-1.0.3.jar"/>
 	<classpathentry kind="lib" path="lib/mina-core-1.1.6-snapshot.jar"/>
 	<classpathentry kind="lib" path="lib/mina-filter-ssl-1.1.6-snapshot.jar"/>
 	<classpathentry kind="lib" path="lib/mina-integration-jmx-1.1.6-snapshot.jar"/>
 	<classpathentry kind="lib" path="lib/mina-integration-spring-1.1.6-snapshot.jar"/>
-	<classpathentry kind="lib" path="lib/spring-mock-2.0.7.jar"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/4"/>
-	<classpathentry kind="lib" path="lib/groovy-engine.jar"/>
-	<classpathentry kind="lib" path="lib/jruby-engine.jar"/>
-	<classpathentry kind="lib" path="lib/jython-engine.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

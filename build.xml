@@ -277,27 +277,6 @@
 			</fileset>
 		</copy>
 		<!-- build demos -->
-		<build-demo name="admin"/>
-		<build-demo name="adminPanel">
-			<copy-assets>
-				<logback webapp="adminPanel"/>
-			</copy-assets>
-		</build-demo>
-		<build-demo name="echo">
-			<copy-assets>
-				<logback webapp="echo"/>
-			</copy-assets>
-		</build-demo>
-		<build-demo name="fitcDemo">
-			<copy-assets>
-				<logback webapp="fitcDemo"/>
-			</copy-assets>
-		</build-demo>
-		<build-demo name="midiDemo">
-			<copy-assets>
-				<logback webapp="midiDemo"/>
-			</copy-assets>
-		</build-demo>
 		<build-demo name="oflaDemo">
 			<copy-assets>
 				<logback webapp="oflaDemo"/>
@@ -314,19 +293,6 @@
 				</copy>
 			</copy-assets>
 		</build-demo>
-		<build-demo name="tutorial">
-			<copy-assets>
-				<logback webapp="tutorial"/>
-			</copy-assets>
-		</build-demo>
-		<build-demo name="test"/>
-		<!-- no java source for the messageRecorder and SOSample app -->
-		<copy todir="${webapps.build.dir}/messageRecorder" filtering="true">
-			<fileset dir="webapps/messageRecorder"/>
-		</copy>
-		<copy todir="${webapps.build.dir}/SOSample" filtering="true">
-			<fileset dir="webapps/SOSample"/>
-		</copy>
 	</target>
 
 	<!-- Scripting -->
@@ -527,10 +493,6 @@
 		</jar>
 
 		<!-- create jar files for demos -->
-		<compile-jardemo name="admin"/>
-		<compile-jardemo name="echo"/>
-		<compile-jardemo name="fitcDemo"/>
-		<compile-jardemo name="midiDemo"/>
 		<compile-jardemo name="oflaDemo">
 			<copy-assets>
 				<!-- copy scripts -->
@@ -540,19 +502,9 @@
 				</copy>
 			</copy-assets>
 		</compile-jardemo>
-		<compile-jardemo name="test"/>
-		<compile-jardemo name="tutorial"/>
-		
-		<!-- exclude logback.xml for adminPanel -->
-		<jar destfile="${webapps.build.dir}/adminPanel/WEB-INF/lib/adminPanel.jar">
-			<fileset dir="${webapps.build.dir}/adminPanel/WEB-INF/classes">
-				<include name="**"/>
-				<exclude name="logback.xml"/>
-			</fileset>
-		</jar>
 	</target>
 
-	<target name="dist" description="Make Binary Distribution" depends="clean, jar, javadoc">
+	<target name="dist" description="Make Binary Distribution" depends="clean, jar">
 		<copy todir="${dist.dir}/doc">
 			<fileset dir="doc"/>
 		</copy>
@@ -581,32 +533,6 @@
 		</copy>
 		<chmod file="${dist.dir}/red5.sh" perm="755"/>
 		<chmod file="${dist.dir}/red5-shutdown.sh" perm="755"/>
-
-		<!-- Origin Cluster Distribution. Copies dist build and then puts origin config into place. -->
-		<property name="origindist.dir" value="${dist.dir}/origin"/>
-        <mkdir dir="${origindist.dir}"/>
-        <copy todir="${origindist.dir}/">
-            <fileset dir="${dist.dir}">
-                <exclude name="**/origin/**"/>
-                <exclude name="**/edge/**"/>
-                <exclude name="**/doc/**"/>
-            </fileset>
-        </copy>
-		<copy tofile="${origindist.dir}/conf/red5.xml" file="${dist.dir}/conf/red5-origin.xml" overwrite="true"/>
-		<copy todir="${origindist.dir}/webapps" file="webapps\red5-default.xml"/>
-	    
-		<!-- Edge Cluster Distribution. Copies dist build ignoring webapps, puts edge config into place, copies default webapp into place. -->	
-        <property name="edgedist.dir" value="${dist.dir}/edge"/>
-		<mkdir dir="${edgedist.dir}"/>
-        <copy todir="${edgedist.dir}/">
-            <fileset dir="${dist.dir}">
-                <exclude name="**/origin/**"/>
-                <exclude name="**/edge/**"/>
-                <exclude name="**/doc/**"/>
-            </fileset>
-        </copy>
-		<copy tofile="${edgedist.dir}/conf/red5.xml" file="${dist.dir}/conf/red5-edge.xml" overwrite="true"/>
-		<copy todir="${edgedist.dir}/webapps" file="webapps\red5-default.xml"/>
 	</target>
 
 	<target name="installerdist" description="Make Installer Distribution" depends="dist">

@@ -42,7 +42,9 @@ package org.red5.io.mp4;
 */
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.Vector;
 
 import org.slf4j.Logger;
@@ -110,7 +112,7 @@ public class MP4Atom {
 	/** The amount of bytes that readed from the mpeg stream. */
 	protected long readed;  
 	/** The children of this atom. */	
-	protected Vector children = new Vector();
+	protected List<MP4Atom> children = new ArrayList<MP4Atom>(3);
 	
 	public MP4Atom(long size, int type, String uuid, long readed) {
 		super();
@@ -165,15 +167,13 @@ public class MP4Atom {
 		} else if(type == MP4CompactSampleSizeAtomType){
 			readed = atom.create_compact_sample_size_atom(bitstream);
 		} else if(type == MP4SampleToChunkAtomType){
-			readed = atom.create_sample_to_chunk_atom(bitstream);
-			
+			readed = atom.create_sample_to_chunk_atom(bitstream);			
 		} else if(type == MP4SoundMediaHeaderAtomType){
 			readed = atom.create_sound_media_header_atom(bitstream);
 		} else if(type == MP4TrackHeaderAtomType){
 			readed = atom.create_track_header_atom(bitstream);
 		} else if(type == MP4VideoMediaHeaderAtomType){
 			readed = atom.create_video_media_header_atom(bitstream);
-			
 		} else if(type == MP4VisualSampleEntryAtomType){
 			readed = atom.create_visual_sample_entry_atom(bitstream);
 		} else if(type == MP4ESDAtomType) {
@@ -209,7 +209,7 @@ public class MP4Atom {
 	public long create_composite_atom(MP4DataStream bitstream) throws IOException {
 		while(readed < size) {
 			MP4Atom child = MP4Atom.createAtom(bitstream);
-			this.children.addElement(child);
+			this.children.add(child);
 			readed += child.getSize();
 		}
 		return readed;		
@@ -225,35 +225,45 @@ public class MP4Atom {
 	public MP4Atom lookup(long type, int number) {
 		int position = 0; 
 		for(int i = 0; i < children.size(); i++) {
-			MP4Atom atom = (MP4Atom)children.elementAt(i);
+			MP4Atom atom = (MP4Atom) children.get(i);
 			if(atom.getType() == type) {
 				if(position >= number) {
 					return atom;
 				}
-				position ++;
+				position++;
 			}
 		}
 		return null;
 	}
 
+	private int channelCount = 0;
 	
+	public int getChannelCount() {
+		return channelCount;
+	}
+
 	/**
 	 * Loads AudioSampleEntry atom from the input bitstream.
 	 * @param bitstream the input bitstream
 	 * @return the number of bytes which was being loaded.
 	 */
 	public long create_audio_sample_entry_atom(MP4DataStream bitstream) throws IOException {
+		//qtff page 117
+		log.debug("Audio sample entry");
 		bitstream.skipBytes(6);
 		int dataReferenceIndex = (int) bitstream.readBytes(2);
 		bitstream.skipBytes(8);
-		int channelCount = (int) bitstream.readBytes(2);
-		int sampleSize = (int) bitstream.readBytes(2);
+		channelCount = (int) bitstream.readBytes(2);
+		log.debug("Channels: {}", channelCount);
+		sampleSize = (int) bitstream.readBytes(2);
+		log.debug("Sample size (bits): {}", sampleSize);
 		bitstream.skipBytes(4);
-		int timeScale = (int) bitstream.readBytes(2);
+		timeScale = (int) bitstream.readBytes(2);
+		log.debug("Time scale: {}", timeScale);
 		bitstream.skipBytes(2);
 		readed += 28;
 		MP4Atom child = MP4Atom.createAtom(bitstream);
-		this.children.addElement(child);
+		this.children.add(child);
 		readed += child.getSize();
 		return readed;		
 	}
@@ -423,7 +433,7 @@ public class MP4Atom {
 		readed += 4;
 		for(int i = 0; i < entryCount; i++) {
 			MP4Atom child = MP4Atom.createAtom(bitstream);
-			this.children.addElement(child);
+			this.children.add(child);
 			readed += child.getSize();
 		}
 		return readed;		
@@ -644,13 +654,16 @@ public class MP4Atom {
 	 * @return the number of bytes which was being loaded.
 	 */
 	public long create_visual_sample_entry_atom(MP4DataStream bitstream) throws IOException {
+		log.debug("Visual entry atom contains wxh");
 		bitstream.skipBytes(24);
 		width = (int)bitstream.readBytes(2);
+		log.debug("Width: {}", width);
 		height = (int)bitstream.readBytes(2);
+		log.debug("Height: {}", height);
 		bitstream.skipBytes(50);
 		readed += 78;		
 		MP4Atom child = MP4Atom.createAtom(bitstream);
-		this.children.addElement(child);
+		this.children.add(child);
 		readed += child.getSize();
 		return readed;		
 	}
@@ -711,7 +724,7 @@ public class MP4Atom {
 	 * Gets children from this atom.
 	 * @return children from this atom.
 	 */
-	public Vector getChildren() {
+	public List<MP4Atom> getChildren() {
 		return children;
 	}
 

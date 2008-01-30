@@ -64,7 +64,7 @@ public class MP4Descriptor {
 	
 	protected int readed;
 	
-	protected Vector children = new Vector();
+	protected Vector<MP4Descriptor> children = new Vector<MP4Descriptor>();
 	
 	public MP4Descriptor(int type, int size) {
 		super();
@@ -157,7 +157,6 @@ public class MP4Descriptor {
 		}
 	}
 
-	
 	protected int decSpecificDataSize;
 	protected long decSpecificDataOffset;
 	
@@ -214,4 +213,8 @@ public class MP4Descriptor {
 		return readed;
 	}
 
+	public Vector<MP4Descriptor> getChildren() {
+		return children;
+	}	
+	
 }

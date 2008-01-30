@@ -21,7 +21,6 @@ package org.red5.io.mp4.impl;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.channels.FileChannel;
 import java.util.ArrayList;
@@ -43,6 +42,7 @@ import org.red5.io.flv.IKeyFrameDataAnalyzer;
 import org.red5.io.flv.impl.Tag;
 import org.red5.io.mp4.MP4Atom;
 import org.red5.io.mp4.MP4DataStream;
+import org.red5.io.mp4.MP4Descriptor;
 import org.red5.io.mp4.MP4Header;
 import org.red5.io.object.Serializer;
 import org.red5.io.utils.IOUtils;
@@ -125,6 +125,13 @@ public class MP4Reader implements IoConstants, ITagReader,
 	/** The header of this MP4 file. */
 	private MP4Header header;
 	
+	/** Whether or not the clip contains a video track */
+	private boolean hasVideo = false;
+	
+	//
+	private String videoCodecId = "avc1";
+	private String audioCodecId = "mp4a";
+	
     /**
      * File metadata
      */
@@ -139,7 +146,7 @@ public class MP4Reader implements IoConstants, ITagReader,
 	 *
      * @param f         File
      */
-    public MP4Reader(File f) throws FileNotFoundException {
+    public MP4Reader(File f) throws IOException {
 		this(f, false);
 	}
 
@@ -149,7 +156,7 @@ public class MP4Reader implements IoConstants, ITagReader,
      * @param f                    File input stream
      * @param generateMetadata     <code>true</code> if metadata generation required, <code>false</code> otherwise
      */
-    public MP4Reader(File f, boolean generateMetadata) throws FileNotFoundException {
+    public MP4Reader(File f, boolean generateMetadata) throws IOException {
     	if (null == f) {
     		log.warn("Reader was passed a null file");
         	log.debug("{}", ToStringBuilder.reflectionToString(this));
@@ -160,57 +167,307 @@ public class MP4Reader implements IoConstants, ITagReader,
 		channel = fis.getChannel();
 		
 		try {
-			//the first atom will/should be the type
+			// the first atom will/should be the type
 			MP4Atom type = MP4Atom.createAtom(fis);
-			log.debug("Type {}", type.getType());
+			// expect ftyp
+			log.debug("Type {}", MP4Atom.intToType(type.getType()));
+			log.debug("type children: {}", type.getChildren());
+			log.debug("{}", ToStringBuilder.reflectionToString(type));
+
+			MP4Atom moov = MP4Atom.createAtom(fis);
+			// expect moov
+			log.debug("Type {}", MP4Atom.intToType(moov.getType()));
+			log.debug("moov children: {}", moov.getChildren());			
+
+			MP4Atom mvhd = moov.lookup(MP4Atom.typeToInt("mvhd"), 0);
+			if (mvhd != null) {
+				log.debug("Movie header atom found");
+				log.debug("Time scale {}", mvhd.getTimeScale());
+				duration = mvhd.getDuration();
+				log.debug("Duration {}", duration);
+			}
+
+			MP4Atom meta = moov.lookup(MP4Atom.typeToInt("meta"), 0);
+			if (meta != null) {
+				log.debug("Meta atom found");
+				log.debug("{}", ToStringBuilder.reflectionToString(meta));
+			}
+			
 			int i = 0;
-			while (i < 6) {
-				MP4Atom atom = MP4Atom.createAtom(fis);
-				log.debug("{}", ToStringBuilder.reflectionToString(atom));
-				Vector children = atom.getChildren();
+			while (i < 2) {
+
+				MP4Atom trak = moov.lookup(MP4Atom.typeToInt("trak"), i);
+				if (trak != null) {
+					log.debug("Track atom found");
+					// trak: tkhd, edts, mdia
+					MP4Atom tkhd = trak.lookup(MP4Atom.typeToInt("tkhd"), 0);
+					if (tkhd != null) {
+						log.debug("Track header atom found");
+						log.debug("Width {} x Height {}", tkhd.getWidth(), tkhd
+								.getHeight());
+					}
+
+					MP4Atom mdia = trak.lookup(MP4Atom.typeToInt("mdia"), 0);
+					if (mdia != null) {
+						log.debug("Media atom found");
+						// mdia: mdhd, hdlr, minf
+						MP4Atom hdlr = mdia
+								.lookup(MP4Atom.typeToInt("hdlr"), 0);
+						if (hdlr != null) {
+							log.debug("Handler ref atom found");
+							// soun or vide
+							log.debug("Handler type: {}", MP4Atom
+									.intToType(hdlr.getHandlerType()));
+							if (MP4Atom.intToType(hdlr.getHandlerType()) == "vide") {
+								hasVideo = true;
+							}
+							i++;
+						}
+
+						MP4Atom minf = mdia
+								.lookup(MP4Atom.typeToInt("minf"), 0);
+						if (minf != null) {
+							log.debug("Media info atom found");
+							// minf: (audio) smhd, dinf, stbl / (video) vmhd,
+							// dinf, stbl
+
+							MP4Atom smhd = minf.lookup(MP4Atom
+									.typeToInt("smhd"), 0);
+							if (smhd != null) {
+								log.debug("Sound header atom found");
+								MP4Atom dinf = minf.lookup(MP4Atom
+										.typeToInt("dinf"), 0);
+								if (dinf != null) {
+									log.debug("Data info atom found");
+									// dinf: dref
+									log.debug("Sound dinf children: {}", dinf
+											.getChildren());
+									MP4Atom dref = dinf.lookup(MP4Atom
+											.typeToInt("dref"), 0);
+									if (dref != null) {
+										log.debug("Data reference atom found");
+									}
+
+								}
+								MP4Atom stbl = minf.lookup(MP4Atom
+										.typeToInt("stbl"), 0);
+								if (stbl != null) {
+									log.debug("Sample table atom found");
+									// stbl: stsd, stts, stss, stsc, stsz, stco,
+									// stsh
+									log.debug("Sound stbl children: {}", stbl
+											.getChildren());
+									// stsd - sample description
+									// stts - time to sample
+									// stsc - sample to chunk
+									// stsz - sample size
+									// stco - chunk offset
+
+									//stsd - has codec child
+									MP4Atom stsd = stbl.lookup(MP4Atom.typeToInt("stsd"), 0);
+									if (stsd != null) {
+										//stsd: mp4a
+										log.debug("Sample description atom found");
+										MP4Atom mp4a = stsd.getChildren().get(0);
+										//could set the audio codec here
+										setAudioCodecId(MP4Atom.intToType(mp4a.getType()));
+										//log.debug("{}", ToStringBuilder.reflectionToString(mp4a));
+										log.debug("Sample size: {}", mp4a.getSampleSize());										
+										log.debug("Sample rate: {}", mp4a.getTimeScale());										
+										log.debug("Channels: {}", mp4a.getChannelCount());										
+										//mp4a: esds
+										if (mp4a.getChildren().size() > 0) {
+											log.debug("Elementary stream descriptor atom found");
+											MP4Atom esds = mp4a.getChildren().get(0);
+											log.debug("{}", ToStringBuilder.reflectionToString(esds));
+											MP4Descriptor descriptor = esds.getEsd_descriptor();
+											//log.debug("{}", ToStringBuilder.reflectionToString(descriptor));
+											if (descriptor != null) {
+    											Vector children = descriptor.getChildren();
+    											for (int e = 0; e < children.size(); e++) { 
+    												MP4Descriptor descr = (MP4Descriptor) children.get(e);
+    												log.debug("{}", ToStringBuilder.reflectionToString(descr));
+    												if (descr.getChildren().size() > 0) {
+    													Vector children2 = descr.getChildren();
+    													for (int e2 = 0; e2 < children2.size(); e2++) { 
+    														MP4Descriptor descr2 = (MP4Descriptor) children2.get(e2);
+    														log.debug("{}", ToStringBuilder.reflectionToString(descr2));														
+    													}													
+    												}
+    											}
+											}
+										}
+									}
+									//stsc - has Records
+									MP4Atom stsc = stbl.lookup(MP4Atom.typeToInt("stsc"), 0);
+									if (stsc != null) {
+										log.debug("Sample to chunk atom found");
+										Vector records = stsc.getRecords();
+										log.debug("Record count: {}", records.size());
+										MP4Atom.Record rec = (MP4Atom.Record) records.firstElement();
+										log.debug("Record data: Description index={} Samples per chunk={}", rec.getSampleDescriptionIndex(), rec.getSamplesPerChunk());
+									}									
+									//stsz - has Samples
+									MP4Atom stsz = stbl.lookup(MP4Atom.typeToInt("stsz"), 0);
+									if (stsz != null) {
+										log.debug("Sample size atom found");
+										Vector samples = stsz.getSamples();
+										//vector full of integers										
+										log.debug("Sample size: {}", stsz.getSampleSize());
+										log.debug("Sample count: {}", samples.size());
+									}
+									//stco - has Chunks
+									MP4Atom stco = stbl.lookup(MP4Atom.typeToInt("stco"), 0);
+									if (stco != null) {
+										log.debug("Chunk offset atom found");
+										//vector full of integers
+										Vector chunks = stco.getChunks();
+										log.debug("Chunk count: {}", chunks.size());
+									}
+									
+									//for (MP4Atom child : stbl.getChildren()) {
+									//	log.debug("{}", MP4Atom.intToType(child.getType()));
+									//	log.debug("{}", ToStringBuilder.reflectionToString(child));
+									//}
+
+								}
+							}
+							MP4Atom vmhd = minf.lookup(MP4Atom
+									.typeToInt("vmhd"), 0);
+							if (vmhd != null) {
+								log.debug("Video header atom found");
+								MP4Atom dinf = minf.lookup(MP4Atom
+										.typeToInt("dinf"), 0);
+								if (dinf != null) {
+									log.debug("Data info atom found");
+									// dinf: dref
+									log.debug("Video dinf children: {}", dinf
+											.getChildren());
+									MP4Atom dref = dinf.lookup(MP4Atom
+											.typeToInt("dref"), 0);
+									if (dref != null) {
+										log.debug("Data reference atom found");
+									}
+								}
+								MP4Atom stbl = minf.lookup(MP4Atom
+										.typeToInt("stbl"), 0);
+								if (stbl != null) {
+									log.debug("Sample table atom found");
+									// stbl: stsd, stts, stss, stsc, stsz, stco,
+									// stsh
+									log.debug("Video stbl children: {}", stbl
+											.getChildren());
+									// stsd - sample description
+									// stts - time to sample
+									// stsc - sample to chunk
+									// stsz - sample size
+									// stco - chunk offset
+									// ctts
+									// stss - sync sample
+									// sdtp
+
+									//stsd - has codec child
+									MP4Atom stsd = stbl.lookup(MP4Atom.typeToInt("stsd"), 0);
+									if (stsd != null) {
+										log.debug("Sample description atom found");
+										MP4Atom avc1 = stsd.getChildren().get(0);
+										//could set the video codec here
+										setVideoCodecId(MP4Atom.intToType(avc1.getType()));
+										log.debug("{}", ToStringBuilder.reflectionToString(avc1));
+									}
+									//stsc - has Records
+									MP4Atom stsc = stbl.lookup(MP4Atom.typeToInt("stsc"), 0);
+									if (stsc != null) {
+										log.debug("Sample to chunk atom found");
+										Vector records = stsc.getRecords();
+										log.debug("Record count: {}", records.size());
+										MP4Atom.Record rec = (MP4Atom.Record) records.firstElement();
+										log.debug("Record data: Description index={} Samples per chunk={}", rec.getSampleDescriptionIndex(), rec.getSamplesPerChunk());
+									}									
+									//stsz - has Samples
+									MP4Atom stsz = stbl.lookup(MP4Atom.typeToInt("stsz"), 0);
+									if (stsz != null) {
+										log.debug("Sample size atom found");
+										Vector samples = stsz.getSamples();
+										//vector full of integers										
+										log.debug("Sample size: {}", stsz.getSampleSize());
+										log.debug("Sample count: {}", samples.size());
+									}
+									//stco - has Chunks
+									MP4Atom stco = stbl.lookup(MP4Atom.typeToInt("stco"), 0);
+									if (stco != null) {
+										log.debug("Chunk offset atom found");
+										//vector full of integers
+										Vector chunks = stco.getChunks();
+										log.debug("Chunk count: {}", chunks.size());
+									}									
+									
+									//for (MP4Atom child : stbl.getChildren()) {
+									//	log.debug("{}", MP4Atom.intToType(child.getType()));
+									//	log.debug("{}", ToStringBuilder.reflectionToString(child));
+									//}
+
+								}
+							}
+
+						}
+
+					}
+				}
+			}
+				
+			MP4Atom mdat = null;
+			do {
+				mdat = MP4Atom.createAtom(fis);
+    			if (mdat != null && mdat.getType() == MP4Atom.typeToInt("mdat")) {
+    				log.debug("Movie data atom found");
+    				log.debug("{}", ToStringBuilder.reflectionToString(mdat));    				
+    			} else {
+    				log.debug("{} atom found", MP4Atom.intToType(mdat.getType()));
+    			}
+			} while (mdat.getType() != MP4Atom.typeToInt("mdat"));
+				
+/*
+				List<MP4Atom> children = moov.getChildren();
 				for (int v = 0; v < children.size(); v++) {
 					MP4Atom at = (MP4Atom) children.get(v);
+					log.debug("Type {}", MP4Atom.intToType(at.getType()));
 					if (at.getType() == MP4Atom.typeToInt("mvhd")) {
 						log.debug("----------- Got movie header");
-						duration = at.getDuration();
 						log.debug("Children {}", at.getChildren());
-						log.debug("Esd Descriptor {}", at.getEsd_descriptor());
-						log.debug("Time scale {}", at.getTimeScale());
-						log.debug("Duration {}", duration);
 					} else if (at.getType() == MP4Atom.typeToInt("trak")) {
 						log.debug("----------- Got track");
 						log.debug("Children {}", at.getChildren());
-						log.debug("Esd Descriptor {}", at.getEsd_descriptor());
 
-						Vector children2 = at.getChildren();
+						List<MP4Atom> children2 = at.getChildren();
 						for (int v2 = 0; v2 < children2.size(); v2++) {
 							MP4Atom at2 = (MP4Atom) children2.get(v2);
+							log.debug("Type {}", MP4Atom.intToType(at2.getType()));
 							//tkhd, edts, mdia
 							log.debug("Children 2 {}", at2.getChildren());
 							
 							if (at2.getType() == MP4Atom.typeToInt("mdia")) {
 								log.debug("----------- Got Media");
-								Vector children3 = at2.getChildren();
+								List<MP4Atom> children3 = at2.getChildren();
 								for (int v3 = 0; v3 < children3.size(); v3++) {
 									MP4Atom at3 = (MP4Atom) children3.get(v3);
+									log.debug("Type {}", MP4Atom.intToType(at3.getType()));
+
 									//mdhd, hdlr, minf
 									log.debug("Children 3 {}", at3.getChildren());
 									//smhd, dinf, stbl
 									//vmhd, dinf, stbl
 									
 									if (at3.getType() == MP4Atom.typeToInt("minf")) {
-										log.debug("----------- Got Media Information");
-									
-										log.debug("Width {}", at3.getWidth());
-										log.debug("Height {}", at3.getHeight());
+										log.debug("----------- Got Media Information");									
 									}
 								}
 							}
 						}
 					} 
 				}
-				i++;
-			}
+*/
+				
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -218,19 +475,11 @@ public class MP4Reader implements IoConstants, ITagReader,
 		
         // Create file metadata object
         fileMeta = createFileMeta();		
-		
-//		try {
-//			MP4Descriptor descriptor = MP4Descriptor.createDescriptor(fis);
-//			log.debug("{}", ToStringBuilder.reflectionToString(descriptor));
-//		} catch (IOException e) {
-//			// TODO Auto-generated catch block
-//			e.printStackTrace();
-//		}
-		
+				
 		in = null;
-		fillBuffer();
+		//fillBuffer();
 
-		postInitialize();
+		//postInitialize();
 	}
 
     /**
@@ -436,13 +685,8 @@ public class MP4Reader implements IoConstants, ITagReader,
 	
     /** {@inheritDoc} */
     public boolean hasVideo() {
-    	KeyFrameMeta meta = analyzeKeyFrames();
-    	if (meta == null)
-    		return false;
-    	
-    	return (!meta.audioOnly && meta.positions.length > 0);
+    	return hasVideo;
     }
-
 
 	/**
      * Getter for buffer type (auto, direct or heap).
@@ -451,14 +695,13 @@ public class MP4Reader implements IoConstants, ITagReader,
      */
     public static String getBufferType() {
 		switch (bufferType) {
-			case AUTO:
-				return "auto";
 			case DIRECT:
 				return "direct";
 			case HEAP:
 				return "heap";
+			case AUTO:
 			default:
-				return null;
+				return "auto";
 		}
 	}
 
@@ -482,7 +725,7 @@ public class MP4Reader implements IoConstants, ITagReader,
 				 //Let MINA choose
 			 default:
 				 MP4Reader.bufferType = BufferType.AUTO;
-			 }
+		}
 	}
 
 	/**
@@ -562,12 +805,12 @@ public class MP4Reader implements IoConstants, ITagReader,
 		return duration;
 	}
 
-	public int getVideoCodecId() {
-		return MP4Atom.typeToInt("avc1");
+	public String getVideoCodecId() {
+		return videoCodecId;
 	}
 
-	public int getAudioCodecId() {
-		return MP4Atom.typeToInt("mp4a");
+	public String getAudioCodecId() {
+		return audioCodecId;
 	}
 
 	/** {@inheritDoc}
@@ -608,21 +851,21 @@ public class MP4Reader implements IoConstants, ITagReader,
         // Duration property
 		out.writeString("onMetaData");
 		Map<Object, Object> props = new HashMap<Object, Object>();
-		props.put("duration", duration / 1000.0);
+		props.put("duration", duration);
         // Video codec id
-		props.put("videocodecid", MP4Atom.typeToInt("avc1"));
+		props.put("videocodecid", videoCodecId);
 		props.put("avcprofile", "");
         props.put("avclevel", "");
         props.put("videoframerate", "");
 		// Audio codec id - watch for mp3 instead of aac
-        props.put("audiocodecid", MP4Atom.typeToInt("mp4a"));
+        props.put("audiocodecid", audioCodecId);
         props.put("aottype", "");
         props.put("audiosamplerate", "");
         props.put("audiochannels", "");
         
         props.put("moovposition", "");
         props.put("trackinfo", "");
-        props.put("chapters", "");
+        //props.put("chapters", "");
         props.put("seekpoints", "");
         props.put("tags", "");
    
@@ -867,6 +1110,14 @@ public class MP4Reader implements IoConstants, ITagReader,
 		in.getInt();
 
 		return new Tag(dataType, timestamp, bodySize, null, previousTagSize);
+	}
+
+	public void setVideoCodecId(String videoCodecId) {
+		this.videoCodecId = videoCodecId;
+	}
+
+	public void setAudioCodecId(String audioCodecId) {
+		this.audioCodecId = audioCodecId;
 	}
 
 }

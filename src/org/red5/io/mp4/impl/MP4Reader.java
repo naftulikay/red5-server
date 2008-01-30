@@ -54,7 +54,16 @@ import org.slf4j.LoggerFactory;
  * A Reader is used to read the contents of a MP4 file.
  * NOTE: This class is not implemented as threading-safe. The caller
  * should make sure the threading-safety.
- *
+ * <p>
+ * New NetStream notifications
+ * <br />
+ * Two new notifications facilitate the implementation of the playback components:
+ * <ul>
+ * <li>NetStream.Play.FileStructureInvalid: This event is sent if the player detects an MP4 with an invalid file structure. Flash Player cannot play files that have invalid file structures.</li>
+ * <li>NetStream.Play.NoSupportedTrackFound: This event is sent if the player does not detect any supported tracks. If there aren't any supported video, audio or data tracks found, Flash Player does not play the file.</li>
+ * </ul>
+ * </p>
+ * 
  * @author The Red5 Project (red5@osflash.org)
  * @author Paul Gregoire, (mondain@gmail.com)
  */
@@ -132,6 +141,11 @@ public class MP4Reader implements IoConstants, ITagReader,
 	private String videoCodecId = "avc1";
 	private String audioCodecId = "mp4a";
 	
+	private int width;
+	private int height;
+	private int audioSampleRate;
+	private int audioChannels;
+	
     /**
      * File metadata
      */
@@ -183,8 +197,9 @@ public class MP4Reader implements IoConstants, ITagReader,
 			if (mvhd != null) {
 				log.debug("Movie header atom found");
 				log.debug("Time scale {}", mvhd.getTimeScale());
-				duration = mvhd.getDuration();
-				log.debug("Duration {}", duration);
+				log.debug("Duration {}", mvhd.getDuration());
+				duration = mvhd.getDuration() / mvhd.getTimeScale();
+				
 			}
 
 			MP4Atom meta = moov.lookup(MP4Atom.typeToInt("meta"), 0);
@@ -199,14 +214,26 @@ public class MP4Reader implements IoConstants, ITagReader,
 				MP4Atom trak = moov.lookup(MP4Atom.typeToInt("trak"), i);
 				if (trak != null) {
 					log.debug("Track atom found");
+					log.debug("trak children: {}", trak.getChildren());	
 					// trak: tkhd, edts, mdia
 					MP4Atom tkhd = trak.lookup(MP4Atom.typeToInt("tkhd"), 0);
 					if (tkhd != null) {
 						log.debug("Track header atom found");
-						log.debug("Width {} x Height {}", tkhd.getWidth(), tkhd
-								.getHeight());
+						log.debug("tkhd children: {}", tkhd.getChildren());	
+						if (tkhd.getWidth() > 0) {
+							width = tkhd.getWidth();
+							height = tkhd.getHeight();
+							log.debug("Width {} x Height {}", width, height);
+						}
 					}
 
+					MP4Atom edts = trak.lookup(MP4Atom.typeToInt("edts"), 0);
+					if (edts != null) {
+						log.debug("Edit atom found");
+						log.debug("edts children: {}", edts.getChildren());	
+						//log.debug("Width {} x Height {}", edts.getWidth(), edts.getHeight());
+					}					
+					
 					MP4Atom mdia = trak.lookup(MP4Atom.typeToInt("mdia"), 0);
 					if (mdia != null) {
 						log.debug("Media atom found");
@@ -273,8 +300,10 @@ public class MP4Reader implements IoConstants, ITagReader,
 										setAudioCodecId(MP4Atom.intToType(mp4a.getType()));
 										//log.debug("{}", ToStringBuilder.reflectionToString(mp4a));
 										log.debug("Sample size: {}", mp4a.getSampleSize());										
-										log.debug("Sample rate: {}", mp4a.getTimeScale());										
-										log.debug("Channels: {}", mp4a.getChannelCount());										
+										audioSampleRate = mp4a.getTimeScale();
+										audioChannels = mp4a.getChannelCount();
+										log.debug("Sample rate: {}", audioSampleRate);			
+										log.debug("Channels: {}", audioChannels);										
 										//mp4a: esds
 										if (mp4a.getChildren().size() > 0) {
 											log.debug("Elementary stream descriptor atom found");
@@ -358,18 +387,19 @@ public class MP4Reader implements IoConstants, ITagReader,
 									log.debug("Video stbl children: {}", stbl
 											.getChildren());
 									// stsd - sample description
-									// stts - time to sample
+									// stts - (decoding) time to sample
 									// stsc - sample to chunk
 									// stsz - sample size
 									// stco - chunk offset
-									// ctts
+									// ctts - (composition) time to sample
 									// stss - sync sample
-									// sdtp
+									// sdtp - independent and disposible samples
 
 									//stsd - has codec child
 									MP4Atom stsd = stbl.lookup(MP4Atom.typeToInt("stsd"), 0);
 									if (stsd != null) {
 										log.debug("Sample description atom found");
+										
 										MP4Atom avc1 = stsd.getChildren().get(0);
 										//could set the video codec here
 										setVideoCodecId(MP4Atom.intToType(avc1.getType()));
@@ -834,10 +864,32 @@ public class MP4Reader implements IoConstants, ITagReader,
         trackinfo - An array of objects containing various infomation about all the tracks in a file.
         chapters - As mentioned above information about chapters in audiobooks.
         seekpoints - As mentioned above times you can directly feed into NetStream.seek();
-        videoframerate - The frame rate of the video if a monotone frame rate is used. Most videos will have a monotone frame rate.
+        videoframerate - The frame rate of the video if a monotone frame rate is used. 
+        		Most videos will have a monotone frame rate.
         audiosamplerate - The original sampling rate of the audio track.
         audiochannels - The original number of channels of the audio track.
         tags - As mentioned above ID3 like tag information.
+	 * </pre>
+	 * Info from 
+	 * <pre>
+		width: Display width in pixels.
+		height: Display height in pixels.
+		duration: Duration in seconds.
+		avcprofile: AVC profile number such as 55, 77, 100 etc.
+		avclevel: AVC IDC level number such as 10, 11, 20, 21 etc.
+		aacaot: AAC audio object type; 0, 1 or 2 are supported.
+		videoframerate: Frame rate of the video in this MP4.
+		seekpoints: Array that lists the available keyframes in a file as time stamps in milliseconds. 
+				This is optional as the MP4 file might not contain this information. Generally speaking, 
+				most MP4 files will include this by default.
+		videocodecid: Usually a string such as "avc1" or "VP6F."
+		audiocodecid: Usually a string such as ".mp3" or "mp4a."
+		progressivedownloadinfo: Object that provides information from the "pdin" atom. This is optional 
+				and many files will not have this field.
+ 		trackinfo: Object that provides information on all the tracks in the MP4 file, including their 
+ 				sample description ID.
+		tags: Array of key value pairs representing the information present in the "ilst" atom, which is 
+				the equivalent of ID3 tags for MP4 files. These tags are mostly used by iTunes. 
 	 * </pre>
 	 *
      * @return         Metadata event tag
@@ -852,7 +904,10 @@ public class MP4Reader implements IoConstants, ITagReader,
 		out.writeString("onMetaData");
 		Map<Object, Object> props = new HashMap<Object, Object>();
 		props.put("duration", duration);
-        // Video codec id
+		props.put("width", width);
+		props.put("height", height);
+
+		// Video codec id
 		props.put("videocodecid", videoCodecId);
 		props.put("avcprofile", "");
         props.put("avclevel", "");
@@ -860,14 +915,15 @@ public class MP4Reader implements IoConstants, ITagReader,
 		// Audio codec id - watch for mp3 instead of aac
         props.put("audiocodecid", audioCodecId);
         props.put("aottype", "");
-        props.put("audiosamplerate", "");
-        props.put("audiochannels", "");
+        props.put("audiosamplerate", audioSampleRate);
+        props.put("audiochannels", audioChannels);
         
         props.put("moovposition", "");
         props.put("trackinfo", "");
         //props.put("chapters", "");
         props.put("seekpoints", "");
-        props.put("tags", "");
+        // tags will only appear if there is an "ilst" atom in the file
+        //props.put("tags", "");
    
 		props.put("canSeekToEnd", false);
 		out.writeMap(props, new Serializer());

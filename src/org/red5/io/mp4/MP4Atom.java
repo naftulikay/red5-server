@@ -53,6 +53,10 @@ import org.slf4j.LoggerFactory;
 /**
  * The <code>MP4Atom</code> object represents the smallest information block 
  * of the MP4 file. It could contain other atoms as children.
+ * 
+ * 01/29/2008 - Added support for avc1 atom (video sample)
+ * 
+ * @author Paul Gregoire (mondain@gmail.com)
  */
 public class MP4Atom {
 
@@ -102,6 +106,8 @@ public class MP4Atom {
 	public final static int MP4VideoMediaHeaderAtomType         	= MP4Atom.typeToInt("vmhd");
 	/** Constant, the type of the MP4 Atom. */
 	public final static int MP4VisualSampleEntryAtomType        	= MP4Atom.typeToInt("mp4v");
+	/** Constant, the type of the avc1 / H.263 Atom. */
+	public final static int MP4VideoSampleEntryAtomType        		= MP4Atom.typeToInt("avc1");
 	
 	/** The size of the atom. */
 	protected long size;
@@ -176,6 +182,8 @@ public class MP4Atom {
 			readed = atom.create_video_media_header_atom(bitstream);
 		} else if(type == MP4VisualSampleEntryAtomType){
 			readed = atom.create_visual_sample_entry_atom(bitstream);
+		} else if(type == MP4VideoSampleEntryAtomType){
+			readed = atom.create_video_sample_entry_atom(bitstream);
 		} else if(type == MP4ESDAtomType) {
 			readed = atom.create_esd_atom(bitstream);
 		}
@@ -430,6 +438,7 @@ public class MP4Atom {
 	public long create_sample_description_atom(MP4DataStream bitstream) throws IOException {
 		create_full_atom(bitstream);
 		entryCount = (int)bitstream.readBytes(4);
+		log.debug("stsd entry count: {}", entryCount);
 		readed += 4;
 		for(int i = 0; i < entryCount; i++) {
 			MP4Atom child = MP4Atom.createAtom(bitstream);
@@ -588,7 +597,8 @@ public class MP4Atom {
 	 */
 	public long create_track_header_atom(MP4DataStream bitstream) throws IOException {
 		create_full_atom(bitstream);
-		if(version == 1) {
+		log.debug("Version: {}", version);
+		if (version == 1) {
 			creationTime = createDate(bitstream.readBytes(8));
 			modificationTime = createDate(bitstream.readBytes(8));
 			trackId = bitstream.readBytes(4);
@@ -603,11 +613,12 @@ public class MP4Atom {
 			duration = bitstream.readBytes(4);
 			readed += 20;
 		}
-		bitstream.skipBytes(8);
+		bitstream.skipBytes(8); //reserved by apple
 		int qt_layer = (int)bitstream.readBytes(2);
 		int qt_alternateGroup = (int)bitstream.readBytes(2);
 		int qt_volume = (int)bitstream.readBytes(2);
-		bitstream.skipBytes(2);
+		log.debug("Volume: {}", qt_volume);
+		bitstream.skipBytes(2); //reserved by apple
 		long qt_matrixA = bitstream.readBytes(4);
 		long qt_matrixB = bitstream.readBytes(4);
 		long qt_matrixU = bitstream.readBytes(4);
@@ -618,7 +629,9 @@ public class MP4Atom {
 		long qt_matrixY = bitstream.readBytes(4);
 		long qt_matrixW = bitstream.readBytes(4);
 		qt_trackWidth = (int)bitstream.readBytes(4);
+		width = (qt_trackWidth >> 16);
 		qt_trackHeight = (int)bitstream.readBytes(4);
+		height = (qt_trackHeight >> 16);
 		readed += 60; 	
 		return readed;		
 	}
@@ -667,6 +680,43 @@ public class MP4Atom {
 		readed += child.getSize();
 		return readed;		
 	}
+	
+	/**
+	 * Loads MP4VideoSampleEntryAtom atom from the input bitstream.
+	 * @param bitstream the input bitstream
+	 * @return the number of bytes which was being loaded.
+	 */
+	public long create_video_sample_entry_atom(MP4DataStream bitstream) throws IOException {
+		log.debug("Video entry atom contains wxh");
+		bitstream.skipBytes(6);
+		int dataReferenceIndex = (int) bitstream.readBytes(2);		
+		bitstream.skipBytes(2);
+		bitstream.skipBytes(2);
+		bitstream.skipBytes(12);
+		width = (int) bitstream.readBytes(2);
+		log.debug("Width: {}", width);
+		height = (int) bitstream.readBytes(2);
+		log.debug("Height: {}", height);
+		int horizontalRez = (int) bitstream.readBytes(4) >> 16;
+		log.debug("H Resolution: {}", horizontalRez);
+		int verticalRez = (int) bitstream.readBytes(4) >> 16;
+		log.debug("V Resolution: {}", verticalRez);
+		bitstream.skipBytes(4);
+		int frameCount = (int) bitstream.readBytes(2);
+		log.debug("Frame count: {}", frameCount);
+		int stringLen = (int) bitstream.readBytes(1);
+		log.debug("String length (cpname): {}", stringLen);
+		String compressorName = bitstream.readString(31);
+		log.debug("Compressor name: {}", compressorName.trim());
+		int depth = (int) bitstream.readBytes(2);
+		log.debug("Depth: {}", depth);
+		bitstream.skipBytes(2);		
+		readed += 78;		
+		MP4Atom child = MP4Atom.createAtom(bitstream);
+		this.children.add(child);
+		readed += child.getSize();
+		return readed;		
+	}	
 
 	public int getHeight() {
 		return height;

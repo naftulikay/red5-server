@@ -179,7 +179,25 @@ public class MP4Reader implements IoConstants, ITagReader,
 		this.fis = new MP4DataStream(new FileInputStream(f));
 		this.generateMetadata = generateMetadata;
 		channel = fis.getChannel();
-		
+		in = null;
+
+		init();
+		//fillBuffer();
+	}
+
+    /**
+	 * Accepts mapped file bytes to construct internal members.
+	 *
+	 * @param generateMetadata         <code>true</code> if metadata generation required, <code>false</code> otherwise
+     * @param buffer                   Byte buffer
+	 */
+	public MP4Reader(ByteBuffer buffer, boolean generateMetadata) throws IOException {
+		this.generateMetadata = generateMetadata;
+		in = buffer;
+		init();
+	}
+    
+	public void init() {
 		try {
 			// the first atom will/should be the type
 			MP4Atom type = MP4Atom.createAtom(fis);
@@ -456,75 +474,15 @@ public class MP4Reader implements IoConstants, ITagReader,
     				log.debug("{} atom found", MP4Atom.intToType(mdat.getType()));
     			}
 			} while (mdat.getType() != MP4Atom.typeToInt("mdat"));
-				
-/*
-				List<MP4Atom> children = moov.getChildren();
-				for (int v = 0; v < children.size(); v++) {
-					MP4Atom at = (MP4Atom) children.get(v);
-					log.debug("Type {}", MP4Atom.intToType(at.getType()));
-					if (at.getType() == MP4Atom.typeToInt("mvhd")) {
-						log.debug("----------- Got movie header");
-						log.debug("Children {}", at.getChildren());
-					} else if (at.getType() == MP4Atom.typeToInt("trak")) {
-						log.debug("----------- Got track");
-						log.debug("Children {}", at.getChildren());
-
-						List<MP4Atom> children2 = at.getChildren();
-						for (int v2 = 0; v2 < children2.size(); v2++) {
-							MP4Atom at2 = (MP4Atom) children2.get(v2);
-							log.debug("Type {}", MP4Atom.intToType(at2.getType()));
-							//tkhd, edts, mdia
-							log.debug("Children 2 {}", at2.getChildren());
-							
-							if (at2.getType() == MP4Atom.typeToInt("mdia")) {
-								log.debug("----------- Got Media");
-								List<MP4Atom> children3 = at2.getChildren();
-								for (int v3 = 0; v3 < children3.size(); v3++) {
-									MP4Atom at3 = (MP4Atom) children3.get(v3);
-									log.debug("Type {}", MP4Atom.intToType(at3.getType()));
-
-									//mdhd, hdlr, minf
-									log.debug("Children 3 {}", at3.getChildren());
-									//smhd, dinf, stbl
-									//vmhd, dinf, stbl
-									
-									if (at3.getType() == MP4Atom.typeToInt("minf")) {
-										log.debug("----------- Got Media Information");									
-									}
-								}
-							}
-						}
-					} 
-				}
-*/
-				
+								
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			log.error("{}", e);
 		}
 		
         // Create file metadata object
-        fileMeta = createFileMeta();		
-				
-		in = null;
-		//fillBuffer();
-
-		//postInitialize();
+        fileMeta = createFileMeta();			
 	}
-
-    /**
-	 * Accepts mapped file bytes to construct internal members.
-	 *
-	 * @param generateMetadata         <code>true</code> if metadata generation required, <code>false</code> otherwise
-     * @param buffer                   Byte buffer
-	 */
-	public MP4Reader(ByteBuffer buffer, boolean generateMetadata) {
-		this.generateMetadata = generateMetadata;
-		in = buffer;
-
-		postInitialize();
-	}
-    
+	
     public void setKeyFrameCache(IKeyFrameMetaCache keyframeCache) {
     	MP4Reader.keyframeCache = keyframeCache;
     }
@@ -692,27 +650,6 @@ public class MP4Reader implements IoConstants, ITagReader,
 		}
 	}
 
-    /**
-     * Post-initialization hook, reads keyframe metadata and decodes header (if any).
-     */
-    private void postInitialize() {
-		ITag tag = null;
-
-		if (log.isDebugEnabled()) {
-			log.debug("MP4Reader 1 - Buffer size: " + getTotalBytes()
-					+ " position: " + getCurrentPosition() + " remaining: "
-					+ getRemainingBytes());
-		}
-		if (getRemainingBytes() >= 9) {
-			decodeHeader();
-		}
-		keyframeMeta = analyzeKeyFrames();
-		long old = getCurrentPosition();
-		
-		
-
-	}
-	
     /** {@inheritDoc} */
     public boolean hasVideo() {
     	return hasVideo;
@@ -861,7 +798,17 @@ public class MP4Reader implements IoConstants, ITagReader,
         avclevel - A number between 10 and 51. Consult this list to find out more.
         aottype - Either 0, 1 or 2. This corresponds to AAC Main, AAC LC and SBR audio types.
         moovposition - The offset in bytes of the moov atom in a file.
-        trackinfo - An array of objects containing various infomation about all the tracks in a file.
+        trackinfo - An array of objects containing various infomation about all the tracks in a file
+          ex.
+        	trackinfo[0].length: 7081
+        	trackinfo[0].timescale: 600
+        	trackinfo[0].sampledescription.sampletype: avc1
+        	trackinfo[0].language: und
+        	trackinfo[1].length: 525312
+        	trackinfo[1].timescale: 44100
+        	trackinfo[1].sampledescription.sampletype: mp4a
+        	trackinfo[1].language: und
+        
         chapters - As mentioned above information about chapters in audiobooks.
         seekpoints - As mentioned above times you can directly feed into NetStream.seek();
         videoframerate - The frame rate of the video if a monotone frame rate is used. 

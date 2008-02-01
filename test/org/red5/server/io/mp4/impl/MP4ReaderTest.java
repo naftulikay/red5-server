@@ -15,12 +15,12 @@ public class MP4ReaderTest extends TestCase {
 
 	@Test
 	public void testCtor() throws Exception {	
-		File file = new File("C:/red5/webapps/oflaDemo/streams/backcountry_bombshells_4min_HD_H264.mp4");
+		File file = new File("E:/media/test_clips/backcountry_bombshells_4min_HD_H264.mp4");
 		MP4Reader reader = new MP4Reader(file, false);
-		
+	
 		log.info("----------------------------------------------------------------------------------");
 
-		File file2 = new File("C:/red5/webapps/oflaDemo/streams/IronMan.mov");
+		File file2 = new File("E:/media/test_clips/IronMan.mov");
 		MP4Reader reader2 = new MP4Reader(file2, false);
 		
 	}

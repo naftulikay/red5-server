@@ -1,4 +1,5 @@
 package org.red5.io.mp4;
+
 /*
  * RED5 Open Source Flash Server - http://www.osflash.org/red5
  * 
@@ -17,29 +18,29 @@ package org.red5.io.mp4;
  * with this library; if not, write to the Free Software Foundation, Inc., 
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA 
  */
- 
+
 /**
-	This software module was originally developed by Apple Computer, Inc.
-	in the course of development of MPEG-4. 
-	This software module is an implementation of a part of one or 
-	more MPEG-4 tools as specified by MPEG-4. 
-	ISO/IEC gives users of MPEG-4 free license to this
-	software module or modifications thereof for use in hardware 
-	or software products claiming conformance to MPEG-4.
-	Those intending to use this software module in hardware or software
-	products are advised that its use may infringe existing patents.
-	The original developer of this software module and his/her company,
-	the subsequent editors and their companies, and ISO/IEC have no
-	liability for use of this software module or modifications thereof
-	in an implementation.
-	Copyright is not released for non MPEG-4 conforming
-	products. Apple Computer, Inc. retains full right to use the code for its own
-	purpose, assign or donate the code to a third party and to
-	inhibit third parties from using the code for non 
-	MPEG-4 conforming products.
-	This copyright notice must be included in all copies or
-	derivative works. Copyright (c) 1999, 2000.
-*/
+ This software module was originally developed by Apple Computer, Inc.
+ in the course of development of MPEG-4. 
+ This software module is an implementation of a part of one or 
+ more MPEG-4 tools as specified by MPEG-4. 
+ ISO/IEC gives users of MPEG-4 free license to this
+ software module or modifications thereof for use in hardware 
+ or software products claiming conformance to MPEG-4.
+ Those intending to use this software module in hardware or software
+ products are advised that its use may infringe existing patents.
+ The original developer of this software module and his/her company,
+ the subsequent editors and their companies, and ISO/IEC have no
+ liability for use of this software module or modifications thereof
+ in an implementation.
+ Copyright is not released for non MPEG-4 conforming
+ products. Apple Computer, Inc. retains full right to use the code for its own
+ purpose, assign or donate the code to a third party and to
+ inhibit third parties from using the code for non 
+ MPEG-4 conforming products.
+ This copyright notice must be included in all copies or
+ derivative works. Copyright (c) 1999, 2000.
+ */
 
 import java.io.IOException;
 import java.util.Vector;
@@ -53,39 +54,43 @@ import org.slf4j.LoggerFactory;
  */
 public class MP4Descriptor {
 
-    private static Logger log = LoggerFactory.getLogger(MP4Descriptor.class);
+	private static Logger log = LoggerFactory.getLogger(MP4Descriptor.class);
 
 	public final static int MP4ES_DescriptorTag = 3;
+
 	public final static int MP4DecoderConfigDescriptorTag = 4;
+
 	public final static int MP4DecSpecificInfoDescriptorTag = 5;
 
 	protected int type;
+
 	protected int size;
-	
+
 	protected int readed;
-	
+
 	protected Vector<MP4Descriptor> children = new Vector<MP4Descriptor>();
-	
+
 	public MP4Descriptor(int type, int size) {
 		super();
 		this.readed = 0;
 		this.type = type;
 		this.size = size;
 	}
-	
-	public static MP4Descriptor createDescriptor(MP4DataStream bitstream) throws IOException {
-		int tag = (int)bitstream.readBytes(1);
+
+	public static MP4Descriptor createDescriptor(MP4DataStream bitstream)
+			throws IOException {
+		int tag = (int) bitstream.readBytes(1);
 		int readed = 1;
 		int size = 0;
 		int b = 0;
 		do {
-			b = (int)bitstream.readBytes(1);
+			b = (int) bitstream.readBytes(1);
 			size <<= 7;
-			size |= b & 0x7f; 
-			readed ++;
-		} while((b & 0x80) == 0x80);
+			size |= b & 0x7f;
+			readed++;
+		} while ((b & 0x80) == 0x80);
 		MP4Descriptor descriptor = new MP4Descriptor(tag, size);
-		switch(tag) {
+		switch (tag) {
 			case MP4ES_DescriptorTag:
 				descriptor.createES_Descriptor(bitstream);
 				break;
@@ -99,58 +104,63 @@ public class MP4Descriptor {
 				break;
 		}
 		bitstream.skipBytes(descriptor.size - descriptor.readed);
-		descriptor.readed = readed + descriptor.size; 
+		descriptor.readed = readed + descriptor.size;
 		return descriptor;
 	}
-	
+
 	/**
 	 * Loads the MP4ES_Descriptor from the input bitstream.
-	 * @param bitstream the input bitstream
+	 * 
+	 * @param bitstream
+	 *            the input bitstream
 	 */
 	public void createES_Descriptor(MP4DataStream bitstream) throws IOException {
-		int ES_ID = (int)bitstream.readBytes(2);
-		int flags = (int)bitstream.readBytes(1);
+		int ES_ID = (int) bitstream.readBytes(2);
+		int flags = (int) bitstream.readBytes(1);
 		boolean streamDependenceFlag = (flags & (1 << 7)) != 0;
 		boolean urlFlag = (flags & (1 << 6)) != 0;
 		boolean ocrFlag = (flags & (1 << 5)) != 0;
-		readed += 3; 
-		if(streamDependenceFlag) {
+		readed += 3;
+		if (streamDependenceFlag) {
 			bitstream.skipBytes(2);
 			readed += 2;
 		}
-		if(urlFlag) {
-			int str_size = (int)bitstream.readBytes(1);
+		if (urlFlag) {
+			int str_size = (int) bitstream.readBytes(1);
 			bitstream.readString(str_size);
 			readed += str_size + 1;
 		}
-		if(ocrFlag) {
+		if (ocrFlag) {
 			bitstream.skipBytes(2);
 			readed += 2;
 		}
-		while(readed < size) {
+		while (readed < size) {
 			MP4Descriptor descriptor = createDescriptor(bitstream);
 			children.addElement(descriptor);
 			readed += descriptor.getReaded();
 		}
 	}
-	
+
 	/**
 	 * Loads the MP4DecoderConfigDescriptor from the input bitstream.
-	 * @param bitstream the input bitstream
+	 * 
+	 * @param bitstream
+	 *            the input bitstream
 	 */
-	public void createDecoderConfigDescriptor(MP4DataStream bitstream) throws IOException {
-		int objectTypeIndication  = (int)bitstream.readBytes(1);
-		int value = (int)bitstream.readBytes(1);
+	public void createDecoderConfigDescriptor(MP4DataStream bitstream)
+			throws IOException {
+		int objectTypeIndication = (int) bitstream.readBytes(1);
+		int value = (int) bitstream.readBytes(1);
 		boolean upstream = (value & (1 << 1)) > 0;
-		byte streamType = (byte)(value >> 2);
-		value = (int)bitstream.readBytes(2);
-		int bufferSizeDB = value << 8; 
-		value = (int)bitstream.readBytes(1);
-		bufferSizeDB |= value & 0xff; 
-		int maxBitRate = (int)bitstream.readBytes(4);
-		int minBitRate = (int)bitstream.readBytes(4);
+		byte streamType = (byte) (value >> 2);
+		value = (int) bitstream.readBytes(2);
+		int bufferSizeDB = value << 8;
+		value = (int) bitstream.readBytes(1);
+		bufferSizeDB |= value & 0xff;
+		int maxBitRate = (int) bitstream.readBytes(4);
+		int minBitRate = (int) bitstream.readBytes(4);
 		readed += 13;
-		if(readed < size) {
+		if (readed < size) {
 			MP4Descriptor descriptor = createDescriptor(bitstream);
 			children.addElement(descriptor);
 			readed += descriptor.getReaded();
@@ -158,17 +168,21 @@ public class MP4Descriptor {
 	}
 
 	protected int decSpecificDataSize;
+
 	protected long decSpecificDataOffset;
-	
+
 	/**
 	 * Loads the MP4DecSpecificInfoDescriptor from the input bitstream.
-	 * @param bitstream the input bitstream
+	 * 
+	 * @param bitstream
+	 *            the input bitstream
 	 */
-	public void createDecSpecificInfoDescriptor(MP4DataStream bitstream) throws IOException {
-			decSpecificDataOffset = bitstream.getOffset();
-			decSpecificDataSize = size - readed;
+	public void createDecSpecificInfoDescriptor(MP4DataStream bitstream)
+			throws IOException {
+		decSpecificDataOffset = bitstream.getOffset();
+		decSpecificDataSize = size - readed;
 	}
-	
+
 	public long getDecSpecificDataOffset() {
 		return decSpecificDataOffset;
 	}
@@ -178,21 +192,25 @@ public class MP4Descriptor {
 	}
 
 	/**
-	 * Lookups for a child descriptor with the specified <code>type</code>, skips the <code>number</code> 
-	 * children with the same type before finding a result. 
-	 * @param type the type of the descriptor.
-	 * @param number the number of child descriptors to skip
-	 * @return the descriptor which was being searched. 
-	 */	
+	 * Lookups for a child descriptor with the specified <code>type</code>,
+	 * skips the <code>number</code> children with the same type before
+	 * finding a result.
+	 * 
+	 * @param type
+	 *            the type of the descriptor.
+	 * @param number
+	 *            the number of child descriptors to skip
+	 * @return the descriptor which was being searched.
+	 */
 	public MP4Descriptor lookup(int type, int number) {
-		int position = 0; 
-		for(int i = 0; i < children.size(); i++) {
-			MP4Descriptor descriptor = (MP4Descriptor)children.elementAt(i);
-			if(descriptor.getType() == type) {
-				if(position >= number) {
+		int position = 0;
+		for (int i = 0; i < children.size(); i++) {
+			MP4Descriptor descriptor = (MP4Descriptor) children.elementAt(i);
+			if (descriptor.getType() == type) {
+				if (position >= number) {
 					return descriptor;
 				}
-				position ++;
+				position++;
 			}
 		}
 		return null;
@@ -207,6 +225,7 @@ public class MP4Descriptor {
 
 	/**
 	 * Gets the number of data bytes which were readed from the stream;
+	 * 
 	 * @return the number of readed data bytes.
 	 */
 	public int getReaded() {
@@ -215,6 +234,6 @@ public class MP4Descriptor {
 
 	public Vector<MP4Descriptor> getChildren() {
 		return children;
-	}	
-	
+	}
+
 }

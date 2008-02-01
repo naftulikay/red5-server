@@ -97,8 +97,9 @@ public class MP4 implements IMP4 {
 				while (reader.hasMoreTags() && (++count < 5)) {
 					tag = reader.readTag();
 					if (tag.getDataType() == IoConstants.TYPE_METADATA) {
-						if (metaService == null)
+						if (metaService == null) {
 							metaService = new MetaService(this.file);
+						}
 						metaData = metaService.readMetaData(tag.getBody());
 					}
 				}
@@ -153,7 +154,6 @@ public class MP4 implements IMP4 {
 	 * {@inheritDoc}
 	 */
 	public Map getKeyFrameData() {
-		// TODO Auto-generated method stub
 		return null;
 	}
 
@@ -161,16 +161,12 @@ public class MP4 implements IMP4 {
 	 * {@inheritDoc}
 	 */
 	public void refreshHeaders() throws IOException {
-		// TODO Auto-generated method stub
-
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
 	public void flushHeaders() throws IOException {
-		// TODO Auto-generated method stub
-
 	}
 
 	/**

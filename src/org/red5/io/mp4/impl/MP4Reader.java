@@ -23,6 +23,8 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.channels.FileChannel;
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -141,10 +143,14 @@ public class MP4Reader implements IoConstants, ITagReader,
 	private String videoCodecId = "avc1";
 	private String audioCodecId = "mp4a";
 	
+	private int timeScale;
 	private int width;
 	private int height;
 	private int audioSampleRate;
 	private int audioChannels;
+	private int videoSampleCount;
+	private double fps;
+	private String formattedDuration;
 	
     /**
      * File metadata
@@ -216,8 +222,8 @@ public class MP4Reader implements IoConstants, ITagReader,
 				log.debug("Movie header atom found");
 				log.debug("Time scale {}", mvhd.getTimeScale());
 				log.debug("Duration {}", mvhd.getDuration());
-				duration = mvhd.getDuration() / mvhd.getTimeScale();
-				
+				timeScale = mvhd.getTimeScale();
+				duration = mvhd.getDuration();
 			}
 
 			MP4Atom meta = moov.lookup(MP4Atom.typeToInt("meta"), 0);
@@ -440,6 +446,7 @@ public class MP4Reader implements IoConstants, ITagReader,
 										//vector full of integers										
 										log.debug("Sample size: {}", stsz.getSampleSize());
 										log.debug("Sample count: {}", samples.size());
+										videoSampleCount = samples.size();
 									}
 									//stco - has Chunks
 									MP4Atom stco = stbl.lookup(MP4Atom.typeToInt("stco"), 0);
@@ -463,7 +470,27 @@ public class MP4Reader implements IoConstants, ITagReader,
 					}
 				}
 			}
+			//calculate FPS
+			fps = (videoSampleCount * timeScale) / (double) duration;
+			log.debug("FPS calc: ({} * {}) / {}", new Object[]{videoSampleCount, timeScale, duration});
+			log.debug("FPS: {}", fps);
 				
+			//real duration
+			StringBuilder sb = new StringBuilder();
+			double videoTime = ((double) duration / (double) timeScale);
+			int minutes = (int) (videoTime / 60);
+			if (minutes > 0) {
+    			sb.append(minutes);
+    			sb.append('.');
+			}
+			//formatter for seconds / millis
+			NumberFormat df = DecimalFormat.getInstance();
+			df.setMaximumFractionDigits(2);
+			sb.append(df.format((videoTime % 60)));
+			formattedDuration = sb.toString();
+			log.debug("Time: {}", formattedDuration);
+			
+			
 			MP4Atom mdat = null;
 			do {
 				mdat = MP4Atom.createAtom(fis);
@@ -850,7 +877,7 @@ public class MP4Reader implements IoConstants, ITagReader,
         // Duration property
 		out.writeString("onMetaData");
 		Map<Object, Object> props = new HashMap<Object, Object>();
-		props.put("duration", duration);
+		props.put("duration", formattedDuration);
 		props.put("width", width);
 		props.put("height", height);
 
@@ -858,7 +885,7 @@ public class MP4Reader implements IoConstants, ITagReader,
 		props.put("videocodecid", videoCodecId);
 		props.put("avcprofile", "");
         props.put("avclevel", "");
-        props.put("videoframerate", "");
+        props.put("videoframerate", fps);
 		// Audio codec id - watch for mp3 instead of aac
         props.put("audiocodecid", audioCodecId);
         props.put("aottype", "");

@@ -58,6 +58,9 @@
 	<logger name="org.red5.io">
 		<level value="DEBUG" />
 	</logger>
+	<logger name="org.red5.io.object">
+		<level value="WARN" />
+	</logger>
 	<logger name="org.red5.server">
 		<level value="WARN" />
 	</logger>

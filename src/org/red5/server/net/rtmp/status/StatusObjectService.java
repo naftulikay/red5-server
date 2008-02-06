@@ -31,8 +31,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Service that works with status objects. Note all status object should aim to
- * be under 128 bytes.
+ * Service that works with status objects.
+ * Note all status object should aim to be under 128 bytes.
  * 
  * @author The Red5 Project (red5@osflash.org)
  * @author Luke Hubbard, Codegent Ltd (luke@codegent.com)
@@ -106,8 +106,8 @@ public class StatusObjectService implements StatusCodes {
 		statusObjects.put(NC_CONNECT_INVALID_APPLICATION, new StatusObject(
 				NC_CONNECT_INVALID_APPLICATION, StatusObject.ERROR, ""));
 
-		statusObjects.put(NS_INVALID_ARGUMENT, new StatusObject(
-				NS_INVALID_ARGUMENT, StatusObject.ERROR, ""));
+		statusObjects.put(NS_INVALID_ARGUMENT, new StatusObject(NS_INVALID_ARGUMENT,
+				StatusObject.ERROR, ""));
 		statusObjects.put(NS_CLEAR_SUCCESS, new StatusObject(NS_CLEAR_SUCCESS,
 				StatusObject.STATUS, ""));
 		statusObjects.put(NS_CLEAR_FAILED, new StatusObject(NS_CLEAR_FAILED,
@@ -201,10 +201,8 @@ public class StatusObjectService implements StatusCodes {
 	/**
 	 * Serializes status object
 	 * 
-	 * @param out
-	 *            Byte buffer for output object
-	 * @param statusObject
-	 *            Status object to serialize
+     * @param out                 Byte buffer for output object
+     * @param statusObject        Status object to serialize
 	 */
 	public void serializeStatusObject(ByteBuffer out, StatusObject statusObject) {
 		Map statusMap = new BeanMap(statusObject);
@@ -215,8 +213,7 @@ public class StatusObjectService implements StatusCodes {
 	/**
 	 * Return status object by code
 	 * 
-	 * @param statusCode
-	 *            Status object code
+	 * @param statusCode Status object code
 	 * @return Status object with given code
 	 */
 	public StatusObject getStatusObject(String statusCode) {
@@ -226,8 +223,7 @@ public class StatusObjectService implements StatusCodes {
 	/**
 	 * Return status object by code as byte array
 	 * 
-	 * @param statusCode
-	 *            Status object code
+	 * @param statusCode Status object code
 	 * @return Status object with given code as byte array
 	 */
 	public byte[] getCachedStatusObjectAsByteArray(String statusCode) {

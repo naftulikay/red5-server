@@ -58,7 +58,7 @@ public final class Red5 implements Red5MBean {
     /**
      * Current server version with revision
      */
-    public static final String VERSION = "Red5 Server 0.6.4-dev $Revision: 2516 $";
+    public static final String VERSION = "Red5 Server 0.6.4-dev $Revision: 2574 $";
 
 	/**
 	 * Create a new Red5 object using given connection.

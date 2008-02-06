@@ -55,6 +55,7 @@ import org.slf4j.LoggerFactory;
  * of the MP4 file. It could contain other atoms as children.
  * 
  * 01/29/2008 - Added support for avc1 atom (video sample)
+ * 02/05/2008 - Added stss - sync sample atom
  * 
  * @author Paul Gregoire (mondain@gmail.com)
  */
@@ -108,6 +109,8 @@ public class MP4Atom {
 	public final static int MP4VisualSampleEntryAtomType        	= MP4Atom.typeToInt("mp4v");
 	/** Constant, the type of the avc1 / H.263 Atom. */
 	public final static int MP4VideoSampleEntryAtomType        		= MP4Atom.typeToInt("avc1");
+	
+	public final static int MP4SyncSampleAtomType         			= MP4Atom.typeToInt("stss");	
 	
 	/** The size of the atom. */
 	protected long size;
@@ -173,7 +176,9 @@ public class MP4Atom {
 		} else if(type == MP4CompactSampleSizeAtomType){
 			readed = atom.create_compact_sample_size_atom(bitstream);
 		} else if(type == MP4SampleToChunkAtomType){
-			readed = atom.create_sample_to_chunk_atom(bitstream);			
+			readed = atom.create_sample_to_chunk_atom(bitstream);	
+		} else if(type == MP4SyncSampleAtomType){
+			readed = atom.create_sync_sample_atom(bitstream);	
 		} else if(type == MP4SoundMediaHeaderAtomType){
 			readed = atom.create_sound_media_header_atom(bitstream);
 		} else if(type == MP4TrackHeaderAtomType){
@@ -571,6 +576,32 @@ public class MP4Atom {
 		return readed;		
 	}
 
+	protected Vector syncSamples = new Vector();
+	
+	public Vector getSyncSamples() {
+		return syncSamples;
+	}
+	
+	/**
+	 * Loads MP4SyncSampleAtom atom from the input bitstream.
+	 * @param bitstream the input bitstream
+	 * @return the number of bytes which was being loaded.
+	 */
+	public long create_sync_sample_atom(MP4DataStream bitstream) throws IOException {
+		log.debug("Sync sample atom contains keyframe info");
+		create_full_atom(bitstream);
+		entryCount = (int) bitstream.readBytes(4);
+		log.debug("Sync entries: {}", entryCount);
+		readed += 4;
+		for (int i = 0; i < entryCount; i++) {
+			int sample = (int) bitstream.readBytes(4);
+			//log.debug("Sync entry: {}", sample);
+			syncSamples.addElement(new Integer(sample));
+			readed += 4;
+		}
+		return readed;		
+	}
+	
 	protected int balance;
 
 	/**
@@ -762,7 +793,7 @@ public class MP4Atom {
 	}
 	
 	public static String intToType(int type) {
-		StringBuffer st = new StringBuffer();
+		StringBuilder st = new StringBuilder();
 		st.append((char)((type >> 24) & 0xff)); 
 		st.append((char)((type >> 16) & 0xff)); 
 		st.append((char)((type >> 8) & 0xff)); 

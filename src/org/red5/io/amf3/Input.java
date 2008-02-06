@@ -336,7 +336,7 @@ public class Input extends org.red5.io.amf.Input implements org.red5.io.object.I
 			List<Object> resultList = new ArrayList<Object>(count);
 			storeReference(resultList);
 			for (int i=0; i<count; i++) {
-				final Object value = deserializer.deserialize(this);
+				final Object value = deserializer.deserialize(this, Object.class);
 				resultList.add(value);
 			}
 			result = resultList;
@@ -345,12 +345,12 @@ public class Input extends org.red5.io.amf.Input implements org.red5.io.object.I
 			Map<Object, Object> resultMap = new HashMap<Object, Object>();
 			storeReference(resultMap);
 			while (!key.equals("")) {
-				final Object value = deserializer.deserialize(this);
+				final Object value = deserializer.deserialize(this, Object.class);
 				resultMap.put(key, value);
 				key = readString();
 			}
 			for (int i=0; i<count; i++) {
-				final Object value = deserializer.deserialize(this);
+				final Object value = deserializer.deserialize(this, Object.class);
 				resultMap.put(i, value);
 			}
 			result = resultMap;
@@ -391,6 +391,7 @@ public class Input extends org.red5.io.amf.Input implements org.red5.io.object.I
 			className = readString();
 		}
 		amf3_mode += 1;
+        Object instance  = newInstance(className);
 		Map<String, Object> properties = null;
 		PendingObject pending = new PendingObject();
 		int tempRefId = storeReference(pending);
@@ -407,7 +408,8 @@ public class Input extends org.red5.io.amf.Input implements org.red5.io.object.I
 				classReferences.add(new ClassReference(className, AMF3.TYPE_OBJECT_PROPERTY, attributes));
 			}
 			for (int i=0; i<count; i++) {
-				properties.put(attributes.get(i), deserializer.deserialize(this));
+                String name = attributes.get(i);
+                properties.put(name, deserializer.deserialize(this, getPropertyType(instance, name)));
 			}
 			break;
 		case AMF3.TYPE_OBJECT_EXTERNALIZABLE:
@@ -434,7 +436,7 @@ public class Input extends org.red5.io.amf.Input implements org.red5.io.object.I
 			String key = readString();
 			while (!"".equals(key)) {
 				attributes.add(key);
-				Object value = deserializer.deserialize(this);
+				Object value = deserializer.deserialize(this, getPropertyType(instance, key));
 				properties.put(key, value);
 				key = readString();
 			}

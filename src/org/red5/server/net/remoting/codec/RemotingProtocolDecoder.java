@@ -127,12 +127,9 @@ public class RemotingProtocolDecoder implements SimpleProtocolDecoder {
 			String name = org.red5.io.amf.Input.getString(in);
 			boolean required = in.get() == 0x01;
 			int size = in.getInt();
-			Object value = deserializer.deserialize(input);
+			Object value = deserializer.deserialize(input, Object.class);
 			if (log.isDebugEnabled()) {
-				log.debug("Header: " + name);
-				log.debug("Required: " + required);
-				log.debug("Size: " + size);
-				log.debug("Value: " + value);
+				log.debug("Header: {} Required: {} Size: {} Value: {}", new Object[]{name, required, size, value});
 			}
 			result.put(name, value);
 		}
@@ -193,7 +190,7 @@ public class RemotingProtocolDecoder implements SimpleProtocolDecoder {
 				// Prepare remoting mode
 				input.reset(ReferenceMode.MODE_REMOTING);
 				
-				values.add(deserializer.deserialize(input));
+				values.add(deserializer.deserialize(input, Object.class));
 			}
 
 			String serviceName;
@@ -220,7 +217,7 @@ public class RemotingProtocolDecoder implements SimpleProtocolDecoder {
 			if (log.isDebugEnabled()) {
 				log.debug("Service: " + serviceName + " Method: " + serviceMethod);
 			}
-			Object[] args = (Object[]) values.toArray(new Object[values.size()]);
+			Object[] args = values.toArray(new Object[values.size()]);
 			if (log.isDebugEnabled()) {
 				for (Object element : args) {
 					log.debug("> " + element);

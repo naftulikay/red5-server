@@ -182,12 +182,13 @@ public class MP3Reader implements ITagReader, IKeyFrameDataAnalyzer {
     
 	/**
 	 * Check if the file can be played back with Flash. Supported sample rates are
-     * 44KHz, 22KHz, 11KHz and 5.5KHz
+     * 48KHz, 44KHz, 22KHz, 11KHz and 5.5KHz
      * 
 	 * @param header       Header to check
 	 */
 	private void checkValidHeader(MP3Header header) {
 		switch (header.getSampleRate()) {
+			case 48000:
 			case 44100:
 			case 22050:
 			case 11025:
@@ -499,10 +500,10 @@ public class MP3Reader implements ITagReader, IKeyFrameDataAnalyzer {
 	}
 
     private void processID3v2Header() {
-    	if (in.remaining() <= 10)
+    	if (in.remaining() <= 10) {
     		// We need at least 10 bytes ID3v2 header + data
     		return;
-    	
+    	}
     	int start = in.position();
     	byte a, b, c;
     	a = in.get();

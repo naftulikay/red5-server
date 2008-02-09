@@ -101,15 +101,6 @@ public class MP4Reader implements IoConstants, ITagReader,
      */
     private ByteBuffer in;
 
-	/** Set to true to generate metadata automatically before the first tag. */
-	private boolean generateMetadata;
-
-	/** Position of first video tag. */
-	private long firstVideoTag = -1;
-
-	/** Position of first audio tag. */
-	private long firstAudioTag = -1;
-
 	/** Current tag. */
 	private int tagPosition;
 
@@ -124,7 +115,7 @@ public class MP4Reader implements IoConstants, ITagReader,
 	/** Buffer type / style to use **/
 	private static BufferType bufferType = BufferType.AUTO;
 
-	private static int bufferSize = 3471; //1024
+	private static int bufferSize = 4096; //1024;
 
 	/** Cache for keyframe informations. */
 	private static IKeyFrameMetaCache keyframeCache;
@@ -167,6 +158,9 @@ public class MP4Reader implements IoConstants, ITagReader,
 	//keep track of current sample
 	private int currentSample = 0;
 	
+	private long firstAudioTag;
+	private long firstVideoTag;
+	
     /**
      * File metadata
      */
@@ -198,7 +192,6 @@ public class MP4Reader implements IoConstants, ITagReader,
     	}
     	this.file = f;
 		this.fis = new MP4DataStream(new FileInputStream(f));
-		this.generateMetadata = generateMetadata;
 		channel = fis.getChannel();
 		in = null;
 
@@ -213,7 +206,6 @@ public class MP4Reader implements IoConstants, ITagReader,
      * @param buffer                   Byte buffer
 	 */
 	public MP4Reader(ByteBuffer buffer, boolean generateMetadata) throws IOException {
-		this.generateMetadata = generateMetadata;
 		in = buffer;
 		decodeHeader();
 	}
@@ -706,17 +698,7 @@ public class MP4Reader implements IoConstants, ITagReader,
 					default:
 						in = ByteBuffer.allocate(bufferSize);
 				}
-			}
-//			try {
-//				//set channel position
-//				if (samplePosMap != null) {
-//					channel.position(samplePosMap.get(currentSample));
-//				} else {
-//					channel.position(mdatOffset);
-//				}
-//			} catch (IOException e) {
-//				log.error("Position error {}", e);
-//			}			
+			}	
 			channel.read(in.buf());
 			in.flip();	
 		} catch (Exception e) {
@@ -951,14 +933,20 @@ public class MP4Reader implements IoConstants, ITagReader,
 		if (tagPosition == 0) {
 			tagPosition++;
 			analyzeKeyFrames();	
-			setCurrentPosition(mdatOffset);
 			fileMeta = createFileMeta();				
 			//return onMetaData stuff
 			prevFrameSize = fileMeta.getBodySize();
 			return fileMeta;
 		}
-		
+				
 		int sampleSize = (Integer) videoSamples.get(currentSample);
+
+//   		if (in.position() + sampleSize > in.limit()) {
+//   			//last sample is incomplete
+//   			in.position(in.limit());
+//   			return null;
+//   		}	
+		
 		int ts = ((int) videoSampleDuration * (currentSample));
 		
 		long samplePos = samplePosMap.get(currentSample);
@@ -970,8 +958,15 @@ public class MP4Reader implements IoConstants, ITagReader,
 		ByteBuffer body = ByteBuffer.allocate(tag.getBodySize());
 		log.debug("Read tag - current pos {} sample pos {}", getCurrentPosition(), samplePos);
 		fillBuffer(sampleSize);
+		//get current limit
+		final int limit = in.limit();
+		log.debug("Limit: {}", limit);
+		//set to sample size
+		in.limit(sampleSize);
 		body.put(in);
 		body.flip();
+		//reset limit
+		in.limit(limit);
 		tag.setBody(body);
 		tagPosition++;
 		

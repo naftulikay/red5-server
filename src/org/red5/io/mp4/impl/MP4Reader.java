@@ -46,7 +46,6 @@ import org.red5.io.flv.impl.Tag;
 import org.red5.io.mp4.MP4Atom;
 import org.red5.io.mp4.MP4DataStream;
 import org.red5.io.mp4.MP4Descriptor;
-import org.red5.io.mp4.MP4Header;
 import org.red5.io.object.Serializer;
 import org.red5.io.utils.IOUtils;
 import org.slf4j.Logger;
@@ -119,20 +118,16 @@ public class MP4Reader implements IoConstants, ITagReader,
 
 	/** Mapping between file position and tag number. */
 	private HashMap<Long, Integer> posTagMap;
+	
+	private HashMap<Integer, Long> samplePosMap;
 
 	/** Buffer type / style to use **/
 	private static BufferType bufferType = BufferType.AUTO;
 
-	private static int bufferSize = 1024;
-	
-	/** Use load buffer */
-	private boolean useLoadBuf;
+	private static int bufferSize = 3471; //1024
 
 	/** Cache for keyframe informations. */
 	private static IKeyFrameMetaCache keyframeCache;
-	
-	/** The header of this MP4 file. */
-	private MP4Header header;
 	
 	/** Whether or not the clip contains a video track */
 	private boolean hasVideo = false;
@@ -224,8 +219,6 @@ public class MP4Reader implements IoConstants, ITagReader,
 	}
     
 	public void decodeHeader() {
-		//not sure if ill use a header or not
-		header = new MP4Header();
 		try {
 			// the first atom will/should be the type
 			MP4Atom type = MP4Atom.createAtom(fis);
@@ -587,10 +580,6 @@ public class MP4Reader implements IoConstants, ITagReader,
 	 * @return          Number of remaining bytes
 	 */
 	private long getRemainingBytes() {
-		if (!useLoadBuf) {
-			return in.remaining();
-		}
-
 		try {
 			return channel.size() - channel.position() + in.remaining();
 		} catch (Exception e) {
@@ -605,10 +594,6 @@ public class MP4Reader implements IoConstants, ITagReader,
 	 * @return          Total readable bytes
 	 */
 	private long getTotalBytes() {
-		if (!useLoadBuf) {
-			return in.capacity();
-		}
-
 		try {
 			return channel.size();
 		} catch (Exception e) {
@@ -624,10 +609,12 @@ public class MP4Reader implements IoConstants, ITagReader,
 	 */
 	private long getCurrentPosition() {
 		long pos;
-		if (!useLoadBuf) {
-			return in.position();
-		}
 		try {
+			//if we are at the end of the file drop back to mdat offset
+			if (channel.position() == channel.size()) {
+				log.debug("Reached end of file, going back to data offset");
+				channel.position(mdatOffset);
+			}		
 			if (in != null) {
 				pos = (channel.position() - in.remaining());
 			} else {
@@ -650,11 +637,7 @@ public class MP4Reader implements IoConstants, ITagReader,
 		if (pos == Long.MAX_VALUE) {
 			pos = file.length();
 		}
-		if (!useLoadBuf) {
-			in.position((int) pos);
-			return;
-		}
-
+		//in.position((int) pos);
 		try {
 			if (pos >= (channel.position() - in.limit())
 					&& pos < channel.position()) {
@@ -665,8 +648,7 @@ public class MP4Reader implements IoConstants, ITagReader,
 			}
 		} catch (Exception e) {
 			log.error("Error setCurrentPosition", e);
-		}
-
+		}		
 	}
 
     /**
@@ -696,6 +678,7 @@ public class MP4Reader implements IoConstants, ITagReader,
 	 */
 	private void fillBuffer(long amount, boolean reload) {
 		try {
+			log.debug("Fill buffer with {} bytes. Append or reload: {}", amount, (reload ? "reload" : "append"));
 			if (amount > bufferSize) {
 				amount = bufferSize;
 			}
@@ -704,8 +687,14 @@ public class MP4Reader implements IoConstants, ITagReader,
 			if (channel.size() - channel.position() < amount) {
 				amount = channel.size() - channel.position();
 			}
-
-			if (in == null) {
+			if (in != null) {
+				if (!reload) {
+					in.compact();
+				} else {
+					in.clear();
+				}		
+			} else {
+				log.debug("ByteBuffer was null, creating a new one");
 				switch (bufferType) {
 					case HEAP:
 						in = ByteBuffer.allocate(bufferSize, false);
@@ -717,25 +706,19 @@ public class MP4Reader implements IoConstants, ITagReader,
 					default:
 						in = ByteBuffer.allocate(bufferSize);
 				}
-				channel.read(in.buf());
-				in.flip();
-				useLoadBuf = true;
 			}
-
-			if (!useLoadBuf) {
-				return;
-			}
-
-			if (reload || in.remaining() < amount) {
-				if (!reload) {
-					in.compact();
-				} else {
-					in.clear();
-				}
-				channel.read(in.buf());
-				in.flip();
-			}
-
+//			try {
+//				//set channel position
+//				if (samplePosMap != null) {
+//					channel.position(samplePosMap.get(currentSample));
+//				} else {
+//					channel.position(mdatOffset);
+//				}
+//			} catch (IOException e) {
+//				log.error("Position error {}", e);
+//			}			
+			channel.read(in.buf());
+			in.flip();	
 		} catch (Exception e) {
 			log.error("Error fillBuffer", e);
 		}
@@ -968,6 +951,7 @@ public class MP4Reader implements IoConstants, ITagReader,
 		if (tagPosition == 0) {
 			tagPosition++;
 			analyzeKeyFrames();	
+			setCurrentPosition(mdatOffset);
 			fileMeta = createFileMeta();				
 			//return onMetaData stuff
 			prevFrameSize = fileMeta.getBodySize();
@@ -977,12 +961,15 @@ public class MP4Reader implements IoConstants, ITagReader,
 		int sampleSize = (Integer) videoSamples.get(currentSample);
 		int ts = ((int) videoSampleDuration * (currentSample));
 		
+		long samplePos = samplePosMap.get(currentSample);
+		setCurrentPosition(samplePos);
+		
 		//ITag tag = new Tag(IoConstants.TYPE_AUDIO, ts, sampleSize, null, prevFrameSize);
 		ITag tag = new Tag(IoConstants.TYPE_VIDEO, ts, sampleSize, null, prevFrameSize);
 		log.debug("Read tag - body size: {}", tag.getBodySize());
 		ByteBuffer body = ByteBuffer.allocate(tag.getBodySize());
-		log.debug("Read tag - current pos {}", getCurrentPosition());
-		fillBuffer(getCurrentPosition());
+		log.debug("Read tag - current pos {} sample pos {}", getCurrentPosition(), samplePos);
+		fillBuffer(sampleSize);
 		body.put(in);
 		body.flip();
 		tag.setBody(body);
@@ -1007,6 +994,7 @@ public class MP4Reader implements IoConstants, ITagReader,
 			return keyframeMeta;
 		}
 			
+		//key frame sample numbers are stored in the syncSamples collection
 		int keyframeCount = syncSamples.size();
 		
         // Lists of video positions and timestamps
@@ -1014,6 +1002,7 @@ public class MP4Reader implements IoConstants, ITagReader,
         List<Integer> timestampList = new ArrayList<Integer>(keyframeCount);     
         // Maps positions to tags
         posTagMap = new HashMap<Long, Integer>();
+        samplePosMap = new HashMap<Integer, Long>();
         // tag == sample
 		int sample = 0;
 		Long pos = null;
@@ -1022,11 +1011,12 @@ public class MP4Reader implements IoConstants, ITagReader,
 			MP4Atom.Record record = (MP4Atom.Record) records.nextElement();
 			int firstChunk = record.getFirstChunk();
 			int sampleCount = record.getSamplesPerChunk();
-			log.debug("First chunk: {} count:{}", firstChunk, sampleCount);
+			//log.debug("First chunk: {} count:{}", firstChunk, sampleCount);
 			pos = (Long) videoChunkOffsets.elementAt(firstChunk - 1);
 			while (sampleCount > 0) {
 				//log.debug("Position: {}", pos);
     			posTagMap.put(pos, sample);
+    			samplePosMap.put(sample, pos);
     			//check to see if the sample is a keyframe
     			if (syncSamples.contains(sample)) {
     				//log.debug("Keyframe - sample: {}", sample);
@@ -1061,8 +1051,6 @@ public class MP4Reader implements IoConstants, ITagReader,
 			keyframeCache.saveKeyFrameMeta(file, keyframeMeta);
 		}
 		
-		setCurrentPosition(mdatOffset);
-		
 		return keyframeMeta;
 	}
 
@@ -1080,11 +1068,12 @@ public class MP4Reader implements IoConstants, ITagReader,
 			return;
 		}
 		// Update the current tag number
-		Integer tag = posTagMap.get(pos);
-		if (tag == null) {
+		Integer tagNumber = posTagMap.get(pos);
+		log.debug("Got a tag number {} for position {}", tagNumber, pos);
+		if (tagNumber == null) {
 			return;
 		}
-		tagPosition = tag;
+		tagPosition = tagNumber;
 	}
 
 	/** {@inheritDoc}
@@ -1099,6 +1088,7 @@ public class MP4Reader implements IoConstants, ITagReader,
 			try {
 				channel.close();
 				fis.close();
+				fis = null;
 			} catch (IOException e) {
 				log.error("Channel close {}", e);
 			}

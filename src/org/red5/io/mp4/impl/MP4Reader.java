@@ -208,7 +208,6 @@ public class MP4Reader implements IoConstants, ITagReader,
 		in = null;
 
 		decodeHeader();
-        analyzeKeyFrames();			
 		fillBuffer();
 	}
 
@@ -575,10 +574,7 @@ public class MP4Reader implements IoConstants, ITagReader,
 						
 		} catch (IOException e) {
 			log.error("{}", e);
-		}
-		
-        // Create file metadata object
-        fileMeta = createFileMeta();			
+		}		
 	}
 	
     public void setKeyFrameCache(IKeyFrameMetaCache keyframeCache) {
@@ -628,11 +624,9 @@ public class MP4Reader implements IoConstants, ITagReader,
 	 */
 	private long getCurrentPosition() {
 		long pos;
-
 		if (!useLoadBuf) {
 			return in.position();
 		}
-
 		try {
 			if (in != null) {
 				pos = (channel.position() - in.remaining());
@@ -652,6 +646,7 @@ public class MP4Reader implements IoConstants, ITagReader,
      * @param pos  Current position in file
      */
     private void setCurrentPosition(long pos) {
+    	log.debug("Set current position: {}", pos);
 		if (pos == Long.MAX_VALUE) {
 			pos = file.length();
 		}
@@ -864,7 +859,7 @@ public class MP4Reader implements IoConstants, ITagReader,
 	/** {@inheritDoc}
 	 */
 	public boolean hasMoreTags() {
-		return currentSample < videoChunkOffsets.size();
+		return currentSample < videoSampleCount;
 	}
 
     /**
@@ -937,12 +932,12 @@ public class MP4Reader implements IoConstants, ITagReader,
 
 		// Video codec id
 		props.put("videocodecid", videoCodecId);
-		props.put("avcprofile", "");
-        props.put("avclevel", "");
+		props.put("avcprofile", "55");
+        props.put("avclevel", "10");
         props.put("videoframerate", fps);
 		// Audio codec id - watch for mp3 instead of aac
         props.put("audiocodecid", audioCodecId);
-        props.put("aacaot", "");
+        props.put("aacaot", "0");
         props.put("audiosamplerate", audioSampleRate);
         props.put("audiochannels", audioChannels);
         
@@ -969,20 +964,24 @@ public class MP4Reader implements IoConstants, ITagReader,
 	 */
     public synchronized ITag readTag() {
 		long oldPos = getCurrentPosition();
-		if (tagPosition == 0 && generateMetadata) {
-			// Generate initial metadata automatically
-			setCurrentPosition(mdatOffset);
-			//KeyFrameMeta meta = analyzeKeyFrames();
+		log.debug("Read tag - old pos {}, tagPosition {}, prevFrameSize {}", new Object[]{oldPos, tagPosition, prevFrameSize});
+		if (tagPosition == 0) {
 			tagPosition++;
+			analyzeKeyFrames();	
+			fileMeta = createFileMeta();				
 			//return onMetaData stuff
 			prevFrameSize = fileMeta.getBodySize();
 			return fileMeta;
 		}
 		
-		ITag tag = new Tag(IoConstants.TYPE_AUDIO, (int) currentTime, 1206, null, prevFrameSize);
-
+		int sampleSize = (Integer) videoSamples.get(currentSample);
+		int ts = ((int) videoSampleDuration * (currentSample));
+		
+		//ITag tag = new Tag(IoConstants.TYPE_AUDIO, ts, sampleSize, null, prevFrameSize);
+		ITag tag = new Tag(IoConstants.TYPE_VIDEO, ts, sampleSize, null, prevFrameSize);
+		log.debug("Read tag - body size: {}", tag.getBodySize());
 		ByteBuffer body = ByteBuffer.allocate(tag.getBodySize());
-
+		log.debug("Read tag - current pos {}", getCurrentPosition());
 		fillBuffer(getCurrentPosition());
 		body.put(in);
 		body.flip();
@@ -991,25 +990,9 @@ public class MP4Reader implements IoConstants, ITagReader,
 		
 		prevFrameSize = tag.getBodySize();
 
+		currentSample++;
+		
 		return tag;
-	}
-
-	/** {@inheritDoc}
-	 */
-	public void close() {
-		log.debug("Close");
-		if (in != null) {
-			in.release();
-			in = null;
-		}
-		if (channel != null) {
-			try {
-				channel.close();
-				fis.close();
-			} catch (IOException e) {
-				log.error("Channel close {}", e);
-			}
-		}
 	}
 
     /**
@@ -1042,21 +1025,20 @@ public class MP4Reader implements IoConstants, ITagReader,
 			log.debug("First chunk: {} count:{}", firstChunk, sampleCount);
 			pos = (Long) videoChunkOffsets.elementAt(firstChunk - 1);
 			while (sampleCount > 0) {
-				log.debug("Position: {}", pos);
-    			posTagMap.put(pos, sample++);
-                //set video duration
-    			duration = videoSampleDuration;
+				//log.debug("Position: {}", pos);
+    			posTagMap.put(pos, sample);
     			//check to see if the sample is a keyframe
-    			if (syncSamples.contains(sample - 1)) {
-    				log.debug("Keyframe - sample: {}", sample);
+    			if (syncSamples.contains(sample)) {
+    				//log.debug("Keyframe - sample: {}", sample);
     				positionList.add(pos);
     				//need to calculate ts
-    				Integer ts = ((int) duration * sample);
-    				log.debug("Keyframe - timestamp: {}", ts);
+    				Integer ts = ((int) videoSampleDuration * (sample));
+    				//log.debug("Keyframe - timestamp: {}", ts);
     				timestampList.add(ts);
     			}
-    			pos = pos + (Integer) videoSamples.get(sample - 1);
+    			pos = pos + (Integer) videoSamples.get(sample);
     			sampleCount--;
+    			sample++;
 			}
 		}
 
@@ -1078,6 +1060,9 @@ public class MP4Reader implements IoConstants, ITagReader,
 		if (keyframeCache != null) {
 			keyframeCache.saveKeyFrameMeta(file, keyframeMeta);
 		}
+		
+		setCurrentPosition(mdatOffset);
+		
 		return keyframeMeta;
 	}
 
@@ -1102,7 +1087,23 @@ public class MP4Reader implements IoConstants, ITagReader,
 		tagPosition = tag;
 	}
 
-
+	/** {@inheritDoc}
+	 */
+	public void close() {
+		log.debug("Close");
+		if (in != null) {
+			in.release();
+			in = null;
+		}
+		if (channel != null) {
+			try {
+				channel.close();
+				fis.close();
+			} catch (IOException e) {
+				log.error("Channel close {}", e);
+			}
+		}
+	}
 
 	public void setVideoCodecId(String videoCodecId) {
 		this.videoCodecId = videoCodecId;

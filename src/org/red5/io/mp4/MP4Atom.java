@@ -55,7 +55,7 @@ import org.slf4j.LoggerFactory;
  * of the MP4 file. It could contain other atoms as children.
  * 
  * 01/29/2008 - Added support for avc1 atom (video sample)
- * 02/05/2008 - Added stss - sync sample atom
+ * 02/05/2008 - Added stss - sync sample atom and stts - time to sample atom
  * 
  * @author Paul Gregoire (mondain@gmail.com)
  */
@@ -111,6 +111,7 @@ public class MP4Atom {
 	public final static int MP4VideoSampleEntryAtomType        		= MP4Atom.typeToInt("avc1");
 	
 	public final static int MP4SyncSampleAtomType         			= MP4Atom.typeToInt("stss");	
+	public final static int MP4TimeToSampleAtomType         		= MP4Atom.typeToInt("stts");	
 	
 	/** The size of the atom. */
 	protected long size;
@@ -179,6 +180,8 @@ public class MP4Atom {
 			readed = atom.create_sample_to_chunk_atom(bitstream);	
 		} else if(type == MP4SyncSampleAtomType){
 			readed = atom.create_sync_sample_atom(bitstream);	
+		} else if(type == MP4TimeToSampleAtomType){
+			readed = atom.create_time_to_sample_atom(bitstream);	
 		} else if(type == MP4SoundMediaHeaderAtomType){
 			readed = atom.create_sound_media_header_atom(bitstream);
 		} else if(type == MP4TrackHeaderAtomType){
@@ -551,7 +554,7 @@ public class MP4Atom {
 	}
 
 	/** The decoding time to sample table. */
-	protected Vector records = new Vector();
+	protected Vector<Record> records = new Vector<Record>();
 
 	public Vector getRecords() {
 		return records;
@@ -574,8 +577,8 @@ public class MP4Atom {
 			readed += 12;
 		}
 		return readed;		
-	}
-
+	}	
+	
 	protected Vector syncSamples = new Vector();
 	
 	public Vector getSyncSamples() {
@@ -598,6 +601,50 @@ public class MP4Atom {
 			//log.debug("Sync entry: {}", sample);
 			syncSamples.addElement(new Integer(sample));
 			readed += 4;
+		}
+		return readed;		
+	}
+	
+	public class TimeSampleRecord {
+		private int consecutiveSamples;
+		private int sampleDuration;
+		
+		public TimeSampleRecord(int consecutiveSamples, int sampleDuration) {
+			this.consecutiveSamples = consecutiveSamples;
+			this.sampleDuration = sampleDuration;
+		}
+		
+		public int getConsecutiveSamples() {
+			return consecutiveSamples;
+		}
+		public int getSampleDuration(){
+			return sampleDuration;
+		}
+	}
+	
+	protected Vector<TimeSampleRecord> timeToSamplesRecords = new Vector<TimeSampleRecord>();
+	
+	public Vector getTimeToSamplesRecords() {
+		return timeToSamplesRecords;
+	}	
+	
+	/**
+	 * Loads MP4TimeToSampleAtom atom from the input bitstream.
+	 * @param bitstream the input bitstream
+	 * @return the number of bytes which was being loaded.
+	 */
+	public long create_time_to_sample_atom(MP4DataStream bitstream) throws IOException {
+		log.debug("Time to sample atom");
+		create_full_atom(bitstream);
+		entryCount = (int) bitstream.readBytes(4);
+		log.debug("Time to sample entries: {}", entryCount);
+		readed += 4;
+		for (int i = 0; i < entryCount; i++) {
+			int sampleCount = (int) bitstream.readBytes(4);
+			int sampleDuration = (int) bitstream.readBytes(4);
+			//log.debug("Sync entry: {}", sample);
+			timeToSamplesRecords.addElement(new TimeSampleRecord(sampleCount, sampleDuration));
+			readed += 8;
 		}
 		return readed;		
 	}

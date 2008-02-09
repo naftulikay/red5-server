@@ -25,8 +25,8 @@ public class MP4ReaderTest extends TestCase {
 		log
 				.info("----------------------------------------------------------------------------------");
 
-		File file2 = new File("E:/media/test_clips/IronMan.mov");
-		MP4Reader reader2 = new MP4Reader(file2, false);
+		//File file2 = new File("E:/media/test_clips/IronMan.mov");
+		//MP4Reader reader2 = new MP4Reader(file2, false);
 
 		// log.info("----------------------------------------------------------------------------------");
 		//		

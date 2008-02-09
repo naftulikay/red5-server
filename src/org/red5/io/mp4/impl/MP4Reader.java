@@ -26,6 +26,7 @@ import java.nio.channels.FileChannel;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.ArrayList;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -161,6 +162,12 @@ public class MP4Reader implements IoConstants, ITagReader,
 	//chunk offsets
 	private Vector videoChunkOffsets;
 	private Vector audioChunkOffsets;
+	//sample duration
+	private int videoSampleDuration = 125;
+	private int audioSampleDuration = 1024;
+	
+	//keep track of current sample
+	private int currentSample = 0;
 	
     /**
      * File metadata
@@ -390,6 +397,20 @@ public class MP4Reader implements IoConstants, ITagReader,
 										audioChunkOffsets = stco.getChunks();
 										log.debug("Chunk count: {}", audioChunkOffsets.size());
 									}
+									//stts - has TimeSampleRecords
+									MP4Atom stts = stbl.lookup(MP4Atom.typeToInt("stts"), 0);
+									if (stts != null) {
+										log.debug("Time to sample atom found");
+										Vector records = stts.getTimeToSamplesRecords();
+										log.debug("Record count: {}", records.size());
+										MP4Atom.TimeSampleRecord rec = (MP4Atom.TimeSampleRecord) records.firstElement();
+										log.debug("Record data: Consecutive samples={} Duration={}", rec.getConsecutiveSamples(), rec.getSampleDuration());
+										//if we have 1 record then all samples have the same duration
+										if (records.size() > 1) {
+											log.warn("Audio samples have differing durations, audio playback may fail");
+										}
+										audioSampleDuration = rec.getSampleDuration();
+									}		
 									
 									//for (MP4Atom child : stbl.getChildren()) {
 									//	log.debug("{}", MP4Atom.intToType(child.getType()));
@@ -470,7 +491,6 @@ public class MP4Reader implements IoConstants, ITagReader,
 										videoChunkOffsets = stco.getChunks();
 										log.debug("Chunk count: {}", videoChunkOffsets.size());
 									}									
-									
 									//stss - has Sync - no sync means all samples are keyframes
 									MP4Atom stss = stbl.lookup(MP4Atom.typeToInt("stss"), 0);
 									if (stss != null) {
@@ -479,6 +499,20 @@ public class MP4Reader implements IoConstants, ITagReader,
 										syncSamples = stss.getSyncSamples();
 										log.debug("Keyframes: {}", syncSamples.size());
 									}		
+									//stts - has TimeSampleRecords
+									MP4Atom stts = stbl.lookup(MP4Atom.typeToInt("stts"), 0);
+									if (stts != null) {
+										log.debug("Time to sample atom found");
+										Vector records = stts.getTimeToSamplesRecords();
+										log.debug("Record count: {}", records.size());
+										MP4Atom.TimeSampleRecord rec = (MP4Atom.TimeSampleRecord) records.firstElement();
+										log.debug("Record data: Consecutive samples={} Duration={}", rec.getConsecutiveSamples(), rec.getSampleDuration());
+										//if we have 1 record then all samples have the same duration
+										if (records.size() > 1) {
+											log.warn("Video samples have differing durations, video playback may fail");
+										}
+										videoSampleDuration = rec.getSampleDuration();
+									}										
 									
 									//for (MP4Atom child : stbl.getChildren()) {
 									//	log.debug("{}", MP4Atom.intToType(child.getType()));
@@ -530,6 +564,43 @@ public class MP4Reader implements IoConstants, ITagReader,
 			
 			log.debug("File size: {} mdat size: {}", file.length(), dataSize);
 			log.debug("Offsets moov: {} mdat: {}", moovOffset, mdatOffset);
+			
+			//debug - go thru first 10 or so
+			int oo = 0;
+			Object o = null;
+			log.debug("Samples: ");
+			Enumeration en = videoSamples.elements();
+			while (en.hasMoreElements()) {
+				o = en.nextElement();
+				log.debug("{}", o);
+				if (oo == 10) {
+					break;
+				}
+				oo++;
+			}
+			oo = 0;
+			log.debug("Keyframes (sync): ");
+			en = syncSamples.elements();
+			while (en.hasMoreElements()) {
+				o = en.nextElement();
+				log.debug("{}", o);
+				if (oo == 10) {
+					break;
+				}
+				oo++;
+			}
+			oo = 0;
+			log.debug("Chunk offsets: ");
+			en = videoChunkOffsets.elements();
+			while (en.hasMoreElements()) {
+				o = en.nextElement();
+				log.debug("{}", o);
+				if (oo == 10) {
+					break;
+				}
+				oo++;
+			}
+			oo = 0;
 			
 		} catch (IOException e) {
 			log.error("{}", e);
@@ -677,8 +748,6 @@ public class MP4Reader implements IoConstants, ITagReader,
 						in = ByteBuffer.allocate(bufferSize, true);
 						break;
 					case AUTO:
-						in = ByteBuffer.allocate(bufferSize);
-						break;
 					default:
 						in = ByteBuffer.allocate(bufferSize);
 				}
@@ -824,7 +893,7 @@ public class MP4Reader implements IoConstants, ITagReader,
 	/** {@inheritDoc}
 	 */
 	public boolean hasMoreTags() {
-		return getRemainingBytes() > 4;
+		return currentSample < videoChunkOffsets.size();
 	}
 
     /**
@@ -922,45 +991,34 @@ public class MP4Reader implements IoConstants, ITagReader,
 		return result;
 	}
 
+    int prevFrameSize = 0;
+    int currentTime = 0;
+    
 	/** {@inheritDoc}
 	 */
     public synchronized ITag readTag() {
 		long oldPos = getCurrentPosition();
-		ITag tag = readTagHeader();
-
-		if (tagPosition == 0 && tag.getDataType() != TYPE_METADATA
-				&& generateMetadata) {
+		if (tagPosition == 0 && generateMetadata) {
 			// Generate initial metadata automatically
-			setCurrentPosition(oldPos);
-			KeyFrameMeta meta = analyzeKeyFrames();
+			setCurrentPosition(mdatOffset);
+			//KeyFrameMeta meta = analyzeKeyFrames();
 			tagPosition++;
-			if (meta != null) {
-				return createFileMeta();
-			}
+			//return onMetaData stuff
+			prevFrameSize = fileMeta.getBodySize();
+			return fileMeta;
 		}
+		
+		ITag tag = new Tag(IoConstants.TYPE_AUDIO, (int) currentTime, 1206, null, prevFrameSize);
 
 		ByteBuffer body = ByteBuffer.allocate(tag.getBodySize());
 
-		// XXX Paul: this assists in 'properly' handling damaged FLV files		
-		long newPosition = getCurrentPosition() + tag.getBodySize();
-		if (newPosition <= getTotalBytes()) {
-			int limit;
-			while (getCurrentPosition() < newPosition) {
-				fillBuffer(newPosition - getCurrentPosition());
-				if (getCurrentPosition() + in.remaining() > newPosition) {
-					limit = in.limit();
-					in.limit((int) (newPosition - getCurrentPosition()) + in.position());
-					body.put(in);
-					in.limit(limit);
-				} else {
-					body.put(in);
-				}
-			}
-
-			body.flip();
-			tag.setBody(body);
-			tagPosition++;
-		}
+		fillBuffer(getCurrentPosition());
+		body.put(in);
+		body.flip();
+		tag.setBody(body);
+		tagPosition++;
+		
+		prevFrameSize = tag.getBodySize();
 
 		return tag;
 	}

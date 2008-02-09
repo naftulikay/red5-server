@@ -154,6 +154,9 @@ public class MP4Reader implements IoConstants, ITagReader,
 	private long moovOffset;
 	private long mdatOffset;
 	
+	//samples to chunk mappings
+	private Vector videoSamplesToChunks;
+	private Vector audioSamplesToChunks;
 	//keyframe - sample numbers
 	private Vector syncSamples;
 	//samples 
@@ -205,6 +208,7 @@ public class MP4Reader implements IoConstants, ITagReader,
 		in = null;
 
 		decodeHeader();
+        analyzeKeyFrames();			
 		fillBuffer();
 	}
 
@@ -375,9 +379,9 @@ public class MP4Reader implements IoConstants, ITagReader,
 									MP4Atom stsc = stbl.lookup(MP4Atom.typeToInt("stsc"), 0);
 									if (stsc != null) {
 										log.debug("Sample to chunk atom found");
-										Vector records = stsc.getRecords();
-										log.debug("Record count: {}", records.size());
-										MP4Atom.Record rec = (MP4Atom.Record) records.firstElement();
+										audioSamplesToChunks = stsc.getRecords();
+										log.debug("Record count: {}", audioSamplesToChunks.size());
+										MP4Atom.Record rec = (MP4Atom.Record) audioSamplesToChunks.firstElement();
 										log.debug("Record data: Description index={} Samples per chunk={}", rec.getSampleDescriptionIndex(), rec.getSamplesPerChunk());
 									}									
 									//stsz - has Samples
@@ -396,6 +400,8 @@ public class MP4Reader implements IoConstants, ITagReader,
 										//vector full of integers
 										audioChunkOffsets = stco.getChunks();
 										log.debug("Chunk count: {}", audioChunkOffsets.size());
+										//set the first video offset
+										firstAudioTag = (Long) audioChunkOffsets.get(0);
 									}
 									//stts - has TimeSampleRecords
 									MP4Atom stts = stbl.lookup(MP4Atom.typeToInt("stts"), 0);
@@ -466,9 +472,9 @@ public class MP4Reader implements IoConstants, ITagReader,
 									MP4Atom stsc = stbl.lookup(MP4Atom.typeToInt("stsc"), 0);
 									if (stsc != null) {
 										log.debug("Sample to chunk atom found");
-										Vector records = stsc.getRecords();
-										log.debug("Record count: {}", records.size());
-										MP4Atom.Record rec = (MP4Atom.Record) records.firstElement();
+										videoSamplesToChunks = stsc.getRecords();
+										log.debug("Record count: {}", videoSamplesToChunks.size());
+										MP4Atom.Record rec = (MP4Atom.Record) videoSamplesToChunks.firstElement();
 										log.debug("Record data: Description index={} Samples per chunk={}", rec.getSampleDescriptionIndex(), rec.getSamplesPerChunk());
 									}									
 									//stsz - has Samples
@@ -490,6 +496,8 @@ public class MP4Reader implements IoConstants, ITagReader,
 										//vector full of integers
 										videoChunkOffsets = stco.getChunks();
 										log.debug("Chunk count: {}", videoChunkOffsets.size());
+										//set the first video offset
+										firstVideoTag = (Long) videoChunkOffsets.get(0);
 									}									
 									//stss - has Sync - no sync means all samples are keyframes
 									MP4Atom stss = stbl.lookup(MP4Atom.typeToInt("stss"), 0);
@@ -564,44 +572,7 @@ public class MP4Reader implements IoConstants, ITagReader,
 			
 			log.debug("File size: {} mdat size: {}", file.length(), dataSize);
 			log.debug("Offsets moov: {} mdat: {}", moovOffset, mdatOffset);
-			
-			//debug - go thru first 10 or so
-			int oo = 0;
-			Object o = null;
-			log.debug("Samples: ");
-			Enumeration en = videoSamples.elements();
-			while (en.hasMoreElements()) {
-				o = en.nextElement();
-				log.debug("{}", o);
-				if (oo == 10) {
-					break;
-				}
-				oo++;
-			}
-			oo = 0;
-			log.debug("Keyframes (sync): ");
-			en = syncSamples.elements();
-			while (en.hasMoreElements()) {
-				o = en.nextElement();
-				log.debug("{}", o);
-				if (oo == 10) {
-					break;
-				}
-				oo++;
-			}
-			oo = 0;
-			log.debug("Chunk offsets: ");
-			en = videoChunkOffsets.elements();
-			while (en.hasMoreElements()) {
-				o = en.nextElement();
-				log.debug("{}", o);
-				if (oo == 10) {
-					break;
-				}
-				oo++;
-			}
-			oo = 0;
-			
+						
 		} catch (IOException e) {
 			log.error("{}", e);
 		}
@@ -1052,66 +1023,46 @@ public class MP4Reader implements IoConstants, ITagReader,
 			log.debug("Key frame meta already generated");
 			return keyframeMeta;
 		}
-
-		// check for cached keyframe informations
-//		if (keyframeCache != null) {
-//			keyframeMeta = keyframeCache.loadKeyFrameMeta(file);
-//			if (keyframeMeta != null) {
-//				// Keyframe data loaded, create other mappings
-//				duration = keyframeMeta.duration;
-//				posTimeMap = new HashMap<Long, Long>();
-//				for (int i=0; i<keyframeMeta.positions.length; i++) {
-//					posTimeMap.put(keyframeMeta.positions[i], (long) keyframeMeta.timestamps[i]);
-//				}
-//				// XXX: We currently lose pos -> tag mapping, but that isn't used anywhere, so that's okay for now... 
-//				posTagMap = new HashMap<Long, Integer>();
-//				posTagMap.put((long) 0, 0);
-//				return keyframeMeta;
-//			}
-//		}
+			
+		int keyframeCount = syncSamples.size();
 		
         // Lists of video positions and timestamps
-        List<Long> positionList = new ArrayList<Long>();
-        List<Integer> timestampList = new ArrayList<Integer>();
-        // Lists of audio positions and timestamps
-//        List<Long> audioPositionList = new ArrayList<Long>();
-//        List<Integer> audioTimestampList = new ArrayList<Integer>();
-        
-		long origPos = getCurrentPosition();
-		// point to the first tag
-		setCurrentPosition(mdatOffset);
-
+        List<Long> positionList = new ArrayList<Long>(keyframeCount);
+        List<Integer> timestampList = new ArrayList<Integer>(keyframeCount);     
         // Maps positions to tags
         posTagMap = new HashMap<Long, Integer>();
-		int idx = 0;
-		while (this.hasMoreTags()) {
-			long pos = getCurrentPosition();
-			posTagMap.put(pos, idx++);
-            // Read tag header and duration
-            ITag tmpTag = this.readTagHeader();
-			duration = tmpTag.getTimestamp();
-			if (tmpTag.getDataType() == IoConstants.TYPE_VIDEO) {
-				if (firstVideoTag == -1) {
-					firstVideoTag = pos;
-				}
-
-				// Grab Frame type
-				fillBuffer(1);
-				byte frametype = in.get();
-				if (((frametype & MASK_VIDEO_FRAMETYPE) >> 4) == FLAG_FRAMETYPE_KEYFRAME) {
-					positionList.add(pos);
-					timestampList.add(tmpTag.getTimestamp());
-				}
-
-			} else if (tmpTag.getDataType() == IoConstants.TYPE_AUDIO) {
-				if (firstAudioTag == -1) {
-					firstAudioTag = pos;
-				}
+        // tag == sample
+		int sample = 0;
+		Long pos = null;
+		Enumeration records = videoSamplesToChunks.elements();
+		while (records.hasMoreElements()) {
+			MP4Atom.Record record = (MP4Atom.Record) records.nextElement();
+			int firstChunk = record.getFirstChunk();
+			int sampleCount = record.getSamplesPerChunk();
+			log.debug("First chunk: {} count:{}", firstChunk, sampleCount);
+			pos = (Long) videoChunkOffsets.elementAt(firstChunk - 1);
+			while (sampleCount > 0) {
+				log.debug("Position: {}", pos);
+    			posTagMap.put(pos, sample++);
+                //set video duration
+    			duration = videoSampleDuration;
+    			//check to see if the sample is a keyframe
+    			if (syncSamples.contains(sample - 1)) {
+    				log.debug("Keyframe - sample: {}", sample);
+    				positionList.add(pos);
+    				//need to calculate ts
+    				Integer ts = ((int) duration * sample);
+    				log.debug("Keyframe - timestamp: {}", ts);
+    				timestampList.add(ts);
+    			}
+    			pos = pos + (Integer) videoSamples.get(sample - 1);
+    			sampleCount--;
 			}
 		}
-		// restore the pos
-		setCurrentPosition(origPos);
 
+		log.debug("Position Tag Map size: {}", posTagMap.size());
+		log.debug("Keyframe position list size: {}", positionList.size());
+		
 		keyframeMeta = new KeyFrameMeta();
 		keyframeMeta.duration = duration;
 		posTimeMap = new HashMap<Long, Long>();

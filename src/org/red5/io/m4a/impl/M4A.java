@@ -1,4 +1,4 @@
-package org.red5.io.mp4.impl;
+package org.red5.io.m4a.impl;
 
 /*
  * RED5 Open Source Flash Server - http://www.osflash.org/red5
@@ -34,7 +34,7 @@ import org.red5.io.IoConstants;
 import org.red5.io.flv.meta.IMetaData;
 import org.red5.io.flv.meta.IMetaService;
 import org.red5.io.flv.meta.MetaService;
-import org.red5.io.mp4.IMP4;
+import org.red5.io.m4a.IM4A;
 import org.red5.server.api.cache.ICacheStore;
 import org.red5.server.api.cache.ICacheable;
 import org.red5.server.cache.NoCacheImpl;
@@ -42,14 +42,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * A MP4Impl implements the MP4 api
+ * A M4AImpl implements the M4A api
  * 
  * @author The Red5 Project (red5@osflash.org)
  * @author Paul Gregoire, (mondain@gmail.com)
  */
-public class MP4 implements IMP4 {
+public class M4A implements IM4A {
 
-	protected static Logger log = LoggerFactory.getLogger(MP4.class);
+	protected static Logger log = LoggerFactory.getLogger(M4A.class);
 
 	private static ICacheStore cache;
 
@@ -64,21 +64,21 @@ public class MP4 implements IMP4 {
 	/**
 	 * Default constructor, used by Spring so that parameters may be injected.
 	 */
-	public MP4() {
+	public M4A() {
 	}
 
 	/**
-	 * Create MP4 from given file source
+	 * Create M4A from given file source
 	 * 
 	 * @param file
 	 *            File source
 	 */
-	public MP4(File file) {
+	public M4A(File file) {
 		this(file, false);
 	}
 
 	/**
-	 * Create MP4 from given file source and with specified metadata generation
+	 * Create M4A from given file source and with specified metadata generation
 	 * option
 	 * 
 	 * @param file
@@ -86,14 +86,14 @@ public class MP4 implements IMP4 {
 	 * @param generateMetadata
 	 *            Metadata generation option
 	 */
-	public MP4(File file, boolean generateMetadata) {
+	public M4A(File file, boolean generateMetadata) {
 		this.file = file;
 		this.generateMetadata = generateMetadata;
 		int count = 0;
 
 		if (!generateMetadata) {
 			try {
-				MP4Reader reader = new MP4Reader(this.file);
+				M4AReader reader = new M4AReader(this.file);
 				ITag tag = null;
 				while (reader.hasMoreTags() && (++count < 5)) {
 					tag = reader.readTag();
@@ -119,7 +119,7 @@ public class MP4 implements IMP4 {
 	 *            Cache store
 	 */
 	public void setCache(ICacheStore cache) {
-		MP4.cache = cache;
+		M4A.cache = cache;
 	}
 
 	/**
@@ -174,7 +174,7 @@ public class MP4 implements IMP4 {
 	 * {@inheritDoc}
 	 */
 	public ITagReader getReader() throws IOException {
-		MP4Reader reader = null;
+		M4AReader reader = null;
 		ByteBuffer fileData;
 		String fileName = file.getName();
 
@@ -182,7 +182,7 @@ public class MP4 implements IMP4 {
 		if (cache == null) {
 			System.out.println("No cache");
 			log
-					.warn("MP4 cache is null, an NPE may be thrown. To fix your code, ensure a cache is set via Spring or by the following: setCache(NoCacheImpl.getInstance())");
+					.warn("M4A cache is null, an NPE may be thrown. To fix your code, ensure a cache is set via Spring or by the following: setCache(NoCacheImpl.getInstance())");
 			setCache(NoCacheImpl.getInstance());
 		}
 		ICacheable ic = cache.get(fileName);
@@ -193,7 +193,7 @@ public class MP4 implements IMP4 {
 				if (log.isDebugEnabled()) {
 					log.debug("File size: " + file.length());
 				}
-				reader = new MP4Reader(file, generateMetadata);
+				reader = new M4AReader(file, generateMetadata);
 				// get a ref to the mapped byte buffer
 				fileData = reader.getFileData();
 				// offer the uncached file to the cache
@@ -212,7 +212,7 @@ public class MP4 implements IMP4 {
 			}
 		} else {
 			fileData = ByteBuffer.wrap(ic.getBytes());
-			reader = new MP4Reader(fileData, generateMetadata);
+			reader = new M4AReader(fileData, generateMetadata);
 		}
 		return reader;
 	}
@@ -241,7 +241,7 @@ public class MP4 implements IMP4 {
 
 	/** {@inheritDoc} */
 	public void setMetaData(IMetaData meta) throws IOException {
-		File tmpFile = File.createTempFile("setMeta_", ".mp4");
+		File tmpFile = File.createTempFile("setMeta_", ".m4a");
 		if (metaService == null) {
 			metaService = new MetaService(file);
 		}

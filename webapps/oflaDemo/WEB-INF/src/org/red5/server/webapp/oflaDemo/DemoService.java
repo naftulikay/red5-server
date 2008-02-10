@@ -45,6 +45,9 @@ public class DemoService {
 			
 			Resource[] mp4s = scope.getResources("streams/*.mp4");
 			addToMap(filesMap, mp4s);
+
+			Resource[] m4as = scope.getResources("streams/*.m4a");
+			addToMap(filesMap, m4as);
 			
 		} catch (IOException e) {
 			log.error("{}", e);

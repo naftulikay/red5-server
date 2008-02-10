@@ -208,6 +208,10 @@ public class MP4Reader implements IoConstants, ITagReader, IKeyFrameDataAnalyzer
 		decodeHeader();
 	}
     
+	/**
+	 * Currently this expects the moov atom at the beginning of the file, later we will
+	 * have to handle the mdat at the beginning instead.
+	 */
 	public void decodeHeader() {
 		try {
 			// the first atom will/should be the type
@@ -554,8 +558,10 @@ public class MP4Reader implements IoConstants, ITagReader, IKeyFrameDataAnalyzer
 			
 			log.debug("File size: {} mdat size: {}", file.length(), dataSize);
 			//the tag name to the offsets
-			moovOffset += 4;
-			mdatOffset += 4;
+			moovOffset += 8;
+			mdatOffset += 8;
+			//
+			mdatOffset = 135204;
 			log.debug("Offsets moov: {} mdat: {}", moovOffset, mdatOffset);
 						
 		} catch (IOException e) {

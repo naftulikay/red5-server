@@ -55,8 +55,7 @@ import org.slf4j.LoggerFactory;
  * @author Luke Hubbard, Codegent Ltd (luke@codegent.com)
  * @author Paul Gregoire, (mondain@gmail.com)
  */
-public class FLVReader implements IoConstants, ITagReader,
-		IKeyFrameDataAnalyzer {
+public class FLVReader implements IoConstants, ITagReader, IKeyFrameDataAnalyzer {
 
     /**
      * Logger
@@ -123,7 +122,7 @@ public class FLVReader implements IoConstants, ITagReader,
 	
 	/** The header of this FLV file. */
 	private FLVHeader header;
-	
+		
 	/** Constructs a new FLVReader. */
     FLVReader() {
 	}

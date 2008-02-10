@@ -56,15 +56,15 @@
 	<classpathentry kind="lib" path="lib/commons-beanutils-1.8.0-BETA.jar"/>
 	<classpathentry kind="lib" path="lib/commons-httpclient-3.1.jar"/>
 	<classpathentry kind="lib" path="lib/jruby-1.0.3.jar"/>
-	<classpathentry kind="lib" path="lib/mina-core-1.1.6-snapshot.jar"/>
-	<classpathentry kind="lib" path="lib/mina-filter-ssl-1.1.6-snapshot.jar"/>
-	<classpathentry kind="lib" path="lib/mina-integration-jmx-1.1.6-snapshot.jar"/>
-	<classpathentry kind="lib" path="lib/mina-integration-spring-1.1.6-snapshot.jar"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/4"/>
 	<classpathentry kind="lib" path="lib/jetty-6.1.7.jar"/>
 	<classpathentry kind="lib" path="lib/jetty-util-6.1.7.jar"/>
 	<classpathentry kind="lib" path="lib/jetty-xbean-6.1.7.jar"/>
 	<classpathentry kind="lib" path="lib/jsp-api-2.1.jar"/>
 	<classpathentry kind="lib" path="lib/servlet-api-2.5.jar"/>
+	<classpathentry kind="lib" path="lib/mina-core-1.1.6.jar"/>
+	<classpathentry kind="lib" path="lib/mina-filter-ssl-1.1.6.jar"/>
+	<classpathentry kind="lib" path="lib/mina-integration-jmx-1.1.6.jar"/>
+	<classpathentry kind="lib" path="lib/mina-integration-spring-1.1.6.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

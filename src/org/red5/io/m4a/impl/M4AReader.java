@@ -22,6 +22,8 @@ package org.red5.io.m4a.impl;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.nio.ByteOrder;
+import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
@@ -80,8 +82,13 @@ public class M4AReader implements IoConstants, ITagReader {
      * File channel
      */
     private FileChannel channel;
-
+    
     /**
+     * Memory-mapped buffer for file content
+     */
+	private MappedByteBuffer mappedFile;
+    
+	/**
      * Input byte buffer
      */
     private ByteBuffer in;
@@ -96,11 +103,6 @@ public class M4AReader implements IoConstants, ITagReader {
 	private HashMap<Long, Integer> posTagMap;
 	
 	private HashMap<Integer, Long> samplePosMap;
-
-	/** Buffer type / style to use **/
-	private static BufferType bufferType = BufferType.AUTO;
-
-	private static int bufferSize = 1024;
 
 	/** Cache for keyframe informations. */
 	private static IKeyFrameMetaCache keyframeCache;
@@ -141,21 +143,11 @@ public class M4AReader implements IoConstants, ITagReader {
 	}
 
     /**
-     * Creates M4A reader from file input stream.
-	 *
-     * @param f         File
-     */
-    public M4AReader(File f) throws IOException {
-		this(f, false);
-	}
-
-    /**
      * Creates M4A reader from file input stream, sets up metadata generation flag.
 	 *
      * @param f                    File input stream
-     * @param generateMetadata     <code>true</code> if metadata generation required, <code>false</code> otherwise
      */
-    public M4AReader(File f, boolean generateMetadata) throws IOException {
+    public M4AReader(File f) throws IOException {
     	if (null == f) {
     		log.warn("Reader was passed a null file");
         	log.debug("{}", ToStringBuilder.reflectionToString(this));
@@ -164,8 +156,17 @@ public class M4AReader implements IoConstants, ITagReader {
 		this.fis = new MP4DataStream(new FileInputStream(f));
 		channel = fis.getChannel();
 
+		try {
+			mappedFile = channel.map(FileChannel.MapMode.READ_ONLY, 0, channel.size());
+		} catch (IOException e) {
+			log.error("M4AReader {}", e);
+		}
+        // Use Big Endian bytes order
+        //mappedFile.order(ByteOrder.BIG_ENDIAN);
+        // Wrap mapped byte buffer to MINA buffer
+        in = ByteBuffer.wrap(mappedFile);		
+		
 		decodeHeader();
-		fillBuffer();
 	}
 
     /**
@@ -174,7 +175,7 @@ public class M4AReader implements IoConstants, ITagReader {
 	 * @param generateMetadata         <code>true</code> if metadata generation required, <code>false</code> otherwise
      * @param buffer                   Byte buffer
 	 */
-	public M4AReader(ByteBuffer buffer, boolean generateMetadata) throws IOException {
+	public M4AReader(ByteBuffer buffer) throws IOException {
 		in = buffer;
 		decodeHeader();
 	}
@@ -422,210 +423,11 @@ public class M4AReader implements IoConstants, ITagReader {
     	M4AReader.keyframeCache = keyframeCache;
     }
 
-    /**
-	 * Get the remaining bytes that could be read from a file or ByteBuffer.
-	 *
-	 * @return          Number of remaining bytes
-	 */
-	private long getRemainingBytes() {
-		try {
-			return channel.size() - channel.position() + in.remaining();
-		} catch (Exception e) {
-			log.error("Error getRemainingBytes", e);
-			return 0;
-		}
-	}
-
-	/**
-	 * Get the total readable bytes in a file or ByteBuffer.
-	 *
-	 * @return          Total readable bytes
-	 */
-	private long getTotalBytes() {
-		try {
-			return channel.size();
-		} catch (Exception e) {
-			log.error("Error getTotalBytes", e);
-			return 0;
-		}
-	}
-
-	/**
-	 * Get the current position in a file or ByteBuffer.
-	 *
-	 * @return           Current position in a file
-	 */
-	private long getCurrentPosition() {
-		long pos;
-		try {
-			//if we are at the end of the file drop back to mdat offset
-			if (channel.position() == channel.size()) {
-				log.debug("Reached end of file, going back to data offset");
-				channel.position(mdatOffset);
-			}		
-			if (in != null) {
-				pos = (channel.position() - in.remaining());
-			} else {
-				pos = channel.position();
-			}
-			return pos;
-		} catch (Exception e) {
-			log.error("Error getCurrentPosition", e);
-			return 0;
-		}
-	}
-
-	/**
-     * Modifies current position.
-     *
-     * @param pos  Current position in file
-     */
-    private void setCurrentPosition(long pos) {
-    	log.debug("Set current position: {}", pos);
-		if (pos == Long.MAX_VALUE) {
-			pos = file.length();
-		}
-		//in.position((int) pos);
-		try {
-			if (pos >= (channel.position() - in.limit()) && pos < channel.position()) {
-				in.position((int) (pos - (channel.position() - in.limit())));
-			} else {
-				channel.position(pos);
-				fillBuffer(bufferSize, true);
-			}
-		} catch (Exception e) {
-			log.error("Error setCurrentPosition", e);
-		}		
-	}
-
-    /**
-     * Loads whole buffer from file channel, with no reloading (that is, appending).
-     */
-    private void fillBuffer() {
-		fillBuffer(bufferSize, false);
-	}
-
-	/**
-	 * Loads data from channel to buffer.
-	 *
-	 * @param amount         Amount of data to load with no reloading
-	 */
-	private void fillBuffer(long amount) {
-		fillBuffer(amount, false);
-	}
-
-	/**
-	 * Load enough bytes from channel to buffer.
-	 * After the loading process, the caller can make sure the amount
-	 * in buffer is of size 'amount' if we haven't reached the end of channel.
-	 *
-	 * @param amount The amount of bytes in buffer after returning,
-	 * no larger than bufferSize
-	 * @param reload Whether to reload or append
-	 */
-	private void fillBuffer(long amount, boolean reload) {
-		try {
-			log.debug("Fill buffer with {} bytes. Append or reload: {}", amount, (reload ? "reload" : "append"));
-//			if (amount > bufferSize) {
-//				amount = bufferSize;
-//			}
-			if (in != null) {
-				if (!reload) {
-					in.compact();
-				} else {
-					in.clear();
-				}		
-			} else {
-				log.debug("ByteBuffer was null, creating a new one");
-				switch (bufferType) {
-					case HEAP:
-						in = ByteBuffer.allocate(bufferSize, false);
-						break;
-					case DIRECT:
-						in = ByteBuffer.allocate(bufferSize, true);
-						break;
-					case AUTO:
-					default:
-						in = ByteBuffer.allocate(bufferSize);
-				}
-			}	
-			if (amount > bufferSize) {
-				in = ByteBuffer.allocate((int) amount);
-			}
-			channel.read(in.buf());
-			in.flip();	
-		} catch (Exception e) {
-			log.error("Error fillBuffer", e);
-		}
-	}
-
     /** {@inheritDoc} */
     public boolean hasVideo() {
     	return false;
     }
-
-	/**
-     * Getter for buffer type (auto, direct or heap).
-     *
-     * @return Value for property 'bufferType'
-     */
-    public static String getBufferType() {
-		switch (bufferType) {
-			case DIRECT:
-				return "direct";
-			case HEAP:
-				return "heap";
-			case AUTO:
-			default:
-				return "auto";
-		}
-	}
-
-	/**
-     * Setter for buffer type.
-     *
-     * @param bufferType Value to set for property 'bufferType'
-     */
-    public static void setBufferType(String bufferType) {
-		int bufferTypeHash = bufferType.hashCode();
-		 switch (bufferTypeHash) {
-			 case 3198444: //heap
-				 //Get a heap buffer from buffer pool
-				 M4AReader.bufferType = BufferType.HEAP;
-				 break;
-			 case -1331586071: //direct
-				 //Get a direct buffer from buffer pool
-				 M4AReader.bufferType = BufferType.DIRECT;
-				 break;
-			 case 3005871: //auto
-				 //Let MINA choose
-			 default:
-				 M4AReader.bufferType = BufferType.AUTO;
-		}
-	}
-
-	/**
-     * Getter for buffer size.
-     *
-     * @return Value for property 'bufferSize'
-     */
-    public static int getBufferSize() {
-		return bufferSize;
-	}
-
-	/**
-     * Setter for property 'bufferSize'.
-     *
-     * @param bufferSize Value to set for property 'bufferSize'
-     */
-    public static void setBufferSize(int bufferSize) {
-		// make sure buffer size is no less than 1024 bytes.
-		if (bufferSize < 1024) {
-			bufferSize = 1024;
-		}
-		M4AReader.bufferSize = bufferSize;
-	}
-
+    
 	/**
 	 * Returns the file buffer.
 	 * 
@@ -656,9 +458,7 @@ public class M4AReader implements IoConstants, ITagReader {
 	/** {@inheritDoc}
 	 */
 	public long getBytesRead() {
-		// XXX should summarize the total bytes read or
-		// just the current position?
-		return getCurrentPosition();
+		return in.position();
 	}
 
 	/** {@inheritDoc} */
@@ -742,13 +542,11 @@ public class M4AReader implements IoConstants, ITagReader {
 		int ts = ((int) audioSampleDuration * (currentSample));
 		
 		long samplePos = samplePosMap.get(currentSample);
-		setCurrentPosition(samplePos);
+		position(samplePos);
 		
 		ITag tag = new Tag(IoConstants.TYPE_AUDIO, ts, sampleSize, null, prevFrameSize);
-		log.debug("Read tag - body size: {}", tag.getBodySize());
+		log.debug("Read tag - body size: {} sample pos: {}", tag.getBodySize(), samplePos);
 		ByteBuffer body = ByteBuffer.allocate(tag.getBodySize());
-		log.debug("Read tag - current pos {} sample pos {}", getCurrentPosition(), samplePos);
-		fillBuffer(sampleSize);
 		//get current limit
 		final int limit = in.limit();
 		log.debug("Limit (current): {}", limit);
@@ -810,11 +608,11 @@ public class M4AReader implements IoConstants, ITagReader {
 	 */
 	public void position(long pos) {
 		log.debug("position: {}", pos);
-		setCurrentPosition(pos);
 		if (pos == Long.MAX_VALUE) {
 			tagPosition = posTagMap.size()+1;
 			return;
 		}
+		in.position((int) pos);
 		// Update the current tag number
 		Integer tagNumber = posTagMap.get(pos);
 		log.debug("Got a tag number {} for position {}", tagNumber, pos);

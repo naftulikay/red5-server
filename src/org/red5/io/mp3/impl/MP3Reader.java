@@ -129,7 +129,7 @@ public class MP3Reader implements ITagReader, IKeyFrameDataAnalyzer {
 			mappedFile = channel.map(FileChannel.MapMode.READ_ONLY, 0, channel
 					.size());
 		} catch (IOException e) {
-			log.error("MP3Reader :: MP3Reader ::>\n", e);
+			log.error("MP3Reader {}", e);
 		}
 
         // Use Big Endian bytes order

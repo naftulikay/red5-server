@@ -47,11 +47,6 @@ public class M4AService extends BaseStreamableFileService implements IM4AService
      */
     private Deserializer deserializer;
 
-    /**
-     * Generate M4A metadata?
-     */
-    private boolean generateMetadata;
-
 	/** {@inheritDoc} */
     @Override
 	public String getPrefix() {
@@ -83,16 +78,7 @@ public class M4AService extends BaseStreamableFileService implements IM4AService
 	 */
 	@Override
 	public IStreamableFile getStreamableFile(File file) throws IOException {
-		return new M4A(file, generateMetadata);
-	}
-
-	/**
-     * Generate metadata or not
-     *
-     * @param generate  <code>true</code> if there's need to generate metadata, <code>false</code> otherwise
-     */
-    public void setGenerateMetadata(boolean generate) {
-		generateMetadata = generate;
+		return new M4A(file);
 	}
 
 	/**

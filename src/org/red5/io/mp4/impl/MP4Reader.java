@@ -560,6 +560,8 @@ public class MP4Reader implements IoConstants, ITagReader, IKeyFrameDataAnalyzer
 			//the tag name to the offsets
 			moovOffset += 8;
 			mdatOffset += 8;
+
+			log.debug("Offsets moov: {} mdat: {}", moovOffset, mdatOffset);
 			//
 			mdatOffset = 135204;
 			log.debug("Offsets moov: {} mdat: {}", moovOffset, mdatOffset);
@@ -901,23 +903,36 @@ public class MP4Reader implements IoConstants, ITagReader, IKeyFrameDataAnalyzer
 
 		// Video codec id
 		props.put("videocodecid", videoCodecId);
-		props.put("avcprofile", "55");
-        props.put("avclevel", "10");
+		props.put("avcprofile", "77");
+        props.put("avclevel", "51");
         props.put("videoframerate", fps);
 		// Audio codec id - watch for mp3 instead of aac
         props.put("audiocodecid", audioCodecId);
-        props.put("aacaot", "0");
+        props.put("aacaot", "2");
         props.put("audiosamplerate", audioSampleRate);
         props.put("audiochannels", audioChannels);
         
         props.put("moovposition", moovOffset);
         //props.put("chapters", "");
-        //props.put("seekpoints", "");
+        props.put("seekpoints", syncSamples);
         //tags will only appear if there is an "ilst" atom in the file
         //props.put("tags", "");
-        props.put("trackinfo", "");
    
-		props.put("canSeekToEnd", false);
+        Object[] arr = new Object[2];
+        Map<String, Object> audioMap = new HashMap<String, Object>(4);
+        audioMap.put("length", Integer.valueOf(10552320));
+        audioMap.put("timescale", audioSampleRate);
+        audioMap.put("language", "eng");
+        audioMap.put("sampledescription.sampletype", "undefined");
+        arr[0] = audioMap;
+        Map<String, Object> videoMap = new HashMap<String, Object>(3);
+        videoMap.put("length", Integer.valueOf(717125));
+        videoMap.put("timescale", Integer.valueOf(2997));
+        videoMap.put("language", "eng");
+        arr[1] = videoMap;
+        props.put("trackinfo", arr);
+        
+		//props.put("canSeekToEnd", false);
 		out.writeMap(props, new Serializer());
 		buf.flip();
 

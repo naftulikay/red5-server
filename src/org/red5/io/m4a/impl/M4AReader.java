@@ -683,7 +683,7 @@ public class M4AReader implements IoConstants, ITagReader {
      */
     private ITag createFileMeta() {
 		// Create tag for onMetaData event
-		ByteBuffer buf = ByteBuffer.allocate(320);
+		ByteBuffer buf = ByteBuffer.allocate(256);
 		buf.setAutoExpand(true);
 		Output out = new Output(buf);
 
@@ -693,7 +693,7 @@ public class M4AReader implements IoConstants, ITagReader {
 		props.put("duration", ((double) duration / (double) timeScale));
 		// Audio codec id - watch for mp3 instead of aac
         props.put("audiocodecid", audioCodecId);
-        props.put("aacaot", "0");
+        props.put("aacaot", "2");
         props.put("audiosamplerate", audioSampleRate);
         props.put("audiochannels", audioChannels);
         
@@ -702,9 +702,17 @@ public class M4AReader implements IoConstants, ITagReader {
         //props.put("seekpoints", "");
         //tags will only appear if there is an "ilst" atom in the file
         //props.put("tags", "");
-        props.put("trackinfo", "");
+        
+        Object[] arr = new Object[1];
+        Map<String, Object> audioMap = new HashMap<String, Object>(4);
+        audioMap.put("length", Integer.valueOf(10552320));
+        audioMap.put("timescale", audioSampleRate);
+        audioMap.put("language", "eng");
+        audioMap.put("sampledescription.sampletype", "undefined");               
+        arr[0] = audioMap;
+        props.put("trackinfo", arr);
    
-		props.put("canSeekToEnd", false);
+		//props.put("canSeekToEnd", false);
 		out.writeMap(props, new Serializer());
 		buf.flip();
 
@@ -761,10 +769,7 @@ public class M4AReader implements IoConstants, ITagReader {
 	}
 
     /**
-     * Key frames analysis may be used as a utility method so
-	 * synchronize it.
-	 *
-     * @return             Keyframe metadata
+     * Frame / Sample analysis.
      */
     public void analyzeFrames() {				
         // Maps positions to tags
@@ -780,10 +785,10 @@ public class M4AReader implements IoConstants, ITagReader {
 			MP4Atom.Record record = (MP4Atom.Record) records.nextElement();
 			int firstChunk = record.getFirstChunk();
 			int sampleCount = record.getSamplesPerChunk();
-			//log.debug("First chunk: {} count:{}", firstChunk, sampleCount);
+			log.debug("First chunk: {} count:{}", firstChunk, sampleCount);
 			pos = (Long) audioChunkOffsets.elementAt(firstChunk - 1);
 			while (sampleCount > 0) {
-				//log.debug("Position: {}", pos);
+				log.debug("Position: {}", pos);
     			posTagMap.put(pos, sample);
     			samplePosMap.put(sample, pos);
     			posTimeMap.put(pos, (long)(audioSampleDuration * (sample)));

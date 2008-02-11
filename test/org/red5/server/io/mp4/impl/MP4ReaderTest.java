@@ -7,6 +7,7 @@ import java.nio.ByteOrder;
 import junit.framework.TestCase;
 
 import org.junit.Test;
+import org.red5.io.ITag;
 import org.red5.io.mp4.impl.MP4Reader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,9 +20,18 @@ public class MP4ReaderTest extends TestCase {
 	public void testCtor() throws Exception {
 		
 		File file = new File(
-				"E:/media/test_clips/backcountry_bombshells_4min_HD_H264.mp4");
+				"C:/red5/webapps/oflaDemo/streams/backcountry_bombshells_4min_HD_H264.mp4");
 		MP4Reader reader = new MP4Reader(file, false);
 
+		ITag tag = reader.readTag();
+		log.debug("Tag: {}", tag);
+		tag = reader.readTag();		
+		log.debug("Tag: {}", tag);		
+		tag = reader.readTag();		
+		log.debug("Tag: {}", tag);
+		tag = reader.readTag();		
+		log.debug("Tag: {}", tag);		
+		
 		log
 				.info("----------------------------------------------------------------------------------");
 
@@ -30,7 +40,7 @@ public class MP4ReaderTest extends TestCase {
 
 		// log.info("----------------------------------------------------------------------------------");
 		//		
-		// File file3 = new File("E:/media/test_clips/AdobeBand_300K_H264.mp4");
+		// File file3 = new File("C:/red5/webapps/oflaDemo/streams/AdobeBand_300K_H264.mp4");
 		// MP4Reader reader3 = new MP4Reader(file3, false);
 
 		// AdobeBand_300K_H264.mp4
@@ -80,7 +90,7 @@ public class MP4ReaderTest extends TestCase {
 		
 		byte[] arr = {(byte) 0x40};
 		System.out.println("bbb: {}" + bytesToByte(arr));
-		}	
+	}	
 	
 	public static long bytesToLong(byte[] data) {
 		ByteBuffer buf = ByteBuffer.wrap(data);

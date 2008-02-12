@@ -135,6 +135,8 @@ public class MP4Reader implements IoConstants, ITagReader, IKeyFrameDataAnalyzer
 	private int audioChannels;
 	private int videoSampleCount;
 	private double fps;
+	private int avcLevel;
+	private int avcProfile;
 	private String formattedDuration;
 	private long moovOffset;
 	private long mdatOffset;
@@ -452,6 +454,14 @@ public class MP4Reader implements IoConstants, ITagReader, IKeyFrameDataAnalyzer
 										MP4Atom avc1 = stsd.getChildren().get(0);
 										//could set the video codec here
 										setVideoCodecId(MP4Atom.intToType(avc1.getType()));
+										//
+										MP4Atom avcC = avc1.lookup(MP4Atom.typeToInt("avcC"), 0);
+										if (avcC != null) {
+											avcLevel = avcC.getAvcLevel();
+											log.debug("AVC level: {}", avcLevel);
+											avcProfile = avcC.getAvcProfile();
+											log.debug("AVC Profile: {}", avcProfile);
+										}
 										log.debug("{}", ToStringBuilder.reflectionToString(avc1));
 									}
 									//stsc - has Records
@@ -903,8 +913,8 @@ public class MP4Reader implements IoConstants, ITagReader, IKeyFrameDataAnalyzer
 
 		// Video codec id
 		props.put("videocodecid", videoCodecId);
-		props.put("avcprofile", "77");
-        props.put("avclevel", "51");
+		props.put("avcprofile", avcProfile);
+        props.put("avclevel", avcLevel);
         props.put("videoframerate", fps);
 		// Audio codec id - watch for mp3 instead of aac
         props.put("audiocodecid", audioCodecId);
@@ -936,6 +946,9 @@ public class MP4Reader implements IoConstants, ITagReader, IKeyFrameDataAnalyzer
 		out.writeMap(props, new Serializer());
 		buf.flip();
 
+		//now that all the meta properties are done, update the duration
+		duration = Math.round(duration * 1000d);
+		
 		ITag result = new Tag(IoConstants.TYPE_METADATA, 0, buf.limit(), null, 0);
 		result.setBody(buf);
 		return result;

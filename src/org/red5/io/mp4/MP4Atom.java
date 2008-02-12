@@ -111,7 +111,9 @@ public class MP4Atom {
 	public final static int MP4VideoSampleEntryAtomType        		= MP4Atom.typeToInt("avc1");
 	
 	public final static int MP4SyncSampleAtomType         			= MP4Atom.typeToInt("stss");	
-	public final static int MP4TimeToSampleAtomType         		= MP4Atom.typeToInt("stts");	
+	public final static int MP4TimeToSampleAtomType         		= MP4Atom.typeToInt("stts");
+	// contains avc properties
+	public final static int MP4AVCAtomType							= MP4Atom.typeToInt("avcC");
 	
 	/** The size of the atom. */
 	protected long size;
@@ -194,8 +196,9 @@ public class MP4Atom {
 			readed = atom.create_video_sample_entry_atom(bitstream);
 		} else if(type == MP4ESDAtomType) {
 			readed = atom.create_esd_atom(bitstream);
+		} else if(type == MP4AVCAtomType) {
+			readed = atom.create_avc_config_atom(bitstream);
 		}
-						
         log.debug("Atom: type = {} size = {}", intToType(type), size);
 		bitstream.skipBytes(size - readed);
 		return atom;
@@ -804,6 +807,62 @@ public class MP4Atom {
 		return width;
 	}
 
+	protected int avcLevel;
+	protected int avcProfile;
+	
+	public int getAvcLevel() {
+		return avcLevel;
+	}
+
+	public int getAvcProfile() {
+		return avcProfile;
+	}
+
+	/**
+	 * Loads AVC config atom from the input bitstream.
+	 * 
+	 * <pre>
+                  * 8+ bytes ISO/IEC 14496-10 or 3GPP AVC decode config box
+                      = long unsigned offset + long ASCII text string 'avcC'
+                    -> 1 byte version = 8-bit hex version  (current = 1)
+                    -> 1 byte H.264 profile = 8-bit unsigned stream profile
+                    -> 1 byte H.264 compatible profiles = 8-bit hex flags
+                    -> 1 byte H.264 level = 8-bit unsigned stream level
+                    -> 1 1/2 nibble reserved = 6-bit unsigned value set to 63
+                    -> 1/2 nibble NAL length = 2-bit length byte size type
+                      - 1 byte = 0 ; 2 bytes = 1 ; 4 bytes = 3
+                    -> 1 byte number of SPS = 8-bit unsigned total
+                    -> 2+ bytes SPS length = short unsigned length
+                    -> + SPS NAL unit = hexdump
+                    -> 1 byte number of PPS = 8-bit unsigned total
+                    -> 2+ bytes PPS length = short unsigned length
+                    -> + PPS NAL unit = hexdump 
+	 * </pre>
+	 * 
+	 * @param bitstream the input bitstream
+	 * @return the number of bytes which was being loaded.
+	 */
+	public long create_avc_config_atom(MP4DataStream bitstream) throws IOException {
+		log.debug("AVC config");
+		bitstream.skipBytes(1); //version
+		//profile
+		avcProfile = (int) bitstream.readBytes(1);
+		log.debug("AVC profile: {}", avcProfile);
+		int avcCompatProfile = (int) bitstream.readBytes(1);
+		log.debug("AVC compatible profile: {}", avcCompatProfile);
+		avcLevel = (int) bitstream.readBytes(1);
+		log.debug("AVC level: {}", avcLevel);
+		bitstream.skipBytes(1); //reserved and NAL length
+		int numberSPS = (int) bitstream.readBytes(1);
+		log.debug("Number of SPS: {}", numberSPS);
+		bitstream.skipBytes(5); 
+		readed += 11;
+		MP4Atom child = MP4Atom.createAtom(bitstream);
+		this.children.add(child);
+		readed += child.getSize();
+		return readed;		
+	}	
+	
 	protected MP4Descriptor esd_descriptor;
 	
 	/**

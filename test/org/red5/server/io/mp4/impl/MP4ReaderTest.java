@@ -22,7 +22,7 @@ public class MP4ReaderTest extends TestCase {
 		File file = new File(
 				"C:/red5/webapps/oflaDemo/streams/backcountry_bombshells_4min_HD_H264.mp4");
 		MP4Reader reader = new MP4Reader(file, false);
-
+ 
 		ITag tag = reader.readTag();
 		log.debug("Tag: {}", tag);
 		tag = reader.readTag();		

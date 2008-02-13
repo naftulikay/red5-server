@@ -107,13 +107,15 @@ public class MP4Atom {
 	public final static int MP4VideoMediaHeaderAtomType         	= MP4Atom.typeToInt("vmhd");
 	/** Constant, the type of the MP4 Atom. */
 	public final static int MP4VisualSampleEntryAtomType        	= MP4Atom.typeToInt("mp4v");
-	/** Constant, the type of the avc1 / H.263 Atom. */
+	// the type of the avc1 / H.263 
 	public final static int MP4VideoSampleEntryAtomType        		= MP4Atom.typeToInt("avc1");
-	
+	// contains key frames
 	public final static int MP4SyncSampleAtomType         			= MP4Atom.typeToInt("stss");	
 	public final static int MP4TimeToSampleAtomType         		= MP4Atom.typeToInt("stts");
 	// contains avc properties
 	public final static int MP4AVCAtomType							= MP4Atom.typeToInt("avcC");
+	// movie data, this ones is not actually parsed
+	public final static int MP4MovieDataType                     	= MP4Atom.typeToInt("mdat");
 	
 	/** The size of the atom. */
 	protected long size;

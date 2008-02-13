@@ -40,9 +40,14 @@ public class MP4ReaderTest extends TestCase {
 
 		// log.info("----------------------------------------------------------------------------------");
 		//		
-		// File file3 = new File("C:/red5/webapps/oflaDemo/streams/AdobeBand_300K_H264.mp4");
-		// MP4Reader reader3 = new MP4Reader(file3, false);
+		File file3 = new File("C:/red5/webapps/oflaDemo/streams/AdobeBand_300K_H264.mp4");
+		MP4Reader reader3 = new MP4Reader(file3, false);
 
+		tag = reader3.readTag();		
+		log.debug("Tag: {}", tag);		
+		tag = reader3.readTag();		
+		log.debug("Tag: {}", tag);
+		
 		// AdobeBand_300K_H264.mp4
 		// AdobeBand_800K_H264.mp4
 		// AdobeBand_1500K_H264.mp4

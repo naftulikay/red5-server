@@ -34,6 +34,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import javax.management.ObjectName;
 
 import org.apache.mina.common.ByteBuffer;
+import org.red5.io.amf.Output;
+import org.red5.io.object.Serializer;
 import org.red5.server.BaseConnection;
 import org.red5.server.api.IBWControllable;
 import org.red5.server.api.IBandwidthConfigure;
@@ -71,6 +73,7 @@ import org.red5.server.stream.OutputStream;
 import org.red5.server.stream.PlaylistSubscriberStream;
 import org.red5.server.stream.StreamService;
 import org.red5.server.stream.VideoCodecFactory;
+import org.red5.server.stream.message.RTMPMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
@@ -622,7 +625,7 @@ public abstract class RTMPConnection extends BaseConnection implements
 	 * @param ping	Ping event context
 	 */
 	public void ping(Ping ping) {
-		getChannel((byte) 2).write(ping);
+		getChannel(2).write(ping);
 	}
 
 	/**
@@ -648,8 +651,8 @@ public abstract class RTMPConnection extends BaseConnection implements
 		long bytesRead = getReadBytes();
 		if (bytesRead >= nextBytesRead) {
 			BytesRead sbr = new BytesRead((int) bytesRead);
-			getChannel((byte) 2).write(sbr);
-			//@todo: what do we want to see printed here?
+			getChannel(2).write(sbr);
+			//TODO: what do we want to see printed here?
 			//log.info(sbr);
 			nextBytesRead += bytesReadInterval;
 		}
@@ -676,7 +679,7 @@ public abstract class RTMPConnection extends BaseConnection implements
 
 	/** {@inheritDoc} */
 	public void invoke(IServiceCall call) {
-		invoke(call, (byte) 3);
+		invoke(call, 3);
 	}
 
 	/**
@@ -783,12 +786,12 @@ public abstract class RTMPConnection extends BaseConnection implements
 		if (bwConfig.getDownstreamBandwidth() > 0) {
 			ServerBW serverBW = new ServerBW((int) bwConfig
 					.getDownstreamBandwidth() / 8);
-			getChannel((byte) 2).write(serverBW);
+			getChannel(2).write(serverBW);
 		}
 		if (bwConfig.getUpstreamBandwidth() > 0) {
 			ClientBW clientBW = new ClientBW((int) bwConfig
 					.getUpstreamBandwidth() / 8, (byte) 0);
-			getChannel((byte) 2).write(clientBW);
+			getChannel(2).write(clientBW);
 			// Update generation of BytesRead messages
 			// TODO: what are the correct values here?
 			bytesReadInterval = (int) bwConfig.getUpstreamBandwidth() / 8;
@@ -890,11 +893,44 @@ public abstract class RTMPConnection extends BaseConnection implements
 	@Override
 	public long getPendingVideoMessages(int streamId) {
 		AtomicInteger count = pendingVideos.get(streamId);
-		long result = (count != null ? count.intValue() - getUsedStreamCount()
-				: 0);
-		return (result > 0 ? result : 0);
+		long result = Math.max(count != null ? count.intValue() - getUsedStreamCount() : 0, 0);
+		return result;
 	}
 
+	public void sendCapabilities() {
+		//send fmsver and capabilities
+    	ByteBuffer body = ByteBuffer.allocate(256);
+    	body.setAutoExpand(true);
+		Output out = new Output(body);
+		out.writeString("onStatus");
+		Map<Object, Object> props = new HashMap<Object, Object>();    	
+		props.put("fmsver", "FMS/3,0,0,1157");
+		props.put("capabilities", Integer.valueOf(16447));
+		props.put("", Integer.valueOf(0));
+		props.put("", Integer.valueOf(0));
+		props.put("level", "status");
+		props.put("code", "NetConnection.Connect.Success");
+		out.writeMap(props, new Serializer());
+    	body.flip();
+    	Invoke capa = new Invoke();
+    	capa.setTimestamp(0);
+    	capa.setData(body);
+    	
+    	getChannel(2).write(capa);   	
+	}
+	
+	public void sendChunkSize() {
+    	//send our default chunk size									
+    	ByteBuffer body = ByteBuffer.allocate(4);
+    	body.put(new byte[]{(byte) 0, (byte) 0, (byte) 0x10, (byte) 0}); //4096
+    	body.flip();
+    	Notify access = new Notify();
+    	access.setTimestamp(0);
+    	access.setData(body);
+    	
+    	getChannel(2).write(access);   	
+	}
+	
 	/** {@inheritDoc} */
 	public void ping() {
 		long newPingTime = System.currentTimeMillis();
@@ -957,10 +993,6 @@ public abstract class RTMPConnection extends BaseConnection implements
 			return;
         }
 		if (keepAliveJobName == null) {
-    		//log.debug("Scope null = {}", (scope == null));
-    		//log.debug("getScope null = {}", (getScope() == null));
-    		//log.debug("Context null = {}", (scope.getContext() == null));
-    		//ISchedulingService schedulingService = (ISchedulingService) scope.getContext().getBean(ISchedulingService.BEAN_NAME);
     		keepAliveJobName = schedulingService.addScheduledJob(pingInterval, new KeepAliveJob());
 		}
 		log.debug("Keep alive job name {}", keepAliveJobName);

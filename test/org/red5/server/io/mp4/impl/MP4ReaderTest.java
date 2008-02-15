@@ -56,67 +56,83 @@ public class MP4ReaderTest extends TestCase {
 
 	@Test
 	public void testBytes() throws Exception {
-
-		byte width[] = { (byte) 0x94, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00  };
+		//00 40 94 00 00 00 00 00 00 00 06 == 
+		byte width[] = { (byte) 0x00, (byte) 0x40, (byte) 0x94, (byte) 0x00, 
+				(byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00 };
 		System.out.println("width: {}" + bytesToLong(width));		
 		
-		byte height[] = { (byte) 0x40, (byte) 0x86, (byte) 0x80, (byte) 0x00 };
-		System.out.println("height: {}" + bytesToInt(height));
-
-		byte timescale[] = { (byte) 0x40, (byte) 0xA7, (byte) 0x6A, (byte) 0x00 };
-		System.out.println("timescale: {}" + bytesToInt(timescale));
-
-		byte duration[] = { (byte) 0x40, (byte) 0x6D, (byte) 0xE9, (byte) 0x03,
-				(byte) 0x22, (byte) 0x7B, (byte) 0x4C, (byte) 0x47 };
-		System.out.println("duration: {}" + bytesToLong(duration));
-
-		byte avcprofile[] = { (byte) 0x40, (byte) 0x53, (byte) 0x40,
-				(byte) 0x00 };
-		System.out.println("avcprofile: {}" + bytesToInt(avcprofile));
-
-		byte avclevel[] = { (byte) 0x40, (byte) 0x49, (byte) 0x80, (byte) 0x00 };
-		System.out.println("avclevel: {}" + bytesToInt(avclevel));
-
-		byte aacaot[] = { (byte) 0x40, (byte) 0x00, (byte) 0x00, (byte) 0x00 };
-		System.out.println("aacaot: {}" + bytesToInt(aacaot));
-
-		byte videoframerate[] = { (byte) 0x40, (byte) 0x37, (byte) 0xF9,
-				(byte) 0xDB, (byte) 0x22, (byte) 0xD0, (byte) 0xE5, (byte) 0x60 };
-		System.out.println("videoframerate: {}" + bytesToLong(videoframerate));
-
-		byte audiochannels[] = { (byte) 0x40, (byte) 0x00, (byte) 0x00,
-				(byte) 0x00 };
-		System.out.println("audiochannels: {}" + bytesToInt(audiochannels));
-
-		byte moovposition[] = { (byte) 0x40, (byte) 0x40, (byte) 0x00,
-				(byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00 };
-		System.out.println("moovposition: {}" + bytesToLong(moovposition));
-
-		
-		byte[] arr = {(byte) 0x40};
-		System.out.println("bbb: {}" + bytesToByte(arr));
+//		byte height[] = { (byte) 0x40, (byte) 0x86, (byte) 0x80, (byte) 0x00 };
+//		System.out.println("height: {}" + bytesToInt(height));
+//
+//		byte timescale[] = { (byte) 0x40, (byte) 0xA7, (byte) 0x6A, (byte) 0x00 };
+//		System.out.println("timescale: {}" + bytesToInt(timescale));
+//
+//		byte duration[] = { (byte) 0x40, (byte) 0x6D, (byte) 0xE9, (byte) 0x03,
+//				(byte) 0x22, (byte) 0x7B, (byte) 0x4C, (byte) 0x47 };
+//		System.out.println("duration: {}" + bytesToLong(duration));
+//
+//		byte avcprofile[] = { (byte) 0x40, (byte) 0x53, (byte) 0x40,
+//				(byte) 0x00 };
+//		System.out.println("avcprofile: {}" + bytesToInt(avcprofile));
+//
+//		byte avclevel[] = { (byte) 0x40, (byte) 0x49, (byte) 0x80, (byte) 0x00 };
+//		System.out.println("avclevel: {}" + bytesToInt(avclevel));
+//
+//		byte aacaot[] = { (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x40 };
+//		System.out.println("aacaot: {}" + bytesToLong(aacaot));
+//
+//		byte videoframerate[] = { (byte) 0x40, (byte) 0x37, (byte) 0xF9,
+//				(byte) 0xDB, (byte) 0x22, (byte) 0xD0, (byte) 0xE5, (byte) 0x60 };
+//		System.out.println("videoframerate: {}" + bytesToLong(videoframerate));
+//
+//		byte audiochannels[] = { (byte) 0x40, (byte) 0x00, (byte) 0x00,
+//				(byte) 0x00 };
+//		System.out.println("audiochannels: {}" + bytesToInt(audiochannels));
+//
+//		byte moovposition[] = { (byte) 0x40, (byte) 0x40, (byte) 0x00,
+//				(byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00 };
+//		System.out.println("moovposition: {}" + bytesToLong(moovposition));
+//
+//		
+		//byte[] arr = {(byte) 0x0f};
+		//System.out.println("bbb: {}" + bytesToByte(arr));
+		//byte[] arr = {(byte) 0xE5, (byte) 0x88, (byte) 0x80, (byte) 0x00, 
+		//(byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00 };
+		//System.out.println("bbb: {}" + bytesToLong(arr));
+		byte[] arr = {(byte) 0, (byte) 0, (byte) 0x10, (byte) 0 };
+		System.out.println("bbb: {}" + bytesToInt(arr));
 	}	
 	
 	public static long bytesToLong(byte[] data) {
-		ByteBuffer buf = ByteBuffer.wrap(data);
+		ByteBuffer buf = ByteBuffer.allocate(8);
+		buf.put(data);
+		buf.order(ByteOrder.BIG_ENDIAN);
 		//buf.order(ByteOrder.LITTLE_ENDIAN);
+		buf.flip();
 		return buf.getLong();
 	}
 
 	public static int bytesToInt(byte[] data) {
-		ByteBuffer buf = ByteBuffer.wrap(data);
+		ByteBuffer buf = ByteBuffer.allocate(4);//ByteBuffer.wrap(data);
+		buf.put(data);
+		buf.order(ByteOrder.BIG_ENDIAN);		
 		//buf.order(ByteOrder.LITTLE_ENDIAN);
+		buf.flip();
 		return buf.getInt();
 	}
 
 	public static short bytesToShort(byte[] data) {
-		ByteBuffer buf = ByteBuffer.wrap(data);
+		ByteBuffer buf = ByteBuffer.allocate(2);
+		buf.put(data);
 		//buf.order(ByteOrder.LITTLE_ENDIAN);
+		buf.flip();
 		return buf.getShort();
 	}
 	
 	public static byte bytesToByte(byte[] data) {
-		ByteBuffer buf = ByteBuffer.wrap(data);
+		ByteBuffer buf = ByteBuffer.allocate(1);
+		buf.put(data);
+		buf.flip();
 		return buf.get();
 	}
 }

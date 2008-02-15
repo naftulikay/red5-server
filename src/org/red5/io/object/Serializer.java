@@ -114,9 +114,7 @@ public class Serializer {
 	 * @return boolean   true if object was successfully serialized, false otherwise
 	 */
 	public boolean writeComplex(Output out, Object complex) {
-		if (log.isDebugEnabled()) {
-			log.debug("writeComplex");
-		}
+		log.debug("writeComplex");
 		if (writeListType(out, complex)) {
 			return true;
 		} else if (writeArrayType(out, complex)) {
@@ -140,9 +138,7 @@ public class Serializer {
 	 * @return boolean        true if object was successfully serialized, false otherwise
 	 */
 	protected boolean writeListType(Output out, Object listType) {
-		if (log.isDebugEnabled()) {
-			log.debug("writeListType");
-		}
+		log.debug("writeListType");
 		if (listType instanceof List) {
 			writeList(out, (List<?>) listType);
 		} else {
@@ -189,9 +185,7 @@ public class Serializer {
 	 */
 	@SuppressWarnings("all")
 	protected boolean writeArrayType(Output out, Object arrType) {
-		if (log.isDebugEnabled()) {
-			log.debug("writeArrayType");
-		}
+		log.debug("writeArrayType");
 		if (arrType instanceof Collection) {
 			out.writeArray((Collection<Object>) arrType, this);
 		} else if (arrType instanceof Iterator) {
@@ -214,9 +208,7 @@ public class Serializer {
 	 * @param it           Iterator to write
 	 */
 	protected void writeIterator(Output out, Iterator<Object> it) {
-		if (log.isDebugEnabled()) {
-			log.debug("writeIterator");
-		}
+		log.debug("writeIterator");
         // Create LinkedList of collection we iterate thru and write it out later
         LinkedList<Object> list = new LinkedList<Object>();
 		while (it.hasNext()) {
@@ -234,9 +226,7 @@ public class Serializer {
 	 * @return boolean     <code>true</code> if object was successfully written, <code>false</code> otherwise
 	 */
 	protected boolean writeXMLType(Output out, Object xml) {
-		if (log.isDebugEnabled()) {
-			log.debug("writeXMLType");
-		}
+		log.debug("writeXMLType");
         // If it's a Document write it as Document
         if (xml instanceof Document) {
             writeDocument(out, (Document) xml);

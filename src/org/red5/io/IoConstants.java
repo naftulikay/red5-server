@@ -35,8 +35,12 @@ public interface IoConstants {
     /**
      * Metadata
      */
-	public static final byte TYPE_METADATA = 0x12;
+	public static final byte TYPE_METADATA = 0x12; //this is actually a Notify
     /**
+     * Chunk size
+     */
+	public static final byte TYPE_CHUNK_SIZE = 0x01;	
+	/**
      * Mask sound type
      */
 	public static final byte MASK_SOUND_TYPE = 0x01;

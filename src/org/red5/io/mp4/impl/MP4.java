@@ -31,6 +31,7 @@ import org.red5.io.ITag;
 import org.red5.io.ITagReader;
 import org.red5.io.ITagWriter;
 import org.red5.io.IoConstants;
+import org.red5.io.flv.impl.FLVReader;
 import org.red5.io.flv.meta.IMetaData;
 import org.red5.io.flv.meta.IMetaService;
 import org.red5.io.flv.meta.MetaService;
@@ -50,8 +51,6 @@ import org.slf4j.LoggerFactory;
 public class MP4 implements IMP4 {
 
 	protected static Logger log = LoggerFactory.getLogger(MP4.class);
-
-	private static ICacheStore cache;
 
 	private File file;
 
@@ -89,37 +88,19 @@ public class MP4 implements IMP4 {
 	public MP4(File file, boolean generateMetadata) {
 		this.file = file;
 		this.generateMetadata = generateMetadata;
-		int count = 0;
-
 		if (!generateMetadata) {
 			try {
 				MP4Reader reader = new MP4Reader(this.file);
-				ITag tag = null;
-				while (reader.hasMoreTags() && (++count < 5)) {
-					tag = reader.readTag();
-					if (tag.getDataType() == IoConstants.TYPE_METADATA) {
-						if (metaService == null) {
-							metaService = new MetaService(this.file);
-						}
-						metaData = metaService.readMetaData(tag.getBody());
-					}
+				ITag tag = reader.createFileMeta();
+				if (metaService == null) {
+					metaService = new MetaService(this.file);
 				}
+				metaData = metaService.readMetaData(tag.getBody());
 				reader.close();
 			} catch (Exception e) {
 				log.error("An error occured looking for metadata:", e);
 			}
-		}
-
-	}
-
-	/**
-	 * Sets the cache implementation to be used.
-	 * 
-	 * @param cache
-	 *            Cache store
-	 */
-	public void setCache(ICacheStore cache) {
-		MP4.cache = cache;
+		}		
 	}
 
 	/**
@@ -141,7 +122,6 @@ public class MP4 implements IMP4 {
 	 * {@inheritDoc}
 	 */
 	public boolean hasKeyFrameData() {
-		// TODO Auto-generated method stub
 		return false;
 	}
 
@@ -177,42 +157,14 @@ public class MP4 implements IMP4 {
 		MP4Reader reader = null;
 		ByteBuffer fileData;
 		String fileName = file.getName();
-
-		// if no cache is set an NPE will be thrown
-		if (cache == null) {
-			System.out.println("No cache");
-			log
-					.warn("MP4 cache is null, an NPE may be thrown. To fix your code, ensure a cache is set via Spring or by the following: setCache(NoCacheImpl.getInstance())");
-			setCache(NoCacheImpl.getInstance());
-		}
-		ICacheable ic = cache.get(fileName);
-
-		// look in the cache before reading the file from the disk
-		if (null == ic || (null == ic.getByteBuffer())) {
-			if (file.exists()) {
-				if (log.isDebugEnabled()) {
-					log.debug("File size: " + file.length());
-				}
-				reader = new MP4Reader(file, generateMetadata);
-				// get a ref to the mapped byte buffer
-				fileData = reader.getFileData();
-				// offer the uncached file to the cache
-				if (fileData != null && cache.offer(fileName, fileData)) {
-					if (log.isDebugEnabled()) {
-						log.debug("Item accepted by the cache: " + fileName);
-					}
-				} else {
-					if (log.isDebugEnabled()) {
-						log.debug("Item will not be cached: " + fileName);
-					}
-				}
-			} else {
-				log.info("Creating new file: " + file);
-				file.createNewFile();
-			}
+		if (file.exists()) {
+			log.debug("File size: {}", file.length());
+			reader = new MP4Reader(file, generateMetadata);
+			// get a ref to the mapped byte buffer
+			fileData = reader.getFileData();
 		} else {
-			fileData = ByteBuffer.wrap(ic.getBytes());
-			reader = new MP4Reader(fileData, generateMetadata);
+			log.info("Creating new file: {}", file);
+			file.createNewFile();
 		}
 		return reader;
 	}

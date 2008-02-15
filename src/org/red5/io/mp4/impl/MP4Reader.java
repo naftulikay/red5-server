@@ -94,14 +94,6 @@ public class MP4Reader implements IoConstants, ITagReader, IKeyFrameDataAnalyzer
      */
 	private KeyFrameMeta keyframeMeta;
 
-    /**
-     * Input byte buffer
-     */
-    private ByteBuffer in;
-
-	/** Current tag. */
-	private int tagPosition;
-
 	/** Mapping between file position and timestamp in ms. */
 	private HashMap<Long, Long> posTimeMap;
 
@@ -109,11 +101,6 @@ public class MP4Reader implements IoConstants, ITagReader, IKeyFrameDataAnalyzer
 	private HashMap<Long, Integer> posTagMap;
 	
 	private HashMap<Integer, Long> samplePosMap;
-
-	/** Buffer type / style to use **/
-	private static BufferType bufferType = BufferType.AUTO;
-
-	private static int bufferSize = 1024;
 
 	/** Cache for keyframe informations. */
 	private static IKeyFrameMetaCache keyframeCache;
@@ -161,8 +148,6 @@ public class MP4Reader implements IoConstants, ITagReader, IKeyFrameDataAnalyzer
 	private long firstAudioTag;
 	private long firstVideoTag;
 	
-
-	
 	/** Constructs a new MP4Reader. */
 	MP4Reader() {
 	}
@@ -191,18 +176,6 @@ public class MP4Reader implements IoConstants, ITagReader, IKeyFrameDataAnalyzer
 		this.fis = new MP4DataStream(new FileInputStream(f));
 		channel = fis.getChannel();
 
-		decodeHeader();
-		fillBuffer();
-	}
-
-    /**
-	 * Accepts mapped file bytes to construct internal members.
-	 *
-	 * @param generateMetadata         <code>true</code> if metadata generation required, <code>false</code> otherwise
-     * @param buffer                   Byte buffer
-	 */
-	public MP4Reader(ByteBuffer buffer, boolean generateMetadata) throws IOException {
-		in = buffer;
 		decodeHeader();
 	}
     
@@ -550,14 +523,7 @@ public class MP4Reader implements IoConstants, ITagReader, IKeyFrameDataAnalyzer
     				case 1835295092: //mdat
     					topAtoms++;
     					long dataSize = 0L;
-    					MP4Atom mdat = atom;
-    					log.debug("mdat children {}", mdat.getChildren());
-    					// make sure there isnt an additional mdat
-    					//MP4Atom extra = MP4Atom.createAtom(fis);
-    					//if (extra.getType() == 1835295092) {
-    					//	log.debug("Secondary movie data atom found");
-    					//	mdat = extra;
-    					//}		    				
+    					MP4Atom mdat = atom;	    				
 	    				dataSize = mdat.getSize();
 	    				log.debug("{}", ToStringBuilder.reflectionToString(mdat));    
 	    				mdatOffset = fis.getOffset() - mdat.getSize();
@@ -576,7 +542,6 @@ public class MP4Reader implements IoConstants, ITagReader, IKeyFrameDataAnalyzer
 			moovOffset += 8;
 			mdatOffset += 8;
 			log.debug("Offsets moov: {} mdat: {}", moovOffset, mdatOffset);
-			//mdatOffset = 135204;
 						
 		} catch (IOException e) {
 			log.error("{}", e);
@@ -594,7 +559,7 @@ public class MP4Reader implements IoConstants, ITagReader, IKeyFrameDataAnalyzer
 	 */
 	private long getRemainingBytes() {
 		try {
-			return channel.size() - channel.position() + in.remaining();
+			return channel.size() - channel.position();
 		} catch (Exception e) {
 			log.error("Error getRemainingBytes", e);
 			return 0;
@@ -621,106 +586,16 @@ public class MP4Reader implements IoConstants, ITagReader, IKeyFrameDataAnalyzer
 	 * @return           Current position in a file
 	 */
 	private long getCurrentPosition() {
-		long pos;
 		try {
 			//if we are at the end of the file drop back to mdat offset
 			if (channel.position() == channel.size()) {
 				log.debug("Reached end of file, going back to data offset");
 				channel.position(mdatOffset);
 			}		
-			if (in != null) {
-				pos = (channel.position() - in.remaining());
-			} else {
-				pos = channel.position();
-			}
-			return pos;
+			return channel.position();
 		} catch (Exception e) {
 			log.error("Error getCurrentPosition", e);
 			return 0;
-		}
-	}
-
-	/**
-     * Modifies current position.
-     *
-     * @param pos  Current position in file
-     */
-    private void setCurrentPosition(long pos) {
-    	log.debug("Set current position: {}", pos);
-		if (pos == Long.MAX_VALUE) {
-			pos = file.length();
-		}
-		//in.position((int) pos);
-		try {
-			if (pos >= (channel.position() - in.limit()) && pos < channel.position()) {
-				in.position((int) (pos - (channel.position() - in.limit())));
-			} else {
-				channel.position(pos);
-				fillBuffer(bufferSize, true);
-			}
-		} catch (Exception e) {
-			log.error("Error setCurrentPosition", e);
-		}		
-	}
-
-    /**
-     * Loads whole buffer from file channel, with no reloading (that is, appending).
-     */
-    private void fillBuffer() {
-		fillBuffer(bufferSize, false);
-	}
-
-	/**
-	 * Loads data from channel to buffer.
-	 *
-	 * @param amount         Amount of data to load with no reloading
-	 */
-	private void fillBuffer(long amount) {
-		fillBuffer(amount, false);
-	}
-
-	/**
-	 * Load enough bytes from channel to buffer.
-	 * After the loading process, the caller can make sure the amount
-	 * in buffer is of size 'amount' if we haven't reached the end of channel.
-	 *
-	 * @param amount The amount of bytes in buffer after returning,
-	 * no larger than bufferSize
-	 * @param reload Whether to reload or append
-	 */
-	private void fillBuffer(long amount, boolean reload) {
-		try {
-			log.debug("Fill buffer with {} bytes. Append or reload: {}", amount, (reload ? "reload" : "append"));
-//			if (amount > bufferSize) {
-//				amount = bufferSize;
-//			}
-			if (in != null) {
-				if (!reload) {
-					in.compact();
-				} else {
-					in.clear();
-				}		
-			} else {
-				log.debug("ByteBuffer was null, creating a new one");
-				switch (bufferType) {
-					case HEAP:
-						in = ByteBuffer.allocate(bufferSize, false);
-						break;
-					case DIRECT:
-						in = ByteBuffer.allocate(bufferSize, true);
-						break;
-					case AUTO:
-					default:
-						in = ByteBuffer.allocate(bufferSize);
-				}
-			}	
-			if (amount > bufferSize) {
-				in = ByteBuffer.allocate((int) amount);
-			}
-			channel.read(in.buf());
-			in.flip();	
-		} catch (Exception e) {
-			log.error("Error fillBuffer", e);
 		}
 	}
 
@@ -728,68 +603,6 @@ public class MP4Reader implements IoConstants, ITagReader, IKeyFrameDataAnalyzer
     public boolean hasVideo() {
     	return hasVideo;
     }
-
-	/**
-     * Getter for buffer type (auto, direct or heap).
-     *
-     * @return Value for property 'bufferType'
-     */
-    public static String getBufferType() {
-		switch (bufferType) {
-			case DIRECT:
-				return "direct";
-			case HEAP:
-				return "heap";
-			case AUTO:
-			default:
-				return "auto";
-		}
-	}
-
-	/**
-     * Setter for buffer type.
-     *
-     * @param bufferType Value to set for property 'bufferType'
-     */
-    public static void setBufferType(String bufferType) {
-		int bufferTypeHash = bufferType.hashCode();
-		 switch (bufferTypeHash) {
-			 case 3198444: //heap
-				 //Get a heap buffer from buffer pool
-				 MP4Reader.bufferType = BufferType.HEAP;
-				 break;
-			 case -1331586071: //direct
-				 //Get a direct buffer from buffer pool
-				 MP4Reader.bufferType = BufferType.DIRECT;
-				 break;
-			 case 3005871: //auto
-				 //Let MINA choose
-			 default:
-				 MP4Reader.bufferType = BufferType.AUTO;
-		}
-	}
-
-	/**
-     * Getter for buffer size.
-     *
-     * @return Value for property 'bufferSize'
-     */
-    public static int getBufferSize() {
-		return bufferSize;
-	}
-
-	/**
-     * Setter for property 'bufferSize'.
-     *
-     * @param bufferSize Value to set for property 'bufferSize'
-     */
-    public static void setBufferSize(int bufferSize) {
-		// make sure buffer size is no less than 1024 bytes.
-		if (bufferSize < 1024) {
-			bufferSize = 1024;
-		}
-		MP4Reader.bufferSize = bufferSize;
-	}
 
 	/**
 	 * Returns the file buffer.
@@ -900,15 +713,14 @@ public class MP4Reader implements IoConstants, ITagReader, IKeyFrameDataAnalyzer
 	 *
      * @return         Metadata event tag
      */
-    private ITag createFileMeta() {
+    ITag createFileMeta() {
 		// Create tag for onMetaData event
-		ByteBuffer buf = ByteBuffer.allocate(320);
+		ByteBuffer buf = ByteBuffer.allocate(1024);
 		buf.setAutoExpand(true);
 		Output out = new Output(buf);
-
-        // Duration property
 		out.writeString("onMetaData");
 		Map<Object, Object> props = new HashMap<Object, Object>();
+        // Duration property
 		props.put("duration", ((double) duration / (double) timeScale));
 		props.put("width", width);
 		props.put("height", height);
@@ -958,9 +770,9 @@ public class MP4Reader implements IoConstants, ITagReader, IKeyFrameDataAnalyzer
 		return result;
 	}
 
-    int prevFrameSize = 0;
-    int currentTime = 0;
-    int initPackets = 0;
+    private int prevFrameSize = 0;
+    private int currentTime = 0;
+    private int initPackets = 0;
     
 	/**
 	 * Tag sequence
@@ -973,11 +785,12 @@ public class MP4Reader implements IoConstants, ITagReader, IKeyFrameDataAnalyzer
 	 * Regular packets follow - prefix video with 5 bytes {17 01 00 00 00} 
 	 */
     public synchronized ITag readTag() {
-		log.debug("Read tag - tagPosition {}, prevFrameSize {}", new Object[]{tagPosition, prevFrameSize});
+		log.debug("Read tag - currentSample {}, prevFrameSize {}", new Object[]{currentSample, prevFrameSize});
 		ITag tag = null;
 		ByteBuffer body = null;
 		switch (initPackets) {
 			case 0: //notify
+				log.debug("Creating onMetaData notify");
 				analyzeKeyFrames();
 				tag = createFileMeta();
 				initPackets++;
@@ -1026,10 +839,12 @@ public class MP4Reader implements IoConstants, ITagReader, IKeyFrameDataAnalyzer
 				byte[] videoPrefix = new byte[]{(byte) 0x17, (byte) 0x01, (byte) 0, (byte) 0, (byte) 0};
 				
 				int sampleSize = (Integer) videoSamples.get(currentSample) + 5;
-				int ts = ((int) videoSampleDuration * (currentSample));
+				int ts = videoSampleDuration * currentSample; //Math.round((currentSample * timeScale) / videoSampleDuration);
+    			log.debug("Read tag - sample dur / scale {}", new Object[]{((currentSample * timeScale) / videoSampleDuration)});				
     			long samplePos = samplePosMap.get(currentSample);
-    			setCurrentPosition(samplePos);
-    			
+    			log.debug("Read tag - sampleSize {} ts {}", new Object[]{sampleSize, ts});
+
+    			//once video works we will try adding audio
     			//tag = new Tag(IoConstants.TYPE_AUDIO, ts, sampleSize, null, prevFrameSize);
     			tag = new Tag(IoConstants.TYPE_VIDEO, ts, sampleSize, null, prevFrameSize);
     			log.debug("Read tag - body size: {}", tag.getBodySize());
@@ -1037,22 +852,22 @@ public class MP4Reader implements IoConstants, ITagReader, IKeyFrameDataAnalyzer
     			log.debug("Read tag - current pos {} sample pos {}", getCurrentPosition(), samplePos);
     			body.put(videoPrefix);
     			try {
+    				channel.position(samplePos);
 					channel.read(body.buf());
 				} catch (IOException e) {
-					e.printStackTrace();
+					log.error("Error handling position", e);
 				}
     			body.flip();
-    			tag.setBody(body);
-    			tagPosition++;				
+    			tag.setBody(body);			
     			currentSample++;			
 		}
 		
 		prevFrameSize = tag.getBodySize();
 	
-		//stop after 20 samples
-		if (currentSample >= 20) {
-			return null;
-		}
+		//stop after n samples - for browser crashes
+//		if (currentSample >= 60) {
+//			return null;
+//		}
 		log.debug("Tag: {}", tag);
 		return tag;
 	}
@@ -1138,28 +953,12 @@ public class MP4Reader implements IoConstants, ITagReader, IKeyFrameDataAnalyzer
 	 */
 	public void position(long pos) {
 		log.debug("position: {}", pos);
-		setCurrentPosition(pos);
-		if (pos == Long.MAX_VALUE) {
-			tagPosition = posTagMap.size()+1;
-			return;
-		}
-		// Update the current tag number
-		Integer tagNumber = posTagMap.get(pos);
-		log.debug("Got a tag number {} for position {}", tagNumber, pos);
-		if (tagNumber == null) {
-			return;
-		}
-		tagPosition = tagNumber;
 	}
 
 	/** {@inheritDoc}
 	 */
 	public void close() {
 		log.debug("Close");
-		if (in != null) {
-			in.release();
-			in = null;
-		}
 		if (channel != null) {
 			try {
 				channel.close();

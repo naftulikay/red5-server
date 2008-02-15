@@ -120,10 +120,4 @@ public interface IMP4 extends IStreamableFile {
 	 */
 	public ITagWriter writerFromNearestKeyFrame(int seekPoint);
 
-	/**
-	 * Sets the caching implemenation
-	 * 
-	 * @param cache
-	 */
-	public void setCache(ICacheStore cache);
 }

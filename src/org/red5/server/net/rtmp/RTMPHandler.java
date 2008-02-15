@@ -24,6 +24,8 @@ import static org.red5.server.api.ScopeUtils.getScopeService;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.mina.common.ByteBuffer;
+import org.red5.io.amf.Output;
 import org.red5.server.api.IContext;
 import org.red5.server.api.IGlobalScope;
 import org.red5.server.api.IScope;
@@ -61,6 +63,7 @@ import org.red5.server.so.SharedObjectMessage;
 import org.red5.server.so.SharedObjectService;
 import org.red5.server.stream.IBroadcastScope;
 import org.red5.server.stream.StreamService;
+import org.red5.server.stream.message.RTMPMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -123,13 +126,9 @@ public class RTMPHandler extends BaseRTMPHandler {
 				if (setChunkSize.getServiceParamMap() == null) {
 					setChunkSize.setServiceParamMap(new HashMap());
 				}
-				setChunkSize.getServiceParamMap().put("chunkSize",
-						chunkSize.getSize());
+				setChunkSize.getServiceParamMap().put("chunkSize", chunkSize.getSize());
 				scope.sendOOBControlMessage((IConsumer) null, setChunkSize);
-				if (log.isDebugEnabled()) {
-					log.debug("Sending chunksize " + chunkSize + " to "
-							+ bs.getProvider());
-				}
+				log.debug("Sending chunksize {} to {} ", chunkSize, bs.getProvider());
 			}
 		}
 	}
@@ -178,8 +177,6 @@ public class RTMPHandler extends BaseRTMPHandler {
 		log.debug("Context: {}", context);
 		return context.getServiceInvoker().invoke(call, service);
 	}
-
-	// ------------------------------------------------------------------------------
 
 	/** {@inheritDoc} */
 	@Override
@@ -304,20 +301,18 @@ public class RTMPHandler extends BaseRTMPHandler {
 											IPendingServiceCall pc = (IPendingServiceCall) call;
 											pc.setResult(getStatus(NC_CONNECT_SUCCESS));
 										}
-										// Measure initial roundtrip time after
-										// connecting
-										conn.getChannel(2).write(
-												new Ping(Ping.STREAM_CLEAR, 0,
-														-1));
+										// Measure initial roundtrip time after connecting
+										conn.ping(new Ping(Ping.STREAM_CLEAR, 0, -1));
 										conn.startRoundTripMeasurement();
+										// fms sends a couple items that we do not
+										//conn.sendCapabilities();
+										//conn.sendChunkSize();
 									} else {
 										log.debug("Connect failed");
-										call
-												.setStatus(Call.STATUS_ACCESS_DENIED);
+										call.setStatus(Call.STATUS_ACCESS_DENIED);
 										if (call instanceof IPendingServiceCall) {
 											IPendingServiceCall pc = (IPendingServiceCall) call;
-											pc
-													.setResult(getStatus(NC_CONNECT_REJECTED));
+											pc.setResult(getStatus(NC_CONNECT_REJECTED));
 										}
 										disconnectOnReturn = true;
 									}
@@ -327,9 +322,9 @@ public class RTMPHandler extends BaseRTMPHandler {
 									if (call instanceof IPendingServiceCall) {
 										IPendingServiceCall pc = (IPendingServiceCall) call;
 										StatusObject status = getStatus(NC_CONNECT_REJECTED);
-										if (rejected.getReason() != null)
-											status.setApplication(rejected
-													.getReason());
+										if (rejected.getReason() != null) {
+											status.setApplication(rejected.getReason());
+										}
 										pc.setResult(status);
 									}
 									disconnectOnReturn = true;
@@ -391,8 +386,7 @@ public class RTMPHandler extends BaseRTMPHandler {
 								+ " (stream ID: " + source.getStreamId() + ")");
 					}
 				} catch (Throwable err) {
-					log.error("Error while invoking " + action
-							+ " on stream service.", err);
+					log.error("Error while invoking {} on stream service. {}", action, err);
 					status = getStatus(NS_FAILED).asStatus();
 					status.setDescription("Error while invoking " + action
 							+ " (stream ID: " + source.getStreamId() + ")");
@@ -418,10 +412,7 @@ public class RTMPHandler extends BaseRTMPHandler {
 					&& (call.getStatus() == Call.STATUS_SUCCESS_VOID || call
 							.getStatus() == Call.STATUS_SUCCESS_NULL)) {
 				// This fixes a bug in the FP on Intel Macs.
-				if (log.isDebugEnabled()) {
-					log
-							.debug("Method does not have return value, do not reply");
-				}
+				log.debug("Method does not have return value, do not reply");
 				return;
 			}
 

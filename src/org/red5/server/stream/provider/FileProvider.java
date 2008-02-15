@@ -41,6 +41,7 @@ import org.red5.server.messaging.IPullableProvider;
 import org.red5.server.messaging.OOBControlMessage;
 import org.red5.server.messaging.PipeConnectionEvent;
 import org.red5.server.net.rtmp.event.AudioData;
+import org.red5.server.net.rtmp.event.ChunkSize;
 import org.red5.server.net.rtmp.event.IRTMPEvent;
 import org.red5.server.net.rtmp.event.Invoke;
 import org.red5.server.net.rtmp.event.Notify;
@@ -145,8 +146,11 @@ public class FileProvider implements IPassive, ISeekableProvider,
 			case Constants.TYPE_NOTIFY:
 				msg = new Notify(tag.getBody());
 				break;
+			case Constants.TYPE_CHUNK_SIZE:
+				msg = new ChunkSize(tag.getBody().buf().getInt());
+				break;
 			default:
-				log.warn("Unexpected type? " + tag.getDataType());
+				log.warn("Unexpected type? {}", tag.getDataType());
 				msg = new Unknown(tag.getDataType(), tag.getBody());
 				break;
 		}
@@ -187,13 +191,14 @@ public class FileProvider implements IPassive, ISeekableProvider,
 	/** {@inheritDoc} */
     public void onOOBControlMessage(IMessageComponent source, IPipe pipe,
 			OOBControlMessage oobCtrlMsg) {
-		if (IPassive.KEY.equals(oobCtrlMsg.getTarget())) {
+    	String target = oobCtrlMsg.getTarget();
+		if (IPassive.KEY.equals(target)) {
 			if (oobCtrlMsg.getServiceName().equals("init")) {
 				Integer startTS = (Integer) oobCtrlMsg.getServiceParamMap()
 						.get("startTS");
 				setStart(startTS);
 			}
-		} else if (ISeekableProvider.KEY.equals(oobCtrlMsg.getTarget())) {
+		} else if (ISeekableProvider.KEY.equals(target)) {
 			if (oobCtrlMsg.getServiceName().equals("seek")) {
 				Integer position = (Integer) oobCtrlMsg.getServiceParamMap()
 						.get("position");
@@ -201,7 +206,7 @@ public class FileProvider implements IPassive, ISeekableProvider,
 				// Return position we seeked to
 				oobCtrlMsg.setResult(seekPos);
 			}
-		} else if (IStreamTypeAwareProvider.KEY.equals(oobCtrlMsg.getTarget())) {
+		} else if (IStreamTypeAwareProvider.KEY.equals(target)) {
 			if (oobCtrlMsg.getServiceName().equals("hasVideo")) {
 				oobCtrlMsg.setResult(hasVideo());
 			}
@@ -217,7 +222,7 @@ public class FileProvider implements IPassive, ISeekableProvider,
 						StreamableFileFactory.class);
 		IStreamableFileService service = factory.getService(file);
 		if (service == null) {
-			log.error("No service found for " + file.getAbsolutePath());
+			log.error("No service found for {}", file.getAbsolutePath());
 			return;
 		}
 		IStreamableFile streamFile = service.getStreamableFile(file);
@@ -244,7 +249,6 @@ public class FileProvider implements IPassive, ISeekableProvider,
 				// Seeking not supported
 				return ts;
 			}
-
 			keyFrameMeta = ((IKeyFrameDataAnalyzer) reader).analyzeKeyFrames();
 		}
 

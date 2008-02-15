@@ -162,7 +162,9 @@
 	<!--
 	    Cache to use for keyframe metadata.
 	-->
-	<bean id="keyframe.cache" class="org.red5.io.FileKeyFrameMetaCache"/>
+	<bean id="keyframe.cache" class="org.red5.io.CachingFileKeyFrameMetaCache">
+		<property name="maxCacheEntry" value="500" />
+	</bean>
 	<!--
 	    Represents FLV files
 	    Use injection to set the cache impl to be used with flvs
@@ -204,8 +206,8 @@
 		the client buffer filled.
 	-->
 	<bean id="streamExecutor" class="java.util.concurrent.ScheduledThreadPoolExecutor">
-		<constructor-arg value="16"/>
-		<property name="maximumPoolSize" value="64"/>
+		<constructor-arg value="2"/>
+		<property name="maximumPoolSize" value="32"/>
 	</bean>
 	<!-- ClientBroadcastStream and PlaylistSubscriberStream
 		that will be used by RTMPConnection and maybe other classes.

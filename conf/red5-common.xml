@@ -11,6 +11,7 @@
 	</bean>
 	<bean id="jmxAgent" class="org.red5.server.jmx.JMXAgent" init-method="init">
 		<!-- The RMI adapter allows remote connections to the MBeanServer -->
+
 		<property name="enableRmiAdapter" value="true"/>
 		<property name="rmiAdapterPort" value="9999"/>
 		<!-- SSL
@@ -74,13 +75,12 @@
 	<bean id="streamableFileFactory" class="org.red5.io.StreamableFileFactory">
 		<property name="services">
 			<list>
-                <bean id="flvFileService" class="org.red5.io.flv.impl.FLVService">
-                    <property name="generateMetadata" value="true"/>
-                </bean>
-                <bean id="mp4FileService" class="org.red5.io.mp4.impl.MP4Service">
-                    <property name="generateMetadata" value="false"/>
-                </bean>
+				<bean id="flvFileService" class="org.red5.io.flv.impl.FLVService">
+					<property name="generateMetadata" value="true"/>
+				</bean>
 				<bean id="mp3FileService" class="org.red5.io.mp3.impl.MP3Service"/>
+				<bean id="mp4FileService" class="org.red5.io.mp4.impl.MP4Service"/>
+				<bean id="m4aFileService" class="org.red5.io.m4a.impl.M4AService"/>
 			</list>
 		</property>
 	</bean>
@@ -99,7 +99,8 @@
 	<!-- Provides output to consumers -->
 	<bean id="consumerService" class="org.red5.server.stream.ConsumerService"/>
 	<!-- Simple bandwidth control -->
-	<bean id="BWControlService" class="org.red5.server.stream.SimpleBWControlService" init-method="init" destroy-method="shutdown">
+	<bean id="BWControlService" class="org.red5.server.stream.SimpleBWControlService" init-method="init"
+		 destroy-method="shutdown">
 		<property name="interval" value="100"/>
 		<property name="defaultCapacity" value="104857600"/>
 		<!-- 100MB -->
@@ -163,7 +164,7 @@
 	    Cache to use for keyframe metadata.
 	-->
 	<bean id="keyframe.cache" class="org.red5.io.CachingFileKeyFrameMetaCache">
-		<property name="maxCacheEntry" value="500" />
+		<property name="maxCacheEntry" value="500"/>
 	</bean>
 	<!--
 	    Represents FLV files
@@ -176,6 +177,12 @@
 	</bean>
 	<!-- Use injection to set the keyframe cache for FLV files -->
 	<bean id="flvreader.impl" class="org.red5.io.flv.impl.FLVReader">
+		<property name="keyFrameCache">
+			<ref bean="keyframe.cache"/>
+		</property>
+	</bean>
+	<!-- Use injection to set the keyframe cache for MP4 files -->
+	<bean id="mp4reader.impl" class="org.red5.io.mp4.impl.MP4Reader">
 		<property name="keyFrameCache">
 			<ref bean="keyframe.cache"/>
 		</property>

@@ -907,7 +907,7 @@ public abstract class RTMPConnection extends BaseConnection implements
 		props.put("fmsver", "FMS/3,0,0,1157");
 		props.put("capabilities", Integer.valueOf(16447));
 		props.put("", Integer.valueOf(0));
-		props.put("", Integer.valueOf(0));
+		props.put("", Integer.valueOf(2307));
 		props.put("level", "status");
 		props.put("code", "NetConnection.Connect.Success");
 		out.writeMap(props, new Serializer());

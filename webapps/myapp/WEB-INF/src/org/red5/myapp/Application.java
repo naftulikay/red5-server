@@ -9,19 +9,23 @@ import java.util.Map;
 import org.red5.server.adapter.MultiThreadedApplicationAdapter;
 import org.red5.server.api.IConnection;
 import org.red5.server.api.IScope;
+import org.red5.server.api.Red5;
 import org.red5.server.api.service.IPendingServiceCall;
 import org.red5.server.api.service.IPendingServiceCallback;
+import org.red5.server.api.service.ServiceUtils;
 import org.red5.server.net.rtmp.EmbeddedRTMPClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * @author ptamilarasan
+ * Test application for the RTMPClient
  * 
+ * @author ptamilarasan (Original author)
+ * @author Paul Gregoire 
  */
 public class Application extends MultiThreadedApplicationAdapter {
 
-	private EmbeddedRTMPClient client = new EmbeddedRTMPClient();
+	private EmbeddedRTMPClient client = null;
 	private static final Logger log = LoggerFactory
 			.getLogger(Application.class);
 
@@ -29,7 +33,7 @@ public class Application extends MultiThreadedApplicationAdapter {
 	private Integer remotePort;
 	
 	public Application() {
-		log.info("Started application build 03102008");
+		log.info("Started application build 03112008");
 	}
 
 	@Override
@@ -40,6 +44,14 @@ public class Application extends MultiThreadedApplicationAdapter {
 			log.debug("No parameters passed");
 		} else {
 			log.debug("Params length: {}", params.length);
+	        // getting client parameters
+	        Map<String, Object> properties = conn.getConnectParams();
+	        for(Map.Entry<String, Object> e : properties.entrySet()) {
+	            log.debug("Connection parameter: {} = {}", e.getKey(), e.getValue());
+	        } 			
+	        for(Object p : params) {
+	            log.debug("Parameter: {}", p.toString());
+	        } 			
 		}
 		// Call original method of parent class
 		if (!super.connect(conn, scope, params)) {
@@ -81,21 +93,47 @@ public class Application extends MultiThreadedApplicationAdapter {
 	@Override
 	public void disconnect(IConnection conn, IScope scope) {
 		log.debug("Disconnect called");	
+		//if its a due to a browser close or error make sure the client is disconnected as well
+		if (client != null) {
+			client.disconnect();
+		}
 		super.disconnect(conn, scope);
 	}		
 	
-	public void createClient() {
+	public void createClient(Integer amfVersion) {
 		log.debug("Creating client - ip: {} port: {}", remoteIP, remotePort);
+		
+		client = new EmbeddedRTMPClient();
 		client.connect(remoteIP, remotePort, "myapp", new ConnectCallback());
 	}
 
-	public void createClientWithConnectParams() {
+	public void createClientWithConnectParams(Integer amfVersion) {
 		log.debug("Creating client - ip: {} port: {}", remoteIP, remotePort);
-		Map<String, Object> connectionParams = new HashMap<String, Object>(3);
-		connectionParams.put("var1", "A string");
-		connectionParams.put("var2", Integer.valueOf(33));
-		connectionParams.put("var3", Boolean.TRUE);
-		client.connect(remoteIP, remotePort, connectionParams, new ConnectCallback());
+		Map<String, Object> params = new HashMap<String, Object>();
+		params.put("app", "myapp");
+		params.put("tcUrl", "rtmp://"+remoteIP+':'+remotePort+"/myapp");
+		params.put("objectEncoding", amfVersion);
+		params.put("fpad", Boolean.FALSE);
+		params.put("flashVer", "WIN 9,0,115,0");
+		params.put("audioCodecs", Integer.valueOf(1639)); 
+		params.put("videoFunction", Integer.valueOf(1)); 
+		params.put("pageUrl", "");
+		params.put("path", "myapp");
+		params.put("capabilities", Integer.valueOf(15)); 
+		params.put("swfUrl", "");
+		params.put("videoCodecs", Integer.valueOf(252)); 		
+		// extra parameters
+		params.put("var1", "A string");
+		params.put("var2", Integer.valueOf(33));
+		params.put("var3", Boolean.TRUE);
+		
+		client = new EmbeddedRTMPClient();		
+		client.connect(remoteIP, remotePort, params, new ConnectCallback());
+	}	
+	
+	public void destroyClient() {
+		log.debug("Destroy client");
+		client.disconnect();
 	}	
 	
 	// Functions called by client 1 that then invoke a function on the server
@@ -107,26 +145,25 @@ public class Application extends MultiThreadedApplicationAdapter {
 
 	public void testInvokeParams() {
 		log.debug("Test invokeParams");
-		client.invoke("invokeParams", new Object[] { 1, 2, 3 },
-				new InvokeCallback());
+		client.invoke("invokeParams", new Object[] { 1, 2, 3 },	new InvokeCallback());
 	}
 
 	public void testInvokeNoParamsWithResult() {
 		log.debug("Test invokeNoParams with Result");		
-		client.invoke("invokeNoParamsWithResult", new InvokeCallback());
+		client.invoke("invokeNoParamsWithResult", new InvokeCallback(Red5.getConnectionLocal(), "onResponse"));
 	}	
 	
 	// Functions invoked from RTMPClient
 	public void invokeNoParams() {
-		log.info("invokeNoParams() called.");
+		log.info("invokeNoParams called");
 	}
 
 	public void invokeParams(int a, int b, int c) {
-		log.info("Client passed args: {}, {}, {}.", new Object[] { a, b, c });
+		log.info("invokeParams called - client passed args: {}, {}, {}.", new Object[] { a, b, c });
 	}
 
 	public String invokeNoParamsWithResult() {
-		log.info("invokeNoParamsWithResult() called.");
+		log.info("invokeNoParamsWithResult called");
 		return "Ok";
 	}	
 	
@@ -154,8 +191,25 @@ public class Application extends MultiThreadedApplicationAdapter {
 	}
 
 	public class InvokeCallback implements IPendingServiceCallback {
+		
+		private IConnection connection;
+		private String methodName;
+		
+		public InvokeCallback() {			
+		}
+
+		public InvokeCallback(IConnection connection, String methodName) {	
+			this.connection = connection;
+			this.methodName = methodName;
+		}
+		
 		public void resultReceived(IPendingServiceCall call) {
 			log.info("The call was completed: {}", call.getResult());
+			//if connection is not null then communicate back to the caller
+			if (connection != null) {
+				//send a result back to the original caller
+				ServiceUtils.invokeOnConnection(connection, methodName, new Object[]{call.getResult()});
+			}
 		}
 	}
 

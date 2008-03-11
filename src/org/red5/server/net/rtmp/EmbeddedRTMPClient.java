@@ -189,6 +189,32 @@ public class EmbeddedRTMPClient extends BaseRTMPHandler {
 		connector.connect(new InetSocketAddress(server, port), ioHandler);
 	}
 	
+    /**
+     * Disconnect the first connection in the connection map
+     */
+    public void disconnect() {
+    	log.debug("disconnect");
+		IConnection conn = connManager.getConnection();
+		if (conn == null) {
+		    log.info("Connection was null");
+		} else {
+			conn.close();
+		}
+    }
+
+    /**
+     * Disconnect the connection with the matching id
+     */
+    public void disconnect(String clientId) {
+    	log.debug("disconnect id: {}", clientId);
+		IConnection conn = connManager.getConnection(Integer.valueOf(clientId));
+		if (conn == null) {
+		    log.info("Connection was null for id: {}", clientId);
+		} else {
+			conn.close();
+		}
+    }	
+	
 	/**
 	 * Register object that provides methods that can be called by the server.
 	 * 

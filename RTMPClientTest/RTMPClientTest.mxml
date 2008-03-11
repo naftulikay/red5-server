@@ -42,8 +42,9 @@
 			
 			public function disconnect():void {
 				if (nc.connected) {
-					nc.close();
+					nc.call("destroyClient", null);
 					clientCreated = false;
+					nc.close();
 				}
 			}
 

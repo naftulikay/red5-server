@@ -1,61 +1,159 @@
 <?xml version="1.0" encoding="utf-8"?>
-<mx:Application xmlns:mx="http://www.adobe.com/2006/mxml" layout="absolute">
+<mx:Application xmlns:mx="http://www.adobe.com/2006/mxml" layout="absolute" 
+	creationComplete="init()">
 	<mx:Script>
 		<![CDATA[
-			private var nc:NetConnection = new NetConnection();
-			
-			/** Functions for myapp **/
-			public function connect():void {
+			/**
+			 * Test client for RTMPClient implementations
+			 * 
+			 * @author Dominick Accattato
+			 * @author Paul Gregoire
+			 */
+			import mx.controls.Alert;
+		
+			private var nc:NetConnection = null;
+			private var clientCreated:Boolean = false;
+
+			private function init():void {
+				nc = new NetConnection();
+				
 				nc.addEventListener(NetStatusEvent.NET_STATUS, onNetStatus);
 				nc.addEventListener(SecurityErrorEvent.SECURITY_ERROR, securityErrorHandler);
 				nc.addEventListener(IOErrorEvent.IO_ERROR, ioErrorHandler);
 				nc.addEventListener(AsyncErrorEvent.ASYNC_ERROR, asyncErrorHandler);		
-				
-				nc.objectEncoding = ObjectEncoding.AMF0;		
+
 				nc.client = this;
+			}
+
+			public function connect():void {
+				if (nc.connected) {
+					nc.close();
+					clientCreated = false;
+				}
+				if (amf0.selected) {
+					nc.objectEncoding = ObjectEncoding.AMF0;		
+				} else if (amf3.selected) {
+					nc.objectEncoding = ObjectEncoding.AMF3;		
+				}
+				log("Encoding: AMF" + nc.objectEncoding);
+				
 				nc.connect("rtmp://127.0.0.1/myapp");
 			}
 			
+			public function disconnect():void {
+				if (nc.connected) {
+					nc.close();
+					clientCreated = false;
+				}
+			}
+
 			public function createRTMPClient():void {
-				nc.call("createClient", null);
+				nc.call("createClient", null, nc.objectEncoding);
+				clientCreated = true;
 			}
 
 			public function createRTMPClientWithParams():void {
-				nc.call("createClientWithConnectParams", null);
+				nc.call("createClientWithConnectParams", null, nc.objectEncoding);
+				clientCreated = true;
 			}
 			
 			private function onNetStatus(e:NetStatusEvent):void {
+				log("Net status: " + e.info.code);
 				txtNetStatus.text = e.info.code;
+        		switch (e.info.code) {
+            		case "NetConnection.Connect.Success":				
+						btnConnect.visible = false;
+						btnDisconnect.visible = true;
+						break;
+		           case "NetConnection.Connect.Closed":	                
+						btnConnect.visible = true;
+						btnDisconnect.visible = false;
+		            	break;						
+        		}
 			}
 			
 			//Button functions
 			private function invokeNoParams():void {
-				nc.call("testInvokeNoParams", null);
+				if (clientCreated) {
+					nc.call("testInvokeNoParams", null);
+				} else {
+					Alert.show("You must create a client first");
+				}
 			}
 			
 			private function invokeParams():void {
-				nc.call("testInvokeParams", null);
+				if (clientCreated) {
+					nc.call("testInvokeParams", null);
+				} else {
+					Alert.show("You must create a client first");
+				}
 			}
 			
 			private function invokeNoParamsWithResult():void {
-				nc.call("testInvokeNoParamsWithResult", null);
+				if (clientCreated) {
+					var responder:Responder = new Responder(handleResponse, null);
+					nc.call("testInvokeNoParamsWithResult", responder);
+				} else {
+					Alert.show("You must create a client first");
+				}
 			}
 			
+			//simple responder
+		    public function handleResponse(o:Object):void {
+				log("Call response: " + o);
+				traceObject(o);
+			}			
+			
+			//callback for messages from the server
+		    public function onResponse(o:Object):void {
+				log("Server response: " + o);
+				traceObject(o);
+			}			
+			
 			private function securityErrorHandler(e:SecurityErrorEvent):void {
-				trace('Security Error: '+e);
+				log('Security Error: '+e);
 			}
 		
 			private function ioErrorHandler(e:IOErrorEvent):void {
-				trace('IO Error: '+e);
+				log('IO Error: '+e);
 			}
 			
 			private function asyncErrorHandler(e:AsyncErrorEvent):void {
-				trace('Async Error: '+e);
-			}			
+				log('Async Error: '+e);
+			}		
+			
+			private function log(text:String):void {
+				var tmp:String = "";
+				if (messages.data !== null) {
+					tmp = String(messages.data);
+				}				
+				tmp += text + '\n';
+				messages.data = tmp;
+				messages.verticalScrollPosition = messages.maxVerticalScrollPosition;
+			}				
+
+			public function traceObject(obj:Object, indent:uint = 0):void {
+			    var indentString:String = "";
+			    var i:uint;
+			    var prop:String;
+			    var val:*;
+			    for (i = 0; i < indent; i++) {
+			        indentString += "\t";
+			    }
+			    for (prop in obj) {
+			        val = obj[prop];
+			        if (typeof(val) == "object") {
+			            log(indentString + " " + i + ": [Object]");
+			            traceObject(val, indent + 1);
+			        } else {
+			            log(indentString + " " + prop + ": " + val);
+			        }
+			    }
+			}
 
 		]]>
 	</mx:Script>
-	<mx:Panel x="10" y="10" width="556" height="194" layout="absolute" title="myapp">
+	<mx:Panel x="10" y="10" width="556" height="361" layout="absolute" title="myapp">
 		<mx:Label x="10" y="40" text="Status:"/>
 		<mx:Label id="txtNetStatus" x="63" y="40" text="Not Connected" width="346"/>
 		<mx:HBox x="10" y="66" width="516">
@@ -63,12 +161,16 @@
 			<mx:Button label="No Params" click="createRTMPClient()"/>
 			<mx:Button label="With Params" click="createRTMPClientWithParams()"/>
 		</mx:HBox>
-		<mx:Button label="Connect" click="connect()" x="10" y="10"/>
+		<mx:Button id="btnConnect" label="Connect" click="connect()" x="10" y="10"/>
+		<mx:Button id="btnDisconnect" label="Disonnect" click="disconnect()" x="10" y="10" visible="false"/>
 		<mx:HBox x="10" y="96" width="516">
 			<mx:Label text="Invoke" fontWeight="bold"/>
 			<mx:Button label="No Params" click="invokeNoParams()"/>
 			<mx:Button label="With Params" click="invokeParams()"/>
 			<mx:Button label="No Params + Result" click="invokeNoParamsWithResult()"/>
 		</mx:HBox>
+		<mx:RadioButton x="292" y="10" label="AMF0" selected="true" id="amf0" groupName="amf"/>
+		<mx:RadioButton x="354" y="10" label="AMF3" groupName="amf" id="amf3"/>
+		<mx:TextArea x="10" y="171" width="516" height="140" id="messages" editable="false" wordWrap="true"/>
 	</mx:Panel>
 </mx:Application>

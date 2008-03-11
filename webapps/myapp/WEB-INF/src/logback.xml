@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+	<appender name="MYAPP" class="ch.qos.logback.core.FileAppender">
+		<File>log/myapp.log</File>
+		<Append>false</Append>
+		<BufferedIO>false</BufferedIO>
+		<ImmediateFlush>true</ImmediateFlush>
+		<layout class="ch.qos.logback.classic.PatternLayout">
+			<Pattern>%-4relative [%thread] %-5level %logger{35} - %msg%n</Pattern>
+		</layout>
+	</appender>
+	<logger name="org.red5">
+		<level value="DEBUG" />
+		<appender-ref ref="MYAPP" />
+	</logger>	
+</configuration>

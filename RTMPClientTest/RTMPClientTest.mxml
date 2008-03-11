@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Application xmlns:mx="http://www.adobe.com/2006/mxml" layout="absolute">
+	<mx:Script>
+		<![CDATA[
+			private var nc:NetConnection = new NetConnection();
+			
+			/** Functions for myapp **/
+			public function connect():void
+			{
+				nc.addEventListener(NetStatusEvent.NET_STATUS, onNetStatus);
+				nc.addEventListener(SecurityErrorEvent.SECURITY_ERROR, securityErrorHandler);
+				nc.addEventListener(IOErrorEvent.IO_ERROR, ioErrorHandler);
+				nc.addEventListener(AsyncErrorEvent.ASYNC_ERROR, asyncErrorHandler);		
+				
+				nc.objectEncoding = ObjectEncoding.AMF0;		
+				nc.client = this;
+				nc.connect("rtmp://127.0.0.1/myapp");
+			}
+			
+			public function createRTMPClient():void
+			{
+				nc.call("createClient",null);
+			}
+			
+			private function onNetStatus(e:NetStatusEvent):void
+			{
+				txtNetStatus.text = e.info.code;
+			}
+			
+			
+			
+			//Button functions
+			private function invokeNoParams():void
+			{
+				nc.call("testInvokeNoParams", null);
+			}
+			
+			private function invokeParams():void
+			{
+				nc.call("testInvokeParams", null);
+			}
+			
+			private function securityErrorHandler(e:SecurityErrorEvent):void {
+				trace('Security Error: '+e);
+			}
+		
+			private function ioErrorHandler(e:IOErrorEvent):void {
+				trace('IO Error: '+e);
+			}
+			
+			private function asyncErrorHandler(e:AsyncErrorEvent):void {
+				trace('Async Error: '+e);
+			}			
+
+		]]>
+	</mx:Script>
+	<mx:Panel x="10" y="10" width="662" height="147" layout="absolute" title="myapp">
+		<mx:Button x="90" y="10" label="Create RTMPClient" click="createRTMPClient()"/>
+		<mx:Label x="10" y="40" text="Status:"/>
+		<mx:Label id="txtNetStatus" x="63" y="40" text="Not Connected" width="346"/>
+		<mx:Button x="10" y="10" label="Connect" click="connect()"/>
+		<mx:Button x="228" y="10" label="Invoke No Params" click="invokeNoParams()"/>
+		<mx:Button x="368" y="10" label="Invoke With Params" click="invokeParams()"/>
+	</mx:Panel>
+</mx:Application>

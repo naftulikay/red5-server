@@ -3,9 +3,8 @@
  */
 package org.red5.myapp;
 
+import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 
 import org.red5.server.adapter.MultiThreadedApplicationAdapter;
 import org.red5.server.api.IConnection;
@@ -13,7 +12,6 @@ import org.red5.server.api.IScope;
 import org.red5.server.api.service.IPendingServiceCall;
 import org.red5.server.api.service.IPendingServiceCallback;
 import org.red5.server.net.rtmp.EmbeddedRTMPClient;
-import org.red5.server.net.rtmp.RTMPConnection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,7 +29,7 @@ public class Application extends MultiThreadedApplicationAdapter {
 	private Integer remotePort;
 	
 	public Application() {
-		log.info("Started Omnovia application v0.1 build 03102008");
+		log.info("Started application build 03102008");
 	}
 
 	@Override
@@ -91,6 +89,15 @@ public class Application extends MultiThreadedApplicationAdapter {
 		client.connect(remoteIP, remotePort, "myapp", new ConnectCallback());
 	}
 
+	public void createClientWithConnectParams() {
+		log.debug("Creating client - ip: {} port: {}", remoteIP, remotePort);
+		Map<String, Object> connectionParams = new HashMap<String, Object>(3);
+		connectionParams.put("var1", "A string");
+		connectionParams.put("var2", Integer.valueOf(33));
+		connectionParams.put("var3", Boolean.TRUE);
+		client.connect(remoteIP, remotePort, connectionParams, new ConnectCallback());
+	}	
+	
 	// Functions called by client 1 that then invoke a function on the server
 	// through client 2 (RTMPClient)
 	public void testInvokeNoParams() {
@@ -104,6 +111,11 @@ public class Application extends MultiThreadedApplicationAdapter {
 				new InvokeCallback());
 	}
 
+	public void testInvokeNoParamsWithResult() {
+		log.debug("Test invokeNoParams with Result");		
+		client.invoke("invokeNoParamsWithResult", new InvokeCallback());
+	}	
+	
 	// Functions invoked from RTMPClient
 	public void invokeNoParams() {
 		log.info("invokeNoParams() called.");
@@ -113,6 +125,11 @@ public class Application extends MultiThreadedApplicationAdapter {
 		log.info("Client passed args: {}, {}, {}.", new Object[] { a, b, c });
 	}
 
+	public String invokeNoParamsWithResult() {
+		log.info("invokeNoParamsWithResult() called.");
+		return "Ok";
+	}	
+	
 	public String getRemoteIP() {
 		return remoteIP;
 	}

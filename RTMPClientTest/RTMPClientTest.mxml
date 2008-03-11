@@ -5,8 +5,7 @@
 			private var nc:NetConnection = new NetConnection();
 			
 			/** Functions for myapp **/
-			public function connect():void
-			{
+			public function connect():void {
 				nc.addEventListener(NetStatusEvent.NET_STATUS, onNetStatus);
 				nc.addEventListener(SecurityErrorEvent.SECURITY_ERROR, securityErrorHandler);
 				nc.addEventListener(IOErrorEvent.IO_ERROR, ioErrorHandler);
@@ -17,27 +16,29 @@
 				nc.connect("rtmp://127.0.0.1/myapp");
 			}
 			
-			public function createRTMPClient():void
-			{
-				nc.call("createClient",null);
+			public function createRTMPClient():void {
+				nc.call("createClient", null);
+			}
+
+			public function createRTMPClientWithParams():void {
+				nc.call("createClientWithConnectParams", null);
 			}
 			
-			private function onNetStatus(e:NetStatusEvent):void
-			{
+			private function onNetStatus(e:NetStatusEvent):void {
 				txtNetStatus.text = e.info.code;
 			}
 			
-			
-			
 			//Button functions
-			private function invokeNoParams():void
-			{
+			private function invokeNoParams():void {
 				nc.call("testInvokeNoParams", null);
 			}
 			
-			private function invokeParams():void
-			{
+			private function invokeParams():void {
 				nc.call("testInvokeParams", null);
+			}
+			
+			private function invokeNoParamsWithResult():void {
+				nc.call("testInvokeNoParamsWithResult", null);
 			}
 			
 			private function securityErrorHandler(e:SecurityErrorEvent):void {
@@ -54,12 +55,20 @@
 
 		]]>
 	</mx:Script>
-	<mx:Panel x="10" y="10" width="662" height="147" layout="absolute" title="myapp">
-		<mx:Button x="90" y="10" label="Create RTMPClient" click="createRTMPClient()"/>
+	<mx:Panel x="10" y="10" width="556" height="194" layout="absolute" title="myapp">
 		<mx:Label x="10" y="40" text="Status:"/>
 		<mx:Label id="txtNetStatus" x="63" y="40" text="Not Connected" width="346"/>
-		<mx:Button x="10" y="10" label="Connect" click="connect()"/>
-		<mx:Button x="228" y="10" label="Invoke No Params" click="invokeNoParams()"/>
-		<mx:Button x="368" y="10" label="Invoke With Params" click="invokeParams()"/>
+		<mx:HBox x="10" y="66" width="516">
+			<mx:Label text="Create RTMPClient" fontWeight="bold"/>
+			<mx:Button label="No Params" click="createRTMPClient()"/>
+			<mx:Button label="With Params" click="createRTMPClientWithParams()"/>
+		</mx:HBox>
+		<mx:Button label="Connect" click="connect()" x="10" y="10"/>
+		<mx:HBox x="10" y="96" width="516">
+			<mx:Label text="Invoke" fontWeight="bold"/>
+			<mx:Button label="No Params" click="invokeNoParams()"/>
+			<mx:Button label="With Params" click="invokeParams()"/>
+			<mx:Button label="No Params + Result" click="invokeNoParamsWithResult()"/>
+		</mx:HBox>
 	</mx:Panel>
 </mx:Application>

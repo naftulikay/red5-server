@@ -6,7 +6,7 @@ package org.red5.myapp;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.red5.io.utils.ObjectMap;
+import org.red5.io.amf3.ByteArray;
 import org.red5.server.adapter.MultiThreadedApplicationAdapter;
 import org.red5.server.api.IConnection;
 import org.red5.server.api.IScope;
@@ -15,9 +15,6 @@ import org.red5.server.api.service.IPendingServiceCall;
 import org.red5.server.api.service.IPendingServiceCallback;
 import org.red5.server.api.service.ServiceUtils;
 import org.red5.server.net.rtmp.EmbeddedRTMPClient;
-
-import org.red5.io.amf3.ByteArray;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -106,10 +103,10 @@ public class Application extends MultiThreadedApplicationAdapter {
 	}		
 	
 	public void createClient(Integer amfVersion) {
-		log.info("Creating client - ip: {} port: {} amf: {}", remoteIP, remotePort);
-		log.info("Using amf version " + amfVersion);
+		log.info("Creating client - ip: {} port: {} amf: {}", new Object[]{remoteIP, remotePort, amfVersion});
 		
 		client = new EmbeddedRTMPClient();
+		client.setObjectEncoding(amfVersion);
 		client.connect(remoteIP, remotePort, "myapp", new ConnectCallback());
 	}
 
@@ -134,6 +131,7 @@ public class Application extends MultiThreadedApplicationAdapter {
 		params.put("var3", Boolean.TRUE);
 		
 		client = new EmbeddedRTMPClient();		
+		client.setObjectEncoding(amfVersion);	
 		client.connect(remoteIP, remotePort, params, new ConnectCallback());
 	}	
 	
@@ -159,8 +157,7 @@ public class Application extends MultiThreadedApplicationAdapter {
 		
 	}
 	
-	public void testInvokeAMF3Params() 
-	{
+	public void testInvokeAMF3Params() {
 		log.info("Test invokeAMF3Params");
 		ByteArray b = new ByteArray();
 		b.writeByte((byte)1);

@@ -106,6 +106,9 @@ public class EmbeddedRTMPClient extends BaseRTMPHandler {
     private Map<String, ClientSharedObject> sharedObjects = new HashMap<String, ClientSharedObject>();
     
     private RTMPClientConnManager connManager;
+    
+    /** Analogous to NetConnection.objectEncoding */
+    private Integer objectEncoding = 0;
 
 	/** Constructs a new RTMPClient. */
     public EmbeddedRTMPClient() {
@@ -147,7 +150,7 @@ public class EmbeddedRTMPClient extends BaseRTMPHandler {
 		Map<String, Object> params = new HashMap<String, Object>();
 		params.put("app", application);
 		params.put("tcUrl", "rtmp://"+server+':'+port+'/'+application);
-		params.put("objectEncoding", Integer.valueOf(3));
+		params.put("objectEncoding", objectEncoding);
 		params.put("fpad", Boolean.FALSE);
 		params.put("flashVer", "WIN 9,0,115,0");
 		params.put("audioCodecs", Integer.valueOf(1639)); 
@@ -182,8 +185,8 @@ public class EmbeddedRTMPClient extends BaseRTMPHandler {
     public void connect(String server, int port, Map<String, Object> connectionParams, IPendingServiceCallback connectCallback) {
    	    log.debug("connect server: {} port {} connectionParams {} connectCallback {}", new Object[]{server, port, connectionParams, connectCallback});		
 		this.connectionParams = connectionParams;
-		if (!connectionParams.containsKey("objectEncoding")) {
-			connectionParams.put("objectEncoding", (double) 0);
+		if (!this.connectionParams.containsKey("objectEncoding")) {
+			this.connectionParams.put("objectEncoding", objectEncoding);
 		}
 		this.connectCallback = connectCallback;
 		SocketConnector connector = new SocketConnector();
@@ -313,18 +316,27 @@ public class EmbeddedRTMPClient extends BaseRTMPHandler {
     @Override
 	protected void onInvoke(RTMPConnection conn, Channel channel, Header source, Notify invoke, RTMP rtmp) {
 	    log.debug("onInvoke");	
+	    log.debug("Connection encoding: {} channel: {} header: {}", new Object[]{conn.getEncoding(), channel, source});
 		final IServiceCall call = invoke.getCall();
-		if (call.getServiceMethodName().equals("_result")
-				|| call.getServiceMethodName().equals("_error")) {
-			final IPendingServiceCall pendingCall = conn.getPendingCall(invoke
-					.getInvokeId());
+		String serviceMethodName = call.getServiceMethodName();
+		if ("_result".equals(serviceMethodName) || "_error".equals(serviceMethodName)) {
+			log.debug("Invoke id: {}", invoke.getInvokeId());
+			final IPendingServiceCall pendingCall = conn.getPendingCall(invoke.getInvokeId());
+			log.debug("Pending call: {}", pendingCall);
 			if (pendingCall != null && "connect".equals(pendingCall.getServiceMethodName())) {
-				conn.getState().setEncoding(Encoding.AMF3);
+				//get the connection state
+				RTMP state = conn.getState();
+				log.debug("Connection state: {}", state.getState());				
+				if (objectEncoding == 3 && !conn.getEncoding().equals(IConnection.Encoding.AMF3)) {
+		    		log.debug("Encoding didnt match, enforcing AMF3");
+		    		state.setEncoding(Encoding.AMF3);
+		    	}				
 			}
 			handlePendingCallResult(conn, invoke);
 			return;
 		}
 		
+		log.debug("Service provider: {}", serviceProvider);
 		if (serviceProvider == null) {
 			// Client doesn't support calling methods on him
 			call.setStatus(Call.STATUS_METHOD_NOT_FOUND);
@@ -335,15 +347,18 @@ public class EmbeddedRTMPClient extends BaseRTMPHandler {
 		}
 		
 		if (call instanceof IPendingServiceCall) {
+			log.debug("Pending service call");
 			IPendingServiceCall psc = (IPendingServiceCall) call;
 			Object result = psc.getResult();
 			if (result instanceof DeferredResult) {
+				log.debug("Result is DeferredResult");
 				DeferredResult dr = (DeferredResult) result;
 				dr.setInvokeId(invoke.getInvokeId());
 				dr.setServiceCall(psc);
 				dr.setChannel(channel);
 				conn.registerDeferredResult(dr);
 			} else {
+				log.debug("Result is not a DeferredResult");
 				Invoke reply = new Invoke();
 				reply.setCall(call);
 				reply.setInvokeId(invoke.getInvokeId());
@@ -355,7 +370,7 @@ public class EmbeddedRTMPClient extends BaseRTMPHandler {
 	/** {@inheritDoc} */
     @Override
 	protected void onChunkSize(RTMPConnection conn, Channel channel, Header source, ChunkSize chunkSize) {
-		    log.debug("onChunkSize");	
+		log.debug("onChunkSize");	
 		// TODO: implement this
 		log.info("ChunkSize is not implemented yet: {}", chunkSize);
 	}
@@ -363,7 +378,7 @@ public class EmbeddedRTMPClient extends BaseRTMPHandler {
 	/** {@inheritDoc} */
     @Override
 	protected void onPing(RTMPConnection conn, Channel channel,	Header source, Ping ping) {
-			    log.debug("onPing");	
+    	log.debug("onPing");	
 		switch (ping.getValue1()) {
 			case 6:
 				// The server wants to measure the RTT
@@ -383,7 +398,7 @@ public class EmbeddedRTMPClient extends BaseRTMPHandler {
 	/** {@inheritDoc} */
     @Override
 	protected void onSharedObject(RTMPConnection conn, Channel channel,	Header source, SharedObjectMessage object) {
-				    log.debug("onSharedObject");	
+		log.debug("onSharedObject");	
 		ClientSharedObject so = sharedObjects.get(object.getName());
 		if (so == null) {
 			log.error("Ignoring request for non-existend SO: {}", object);
@@ -393,12 +408,18 @@ public class EmbeddedRTMPClient extends BaseRTMPHandler {
 			log.error("Ignoring request for wrong-persistent SO: {}", object);
 			return;
 		}
-		if (log.isDebugEnabled()) {
-			log.debug("Received SO request: {}", object);
-		}
+		log.debug("Received SO request: {}", object);
 		so.dispatchEvent(object);
 	}
 
+	public Integer getObjectEncoding() {
+		return objectEncoding;
+	}
+
+	public void setObjectEncoding(Integer objectEncoding) {
+		this.objectEncoding = objectEncoding;
+	}   
+    
     private class RTMPClientConnManager implements IRTMPConnManager {
     	
     	private Map<Integer, RTMPConnection> connMap = new HashMap<Integer, RTMPConnection>();
@@ -414,6 +435,9 @@ public class EmbeddedRTMPClient extends BaseRTMPHandler {
 				RTMPConnection conn =  new RTMPMinaConnection();
 				conn.setId(clientId.incrementAndGet());
 				log.debug("Connection id set {}", conn.getId());
+				//check encoding
+				IConnection.Encoding encoding = conn.getEncoding();
+				log.debug("Connection encoding: {}", encoding);
 				if (appCtx == null) {
 					log.debug("Application context was not found, so scheduler will not be added");
 				} else {
@@ -448,4 +472,5 @@ public class EmbeddedRTMPClient extends BaseRTMPHandler {
 			return null;
 		}
     }
+
 }

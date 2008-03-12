@@ -6,6 +6,7 @@ package org.red5.myapp;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.red5.io.utils.ObjectMap;
 import org.red5.server.adapter.MultiThreadedApplicationAdapter;
 import org.red5.server.api.IConnection;
 import org.red5.server.api.IScope;
@@ -38,7 +39,7 @@ public class Application extends MultiThreadedApplicationAdapter {
 
 	@Override
 	public boolean connect(IConnection conn, IScope scope, Object[] params) {
-		log.debug("Connect called");
+		log.debug("connect called");
 		// Check if the user passed valid parameters
 		if (params == null || params.length == 0) {
 			log.debug("No parameters passed");
@@ -50,6 +51,7 @@ public class Application extends MultiThreadedApplicationAdapter {
 	            log.debug("Connection parameter: {} = {}", e.getKey(), e.getValue());
 	        } 			
 	        for(Object p : params) {
+	        	log.debug("Parameter class: {}", p.getClass().getName());
 	            log.debug("Parameter: {}", p.toString());
 	        } 			
 		}
@@ -72,7 +74,7 @@ public class Application extends MultiThreadedApplicationAdapter {
 	        // getting client parameters
 	        Map<String, Object> properties = conn.getConnectParams();
 	        for(Map.Entry<String, Object> e : properties.entrySet()) {
-	            log.debug("{} = {}", e.getKey(), e.getValue());
+	            log.debug("Parameter: {} = {}", e.getKey(), e.getValue());
 	        }        
         }
         return true;
@@ -117,10 +119,10 @@ public class Application extends MultiThreadedApplicationAdapter {
 		params.put("flashVer", "WIN 9,0,115,0");
 		params.put("audioCodecs", Integer.valueOf(1639)); 
 		params.put("videoFunction", Integer.valueOf(1)); 
-		params.put("pageUrl", "");
+		params.put("pageUrl", null);
 		params.put("path", "myapp");
 		params.put("capabilities", Integer.valueOf(15)); 
-		params.put("swfUrl", "");
+		params.put("swfUrl", null);
 		params.put("videoCodecs", Integer.valueOf(252)); 		
 		// extra parameters
 		params.put("var1", "A string");

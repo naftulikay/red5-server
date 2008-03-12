@@ -801,9 +801,11 @@ public class RTMPProtocolDecoder implements Constants, SimpleProtocolDecoder,
 	 */
 	protected Notify decodeNotifyOrInvoke(Notify notify, ByteBuffer in,
 			Header header, RTMP rtmp) {
+		log.debug("decodeNotifyOrInvoke");
 		// TODO: we should use different code depending on server or client mode
 		int start = in.position();
-		Input input;
+		Input input = null;
+		log.debug("Encoding: {}", rtmp.getEncoding());
 		if (rtmp.getEncoding() == Encoding.AMF3) {
 			input = new org.red5.io.amf3.Input(in);
 		} else {

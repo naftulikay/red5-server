@@ -151,10 +151,10 @@ public class EmbeddedRTMPClient extends BaseRTMPHandler {
 		params.put("flashVer", "WIN 9,0,115,0");
 		params.put("audioCodecs", Integer.valueOf(1639)); 
 		params.put("videoFunction", Integer.valueOf(1)); 
-		params.put("pageUrl", "");
+		params.put("pageUrl", null);
 		params.put("path", application);
 		params.put("capabilities", Integer.valueOf(15)); 
-		params.put("swfUrl", "");
+		params.put("swfUrl", null);
 		params.put("videoCodecs", Integer.valueOf(252)); 
 		
 		connect(server, port, params, connectCallback);

@@ -44,14 +44,14 @@ public class Deserializer {
 	public <T> T deserialize(Input in, Class<T> target) {
 
 		byte type = in.readDataType();
+		log.debug("Type: {}", type);
 
 		while (type == DataTypes.CORE_SKIP) {
 			type = in.readDataType();
+			log.debug("Type (skip): {}", type);
 		}
 
-		if (log.isDebugEnabled()) {
-			log.debug("Datatype: " + DataTypes.toStringValue(type));
-		}
+		log.debug("Datatype: " + DataTypes.toStringValue(type));
 
 		Object result;
 
@@ -60,27 +60,33 @@ public class Deserializer {
 				result = in.readNull();
 				break;
 			case DataTypes.CORE_BOOLEAN:
+				log.debug("Reading boolean");
 				result = in.readBoolean();
 				break;
 			case DataTypes.CORE_NUMBER:
+				log.debug("Reading number");
 				result = in.readNumber();
 				break;
 			case DataTypes.CORE_STRING:
+				log.debug("Reading string");
 				result = in.readString();
 				break;
 			case DataTypes.CORE_DATE:
 				result = in.readDate();
 				break;
 			case DataTypes.CORE_ARRAY:
+				log.debug("Reading array");
 				result = in.readArray(this);
 				break;
 			case DataTypes.CORE_MAP:
+				log.debug("Reading map");
 				result = in.readMap(this);
 				break;
 			case DataTypes.CORE_XML:
 				result = in.readXML();
 				break;
 			case DataTypes.CORE_OBJECT:
+				log.debug("Reading object");
 				result = in.readObject(this);
 				break;
 			case DataTypes.CORE_BYTEARRAY:

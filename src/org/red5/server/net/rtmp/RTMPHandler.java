@@ -126,10 +126,7 @@ public class RTMPHandler extends BaseRTMPHandler {
 				setChunkSize.getServiceParamMap().put("chunkSize",
 						chunkSize.getSize());
 				scope.sendOOBControlMessage((IConsumer) null, setChunkSize);
-				if (log.isDebugEnabled()) {
-					log.debug("Sending chunksize " + chunkSize + " to "
-							+ bs.getProvider());
-				}
+				log.debug("Sending chunksize {} to {}", chunkSize, bs.getProvider());
 			}
 		}
 	}
@@ -349,8 +346,8 @@ public class RTMPHandler extends BaseRTMPHandler {
 					// Evaluate request for AMF3 encoding
 					if (Integer.valueOf(3).equals(params.get("objectEncoding"))
 							&& call instanceof IPendingServiceCall) {
-						Object pcResult = ((IPendingServiceCall) call)
-								.getResult();
+						Object pcResult = ((IPendingServiceCall) call).getResult();
+						log.info("Pending call result type: {}", pcResult.getClass().getName());
 						Map<String, Object> result;
 						if (pcResult instanceof Map) {
 							result = (Map) pcResult;
@@ -391,8 +388,7 @@ public class RTMPHandler extends BaseRTMPHandler {
 								+ " (stream ID: " + source.getStreamId() + ")");
 					}
 				} catch (Throwable err) {
-					log.error("Error while invoking " + action
-							+ " on stream service.", err);
+					log.error("Error while invoking {} on stream service.", action, err);
 					status = getStatus(NS_FAILED).asStatus();
 					status.setDescription("Error while invoking " + action
 							+ " (stream ID: " + source.getStreamId() + ")");
@@ -408,7 +404,7 @@ public class RTMPHandler extends BaseRTMPHandler {
 			// Service calls, must be connected.
 			invokeCall(conn, call);
 		} else {
-			// Warn user attemps to call service without being connected
+			// Warn user attempted to call service without being connected
 			log.warn("Not connected, closing connection");
 			conn.close();
 		}
@@ -418,10 +414,7 @@ public class RTMPHandler extends BaseRTMPHandler {
 					&& (call.getStatus() == Call.STATUS_SUCCESS_VOID || call
 							.getStatus() == Call.STATUS_SUCCESS_NULL)) {
 				// This fixes a bug in the FP on Intel Macs.
-				if (log.isDebugEnabled()) {
-					log
-							.debug("Method does not have return value, do not reply");
-				}
+				log.debug("Method does not have return value, do not reply");
 				return;
 			}
 

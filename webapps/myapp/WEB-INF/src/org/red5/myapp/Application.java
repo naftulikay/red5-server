@@ -13,6 +13,7 @@ import org.red5.server.api.IScope;
 import org.red5.server.api.Red5;
 import org.red5.server.api.service.IPendingServiceCall;
 import org.red5.server.api.service.IPendingServiceCallback;
+import org.red5.server.api.service.IServiceCapableConnection;
 import org.red5.server.api.service.ServiceUtils;
 import org.red5.server.net.rtmp.EmbeddedRTMPClient;
 import org.slf4j.Logger;
@@ -140,6 +141,14 @@ public class Application extends MultiThreadedApplicationAdapter {
 		client.disconnect();
 	}	
 	
+	public void testEcho(String message) {
+		log.info("Test echo");
+		IConnection conn = Red5.getConnectionLocal();
+		log.info("Connection: {}", conn);
+		log.info("ServiceCapable? {}", (conn instanceof IServiceCapableConnection));
+		ServiceUtils.invokeOnConnection(conn, "onResponse", new Object[]{message});		
+	}
+	
 	// Functions called by client 1 that then invoke a function on the server
 	// through client 2 (RTMPClient)
 	public void testInvokeNoParams() {
@@ -152,9 +161,9 @@ public class Application extends MultiThreadedApplicationAdapter {
 		client.invoke("invokeParams", new Object[] { 1, 2, 3 },	new InvokeCallback());
 	}
 
-	public void invokeAMF3Params(ByteArray b) {
-		log.info("InvokeAMF3Params");
-		
+	public void testInvokeNoParamsWithResult() {
+		log.info("Test invokeNoParams with Result");		
+		client.invoke("invokeNoParamsWithResult", new InvokeCallback(Red5.getConnectionLocal(), "onResponse"));
 	}
 	
 	public void testInvokeAMF3Params() {
@@ -165,11 +174,6 @@ public class Application extends MultiThreadedApplicationAdapter {
 		client.invoke("invokeAMF3Params", new Object[] { b },	new InvokeCallback());
 	}
 
-	public void testInvokeNoParamsWithResult() {
-		log.info("Test invokeNoParams with Result");		
-		client.invoke("invokeNoParamsWithResult", new InvokeCallback(Red5.getConnectionLocal(), "onResponse"));
-	}	
-	
 	// Functions invoked from RTMPClient
 	public void invokeNoParams() {
 		log.info("invokeNoParams called");
@@ -182,6 +186,10 @@ public class Application extends MultiThreadedApplicationAdapter {
 	public String invokeNoParamsWithResult() {
 		log.info("invokeNoParamsWithResult called");
 		return "Ok";
+	}	
+	
+	public void invokeAMF3Params(ByteArray b) {
+		log.info("InvokeAMF3Params");
 	}	
 	
 	public String getRemoteIP() {
@@ -213,19 +221,25 @@ public class Application extends MultiThreadedApplicationAdapter {
 		private String methodName;
 		
 		public InvokeCallback() {			
+			log.info("Creating invoke callback without a method name or connection");
 		}
 
 		public InvokeCallback(IConnection connection, String methodName) {	
 			this.connection = connection;
 			this.methodName = methodName;
+			log.info("Creating invoke callback with - method name: {}, connection: {}", methodName, connection);
 		}
 		
 		public void resultReceived(IPendingServiceCall call) {
-			log.info("The call was completed: {}", call.getResult());
+			log.info("The call: {} was completed with result: {}", call.getResult());
 			//if connection is not null then communicate back to the caller
 			if (connection != null) {
 				//send a result back to the original caller
-				ServiceUtils.invokeOnConnection(connection, methodName, new Object[]{call.getResult()});
+				if (ServiceUtils.invokeOnConnection(connection, methodName, new Object[]{call.getResult()})) {
+					log.info("Method call to flex/flash client suceeded");
+				} else {
+					log.info("Method call to flex/flash client failed");					
+				}
 			}
 		}
 	}

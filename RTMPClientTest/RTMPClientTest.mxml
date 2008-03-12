@@ -107,6 +107,14 @@
 				}
 			}
 			
+			private function invokeEcho():void {
+				if (clientCreated) {
+					nc.call("testEcho", null, echoString.text);
+				} else {
+					Alert.show("You must create a client first");
+				}
+			}			
+			
 			//simple responder
 		    public function handleResponse(o:Object):void {
 				log("Call response: " + o);
@@ -181,6 +189,11 @@
 		</mx:HBox>
 		<mx:RadioButton x="292" y="10" label="AMF0" selected="true" id="amf0" groupName="amf"/>
 		<mx:RadioButton x="354" y="10" label="AMF3" groupName="amf" id="amf3"/>
-		<mx:TextArea x="10" y="171" width="516" height="140" id="messages" editable="false" wordWrap="true"/>
+		<mx:TextArea x="10" y="156" width="516" height="155" id="messages" editable="false" wordWrap="true"/>
+		<mx:HBox x="10" y="126" width="516">
+			<mx:Label text="Echo" fontWeight="bold"/>
+			<mx:TextInput id="echoString" maxChars="50"/>
+			<mx:Button label="Send" click="invokeEcho()"/>
+		</mx:HBox>
 	</mx:Panel>
 </mx:Application>

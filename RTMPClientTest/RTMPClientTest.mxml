@@ -37,7 +37,7 @@
 				}
 				log("Encoding: AMF" + nc.objectEncoding);
 				
-				nc.connect("rtmp://127.0.0.1/myapp");
+				nc.connect("rtmp://localhost/myapp");
 			}
 			
 			public function disconnect():void {
@@ -94,6 +94,14 @@
 				if (clientCreated) {
 					var responder:Responder = new Responder(handleResponse, null);
 					nc.call("testInvokeNoParamsWithResult", responder);
+				} else {
+					Alert.show("You must create a client first");
+				}
+			}
+			
+			private function invokeAMF3Params():void {
+				if (clientCreated) {
+					nc.call("testInvokeAMF3Params", null);
 				} else {
 					Alert.show("You must create a client first");
 				}
@@ -169,6 +177,7 @@
 			<mx:Button label="No Params" click="invokeNoParams()"/>
 			<mx:Button label="With Params" click="invokeParams()"/>
 			<mx:Button label="No Params + Result" click="invokeNoParamsWithResult()"/>
+			<mx:Button label="AMF3 Params" click="invokeAMF3Params()"/>
 		</mx:HBox>
 		<mx:RadioButton x="292" y="10" label="AMF0" selected="true" id="amf0" groupName="amf"/>
 		<mx:RadioButton x="354" y="10" label="AMF3" groupName="amf" id="amf3"/>

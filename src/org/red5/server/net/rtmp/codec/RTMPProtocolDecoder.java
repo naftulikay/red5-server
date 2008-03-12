@@ -801,12 +801,14 @@ public class RTMPProtocolDecoder implements Constants, SimpleProtocolDecoder,
 	 */
 	protected Notify decodeNotifyOrInvoke(Notify notify, ByteBuffer in,
 			Header header, RTMP rtmp) {
-		log.debug("decodeNotifyOrInvoke");
 		// TODO: we should use different code depending on server or client mode
 		int start = in.position();
-		Input input = null;
-		log.debug("Encoding: {}", rtmp.getEncoding());
-		if (rtmp.getEncoding() == Encoding.AMF3) {
+		Input input;
+		// for response, the action string and invokeId is always encoded as AMF0
+		// we use the first byte to decide which encoding to use.
+		byte tmp = in.get();
+		in.position(start);
+		if (tmp == AMF.TYPE_AMF3_OBJECT) {
 			input = new org.red5.io.amf3.Input(in);
 		} else {
 			input = new org.red5.io.amf.Input(in);
@@ -830,6 +832,13 @@ public class RTMPProtocolDecoder implements Constants, SimpleProtocolDecoder,
 			notify.setInvokeId(invokeId);
 		}
 
+		// now go back to the actual encoding to decode parameters
+		if (rtmp.getEncoding() == Encoding.AMF3) {
+			input = new org.red5.io.amf3.Input(in);
+		} else {
+			input = new org.red5.io.amf.Input(in);
+		}
+		
 		Object[] params = new Object[] {};
 
 		if (in.hasRemaining()) {

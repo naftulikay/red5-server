@@ -15,6 +15,9 @@ import org.red5.server.api.service.IPendingServiceCall;
 import org.red5.server.api.service.IPendingServiceCallback;
 import org.red5.server.api.service.ServiceUtils;
 import org.red5.server.net.rtmp.EmbeddedRTMPClient;
+
+import org.red5.io.amf3.ByteArray;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,20 +42,20 @@ public class Application extends MultiThreadedApplicationAdapter {
 
 	@Override
 	public boolean connect(IConnection conn, IScope scope, Object[] params) {
-		log.debug("connect called");
+		log.info("connect called");
 		// Check if the user passed valid parameters
 		if (params == null || params.length == 0) {
-			log.debug("No parameters passed");
+			log.info("No parameters passed");
 		} else {
-			log.debug("Params length: {}", params.length);
+			log.info("Params length: {}", params.length);
 	        // getting client parameters
 	        Map<String, Object> properties = conn.getConnectParams();
 	        for(Map.Entry<String, Object> e : properties.entrySet()) {
-	            log.debug("Connection parameter: {} = {}", e.getKey(), e.getValue());
+	            log.info("Connection parameter: {} = {}", e.getKey(), e.getValue());
 	        } 			
 	        for(Object p : params) {
-	        	log.debug("Parameter class: {}", p.getClass().getName());
-	            log.debug("Parameter: {}", p.toString());
+	        	log.info("Parameter class: {}", p.getClass().getName());
+	            log.info("Parameter: {}", p.toString());
 	        } 			
 		}
 		// Call original method of parent class
@@ -62,19 +65,19 @@ public class Application extends MultiThreadedApplicationAdapter {
 		}
 
 		String clientId = conn.getClient().getId();
-		log.debug("Client id: {}", clientId);
+		log.info("Client id: {}", clientId);
     	
 		return true;
 	}	
 	
 	@Override	
     public boolean appConnect(IConnection conn, Object[] params) {
-        log.debug("appConnect - client id: {}", conn.getClient().getId());
+        log.info("appConnect - client id: {}", conn.getClient().getId());
         if (log.isDebugEnabled()) {
 	        // getting client parameters
 	        Map<String, Object> properties = conn.getConnectParams();
 	        for(Map.Entry<String, Object> e : properties.entrySet()) {
-	            log.debug("Parameter: {} = {}", e.getKey(), e.getValue());
+	            log.info("Parameter: {} = {}", e.getKey(), e.getValue());
 	        }        
         }
         return true;
@@ -94,7 +97,7 @@ public class Application extends MultiThreadedApplicationAdapter {
 
 	@Override
 	public void disconnect(IConnection conn, IScope scope) {
-		log.debug("Disconnect called");	
+		log.info("Disconnect called");	
 		//if its a due to a browser close or error make sure the client is disconnected as well
 		if (client != null) {
 			client.disconnect();
@@ -103,14 +106,15 @@ public class Application extends MultiThreadedApplicationAdapter {
 	}		
 	
 	public void createClient(Integer amfVersion) {
-		log.debug("Creating client - ip: {} port: {}", remoteIP, remotePort);
+		log.info("Creating client - ip: {} port: {} amf: {}", remoteIP, remotePort);
+		log.info("Using amf version " + amfVersion);
 		
 		client = new EmbeddedRTMPClient();
 		client.connect(remoteIP, remotePort, "myapp", new ConnectCallback());
 	}
 
 	public void createClientWithConnectParams(Integer amfVersion) {
-		log.debug("Creating client - ip: {} port: {}", remoteIP, remotePort);
+		log.info("Creating client - ip: {} port: {}", remoteIP, remotePort);
 		Map<String, Object> params = new HashMap<String, Object>();
 		params.put("app", "myapp");
 		params.put("tcUrl", "rtmp://"+remoteIP+':'+remotePort+"/myapp");
@@ -134,24 +138,33 @@ public class Application extends MultiThreadedApplicationAdapter {
 	}	
 	
 	public void destroyClient() {
-		log.debug("Destroy client");
+		log.info("Destroy client");
 		client.disconnect();
 	}	
 	
 	// Functions called by client 1 that then invoke a function on the server
 	// through client 2 (RTMPClient)
 	public void testInvokeNoParams() {
-		log.debug("Test invokeNoParams");		
+		log.info("Test invokeNoParams");		
 		client.invoke("invokeNoParams", new InvokeCallback());
 	}
 
 	public void testInvokeParams() {
-		log.debug("Test invokeParams");
+		log.info("Test invokeParams");
 		client.invoke("invokeParams", new Object[] { 1, 2, 3 },	new InvokeCallback());
 	}
 
+	public void testInvokeAMF3Params() 
+	{
+		log.info("Test invokeAMF3Params");
+		ByteArray b = new ByteArray();
+		b.writeByte((byte)1);
+		b.position(0);
+		client.invoke("invokeAMF3Params", new Object[] { b },	new InvokeCallback());
+	}
+
 	public void testInvokeNoParamsWithResult() {
-		log.debug("Test invokeNoParams with Result");		
+		log.info("Test invokeNoParams with Result");		
 		client.invoke("invokeNoParamsWithResult", new InvokeCallback(Red5.getConnectionLocal(), "onResponse"));
 	}	
 	

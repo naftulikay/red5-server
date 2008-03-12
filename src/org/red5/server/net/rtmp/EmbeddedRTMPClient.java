@@ -34,6 +34,7 @@ import org.red5.io.object.Deserializer;
 import org.red5.io.object.Serializer;
 import org.red5.server.api.IConnection;
 import org.red5.server.api.Red5;
+import org.red5.server.api.IConnection.Encoding;
 import org.red5.server.api.scheduling.ISchedulingService;
 import org.red5.server.api.service.IPendingServiceCall;
 import org.red5.server.api.service.IPendingServiceCallback;
@@ -146,7 +147,7 @@ public class EmbeddedRTMPClient extends BaseRTMPHandler {
 		Map<String, Object> params = new HashMap<String, Object>();
 		params.put("app", application);
 		params.put("tcUrl", "rtmp://"+server+':'+port+'/'+application);
-		params.put("objectEncoding", Integer.valueOf(0));
+		params.put("objectEncoding", Integer.valueOf(3));
 		params.put("fpad", Boolean.FALSE);
 		params.put("flashVer", "WIN 9,0,115,0");
 		params.put("audioCodecs", Integer.valueOf(1639)); 
@@ -315,6 +316,11 @@ public class EmbeddedRTMPClient extends BaseRTMPHandler {
 		final IServiceCall call = invoke.getCall();
 		if (call.getServiceMethodName().equals("_result")
 				|| call.getServiceMethodName().equals("_error")) {
+			final IPendingServiceCall pendingCall = conn.getPendingCall(invoke
+					.getInvokeId());
+			if (pendingCall != null && "connect".equals(pendingCall.getServiceMethodName())) {
+				conn.getState().setEncoding(Encoding.AMF3);
+			}
 			handlePendingCallResult(conn, invoke);
 			return;
 		}

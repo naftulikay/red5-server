@@ -21,13 +21,12 @@ package org.red5.server.net.rtmp;
 
 import java.net.InetSocketAddress;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.locks.ReadWriteLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.apache.mina.transport.socket.nio.SocketConnector;
 import org.red5.io.object.Deserializer;
@@ -42,14 +41,6 @@ import org.red5.server.api.service.IServiceCall;
 import org.red5.server.api.service.IServiceCapableConnection;
 import org.red5.server.api.service.IServiceInvoker;
 import org.red5.server.api.so.IClientSharedObject;
-import org.red5.server.net.rtmp.BaseRTMPHandler;
-import org.red5.server.net.rtmp.Channel;
-import org.red5.server.net.rtmp.DeferredResult;
-import org.red5.server.net.rtmp.EdgeRTMPMinaConnection;
-import org.red5.server.net.rtmp.IRTMPConnManager;
-import org.red5.server.net.rtmp.RTMPConnection;
-import org.red5.server.net.rtmp.RTMPMinaConnection;
-import org.red5.server.net.rtmp.RTMPMinaIoHandler;
 import org.red5.server.net.rtmp.codec.RTMP;
 import org.red5.server.net.rtmp.codec.RTMPCodecFactory;
 import org.red5.server.net.rtmp.event.ChunkSize;
@@ -57,7 +48,7 @@ import org.red5.server.net.rtmp.event.Invoke;
 import org.red5.server.net.rtmp.event.Notify;
 import org.red5.server.net.rtmp.event.Ping;
 import org.red5.server.net.rtmp.message.Header;
-import org.red5.server.net.rtmpt.RTMPTConnection;
+import org.red5.server.scheduling.QuartzSchedulingService;
 import org.red5.server.service.Call;
 import org.red5.server.service.MethodNotFoundException;
 import org.red5.server.service.PendingCall;
@@ -257,7 +248,7 @@ public class EmbeddedRTMPClient extends BaseRTMPHandler {
 	 * @param callback                Callback handler
 	 */
 	public void invoke(String method, IPendingServiceCallback callback) {
-	    log.debug("invoke method: {} params {} callback {}", new Object[]{method, callback});			
+	    log.debug("invoke method: {} callback: {}", new Object[]{method, callback});			
 		IConnection conn = Red5.getConnectionLocal();
 		if (conn == null) {
 		    log.info("Connection was null 1");
@@ -280,7 +271,7 @@ public class EmbeddedRTMPClient extends BaseRTMPHandler {
 	 * @param callback               Callback object
 	 */
 	public void invoke(String method, Object[] params, IPendingServiceCallback callback) {
-	    log.debug("invoke method: {} params {} callback {}", new Object[]{method, params, callback});		
+	    log.debug("invoke method: {} params: {} callback: {}", new Object[]{method, params, callback});		
 		IConnection conn = Red5.getConnectionLocal();
 		if (conn == null) {
 		    log.info("Connection was null 1");
@@ -319,6 +310,7 @@ public class EmbeddedRTMPClient extends BaseRTMPHandler {
 	    log.debug("Connection encoding: {} channel: {} header: {}", new Object[]{conn.getEncoding(), channel, source});
 		final IServiceCall call = invoke.getCall();
 		String serviceMethodName = call.getServiceMethodName();
+		log.debug("Service method name: {}", serviceMethodName);
 		if ("_result".equals(serviceMethodName) || "_error".equals(serviceMethodName)) {
 			log.debug("Invoke id: {}", invoke.getInvokeId());
 			final IPendingServiceCall pendingCall = conn.getPendingCall(invoke.getInvokeId());
@@ -332,7 +324,21 @@ public class EmbeddedRTMPClient extends BaseRTMPHandler {
 		    		state.setEncoding(Encoding.AMF3);
 		    	}				
 			}
-			handlePendingCallResult(conn, invoke);
+			// The client sent a response to a previously made call.
+			Object[] args = call.getArguments();
+			if (args != null && args.length > 0) {
+				log.debug("Call has {} args", args.length);
+				pendingCall.setResult(args[0]);
+			}
+			log.debug("Number of callbacks: {}", pendingCall.getCallbacks().size());
+            for (IPendingServiceCallback callback : Collections.unmodifiableSet(pendingCall.getCallbacks())) {
+                try {
+                	log.debug("Callback class name: {}", callback.getClass().getName());
+                    callback.resultReceived(pendingCall);
+                } catch (Exception e) {
+                    log.error("Error while executing callback {} {}", callback, e);
+                }
+			}
 			return;
 		}
 		
@@ -438,13 +444,15 @@ public class EmbeddedRTMPClient extends BaseRTMPHandler {
 				//check encoding
 				IConnection.Encoding encoding = conn.getEncoding();
 				log.debug("Connection encoding: {}", encoding);
+				ISchedulingService scheduler = null;
 				if (appCtx == null) {
-					log.debug("Application context was not found, so scheduler will not be added");
+					log.debug("Application context was not found, a new scheduler will be added");
+					scheduler = new QuartzSchedulingService();
 				} else {
-					ISchedulingService scheduler = (ISchedulingService) appCtx.getBean(ISchedulingService.BEAN_NAME);
+					scheduler = (ISchedulingService) appCtx.getBean(ISchedulingService.BEAN_NAME);
 					log.debug("Found scheduler");
-					conn.setSchedulingService(scheduler);
 				}
+				conn.setSchedulingService(scheduler);
 				connMap.put(conn.getId(), conn);
 				log.debug("Connection added to the map");
 				return conn;

@@ -316,11 +316,11 @@ public class EmbeddedRTMPClient extends BaseRTMPHandler {
 		final IServiceCall call = invoke.getCall();
 		if (call.getServiceMethodName().equals("_result")
 				|| call.getServiceMethodName().equals("_error")) {
-//			final IPendingServiceCall pendingCall = conn.getPendingCall(invoke
-//					.getInvokeId());
-//			if (pendingCall != null && "connect".equals(pendingCall.getServiceMethodName())) {
-//				conn.getState().setEncoding(Encoding.AMF3);
-//			}
+			final IPendingServiceCall pendingCall = conn.getPendingCall(invoke
+					.getInvokeId());
+			if (pendingCall != null && "connect".equals(pendingCall.getServiceMethodName())) {
+				conn.getState().setEncoding(Encoding.AMF3);
+			}
 			handlePendingCallResult(conn, invoke);
 			return;
 		}

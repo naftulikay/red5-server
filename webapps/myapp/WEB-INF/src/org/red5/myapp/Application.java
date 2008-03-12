@@ -154,6 +154,11 @@ public class Application extends MultiThreadedApplicationAdapter {
 		client.invoke("invokeParams", new Object[] { 1, 2, 3 },	new InvokeCallback());
 	}
 
+	public void invokeAMF3Params(ByteArray b) {
+		log.info("InvokeAMF3Params");
+		
+	}
+	
 	public void testInvokeAMF3Params() 
 	{
 		log.info("Test invokeAMF3Params");

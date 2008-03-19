@@ -257,7 +257,17 @@ public class FilePersistence extends RamPersistence implements IPersistenceStore
 		String filename = getObjectFilename(object);
 		Resource resFile = resources.getResource(filename);
 		try {
-			ByteBuffer buf = ByteBuffer.allocate(1024);
+			ByteBuffer buf;
+			int initialSize = 8192;
+			if (resFile.exists()) {
+				try {
+					// We likely also need the original file size when writing object
+					initialSize += (int) resFile.getFile().length();
+				} catch (IOException e) {
+					// Ignore errors while determining file size
+				}
+			}
+			buf = ByteBuffer.allocate(initialSize);
 			try {
 				buf.setAutoExpand(true);
 				Output out = new Output(buf);

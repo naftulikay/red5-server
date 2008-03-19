@@ -23,10 +23,12 @@ import java.util.List;
 
 import org.apache.mina.common.ByteBuffer;
 import org.apache.mina.filter.codec.ProtocolCodecException;
+import org.red5.server.api.IConnection;
 
 public interface SimpleProtocolDecoder {
 	
 	/**
+	 * @param conn Connection object
 	 * @param state Stores state for the protocol, ProtocolState is just a marker interface
 	 * @param in ByteBuffer of data to be decoded
 	 * @return one of three possible values. 
@@ -35,15 +37,16 @@ public interface SimpleProtocolDecoder {
 	 *     Object : something was decoded, continue
 	 * @throws ProtocolCodecException
 	 */
-	public Object decode(ProtocolState state, ByteBuffer in) throws Exception;
+	public Object decode(IConnection conn, ProtocolState state, ByteBuffer in) throws Exception;
 
 	/**
 	 * Decode all available objects in buffer.
 	 * 
+	 * @param conn Connection object
 	 * @param state Stores state for the protocol
 	 * @param buffer ByteBuffer of data to be decoded
 	 * @return a list of decoded objects, may be empty if nothing could be decoded
 	 */
-    public List decodeBuffer(ProtocolState state, ByteBuffer buffer);
+    public List decodeBuffer(IConnection conn, ProtocolState state, ByteBuffer buffer);
 	
 }

@@ -100,7 +100,7 @@ public class AMFGatewayServlet extends HttpServlet {
 		ByteBuffer reqBuffer = ByteBuffer.allocate(req.getContentLength());
 		ServletUtils.copy(req.getInputStream(),reqBuffer.asOutputStream());
 		reqBuffer.flip();
-		RemotingPacket packet = (RemotingPacket) codecFactory.getSimpleDecoder().decode(null, reqBuffer);
+		RemotingPacket packet = (RemotingPacket) codecFactory.getSimpleDecoder().decode(null, null, reqBuffer);
 		String path = req.getContextPath();
 		if (req.getPathInfo() != null)
 			path += req.getPathInfo();

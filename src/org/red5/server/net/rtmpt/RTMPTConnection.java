@@ -153,7 +153,7 @@ public class RTMPTConnection extends RTMPConnection {
 		readBytes += data.limit();
 		this.buffer.put(data);
 		this.buffer.flip();
-		return this.decoder.decodeBuffer(this.state, this.buffer);
+		return this.decoder.decodeBuffer(this, this.state, this.buffer);
 	}
 
 	/**

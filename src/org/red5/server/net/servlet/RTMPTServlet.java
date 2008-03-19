@@ -20,9 +20,11 @@ package org.red5.server.net.servlet;
  */
 
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
+import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServlet;
@@ -32,6 +34,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.mina.common.ByteBuffer;
+import org.red5.server.net.protocol.ProtocolException;
 import org.red5.server.net.rtmp.codec.RTMP;
 import org.red5.server.net.rtmpt.RTMPTConnection;
 import org.red5.server.net.rtmpt.RTMPTHandler;
@@ -87,8 +90,25 @@ public class RTMPTServlet extends HttpServlet {
 	/**
 	 * Holds a map of client id -> client object.
 	 */
-	protected HashMap rtmptClients = new HashMap(); 
+	protected Map<String, RTMPTConnection> rtmptClients = new ConcurrentHashMap<String, RTMPTConnection>(); 
 	
+	@Override
+	public void init(ServletConfig config) throws ServletException {
+		super.init(config);
+		
+		
+	}
+
+	@Override
+	public void destroy() {
+		// Cleanup connections
+		for (RTMPTConnection conn: rtmptClients.values()) {
+			conn.close();
+		}
+		rtmptClients.clear();
+		super.destroy();
+	}
+
 	/**
 	 * Return an error message to the client.
 	 * 
@@ -189,12 +209,18 @@ public class RTMPTServlet extends HttpServlet {
 	 */
 	protected RTMPTConnection getClient(HttpServletRequest req) {
 		String id = getClientId(req);
-		if (id == "" || !rtmptClients.containsKey(id)) {
+		if (id == null || "".equals(id)) {
 			log.debug("Unknown client id: " + id);
 			return null;
 		}
 		
-		return (RTMPTConnection) rtmptClients.get(id);
+		RTMPTConnection result = rtmptClients.get(id);
+		if (result == null) {
+			log.debug("Unknown client id: " + id);
+			return null;
+		}
+		
+		return result;
 	}
 
 	/**
@@ -248,9 +274,7 @@ public class RTMPTServlet extends HttpServlet {
 		
 		RTMPTHandler handler = (RTMPTHandler) getServletContext().getAttribute(RTMPTHandler.HANDLER_ATTRIBUTE);
 		RTMPTConnection client = new RTMPTConnection(handler);
-		synchronized (rtmptClients) {
-			rtmptClients.put(client.getId(), client);
-		}
+		rtmptClients.put(client.getId(), client);
 		
 		// Return connection id to client
 		returnMessage(client.getId() + "\n", resp);
@@ -276,10 +300,7 @@ public class RTMPTServlet extends HttpServlet {
 			return;
 		}
 
-		synchronized (rtmptClients) {
-			rtmptClients.remove(client.getId());
-		}
-		
+		rtmptClients.remove(client.getId());
 		RTMPTHandler handler = (RTMPTHandler) getServletContext().getAttribute(RTMPTHandler.HANDLER_ATTRIBUTE);
 		client.setServletRequest(req);
 		handler.connectionClosed(client, (RTMP) client.getState());
@@ -303,9 +324,7 @@ public class RTMPTServlet extends HttpServlet {
 			handleBadRequest("Unknown client.", resp);
 			return;
 		} else if (client.getState().getState() == RTMP.STATE_DISCONNECTED) {
-			synchronized (rtmptClients) {
-				rtmptClients.remove(client.getId());
-			}
+			rtmptClients.remove(client.getId());
 			handleBadRequest("Connection already closed.", resp);
 			return;
 		}
@@ -322,6 +341,14 @@ public class RTMPTServlet extends HttpServlet {
 		List messages;
 		try {
 			messages = client.decode(data);
+		} catch (ProtocolException e) {
+			// Error already has been logged
+			client.close();
+			messages = null;
+		} catch (Exception e) {
+			log.error("Error decoding buffer", e);
+			client.close();
+			messages = null;
 		} finally {
 			data.release();
 		}
@@ -364,9 +391,7 @@ public class RTMPTServlet extends HttpServlet {
 			handleBadRequest("Unknown client.", resp);
 			return;
 		} else if (client.getState().getState() == RTMP.STATE_DISCONNECTED) {
-			synchronized (rtmptClients) {
-				rtmptClients.remove(client.getId());
-			}
+			rtmptClients.remove(client.getId());
 			handleBadRequest("Connection already closed.", resp);
 			return;
 		}

@@ -27,6 +27,7 @@ import org.apache.mina.filter.codec.ProtocolCodecException;
 import org.apache.mina.filter.codec.ProtocolDecoder;
 import org.apache.mina.filter.codec.ProtocolDecoderOutput;
 import org.red5.server.net.protocol.ProtocolState;
+import org.red5.server.net.rtmp.RTMPMinaConnection;
 
 public class RTMPMinaProtocolDecoder extends RTMPProtocolDecoder implements ProtocolDecoder {
 
@@ -34,6 +35,7 @@ public class RTMPMinaProtocolDecoder extends RTMPProtocolDecoder implements Prot
             ProtocolDecoderOutput out ) throws ProtocolCodecException {
 		
     	final ProtocolState state = (ProtocolState) session.getAttribute(ProtocolState.SESSION_KEY);
+    	final RTMPMinaConnection conn = (RTMPMinaConnection) session.getAttachment();
     	
 		ByteBuffer buf = (ByteBuffer) session.getAttribute("buffer");
 		if(buf==null){
@@ -44,7 +46,7 @@ public class RTMPMinaProtocolDecoder extends RTMPProtocolDecoder implements Prot
 		buf.put(in);
 		buf.flip();
 		
-		List objects = decodeBuffer(state, buf);
+		List objects = decodeBuffer(conn, state, buf);
 		if (objects == null || objects.isEmpty())
 			return;
 			

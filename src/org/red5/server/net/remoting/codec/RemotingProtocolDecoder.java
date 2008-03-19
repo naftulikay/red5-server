@@ -29,6 +29,7 @@ import org.apache.mina.common.ByteBuffer;
 import org.apache.mina.common.IoSession;
 import org.red5.io.amf.Input;
 import org.red5.io.object.Deserializer;
+import org.red5.server.api.IConnection;
 import org.red5.server.net.protocol.ProtocolState;
 import org.red5.server.net.protocol.SimpleProtocolDecoder;
 import org.red5.server.net.remoting.message.RemotingCall;
@@ -50,11 +51,11 @@ public class RemotingProtocolDecoder implements SimpleProtocolDecoder {
 	
 	
 	
-	public List decodeBuffer(ProtocolState state, ByteBuffer buffer) {
+	public List decodeBuffer(IConnection conn, ProtocolState state, ByteBuffer buffer) {
 		List list = new LinkedList();
 		Object packet = null;
 		try {
-			packet = decode(state, buffer);
+			packet = decode(conn, state, buffer);
 		} catch (Exception e) {
 			log.error("Decoding error",e);
 			packet = null;
@@ -65,7 +66,7 @@ public class RemotingProtocolDecoder implements SimpleProtocolDecoder {
 
 
 
-	public Object decode(ProtocolState state, ByteBuffer in) throws Exception {
+	public Object decode(IConnection conn, ProtocolState state, ByteBuffer in) throws Exception {
 		skipHeaders(in); 
 		List calls = decodeCalls(in);	
 		return new RemotingPacket(calls);

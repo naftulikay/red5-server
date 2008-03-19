@@ -20,14 +20,13 @@ package org.red5.server.net.protocol;
  */
 
 public class ProtocolException extends RuntimeException {
-
-	protected String message = null;
 	
 	public ProtocolException(String message) {
-		this.message = message;
+		super(message);
 	}
 
-	public String getMessage() {
-		return message;
+	public ProtocolException(String message, Throwable cause) {
+		super(message, cause);
 	}
+
 }

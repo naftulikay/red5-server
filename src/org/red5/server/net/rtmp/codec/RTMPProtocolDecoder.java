@@ -30,6 +30,7 @@ import org.apache.mina.common.ByteBuffer;
 import org.red5.io.amf.Input;
 import org.red5.io.object.Deserializer;
 import org.red5.io.utils.BufferUtils;
+import org.red5.server.api.IConnection;
 import org.red5.server.net.protocol.ProtocolException;
 import org.red5.server.net.protocol.ProtocolState;
 import org.red5.server.net.protocol.SimpleProtocolDecoder;
@@ -73,7 +74,7 @@ public class RTMPProtocolDecoder implements Constants, SimpleProtocolDecoder, IE
 		this.deserializer = deserializer;
 	}
 	
-    public List decodeBuffer(ProtocolState state, ByteBuffer buffer) {
+    public List decodeBuffer(IConnection conn, ProtocolState state, ByteBuffer buffer) {
 		
     	List<Object> result = new LinkedList<Object>();
     	
@@ -84,7 +85,7 @@ public class RTMPProtocolDecoder implements Constants, SimpleProtocolDecoder, IE
 				if(state.canStartDecoding(remaining)) state.startDecoding();
 			    else break;
 			   
-			    final Object decodedObject = decode( state, buffer );
+			    final Object decodedObject = decode( conn, state, buffer );
 			    
 			    if(state.hasDecodedObject()) result.add(decodedObject);
 			    else if( state.canContinueDecoding() ) 	continue; 
@@ -94,10 +95,16 @@ public class RTMPProtocolDecoder implements Constants, SimpleProtocolDecoder, IE
 			}
 		}
 		catch(ProtocolException  pvx){
-			log.error("Error decoding buffer",pvx);
+			// An error already has been logged
+			if (conn != null) {
+				conn.close();
+			}
 		}
 		catch(Exception ex){
 			log.error("Error decoding buffer",ex);
+			if (conn != null) {
+				conn.close();
+			}
 		}
 		finally {
 			buffer.compact();
@@ -105,7 +112,7 @@ public class RTMPProtocolDecoder implements Constants, SimpleProtocolDecoder, IE
 		return result;
 	}
     
-	public Object decode(ProtocolState state, ByteBuffer in) throws ProtocolException {
+	public Object decode(IConnection conn, ProtocolState state, ByteBuffer in) throws ProtocolException {
 		int start = in.position();
 		try {
 			final RTMP rtmp = (RTMP) state;
@@ -578,7 +585,6 @@ public class RTMPProtocolDecoder implements Constants, SimpleProtocolDecoder, IE
 	 */
 	public Ping decodePing(ByteBuffer in) {
 		final Ping ping = new Ping();
-		ping.setDebug(in.getHexDump());
 		ping.setValue1(in.getShort());
 		ping.setValue2(in.getInt());
 		if(in.hasRemaining()) ping.setValue3(in.getInt());

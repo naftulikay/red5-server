@@ -115,19 +115,35 @@ public class CaptureViewerServlet extends HttpServlet {
 								
 								out.write("<div class=\"time\">TIME: " + time+ " READ: "+read
 										+ "</div>");
+							} else {
+								break;
 							}
 						
 						}
 					
-						
-						
 						final int remaining = in.remaining();
+						if (remaining == 0)
+							break;
+						
 						if (state.canStartDecoding(remaining))
 							state.startDecoding();
 						else
 							break;
 
-						final Object decodedObject = decoder.decode(state, in);
+						Object decodedObject;
+						try {
+							decodedObject = decoder.decode(null, state, in);
+						} catch (ProtocolException e) {
+							e.printStackTrace();
+							out.write("<pre>");
+							e.printStackTrace(out);
+							out.write("</pre>");
+							state.startDecoding();
+							if (!in.hasRemaining())
+								break;
+							
+							continue;
+						}
 
 						if (state.hasDecodedObject()) {
 							// log.debug(decodedObject);
@@ -135,6 +151,7 @@ public class CaptureViewerServlet extends HttpServlet {
 							
 
 							if (decodedObject instanceof Packet) {
+								out.write("<p>Packet: " + ((Packet) decodedObject).getHeader()+"</p>");
 								out.write(formatHTML((Packet) decodedObject,
 										id++, 0));
 							} else if (decodedObject instanceof ByteBuffer) {

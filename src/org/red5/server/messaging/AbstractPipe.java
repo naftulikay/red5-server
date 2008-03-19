@@ -19,9 +19,9 @@ package org.red5.server.messaging;
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA 
  */
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -36,9 +36,9 @@ import org.apache.commons.logging.LogFactory;
 public abstract class AbstractPipe implements IPipe {
 	private static final Log log = LogFactory.getLog(AbstractPipe.class);
 	
-	protected List<IConsumer> consumers = new ArrayList<IConsumer>();
-	protected List<IProvider> providers = new ArrayList<IProvider>();
-	protected List<IPipeConnectionListener> listeners = new ArrayList<IPipeConnectionListener>();
+	protected List<IConsumer> consumers = new CopyOnWriteArrayList<IConsumer>();
+	protected List<IProvider> providers = new CopyOnWriteArrayList<IProvider>();
+	protected List<IPipeConnectionListener> listeners = new CopyOnWriteArrayList<IPipeConnectionListener>();
 	
 	public boolean subscribe(IConsumer consumer, Map paramMap) {
 		synchronized (consumers) {
@@ -46,9 +46,7 @@ public abstract class AbstractPipe implements IPipe {
 			consumers.add(consumer);
 		}
 		if (consumer instanceof IPipeConnectionListener) {
-			synchronized (listeners) {
-				listeners.add((IPipeConnectionListener) consumer);
-			}
+			listeners.add((IPipeConnectionListener) consumer);
 		}
 		return true;
 	}
@@ -59,62 +57,39 @@ public abstract class AbstractPipe implements IPipe {
 			providers.add(provider);
 		}
 		if (provider instanceof IPipeConnectionListener) {
-			synchronized (listeners) {
-				listeners.add((IPipeConnectionListener) provider);
-			}
+			listeners.add((IPipeConnectionListener) provider);
 		}
 		return true;
 	}
 
 	public boolean unsubscribe(IProvider provider) {
-		synchronized (providers) {
-			if (!providers.contains(provider)) return false;
-			providers.remove(provider);
-		}
+		if (!providers.remove(provider)) return false;
 		fireProviderConnectionEvent(provider, PipeConnectionEvent.PROVIDER_DISCONNECT, null);
 		if (provider instanceof IPipeConnectionListener) {
-			synchronized (listeners) {
-				listeners.remove(provider);
-			}
+			listeners.remove(provider);
 		}
 		return true;
 	}
 
 	public boolean unsubscribe(IConsumer consumer) {
-		synchronized (consumers) {
-			if (!consumers.contains(consumer)) return false;
-			consumers.remove(consumer);
-		}
+		if (!consumers.remove(consumer)) return false;
 		fireConsumerConnectionEvent(consumer, PipeConnectionEvent.CONSUMER_DISCONNECT, null);
 		if (consumer instanceof IPipeConnectionListener) {
-			synchronized (listeners) {
-				listeners.remove(consumer);
-			}
+			listeners.remove(consumer);
 		}
 		return true;
 	}
 	
 	public void addPipeConnectionListener(IPipeConnectionListener listener) {
-		synchronized (listeners) {
-			listeners.add(listener);
-		}
+		listeners.add(listener);
 	}
 
 	public void removePipeConnectionListener(IPipeConnectionListener listener) {
-		synchronized (listeners) {
-			listeners.remove(listener);
-		}
-		
+		listeners.remove(listener);
 	}
 
 	public void sendOOBControlMessage(IProvider provider, OOBControlMessage oobCtrlMsg) {
-		IConsumer[] consumerArray = null;
-		// XXX: synchronizing this sometimes causes deadlocks in the code that
-		//      passes the ChunkSize message to the subscribers of a stream
-		//synchronized (consumers) {
-			consumerArray = consumers.toArray(new IConsumer[]{});
-		//}
-		for (IConsumer consumer : consumerArray) {
+		for (IConsumer consumer : consumers) {
 			try {
 				consumer.onOOBControlMessage(provider, this, oobCtrlMsg);
 			} catch (Throwable t) {
@@ -124,11 +99,7 @@ public abstract class AbstractPipe implements IPipe {
 	}
 
 	public void sendOOBControlMessage(IConsumer consumer, OOBControlMessage oobCtrlMsg) {
-		IProvider[] providerArray = null;
-		synchronized (providers) {
-			providerArray = providers.toArray(new IProvider[]{});
-		}
-		for (IProvider provider : providerArray) {
+		for (IProvider provider : providers) {
 			try {
 				provider.onOOBControlMessage(consumer, this, oobCtrlMsg);
 			} catch (Throwable t) {
@@ -162,13 +133,9 @@ public abstract class AbstractPipe implements IPipe {
 	}
 	
 	protected void firePipeConnectionEvent(PipeConnectionEvent event) {
-		IPipeConnectionListener[] listenerArray = null;
-		synchronized (listeners) {
-			listenerArray = listeners.toArray(new IPipeConnectionListener[]{});
-		}
-		for (int i = 0; i < listenerArray.length; i++) {
+		for (IPipeConnectionListener listener: listeners) {
 			try {
-				listenerArray[i].onPipeConnectionEvent(event);
+				listener.onPipeConnectionEvent(event);
 			} catch (Throwable t) {
 				log.error("exception when handling pipe connection event", t);
 			}

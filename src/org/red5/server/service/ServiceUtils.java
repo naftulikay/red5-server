@@ -65,7 +65,7 @@ public class ServiceUtils {
 		for(int i=0; i<methods.size(); i++){
 			method = (Method) methods.get(i);
 			boolean valid = true;
-			Class[] paramTypes = method.getParameterTypes(); 
+			Class<?>[] paramTypes = ConversionUtils.getMethodParams(method); 
 			for (int j=0; j<args.length; j++) {
 				if ((args[j]==null && paramTypes[j].isPrimitive()) || (args[j]!=null && !args[j].getClass().equals(paramTypes[j]))) {
 					valid = false;
@@ -81,7 +81,8 @@ public class ServiceUtils {
 		for(int i=0; i<methods.size(); i++){
 			try {
 				method = (Method) methods.get(i);
-				params = ConversionUtils.convertParams(args, method.getParameterTypes());
+				Class<?>[] paramTypes = ConversionUtils.getMethodParams(method); 
+				params = ConversionUtils.convertParams(args, paramTypes);
 				if (args.length > 0 && (args[0] instanceof IConnection) && (!(params[0] instanceof IConnection)))
 					// Don't convert first IConnection parameter
 					continue;

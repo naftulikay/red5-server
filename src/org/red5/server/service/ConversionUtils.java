@@ -30,6 +30,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.WeakHashMap;
 
 import org.apache.commons.beanutils.BeanMap;
 import org.apache.commons.beanutils.BeanUtils;
@@ -95,6 +96,27 @@ public class ConversionUtils {
 			wrapperMap.put (WRAPPERS[i], PRIMITIVES[i]);
 			parameterMap.put (WRAPPERS[i], PARAMETER_CHAINS[i]);
 		}
+	}
+	
+	private static Map<Class<?>, Method[]> methodCache = new WeakHashMap<Class<?>, Method[]>();
+	private static Map<Method, Class<?>[]> methodParamCache = new WeakHashMap<Method, Class<?>[]>();
+	
+	public static Method[] getClassMethods(Class<?> klass) {
+		Method[] methods = methodCache.get(klass);
+		if (methods == null) {
+			methods = klass.getMethods();
+			methodCache.put(klass, methods);
+		}
+		return methods;
+	}
+	
+	public static Class<?>[] getMethodParams(Method method) {
+		Class<?>[] params = methodParamCache.get(method);
+		if (params == null) {
+			params = method.getParameterTypes();
+			methodParamCache.put(method, params);
+		}
+		return params;
 	}
 	
 	public static Object convert(Object source, Class target) throws ConversionException {
@@ -190,9 +212,9 @@ public class ConversionUtils {
 	}
 	
 	public static List findMethodsByNameAndNumParams(Object object, String method, int numParam){
-		LinkedList list = new LinkedList();
-		Class klass = object.getClass();
-		Method[] methods = klass.getMethods();
+		LinkedList<Method> list = new LinkedList<Method>();
+		Class<?> klass = object.getClass();
+		Method[] methods = getClassMethods(klass);
 		for(int i=0; i<methods.length; i++){
 			Method m = methods[i];
 			//log.debug("Method name: "+m.getName());
@@ -200,7 +222,9 @@ public class ConversionUtils {
 				//log.debug("Method name not the same");
 				continue;
 			}
-			if(m.getParameterTypes().length != numParam) {
+			
+			Class<?> params[] = getMethodParams(m);
+			if (params.length != numParam) {
 				//log.debug("Param length not the same");
 				continue;
 			}

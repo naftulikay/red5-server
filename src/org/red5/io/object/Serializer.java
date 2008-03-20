@@ -55,9 +55,7 @@ public class Serializer {
 	 * @param any          Object to serialize
 	 */
 	public void serialize(Output out, Object any) {
-		if (log.isDebugEnabled()) {
-			log.debug("serialize");
-		}
+		log.debug("serialize");
 		if (any instanceof IExternalizable) {
 			// Make sure all IExternalizable objects are serialized as objects
 			out.writeObject(any, this);
@@ -69,16 +67,12 @@ public class Serializer {
 		}
 		
 		if (writeBasic(out, any)) {
-			if (log.isDebugEnabled()) {
-				log.debug("write basic");
-			}
+			log.debug("write basic");
 			return;
 		}
 
 		if (!writeComplex(out, any)) {
-			if (log.isDebugEnabled()) {
-				log.debug("Unable to serialize: " + any);
-			}
+			log.debug("Unable to serialize: " + any);
 		}
 	}
 

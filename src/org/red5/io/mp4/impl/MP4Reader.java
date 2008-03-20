@@ -34,7 +34,6 @@ import java.util.Vector;
 
 import org.apache.commons.lang.builder.ToStringBuilder;
 import org.apache.mina.common.ByteBuffer;
-import org.red5.io.BufferType;
 import org.red5.io.IKeyFrameMetaCache;
 import org.red5.io.IStreamableFile;
 import org.red5.io.ITag;
@@ -45,9 +44,12 @@ import org.red5.io.flv.IKeyFrameDataAnalyzer;
 import org.red5.io.flv.impl.Tag;
 import org.red5.io.mp4.MP4Atom;
 import org.red5.io.mp4.MP4DataStream;
-import org.red5.io.mp4.MP4Descriptor;
 import org.red5.io.object.Serializer;
-import org.red5.io.utils.IOUtils;
+import org.red5.server.api.IConnection;
+import org.red5.server.api.Red5;
+import org.red5.server.net.rtmp.Channel;
+import org.red5.server.net.rtmp.event.Invoke;
+import org.red5.server.service.PendingCall;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -783,6 +785,18 @@ public class MP4Reader implements IoConstants, ITagReader, IKeyFrameDataAnalyzer
 	 * Audio - ts=0 size=4 bytes {af 00 12 10}
 	 * Audio - ts=0 size=9 bytes {af 01 20 00 00 00 00 00 0e}
 	 * Regular packets follow - prefix video with 5 bytes {17 01 00 00 00} 
+	 * 
+	 * Packet prefixes:
+	 * 17 00 00 00 00 = Video config?
+	 * 17 01 00 00 00 = Keyframe
+	 * 27 00 00 00 00 = Interframe
+	 * af 00 = Audio config?
+	 * af 01 = Audio
+	 * 
+	 * Audio config:
+	 * af 00 12 10 = AAC LC
+	 * af 00 13 90 56 e5 a5 48 00 = HE-AAC
+	 * 
 	 */
     public synchronized ITag readTag() {
 		log.debug("Read tag - currentSample {}, prevFrameSize {}", new Object[]{currentSample, prevFrameSize});

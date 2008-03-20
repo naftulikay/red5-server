@@ -26,6 +26,7 @@ import java.util.Map;
 
 import org.apache.mina.common.ByteBuffer;
 import org.red5.io.amf.Output;
+import org.red5.io.object.Serializer;
 import org.red5.server.api.IContext;
 import org.red5.server.api.IGlobalScope;
 import org.red5.server.api.IScope;
@@ -85,7 +86,7 @@ public class RTMPHandler extends BaseRTMPHandler {
 	 * Red5 server instance.
 	 */
 	protected IServer server;
-
+	
 	/**
 	 * Setter for server object.
 	 * 
@@ -299,13 +300,16 @@ public class RTMPHandler extends BaseRTMPHandler {
 										call.setStatus(Call.STATUS_SUCCESS_RESULT);
 										if (call instanceof IPendingServiceCall) {
 											IPendingServiceCall pc = (IPendingServiceCall) call;
-											pc.setResult(getStatus(NC_CONNECT_SUCCESS));
+											//send fmsver and capabilities
+									    	StatusObject result = getStatus(NC_CONNECT_SUCCESS);
+									    	result.setAdditional("fmsVer", "RED5/0,7,1,0");
+											result.setAdditional("capabilities", Integer.valueOf(31));
+									    	pc.setResult(result);
 										}
 										// Measure initial roundtrip time after connecting
 										conn.ping(new Ping(Ping.STREAM_CLEAR, 0, -1));
 										conn.startRoundTripMeasurement();
 										// fms sends a couple items that we do not
-										//conn.sendCapabilities();
 										//conn.sendChunkSize();
 									} else {
 										log.debug("Connect failed");

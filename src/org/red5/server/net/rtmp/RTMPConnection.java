@@ -73,7 +73,6 @@ import org.red5.server.stream.OutputStream;
 import org.red5.server.stream.PlaylistSubscriberStream;
 import org.red5.server.stream.StreamService;
 import org.red5.server.stream.VideoCodecFactory;
-import org.red5.server.stream.message.RTMPMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
@@ -897,45 +896,24 @@ public abstract class RTMPConnection extends BaseConnection implements
 		return result;
 	}
 
-	public void sendCapabilities() {
-		//send fmsver and capabilities
-    	ByteBuffer body = ByteBuffer.allocate(256);
-    	body.setAutoExpand(true);
-		Output out = new Output(body);
-		out.writeString("onStatus");
-		Map<Object, Object> props = new HashMap<Object, Object>();    	
-		props.put("fmsver", "FMS/3,0,0,1157");
-		props.put("capabilities", Integer.valueOf(16447));
-		props.put("", Integer.valueOf(0));
-		props.put("", Integer.valueOf(2307));
-		props.put("level", "status");
-		props.put("code", "NetConnection.Connect.Success");
-		out.writeMap(props, new Serializer());
-    	body.flip();
-    	Invoke capa = new Invoke();
-    	capa.setTimestamp(0);
-    	capa.setData(body);
-    	
-    	getChannel(2).write(capa);   	
-	}
-	
 	public void sendChunkSize() {
     	//send our default chunk size									
     	ByteBuffer body = ByteBuffer.allocate(4);
     	body.put(new byte[]{(byte) 0, (byte) 0, (byte) 0x10, (byte) 0}); //4096
     	body.flip();
-    	Notify access = new Notify();
-    	access.setTimestamp(0);
-    	access.setData(body);
+    	Notify chunkSize = new Notify();
+    	chunkSize.setTimestamp(0);
+    	chunkSize.setInvokeId(getInvokeId());
+    	chunkSize.setData(body);
     	
-    	getChannel(2).write(access);   	
+    	getChannel(3).write(chunkSize);   	
 	}
 	
 	/** {@inheritDoc} */
 	public void ping() {
 		long newPingTime = System.currentTimeMillis();
 		if (lastPingSent == 0) {
-			lastPongReceived = newPingTime;
+			lastPongReceived = newPingTime;			
 		}
 		Ping pingRequest = new Ping();
 		pingRequest.setValue1((short) Ping.PING_CLIENT);

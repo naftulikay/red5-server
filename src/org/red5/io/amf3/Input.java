@@ -3,7 +3,7 @@ package org.red5.io.amf3;
 /*
  * RED5 Open Source Flash Server - http://www.osflash.org/red5
  * 
- * Copyright (c) 2006-2007 by respective authors (see below). All rights reserved.
+ * Copyright (c) 2006-2008 by respective authors (see below). All rights reserved.
  * 
  * This library is free software; you can redistribute it and/or modify it under the 
  * terms of the GNU Lesser General Public License as published by the Free Software 
@@ -109,7 +109,7 @@ public class Input extends org.red5.io.amf.Input implements org.red5.io.object.I
 						BeanUtils.setProperty(prop.obj, prop.name, result);
 					}
 				} catch (Exception e) {
-					log.error("Error mapping property: " + prop.name + " (" + result + ")");
+					log.error("Error mapping property: {} ({})", prop.name, result);
 				}
 			}
 			properties.clear();
@@ -167,6 +167,8 @@ public class Input extends org.red5.io.amf.Input implements org.red5.io.object.I
 		}
 
 		currentDataType = buf.get();
+		log.debug("Current data type: {}", currentDataType);
+		
 		byte coreType;
 
 		if (currentDataType == AMF.TYPE_AMF3_OBJECT) {
@@ -217,12 +219,12 @@ public class Input extends org.red5.io.amf.Input implements org.red5.io.object.I
 				break;
 				
 			default:
-				log.info("Unknown datatype: " + currentDataType);
+				log.info("Unknown datatype: {}", currentDataType);
 				// End of object, and anything else lets just skip
 				coreType = DataTypes.CORE_SKIP;
 				break;
 		}
-
+		log.debug("Core type: {}", coreType);
 		return coreType;
 	}
 
@@ -272,16 +274,23 @@ public class Input extends org.red5.io.amf.Input implements org.red5.io.object.I
 	@Override
 	public String readString() {
 		int len = readAMF3Integer();
-		if (len == 1)
+		log.debug("readString - length: {}", len);
+		if (len == 1) {
 			// Empty string
 			return "";
-		
+		}
+		//if the refs are empty an IndexOutOfBoundsEx will be thrown
+		if (stringReferences.isEmpty()) {
+			log.warn("String reference list is empty");
+		}
 		if ((len & 1) == 0) {
 			// Reference
 			return stringReferences.get(len >> 1);
 		}
 		len >>= 1;
+		log.debug("readString - new length: {}", len);
 		int limit = buf.limit();
+		log.debug("readString - limit: {}", limit);
 		final java.nio.ByteBuffer strBuf = buf.buf();
 		strBuf.limit(strBuf.position() + len);
 		final String string = AMF3.CHARSET.decode(strBuf).toString();
@@ -392,8 +401,8 @@ public class Input extends org.red5.io.amf.Input implements org.red5.io.object.I
 		}
 		amf3_mode += 1;
         Object instance  = newInstance(className);
-		Map<String, Object> properties = null;
-		PendingObject pending = new PendingObject();
+        Map<String, Object> properties = null;
+        PendingObject pending = new PendingObject();
 		int tempRefId = storeReference(pending);
 		switch (type & 0x03) {
 		case AMF3.TYPE_OBJECT_PROPERTY:
@@ -407,7 +416,7 @@ public class Input extends org.red5.io.amf.Input implements org.red5.io.object.I
 				}
 				classReferences.add(new ClassReference(className, AMF3.TYPE_OBJECT_PROPERTY, attributes));
 			}
-			for (int i=0; i<count; i++) {
+            for (int i=0; i<count; i++) {
                 String name = attributes.get(i);
                 properties.put(name, deserializer.deserialize(this, getPropertyType(instance, name)));
 			}
@@ -474,10 +483,10 @@ public class Input extends org.red5.io.amf.Input implements org.red5.io.object.I
 				result = properties;
 			} else if ("RecordSet".equals(className)) {
 				// TODO: how are RecordSet objects encoded?
-				throw new RuntimeException("Objects of type " + className + " not supported yet.");
+				throw new RuntimeException("Objects of type RecordSet not supported yet.");
 			} else if ("RecordSetPage".equals(className)) {
 				// TODO: how are RecordSetPage objects encoded?
-				throw new RuntimeException("Objects of type " + className + " not supported yet.");
+				throw new RuntimeException("Objects of type RecordSetPage not supported yet.");
 			} else {
 				// Apply properties to object
 				result = newInstance(className);
@@ -511,7 +520,7 @@ public class Input extends org.red5.io.amf.Input implements org.red5.io.object.I
 								BeanUtils.setProperty(result, key, value);
 							}
 						} catch (Exception e) {
-							log.error("Error mapping property: " + key + " (" + value + ")");
+							log.error("Error mapping property: {} ({})", key, value);
 						}
 					}
 				} // else fall through
@@ -520,7 +529,7 @@ public class Input extends org.red5.io.amf.Input implements org.red5.io.object.I
 		return result;
     }
 
-	public ByteArray readByteArray() {
+    public ByteArray readByteArray() {
 		int type = readAMF3Integer();
 		if ((type & 1) == 0) {
 			// Reference
@@ -598,6 +607,7 @@ public class Input extends org.red5.io.amf.Input implements org.red5.io.object.I
 
 	/** {@inheritDoc} */
 	protected Object newInstance(String className) {
+		log.debug("newInstance {}", className);
 		if (className.startsWith("flex.")) {
 			// Use Red5 compatibility class instead
 			className = "org.red5.compatibility." + className;

@@ -3,7 +3,7 @@ package org.red5.server.net.rtmp;
 /*
  * RED5 Open Source Flash Server - http://www.osflash.org/red5
  * 
- * Copyright (c) 2006-2007 by respective authors (see below). All rights reserved.
+ * Copyright (c) 2006-2008 by respective authors (see below). All rights reserved.
  * 
  * This library is free software; you can redistribute it and/or modify it under the 
  * terms of the GNU Lesser General Public License as published by the Free Software 
@@ -24,9 +24,6 @@ import static org.red5.server.api.ScopeUtils.getScopeService;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.mina.common.ByteBuffer;
-import org.red5.io.amf.Output;
-import org.red5.io.object.Serializer;
 import org.red5.server.api.IContext;
 import org.red5.server.api.IGlobalScope;
 import org.red5.server.api.IScope;
@@ -64,7 +61,6 @@ import org.red5.server.so.SharedObjectMessage;
 import org.red5.server.so.SharedObjectService;
 import org.red5.server.stream.IBroadcastScope;
 import org.red5.server.stream.StreamService;
-import org.red5.server.stream.message.RTMPMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

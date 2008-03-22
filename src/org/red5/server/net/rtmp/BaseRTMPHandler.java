@@ -3,7 +3,7 @@ package org.red5.server.net.rtmp;
 /*
  * RED5 Open Source Flash Server - http://www.osflash.org/red5
  *
- * Copyright (c) 2006-2007 by respective authors (see below). All rights reserved.
+ * Copyright (c) 2006-2008 by respective authors (see below). All rights reserved.
  *
  * This library is free software; you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free Software
@@ -267,7 +267,7 @@ public abstract class BaseRTMPHandler implements IRTMPHandler, Constants, Status
      */
     protected void handlePendingCallResult(RTMPConnection conn, Notify invoke) {
 		final IServiceCall call = invoke.getCall();
-		final IPendingServiceCall pendingCall = conn.getPendingCall(invoke
+		final IPendingServiceCall pendingCall = conn.retrievePendingCall(invoke
 				.getInvokeId());
 		if (pendingCall != null) {
 			// The client sent a response to a previously made call.

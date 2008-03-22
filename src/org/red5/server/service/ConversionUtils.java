@@ -3,7 +3,7 @@ package org.red5.server.service;
 /*
  * RED5 Open Source Flash Server - http://www.osflash.org/red5
  * 
- * Copyright (c) 2006-2007 by respective authors (see below). All rights reserved.
+ * Copyright (c) 2006-2008 by respective authors (see below). All rights reserved.
  * 
  * This library is free software; you can redistribute it and/or modify it under the 
  * terms of the GNU Lesser General Public License as published by the Free Software 
@@ -40,7 +40,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Misc utils for conversions
+ * Misc utils for convertions
  * 
  * @author The Red5 Project (red5@osflash.org)
  * @author Luke Hubbard, Codegent Ltd (luke@codegent.com)

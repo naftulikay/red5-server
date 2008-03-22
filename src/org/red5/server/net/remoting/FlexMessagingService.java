@@ -3,7 +3,7 @@ package org.red5.server.net.remoting;
 /*
  * RED5 Open Source Flash Server - http://www.osflash.org/red5
  *
- * Copyright (c) 2006-2007 by respective authors (see below). All rights reserved.
+ * Copyright (c) 2006-2008 by respective authors (see below). All rights reserved.
  *
  * This library is free software; you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free Software
@@ -32,6 +32,7 @@ import org.red5.compatibility.flex.messaging.messages.CommandMessage;
 import org.red5.compatibility.flex.messaging.messages.Constants;
 import org.red5.compatibility.flex.messaging.messages.ErrorMessage;
 import org.red5.compatibility.flex.messaging.messages.RemotingMessage;
+import org.red5.io.utils.RandomGUID;
 import org.red5.server.api.service.IPendingServiceCall;
 import org.red5.server.api.service.IServiceInvoker;
 import org.red5.server.exception.ClientDetailsException;
@@ -136,6 +137,7 @@ public class FlexMessagingService {
 	 * @return
 	 */
 	public AsyncMessage handleRequest(RemotingMessage msg) {
+		setClientId(msg);
 		if (serviceInvoker == null) {
 			log.error("No service invoker configured: " + msg);
 			return returnError(msg, "Server.Invoke.Error", "No service invoker configured.", "No service invoker configured.");
@@ -179,6 +181,7 @@ public class FlexMessagingService {
 	 * @return
 	 */
 	public AsyncMessage handleRequest(CommandMessage msg) {
+		setClientId(msg);
 		AsyncMessage result = null;
 		switch (msg.operation) {
 		case Constants.OPERATION_PING:
@@ -250,6 +253,7 @@ public class FlexMessagingService {
 	 */
 	@SuppressWarnings("unchecked")
 	public AsyncMessage handleRequest(DataMessage msg) {
+		setClientId(msg);
 		SequencedMessage result = new SequencedMessage();
 		result.clientId = msg.clientId;
 		result.destination = msg.destination;
@@ -288,8 +292,20 @@ public class FlexMessagingService {
 	 * @return
 	 */
 	public ErrorMessage handleRequest(AbstractMessage msg) {
+		setClientId(msg);
 		log.error("Unknown Flex compatibility request: " + msg);
 		return returnError(msg, "notImplemented", "Don't know how to handle " + msg, "Don't know how to handle " + msg);
+	}
+	
+	/**
+	 * This is mandatory for client built from Flex 3 or later, or
+	 * client will hang with concurrent accesses.
+	 * @param msg
+	 */
+	private void setClientId(AbstractMessage msg) {
+		if (msg.clientId == null) {
+			msg.clientId = new RandomGUID().toString();
+		}
 	}
 	
 }

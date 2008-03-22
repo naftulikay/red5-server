@@ -77,6 +77,15 @@ public class MP4Reader implements IoConstants, ITagReader, IKeyFrameDataAnalyzer
      */
     private static Logger log = LoggerFactory.getLogger(MP4Reader.class);
 
+    /** Audio packet prefix */
+	private final static byte[] PREFIX_AUDIO_FRAME = new byte[]{(byte) 0xaf, (byte) 0x01};
+
+	/** Video packet prefix for key frames*/
+	private final static byte[] PREFIX_VIDEO_KEYFRAME = new byte[]{(byte) 0x17, (byte) 0x01, (byte) 0, (byte) 0, (byte) 0};
+    
+	/** Video packet prefix for standard frames (interframe)*/
+	private final static byte[] PREFIX_VIDEO_FRAME = new byte[]{(byte) 0x27, (byte) 0x01, (byte) 0, (byte) 0, (byte) 0};
+    
     /**
      * File
      */
@@ -744,21 +753,21 @@ public class MP4Reader implements IoConstants, ITagReader, IKeyFrameDataAnalyzer
         //tags will only appear if there is an "ilst" atom in the file
         //props.put("tags", "");
    
-        Object[] arr = new Object[2];
-        Map<String, Object> audioMap = new HashMap<String, Object>(4);
-        audioMap.put("timescale", audioSampleRate);
-        audioMap.put("language", "eng");
-        audioMap.put("length", Integer.valueOf(10552320));
-        Map<String, String> sampleMap = new HashMap<String, String>(1);
-        sampleMap.put("sampletype", audioCodecId);
-        audioMap.put("sampledescription", sampleMap);
-        arr[0] = audioMap;
-        Map<String, Object> videoMap = new HashMap<String, Object>(3);
-        videoMap.put("timescale", Integer.valueOf(2997));
-        videoMap.put("language", "eng");
-        videoMap.put("length", Integer.valueOf(717125));
-        arr[1] = videoMap;
-        props.put("trackinfo", arr);
+//        Object[] arr = new Object[2];
+//        Map<String, Object> audioMap = new HashMap<String, Object>(4);
+//        audioMap.put("timescale", audioSampleRate);
+//        audioMap.put("language", "eng");
+//        audioMap.put("length", Integer.valueOf(10552320));
+//        Map<String, String> sampleMap = new HashMap<String, String>(1);
+//        sampleMap.put("sampletype", audioCodecId);
+//        audioMap.put("sampledescription", sampleMap);
+//        arr[0] = audioMap;
+//        Map<String, Object> videoMap = new HashMap<String, Object>(3);
+//        videoMap.put("timescale", Integer.valueOf(2997));
+//        videoMap.put("language", "eng");
+//        videoMap.put("length", Integer.valueOf(717125));
+//        arr[1] = videoMap;
+//        props.put("trackinfo", arr);
         
 		//props.put("canSeekToEnd", false);
 		out.writeMap(props, new Serializer());
@@ -789,7 +798,7 @@ public class MP4Reader implements IoConstants, ITagReader, IKeyFrameDataAnalyzer
 	 * Packet prefixes:
 	 * 17 00 00 00 00 = Video config?
 	 * 17 01 00 00 00 = Keyframe
-	 * 27 00 00 00 00 = Interframe
+	 * 27 01 00 00 00 = Interframe
 	 * af 00 = Audio config?
 	 * af 01 = Audio
 	 * 
@@ -849,9 +858,7 @@ public class MP4Reader implements IoConstants, ITagReader, IKeyFrameDataAnalyzer
 				tag.setBody(body);
 				initPackets++;
 				break;
-			default: 
-				byte[] videoPrefix = new byte[]{(byte) 0x17, (byte) 0x01, (byte) 0, (byte) 0, (byte) 0};
-				
+			default: 				
 				int sampleSize = (Integer) videoSamples.get(currentSample) + 5;
 				int ts = videoSampleDuration * currentSample; //Math.round((currentSample * timeScale) / videoSampleDuration);
     			log.debug("Read tag - sample dur / scale {}", new Object[]{((currentSample * timeScale) / videoSampleDuration)});				
@@ -864,7 +871,14 @@ public class MP4Reader implements IoConstants, ITagReader, IKeyFrameDataAnalyzer
     			log.debug("Read tag - body size: {}", tag.getBodySize());
     			body = ByteBuffer.allocate(tag.getBodySize());
     			log.debug("Read tag - current pos {} sample pos {}", getCurrentPosition(), samplePos);
-    			body.put(videoPrefix);
+    			//prefix is different for keyframes
+    			if (posTimeMap.containsKey(samplePos)) {
+    				log.debug("Writing keyframe prefix");
+    				body.put(PREFIX_VIDEO_KEYFRAME);
+    			} else {  			
+    				log.debug("Writing interframe prefix");
+    				body.put(PREFIX_VIDEO_FRAME);
+    			}
     			try {
     				channel.position(samplePos);
 					channel.read(body.buf());
@@ -878,10 +892,6 @@ public class MP4Reader implements IoConstants, ITagReader, IKeyFrameDataAnalyzer
 		
 		prevFrameSize = tag.getBodySize();
 	
-		//stop after n samples - for browser crashes
-//		if (currentSample >= 60) {
-//			return null;
-//		}
 		log.debug("Tag: {}", tag);
 		return tag;
 	}

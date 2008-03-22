@@ -3,7 +3,7 @@ package org.red5.server.net.rtmp.codec;
 /*
  * RED5 Open Source Flash Server - http://www.osflash.org/red5
  *
- * Copyright (c) 2006-2007 by respective authors (see below). All rights reserved.
+ * Copyright (c) 2006-2008 by respective authors (see below). All rights reserved.
  *
  * This library is free software; you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free Software
@@ -515,6 +515,11 @@ public class RTMPProtocolEncoder extends BaseProtocolEncoder
 			serializer.serialize(output, call.isSuccess() ? "_result" : "_error"); // seems right
 		} else {
 			log.debug("This is a pending call, send request");
+			// for request we need to use AMF3 for client mode
+			// if the connection is AMF3
+			if (rtmp.getEncoding() == Encoding.AMF3 && rtmp.getMode() == RTMP.MODE_CLIENT) {
+				output = new org.red5.io.amf3.Output(out);
+			}
 			final String action = (call.getServiceName() == null) ? call
 					.getServiceMethodName() : call.getServiceName() + '.'
 					+ call.getServiceMethodName();

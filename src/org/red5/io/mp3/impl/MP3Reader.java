@@ -3,7 +3,7 @@ package org.red5.io.mp3.impl;
 /*
  * RED5 Open Source Flash Server - http://www.osflash.org/red5
  * 
- * Copyright (c) 2006-2007 by respective authors (see below). All rights reserved.
+ * Copyright (c) 2006-2008 by respective authors (see below). All rights reserved.
  * 
  * This library is free software; you can redistribute it and/or modify it under the 
  * terms of the GNU Lesser General Public License as published by the Free Software 
@@ -182,7 +182,7 @@ public class MP3Reader implements ITagReader, IKeyFrameDataAnalyzer {
     
 	/**
 	 * Check if the file can be played back with Flash. Supported sample rates are
-     * 48KHz, 44KHz, 22KHz, 11KHz and 5.5KHz
+     * 44KHz, 22KHz, 11KHz and 5.5KHz
      * 
 	 * @param header       Header to check
 	 */

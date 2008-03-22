@@ -3,7 +3,7 @@ package org.red5.server.stream.provider;
 /*
  * RED5 Open Source Flash Server - http://www.osflash.org/red5
  * 
- * Copyright (c) 2006-2007 by respective authors (see below). All rights reserved.
+ * Copyright (c) 2006-2008 by respective authors (see below). All rights reserved.
  * 
  * This library is free software; you can redistribute it and/or modify it under the 
  * terms of the GNU Lesser General Public License as published by the Free Software 
@@ -41,7 +41,6 @@ import org.red5.server.messaging.IPullableProvider;
 import org.red5.server.messaging.OOBControlMessage;
 import org.red5.server.messaging.PipeConnectionEvent;
 import org.red5.server.net.rtmp.event.AudioData;
-import org.red5.server.net.rtmp.event.ChunkSize;
 import org.red5.server.net.rtmp.event.IRTMPEvent;
 import org.red5.server.net.rtmp.event.Invoke;
 import org.red5.server.net.rtmp.event.Notify;
@@ -146,9 +145,6 @@ public class FileProvider implements IPassive, ISeekableProvider,
 			case Constants.TYPE_NOTIFY:
 				msg = new Notify(tag.getBody());
 				break;
-			case Constants.TYPE_CHUNK_SIZE:
-				msg = new ChunkSize(tag.getBody().buf().getInt());
-				break;
 			default:
 				log.warn("Unexpected type? {}", tag.getDataType());
 				msg = new Unknown(tag.getDataType(), tag.getBody());
@@ -249,6 +245,7 @@ public class FileProvider implements IPassive, ISeekableProvider,
 				// Seeking not supported
 				return ts;
 			}
+
 			keyFrameMeta = ((IKeyFrameDataAnalyzer) reader).analyzeKeyFrames();
 		}
 

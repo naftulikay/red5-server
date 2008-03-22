@@ -3,7 +3,7 @@ package org.red5.io.amf;
 /*
  * RED5 Open Source Flash Server - http://www.osflash.org/red5
  *
- * Copyright (c) 2006-2007 by respective authors (see below). All rights reserved.
+ * Copyright (c) 2006-2008 by respective authors (see below). All rights reserved.
  *
  * This library is free software; you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free Software
@@ -143,6 +143,7 @@ public class Output extends BaseOutput implements org.red5.io.object.Output {
 				// Map has non-number keys.
 				break;
 			}
+
 			maxInt = i;
 		}
 		buf.putInt(maxInt+1);
@@ -173,7 +174,7 @@ public class Output extends BaseOutput implements org.red5.io.object.Output {
 		buf.put(AMF.TYPE_MIXED_ARRAY);
 		buf.putInt(array.size()+1);
 		int idx=0;
-		for (Object item : array) {
+		for (Object item: array) {
 			if (item != null) {
 				putString(String.valueOf(idx++));
 				serializer.serialize(this, item);
@@ -270,6 +271,7 @@ public class Output extends BaseOutput implements org.red5.io.object.Output {
 			writeArbitraryObject(object, serializer);
 			return;
 		}
+
         // Write out either start of object marker for class name or "empty" start of object marker
 		Class<?> objectClass = object.getClass();
 		if (!objectClass.isAnnotationPresent(Anonymous.class)) {
@@ -278,6 +280,7 @@ public class Output extends BaseOutput implements org.red5.io.object.Output {
 		} else {
 			buf.put(AMF.TYPE_OBJECT);
 		}
+
         if (object instanceof ICustomSerializable) {
         	((ICustomSerializable) object).serialize(this, serializer);
     		buf.put((byte) 0x00);
@@ -291,6 +294,7 @@ public class Output extends BaseOutput implements org.red5.io.object.Output {
 			if (entry.getKey().toString().equals("class")) {
 				continue;
 			}
+
 			String keyName = entry.getKey().toString();
 			// Check if the Field corresponding to the getter/setter pair is transient
             if (dontSerializeField(objectClass, keyName)) {
@@ -355,7 +359,7 @@ public class Output extends BaseOutput implements org.red5.io.object.Output {
 	 * @param object        Object to write
 	 */
 	protected void writeArbitraryObject(Object object, Serializer serializer) {
-		log.debug("writeObject");
+			log.debug("writeObject");
         // If we need to serialize class information...
 		Class<?> objectClass = object.getClass();
 		if (!objectClass.isAnnotationPresent(Anonymous.class)) {

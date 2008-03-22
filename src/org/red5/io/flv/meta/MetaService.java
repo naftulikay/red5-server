@@ -3,7 +3,7 @@ package org.red5.io.flv.meta;
 /*
  * RED5 Open Source Flash Server - http://www.osflash.org/red5
  *
- * Copyright (c) 2006-2007 by respective authors (see below). All rights reserved.
+ * Copyright (c) 2006-2008 by respective authors (see below). All rights reserved.
  *
  * This library is free software; you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free Software
@@ -340,9 +340,9 @@ public class MetaService implements IMetaService {
 		MetaData retMeta = new MetaData();
 		Input input = new Input(buffer);
 		if (deserializer == null) {
-			deserializer = new Deserializer();
+		    deserializer = new Deserializer();
 		}
-		@SuppressWarnings("unused")
+		@SuppressWarnings("unused") 
 		String metaType = deserializer.deserialize(input, String.class);
 		Map m = deserializer.deserialize(input, Map.class);
 		retMeta.putAll(m);

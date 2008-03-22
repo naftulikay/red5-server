@@ -3,7 +3,7 @@ package org.red5.server.net.rtmp.status;
 /*
  * RED5 Open Source Flash Server - http://www.osflash.org/red5
  * 
- * Copyright (c) 2006-2007 by respective authors (see below). All rights reserved.
+ * Copyright (c) 2006-2008 by respective authors (see below). All rights reserved.
  * 
  * This library is free software; you can redistribute it and/or modify it under the 
  * terms of the GNU Lesser General Public License as published by the Free Software 
@@ -33,47 +33,44 @@ import org.slf4j.LoggerFactory;
 /**
  * Service that works with status objects.
  * Note all status object should aim to be under 128 bytes.
- * 
+ *
  * @author The Red5 Project (red5@osflash.org)
  * @author Luke Hubbard, Codegent Ltd (luke@codegent.com)
  */
 public class StatusObjectService implements StatusCodes {
 
-	/**
-	 * Logger
-	 */
+    /**
+     * Logger
+     */
 	protected static Logger log = LoggerFactory
 			.getLogger(StatusObjectService.class);
 
-	/**
-	 * Serializer
-	 */
-	protected Serializer serializer;
-
-	/**
-	 * Status objects map
-	 */
+    /**
+     * Serializer
+     */
+    protected Serializer serializer;
+    /**
+     * Status objects map
+     */
 	protected Map<String, StatusObject> statusObjects;
-
-	/**
-	 * Cached status objects map
-	 */
+    /**
+     * Cached status objects map
+     */
 	protected Map<String, byte[]> cachedStatusObjects;
 
 	/**
-	 * Setter for serializer
-	 * 
-	 * @param serializer
-	 *            Serializer object
-	 */
-	public void setSerializer(Serializer serializer) {
+     * Setter for serializer
+     *
+     * @param serializer  Serializer object
+     */
+    public void setSerializer(Serializer serializer) {
 		this.serializer = serializer;
 	}
 
-	/**
-	 * Initialization
-	 */
-	public void initialize() {
+    /**
+     * Initialization
+     */
+    public void initialize() {
 		log.debug("Loading status objects");
 		loadStatusObjects();
 		log.debug("Caching status objects");
@@ -81,10 +78,10 @@ public class StatusObjectService implements StatusCodes {
 		log.debug("Status service ready");
 	}
 
-	/**
-	 * Creates all status objects and adds them to status objects map
-	 */
-	public void loadStatusObjects() {
+    /**
+     * Creates all status objects and adds them to status objects map
+     */
+    public void loadStatusObjects() {
 		statusObjects = new HashMap<String, StatusObject>();
 
 		statusObjects.put(NC_CALL_FAILED, new StatusObject(NC_CALL_FAILED,
@@ -169,64 +166,62 @@ public class StatusObjectService implements StatusCodes {
 
 	}
 
-	/**
-	 * Cache status objects
-	 */
-	public void cacheStatusObjects() {
+    /**
+     * Cache status objects
+     */
+    public void cacheStatusObjects() {
+
 		cachedStatusObjects = new HashMap<String, byte[]>();
 
 		String statusCode;
 		ByteBuffer out = ByteBuffer.allocate(256);
 		out.setAutoExpand(true);
 
-		for (String s : statusObjects.keySet()) {
-			statusCode = s;
-			StatusObject statusObject = statusObjects.get(statusCode);
-			if (statusObject instanceof RuntimeStatusObject) {
-				continue;
-			}
-			serializeStatusObject(out, statusObject);
-			out.flip();
-			log.debug(HexDump.formatHexDump(out.getHexDump()));
-			byte[] cachedBytes = new byte[out.limit()];
-			out.get(cachedBytes);
-			out.clear();
-			cachedStatusObjects.put(statusCode, cachedBytes);
-		}
-		out.release();
-
-		out = null;
+        for (String s : statusObjects.keySet()) {
+            statusCode = s;
+            StatusObject statusObject = statusObjects.get(statusCode);
+            if (statusObject instanceof RuntimeStatusObject) {
+                continue;
+            }
+            serializeStatusObject(out, statusObject);
+            out.flip();
+            log.debug(HexDump.formatHexDump(out.getHexDump()));
+            byte[] cachedBytes = new byte[out.limit()];
+            out.get(cachedBytes);
+            out.clear();
+            cachedStatusObjects.put(statusCode, cachedBytes);
+        }
+        out.release();
+        
+        out = null;
 	}
 
-	/**
-	 * Serializes status object
-	 * 
+    /**
+     * Serializes status object
      * @param out                 Byte buffer for output object
      * @param statusObject        Status object to serialize
-	 */
-	public void serializeStatusObject(ByteBuffer out, StatusObject statusObject) {
+     */
+    public void serializeStatusObject(ByteBuffer out, StatusObject statusObject) {
 		Map statusMap = new BeanMap(statusObject);
 		Output output = new Output(out);
 		serializer.serialize(output, statusMap);
 	}
 
-	/**
-	 * Return status object by code
-	 * 
-	 * @param statusCode Status object code
-	 * @return Status object with given code
-	 */
-	public StatusObject getStatusObject(String statusCode) {
+    /**
+     * Return status object by code
+     * @param statusCode           Status object code
+     * @return                     Status object with given code
+     */
+    public StatusObject getStatusObject(String statusCode) {
 		return statusObjects.get(statusCode);
 	}
 
-	/**
-	 * Return status object by code as byte array
-	 * 
-	 * @param statusCode Status object code
-	 * @return Status object with given code as byte array
-	 */
-	public byte[] getCachedStatusObjectAsByteArray(String statusCode) {
+    /**
+     * Return status object by code as byte array
+     * @param statusCode           Status object code
+     * @return                     Status object with given code as byte array
+     */
+    public byte[] getCachedStatusObjectAsByteArray(String statusCode) {
 		return cachedStatusObjects.get(statusCode);
 	}
 

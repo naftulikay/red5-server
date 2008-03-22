@@ -3,7 +3,7 @@ package org.red5.io.object;
 /*
  * RED5 Open Source Flash Server - http://www.osflash.org/red5
  * 
- * Copyright (c) 2006-2007 by respective authors (see below). All rights reserved.
+ * Copyright (c) 2006-2008 by respective authors (see below). All rights reserved.
  * 
  * This library is free software; you can redistribute it and/or modify it under the 
  * terms of the GNU Lesser General Public License as published by the Free Software 
@@ -39,19 +39,19 @@ public class Deserializer {
 	 * which must then be cast to a core data type
 	 * @param in
 	 * @param target
-	 * @return Object
+     * @return Object
 	 */
 	public <T> T deserialize(Input in, Class<T> target) {
 
 		byte type = in.readDataType();
+		log.debug("Type: {}", type);
 
 		while (type == DataTypes.CORE_SKIP) {
 			type = in.readDataType();
+			log.debug("Type (skip): {}", type);
 		}
 
-		if (log.isDebugEnabled()) {
-			log.debug("Datatype: " + DataTypes.toStringValue(type));
-		}
+		log.debug("Datatype: " + DataTypes.toStringValue(type));
 
 		Object result;
 
@@ -101,7 +101,7 @@ public class Deserializer {
 	 * Post processes the result
 	 * TODO Extension Point
      * @param result
-	 * @param target
+     * @param target
      * @return
      */
 	protected Object postProcessExtension(Object result, Class target) {

@@ -3,7 +3,7 @@ package org.red5.server.net.rtmp;
 /*
  * RED5 Open Source Flash Server - http://www.osflash.org/red5
  * 
- * Copyright (c) 2006-2007 by respective authors (see below). All rights reserved.
+ * Copyright (c) 2006-2008 by respective authors (see below). All rights reserved.
  * 
  * This library is free software; you can redistribute it and/or modify it under the 
  * terms of the GNU Lesser General Public License as published by the Free Software 
@@ -34,8 +34,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import javax.management.ObjectName;
 
 import org.apache.mina.common.ByteBuffer;
-import org.red5.io.amf.Output;
-import org.red5.io.object.Serializer;
 import org.red5.server.BaseConnection;
 import org.red5.server.api.IBWControllable;
 import org.red5.server.api.IBandwidthConfigure;
@@ -305,6 +303,7 @@ public abstract class RTMPConnection extends BaseConnection implements
 		this.sessionId = sessionId;
 		this.params = params;
 		if (params.get("objectEncoding") == Integer.valueOf(3)) {
+			log.info("Setting object encoding to AMF3");
 			encoding = Encoding.AMF3;
 		}
 	}
@@ -496,6 +495,22 @@ public abstract class RTMPConnection extends BaseConnection implements
 			return pss;
 		}
 	}
+	
+	public void addClientStream(IClientStream stream) {
+		int streamId = stream.getStreamId();
+		if (reservedStreams.get(streamId - 1)) {
+			return;
+		}
+		reservedStreams.set(streamId - 1);
+		synchronized (streams) {
+			streams.put(streamId - 1, stream);
+			usedStreams++;
+		}
+	}
+	
+	public void removeClientStream(int streamId) {
+		unreserveStreamId(streamId);
+	}
 
 	/**
 	 * Getter for used stream count.
@@ -576,9 +591,7 @@ public abstract class RTMPConnection extends BaseConnection implements
 						.entrySet()) {
 					IClientStream stream = entry.getValue();
 					if (stream != null) {
-						if (log.isDebugEnabled()) {
-							log.debug("Closing stream: {}", stream.getStreamId());
-						}
+						log.debug("Closing stream: {}", stream.getStreamId());
 						streamService.deleteStream(this, stream.getStreamId());
 						usedStreams--;
 					}
@@ -651,7 +664,7 @@ public abstract class RTMPConnection extends BaseConnection implements
 		if (bytesRead >= nextBytesRead) {
 			BytesRead sbr = new BytesRead((int) bytesRead);
 			getChannel(2).write(sbr);
-			//TODO: what do we want to see printed here?
+			//@todo: what do we want to see printed here?
 			//log.info(sbr);
 			nextBytesRead += bytesReadInterval;
 		}
@@ -825,6 +838,18 @@ public abstract class RTMPConnection extends BaseConnection implements
 	 * @return Pending call service object
 	 */
 	protected IPendingServiceCall getPendingCall(int invokeId) {
+		return pendingCalls.get(invokeId);
+	}
+	
+	/**
+	 * Retrieve pending call service by id.
+	 * The call will be removed afterwards.
+	 * 
+	 * @param invokeId
+	 *            Pending call service id
+	 * @return Pending call service object
+	 */
+	protected IPendingServiceCall retrievePendingCall(int invokeId) {
 		return pendingCalls.remove(invokeId);
 	}
 
@@ -892,28 +917,16 @@ public abstract class RTMPConnection extends BaseConnection implements
 	@Override
 	public long getPendingVideoMessages(int streamId) {
 		AtomicInteger count = pendingVideos.get(streamId);
-		long result = Math.max(count != null ? count.intValue() - getUsedStreamCount() : 0, 0);
-		return result;
+		long result = (count != null ? count.intValue() - getUsedStreamCount()
+				: 0);
+		return (result > 0 ? result : 0);
 	}
 
-	public void sendChunkSize() {
-    	//send our default chunk size									
-    	ByteBuffer body = ByteBuffer.allocate(4);
-    	body.put(new byte[]{(byte) 0, (byte) 0, (byte) 0x10, (byte) 0}); //4096
-    	body.flip();
-    	Notify chunkSize = new Notify();
-    	chunkSize.setTimestamp(0);
-    	chunkSize.setInvokeId(getInvokeId());
-    	chunkSize.setData(body);
-    	
-    	getChannel(3).write(chunkSize);   	
-	}
-	
 	/** {@inheritDoc} */
 	public void ping() {
 		long newPingTime = System.currentTimeMillis();
 		if (lastPingSent == 0) {
-			lastPongReceived = newPingTime;			
+			lastPongReceived = newPingTime;
 		}
 		Ping pingRequest = new Ping();
 		pingRequest.setValue1((short) Ping.PING_CLIENT);
@@ -971,6 +984,10 @@ public abstract class RTMPConnection extends BaseConnection implements
 			return;
         }
 		if (keepAliveJobName == null) {
+    		//log.debug("Scope null = {}", (scope == null));
+    		//log.debug("getScope null = {}", (getScope() == null));
+    		//log.debug("Context null = {}", (scope.getContext() == null));
+    		//ISchedulingService schedulingService = (ISchedulingService) scope.getContext().getBean(ISchedulingService.BEAN_NAME);
     		keepAliveJobName = schedulingService.addScheduledJob(pingInterval, new KeepAliveJob());
 		}
 		log.debug("Keep alive job name {}", keepAliveJobName);

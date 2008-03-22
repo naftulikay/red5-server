@@ -3,7 +3,7 @@ package org.red5.server.stream;
 /*
  * RED5 Open Source Flash Server - http://www.osflash.org/red5
  *
- * Copyright (c) 2006-2007 by respective authors (see below). All rights reserved.
+ * Copyright (c) 2006-2008 by respective authors (see below). All rights reserved.
  *
  * This library is free software; you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free Software
@@ -155,7 +155,7 @@ public class ClientBroadcastStream extends AbstractClientStream implements
 	/**
 	 * Whether we are recording or not
 	 */
-	private boolean recording = false;
+	private volatile boolean recording = false;
 
 	/**
 	 * FileConsumer used to output recording to disk
@@ -789,6 +789,10 @@ public class ClientBroadcastStream extends AbstractClientStream implements
 			recordPipe.unsubscribe(recordingFile);
 			sendRecordStopNotify();
 		}
+	}
+	
+	public boolean isRecording() {
+		return recording;
 	}
 
 	/** {@inheritDoc} */

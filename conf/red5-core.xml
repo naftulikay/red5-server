@@ -180,6 +180,22 @@
 		</property>
 		</bean>
 	-->
+
+    <!-- RTSP -->
+    <bean id="rtspMessage"
+        class="org.red5.server.net.rtsp.messages.RTSPMessage" />    
+    
+    <bean id="ipAddressFilter"
+        class="org.red5.server.net.rtsp.filter.ipaddress.IpAddressFilter" init-method="init">
+        <property name="filterClassName" value="org.red5.server.net.rtsp.filter.ipaddress.PlainTextIpAddressProvider" />
+    </bean>
+
+    <bean id="rtspFilters"
+        class="org.red5.server.net.rtsp.filter.RTSPFilters">
+        <property name="enableIpAddressFilter" value="false" />
+        <property name="rewritingFilterClassName" value="" />
+    </bean>
+
 	<!-- Enable when you need it.
 	<bean id="rtmpProxyTransport" class="org.red5.server.net.rtmp.RTMPMinaTransport" init-method="start" destroy-method="stop">
 		<property name="ioHandler" ref="debugProxyIoHandler" />

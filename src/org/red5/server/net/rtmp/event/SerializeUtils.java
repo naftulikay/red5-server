@@ -11,7 +11,7 @@ public class SerializeUtils {
 		buf.position(pos);
 		return byteBuf;
 	}
-	
+
 	public static void ByteArrayToByteBuffer(byte[] byteBuf, ByteBuffer buf) {
 		buf.put(byteBuf);
 		buf.flip();

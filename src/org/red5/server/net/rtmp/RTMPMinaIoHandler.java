@@ -107,9 +107,7 @@ implements ApplicationContextAware {
 	/** {@inheritDoc} */
     @Override
 	public void messageReceived(IoSession session, Object in) throws Exception {
-    	if (log.isDebugEnabled()) {
-    		log.debug("messageRecieved");
-    	}
+   		log.debug("messageRecieved");
 		final ProtocolState state = (ProtocolState) session.getAttribute(ProtocolState.SESSION_KEY);
 		if (in instanceof ByteBuffer) {
 			rawBufferRecieved(state, (ByteBuffer) in, session);
@@ -165,9 +163,7 @@ implements ApplicationContextAware {
 	/** {@inheritDoc} */
     @Override
 	public void messageSent(IoSession session, Object message) throws Exception {
-    	if (log.isDebugEnabled()) {
-    		log.debug("messageSent");
-    	}
+   		log.debug("messageSent");
 		session.getAttribute(ProtocolState.SESSION_KEY);
 		final RTMPMinaConnection conn = (RTMPMinaConnection) session
 				.getAttachment();
@@ -184,11 +180,11 @@ implements ApplicationContextAware {
 	/** {@inheritDoc} */
     @Override
 	public void sessionOpened(IoSession session) throws Exception {   	
-		super.sessionOpened(session);
-
+		log.debug("Session opened");
+    	super.sessionOpened(session);
 		RTMP rtmp=(RTMP)session.getAttribute(ProtocolState.SESSION_KEY);
 		if (rtmp.getMode()==RTMP.MODE_CLIENT) {
-				log.debug("Handshake 1st phase");
+			log.debug("Handshake 1st phase");
 			ByteBuffer out = ByteBuffer.allocate(Constants.HANDSHAKE_SIZE+1);
 			out.put((byte)0x03);
 			out.fill((byte)0x00,Constants.HANDSHAKE_SIZE);
@@ -203,6 +199,7 @@ implements ApplicationContextAware {
 	/** {@inheritDoc} */
     @Override
 	public void sessionClosed(IoSession session) throws Exception {
+		log.debug("Session closed");
 		ByteBuffer buf = (ByteBuffer) session.getAttribute("buffer");
 		if (buf != null) {
 			buf.release();
@@ -219,7 +216,7 @@ implements ApplicationContextAware {
 	/** {@inheritDoc} */
     @Override
 	public void sessionCreated(IoSession session) throws Exception {
-			log.debug("Session created");
+		log.debug("Session created");
 		// moved protocol state from connection object to RTMP object
 		RTMP rtmp = new RTMP(mode);
 		session.setAttribute(ProtocolState.SESSION_KEY, rtmp);

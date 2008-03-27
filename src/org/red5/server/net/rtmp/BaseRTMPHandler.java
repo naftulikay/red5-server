@@ -177,14 +177,14 @@ public abstract class BaseRTMPHandler implements IRTMPHandler, Constants, Status
 
 				case TYPE_AUDIO_DATA:
 				case TYPE_VIDEO_DATA:
-					// log.info("in packet: "+source.getSize()+"
-					// ts:"+source.getTimer());
+					log.info("in packet: {} ts: {}", packet.getHeader().getSize(), packet.getHeader().getTimer());
 
 					// NOTE: If we respond to "publish" with "NetStream.Publish.BadName",
 					// the client sends a few stream packets before stopping. We need to
 					// ignore them.
-					if (stream != null)
+					if (stream != null) {
 						((IEventDispatcher) stream).dispatchEvent(message);
+					}
 					break;
 				case TYPE_FLEX_SHARED_OBJECT:
 				case TYPE_SHARED_OBJECT:

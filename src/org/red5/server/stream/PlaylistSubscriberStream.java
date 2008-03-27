@@ -259,8 +259,10 @@ public class PlaylistSubscriberStream extends AbstractClientStream implements
 		bwContext = bwController.registerBWControllable(this);
 
 		// Start playback engine
+		log.debug("Starting playback engine");
 		engine.start();
 		// Notify subscribers on start
+		log.debug("Notify subscribers on start");
 		notifySubscriberStart();
 	}
 
@@ -289,7 +291,7 @@ public class PlaylistSubscriberStream extends AbstractClientStream implements
 				// go for next item
 				moveToNext();
 				if (currentItemIndex == -1) {
-					// we reaches the end.
+					// we reached the end
 					break;
 				}
 				item = items.get(currentItemIndex);
@@ -428,7 +430,7 @@ public class PlaylistSubscriberStream extends AbstractClientStream implements
 				// go for next item
 				moveToPrevious();
 				if (currentItemIndex == -1) {
-					// we reaches the end.
+					// we reached the end
 					break;
 				}
 			} catch (StreamNotFoundException e) {
@@ -484,7 +486,7 @@ public class PlaylistSubscriberStream extends AbstractClientStream implements
 				// go for next item
 				moveToNext();
 				if (currentItemIndex == -1) {
-					// we reaches the end.
+					// we reached the end
 					break;
 				}
 			} catch (IllegalStateException e) {
@@ -579,7 +581,7 @@ public class PlaylistSubscriberStream extends AbstractClientStream implements
 	/** {@inheritDoc} */
 	public void receiveAudio(boolean receive) {
 		if (receiveAudio && !receive) {
-			// We need to send a black audio packet to reset the player
+			// We need to send a blank audio packet to reset the player
 			engine.sendBlankAudio = true;
 		}
 		final boolean seek = (!receiveAudio && receive);
@@ -1006,7 +1008,7 @@ public class PlaylistSubscriberStream extends AbstractClientStream implements
 		 *             Stream is in stopped state
 		 * @throws IOException
 		 */
-		public synchronized void play(IPlayItem item)
+		public void play(IPlayItem item)
 				throws StreamNotFoundException, IllegalStateException,
 				IOException {
 			play(item, true);
@@ -1082,6 +1084,7 @@ public class PlaylistSubscriberStream extends AbstractClientStream implements
 					}
 					break;
 			}
+			log.debug("Decision: {} (0=Live, 1=File, 2=Wait, 3=N/A)", decision);
 			if (decision == 2) {
 				liveInput = providerService.getLiveProviderInput(thisScope,
 						item.getName(), true);
@@ -1158,6 +1161,7 @@ public class PlaylistSubscriberStream extends AbstractClientStream implements
 			IMessage msg = null;
 			streamOffset = 0;
 			if (decision == 1) {
+				log.debug("VOD / File input");
 				if (withReset) {
 					releasePendingMessage();
 				}
@@ -1527,7 +1531,7 @@ public class PlaylistSubscriberStream extends AbstractClientStream implements
 		}
 
 		/**
-		 * Recieve then send if message is data (not audio or video)
+		 * Receive then send if message is data (not audio or video)
 		 */
 		private synchronized void pullAndPush() throws IOException {
 			if (state == State.PLAYING && isPullMode && !isWaitingForToken) {

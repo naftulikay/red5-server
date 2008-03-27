@@ -41,6 +41,7 @@ import org.red5.io.object.BaseOutput;
 import org.red5.io.object.ICustomSerializable;
 import org.red5.io.object.RecordSet;
 import org.red5.io.object.Serializer;
+import org.red5.io.utils.HexDump;
 import org.red5.io.utils.XMLUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -76,7 +77,6 @@ public class Output extends BaseOutput implements org.red5.io.object.Output {
 
 	/** {@inheritDoc} */
     public boolean isCustom(Object custom) {
-		// TODO Auto-generated method stub
 		return false;
 	}
 
@@ -231,8 +231,7 @@ public class Output extends BaseOutput implements org.red5.io.object.Output {
     public void writeDate(Date date) {
 		buf.put(AMF.TYPE_DATE);
 		buf.putDouble(date.getTime());
-		buf
-				.putShort((short) (TimeZone.getDefault().getRawOffset() / 60 / 1000));
+		buf.putShort((short) (TimeZone.getDefault().getRawOffset() / 60 / 1000));
 	}
 
 	/** {@inheritDoc} */
@@ -245,13 +244,20 @@ public class Output extends BaseOutput implements org.red5.io.object.Output {
 	public void writeNumber(Number num) {
 		buf.put(AMF.TYPE_NUMBER);
 		buf.putDouble(num.doubleValue());
+		
+//		ByteBuffer tmp = ByteBuffer.allocate(8);
+//		tmp.setAutoExpand(true);
+//		tmp.put(AMF.TYPE_NUMBER);
+//		tmp.putDouble(num.doubleValue());
+//		tmp.flip();
+//		byte[] arr = tmp.array();
+//		log.warn("writeNumber: {}", HexDump.byteArrayToHexString(arr));
+//		tmp.release();
 	}
 
 	/** {@inheritDoc} */
     public void writeReference(Object obj) {
-		if (log.isDebugEnabled()) {
-			log.debug("Write reference");
-		}
+		log.debug("Write reference");
 		buf.put(AMF.TYPE_REFERENCE);
 		buf.putShort(getReferenceId(obj));
 	}
@@ -316,7 +322,7 @@ public class Output extends BaseOutput implements org.red5.io.object.Output {
                 boolean dontSerialize = field.isAnnotationPresent(DontSerialize.class);
                 boolean isTransient = Modifier.isTransient(field.getModifiers());
 
-                if (dontSerialize && log.isDebugEnabled()) {
+                if (dontSerialize) {
                 	log.debug("Skipping {} because its marked with @DontSerialize", field.getName());
                 }
                 if (isTransient) {
@@ -359,7 +365,7 @@ public class Output extends BaseOutput implements org.red5.io.object.Output {
 	 * @param object        Object to write
 	 */
 	protected void writeArbitraryObject(Object object, Serializer serializer) {
-			log.debug("writeObject");
+		log.debug("writeObject");
         // If we need to serialize class information...
 		Class<?> objectClass = object.getClass();
 		if (!objectClass.isAnnotationPresent(Anonymous.class)) {
@@ -376,9 +382,7 @@ public class Output extends BaseOutput implements org.red5.io.object.Output {
         // Iterate thru fields of an object to build "name-value" map from it
         for (Field field : objectClass.getFields()) {
 			if (field.isAnnotationPresent(DontSerialize.class)) {
-				if (log.isDebugEnabled()) {
-					log.debug("Skipping " + field.getName() + " because its marked with @DontSerialize");
-				}
+				log.debug("Skipping {} because its marked with @DontSerialize", field.getName());
 				continue;
 			} else {
 				int modifiers = field.getModifiers();

@@ -299,7 +299,7 @@ public class RTMPHandler extends BaseRTMPHandler {
 											//send fmsver and capabilities
 									    	StatusObject result = getStatus(NC_CONNECT_SUCCESS);
 									    	result.setAdditional("fmsVer", "RED5/0,7,1,0");
-											result.setAdditional("capabilities", Integer.valueOf(31));
+											result.setAdditional("capabilities", 31.0);
 									    	pc.setResult(result);
 										}
 										// Measure initial roundtrip time after connecting

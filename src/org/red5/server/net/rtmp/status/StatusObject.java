@@ -31,6 +31,9 @@ import org.red5.annotations.Anonymous;
 import org.red5.io.object.ICustomSerializable;
 import org.red5.io.object.Output;
 import org.red5.io.object.Serializer;
+import org.red5.server.net.rtmp.RTMPMinaIoHandler;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Status object that is sent to client with every status event
@@ -41,6 +44,8 @@ import org.red5.io.object.Serializer;
 public class StatusObject
 implements Serializable, ICustomSerializable, Externalizable {
 
+	protected static Logger log = LoggerFactory.getLogger(StatusObject.class);
+	
 	private static final long serialVersionUID = 8817297676191096283L;
 
 	public static final String ERROR = "error";
@@ -161,7 +166,7 @@ implements Serializable, ICustomSerializable, Externalizable {
     public void setAdditional(String name, Object value) {
     	if ("code".equals(name) || "level".equals(name) ||
     			"description".equals(name) || "application".equals(name)) {
-    		throw new RuntimeException("the name \"" + name + "\" is reserved");
+    		throw new RuntimeException("The name \"" + name + "\" is reserved");
     	}
     	if (additional == null) {
     		additional = new HashMap<String, Object>();
@@ -170,6 +175,7 @@ implements Serializable, ICustomSerializable, Externalizable {
     }
     
     public void serialize(Output output, Serializer serializer) {
+    	log.debug("serialize - output: {} serializer: {}", output.getClass().getName(), serializer.getClass().getName());
     	output.putString("level");
     	output.writeString(getLevel());
     	output.putString("code");
@@ -183,9 +189,11 @@ implements Serializable, ICustomSerializable, Externalizable {
     	if (additional != null) {
     		// Add additional parameters
     		for (Map.Entry<String, Object> entry: additional.entrySet()) {
-    	    	output.putString(entry.getKey());
+    	    	log.debug("Additional entry - key: {} value: {}", entry.getKey(), entry.getValue());
+    			output.putString(entry.getKey());
     	    	serializer.serialize(output, entry.getValue());
     		}
+	    	log.debug("Output: {}", output.toString());
     	}
     }
 

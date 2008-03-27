@@ -200,8 +200,7 @@ public class MP4Reader implements IoConstants, ITagReader, IKeyFrameDataAnalyzer
 			MP4Atom type = MP4Atom.createAtom(fis);
 			// expect ftyp
 			log.debug("Type {}", MP4Atom.intToType(type.getType()));
-			//
-			log.debug("Atom int types - free={} wide={}", MP4Atom.typeToInt("free"), MP4Atom.typeToInt("wide"));
+			//log.debug("Atom int types - free={} wide={}", MP4Atom.typeToInt("free"), MP4Atom.typeToInt("wide"));
 			// keep a running count of the number of atoms found at the "top" levels
 			int topAtoms = 0;
 			// we want a moov and an mdat, anything else throw the invalid file type error

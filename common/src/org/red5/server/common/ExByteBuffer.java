@@ -2,6 +2,7 @@ package org.red5.server.common;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.nio.InvalidMarkException;
 
 /**
  * <p>
@@ -13,7 +14,7 @@ import java.nio.ByteOrder;
  *
  */
 public class ExByteBuffer implements Comparable<ExByteBuffer> {
-	private ByteBuffer wrapped;
+	protected ByteBuffer wrapped;
 	private boolean autoExpand;
 	
 	public static ExByteBuffer wrap(ByteBuffer buf) {
@@ -343,6 +344,42 @@ public class ExByteBuffer implements Comparable<ExByteBuffer> {
 	}
 	
 	protected void checkExpand(int sizeToPut) {
-		// TODO implement the auto size expansion
+		if (isAutoExpand() && !isReadOnly()) {
+			final int limit = wrapped.limit();
+			final int position = wrapped.position();
+			final int capacity = wrapped.capacity();
+			int mark = -1;
+			try {
+				wrapped.reset();
+				mark = wrapped.position();
+				wrapped.position(position);
+			} catch (InvalidMarkException e) {}
+			if (limit - position < sizeToPut) {
+				if (capacity - position >= sizeToPut) {
+					wrapped.limit(capacity);
+				} else {
+					ByteBuffer newBuffer = null;
+					int newCapacity;
+					if (capacity * 2 >= position + sizeToPut) {
+						newCapacity = capacity * 2;
+					} else {
+						newCapacity = position + sizeToPut;
+					}
+					if (wrapped.isDirect()) {
+						newBuffer = ByteBuffer.allocateDirect(newCapacity);
+					} else {
+						newBuffer = ByteBuffer.allocate(newCapacity);
+					}
+					wrapped.flip();
+					newBuffer.put(wrapped);
+					if (mark >= 0) {
+						newBuffer.position(mark);
+						newBuffer.mark();
+						newBuffer.position(position);
+					}
+					wrapped = newBuffer;
+				}
+			}
+		}
 	}
 }

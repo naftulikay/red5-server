@@ -1,5 +1,10 @@
 Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
-Bundle-Name: Common Plug-in
+Bundle-Name: Red5 Common Bundle
 Bundle-SymbolicName: org.red5.server.common
 Bundle-Version: 0.1.0
+Export-Package: org.red5.server.common,
+ org.red5.server.common.amf,
+ org.red5.server.common.rtmp,
+ org.red5.server.common.rtmp.impl,
+ org.red5.server.common.rtmp.packet

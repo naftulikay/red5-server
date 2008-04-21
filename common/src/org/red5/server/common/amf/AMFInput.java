@@ -18,12 +18,13 @@ public interface AMFInput {
 	 * AMFType.AMF_NULL and AMFType.AMF_UNDEFINED respectively.
 	 * <p>
 	 * The input buffer will be set to the original state if any exception
-	 * occurs.
+	 * occurs, otherwise all bytes in the buffer will be consumed if
+	 * it is not enough to create an object.
 	 * 
 	 * @param buf Buffer to read AMF object from.
 	 * @param objectClass The Java class the object is casted to.
 	 * @return The mapped Java object from AMF object. If the remaining
-	 * is not enough for an object, <tt>null</tt> will be returned.
+	 * bytes are not enough for an object, <tt>null</tt> will be returned.
 	 * @exception ClassCastException The Java object can't be casted
 	 * to objectClass.
 	 * @exception AMFInputOutputException If the input doesn't follow AMF format
@@ -34,6 +35,8 @@ public interface AMFInput {
 	
 	/**
 	 * Read as many objects as possible from the input byte buffer.
+	 * The input buffer will be set to the original state if any exception
+	 * occurs, otherwise all bytes in the buffer will be consumed.
 	 * 
 	 * @param buf Buffer to read AMF objects from.
 	 * @param objectClasses An array of class types to cast objects to.

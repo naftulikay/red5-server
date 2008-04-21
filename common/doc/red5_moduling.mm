@@ -149,6 +149,14 @@
 <node CREATED="1208605173582" ID="Freemind_Link_1686473198" MODIFIED="1208605178457" TEXT="registry">
 <node CREATED="1208605633661" ID="Freemind_Link_1996177952" MODIFIED="1208605638739" TEXT="register object with service name"/>
 </node>
+<node CREATED="1208780011890" ID="Freemind_Link_186688925" MODIFIED="1208780014406" TEXT="issues">
+<node CREATED="1208780015250" ID="Freemind_Link_905217239" MODIFIED="1208780034515" TEXT="how to pass connection object to the callee">
+<icon BUILTIN="help"/>
+</node>
+<node CREATED="1208781971953" ID="Freemind_Link_574570108" MODIFIED="1208781992312" TEXT="how to call a method from a stream channel">
+<icon BUILTIN="help"/>
+</node>
+</node>
 </node>
 </node>
 <node CREATED="1208578120457" ID="Freemind_Link_1368921103" MODIFIED="1208578129926" POSITION="right" TEXT="RTMP Core">

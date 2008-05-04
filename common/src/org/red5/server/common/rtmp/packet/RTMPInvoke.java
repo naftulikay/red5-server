@@ -4,7 +4,7 @@ import java.util.Map;
 
 public class RTMPInvoke extends RTMPNotify {
 	private long invokeId;
-	private Map<Object,Object> connectionParams;
+	private Map<String,Object> connectionParams;
 	
 	public RTMPInvoke() {
 		super();
@@ -19,11 +19,11 @@ public class RTMPInvoke extends RTMPNotify {
 		this.invokeId = invokeId;
 	}
 
-	public Map<Object, Object> getConnectionParams() {
+	public Map<String, Object> getConnectionParams() {
 		return connectionParams;
 	}
 
-	public void setConnectionParams(Map<Object, Object> connectionParams) {
+	public void setConnectionParams(Map<String, Object> connectionParams) {
 		this.connectionParams = connectionParams;
 	}
 

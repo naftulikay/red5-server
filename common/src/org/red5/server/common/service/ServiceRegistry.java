@@ -45,4 +45,13 @@ public interface ServiceRegistry {
 	 * @return
 	 */
 	Object[] getService(String serviceName);
+	
+	/**
+	 * Get all the service objects by service name and method name
+	 * that the service object contains.
+	 * @param serviceName
+	 * @param methodName
+	 * @return
+	 */
+	Object[] getService(String serviceName, String methodName);
 }

@@ -21,7 +21,7 @@ public class RTMPPacket {
 	public static final int TYPE_RTMP_HANDSHAKE           = 0x100;
 	
 	private int channel;
-	private int timestamp;
+	private long timestamp;
 	private int size;
 	private int type;
 	private int streamId;
@@ -36,10 +36,10 @@ public class RTMPPacket {
 	public void setChannel(int channel) {
 		this.channel = channel;
 	}
-	public int getTimestamp() {
+	public long getTimestamp() {
 		return timestamp;
 	}
-	public void setTimestamp(int timestamp) {
+	public void setTimestamp(long timestamp) {
 		this.timestamp = timestamp;
 	}
 	public int getSize() {

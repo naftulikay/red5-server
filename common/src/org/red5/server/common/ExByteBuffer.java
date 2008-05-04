@@ -236,9 +236,9 @@ public class ExByteBuffer implements Comparable<ExByteBuffer> {
 		return this;
 	}
 
-	public ExByteBuffer put(ByteBuffer src) {
+	public ExByteBuffer put(ExByteBuffer src) {
 		checkExpand(src.remaining());
-		wrapped.put(src);
+		wrapped.put(src.wrapped);
 		return this;
 	}
 

@@ -7,4 +7,5 @@ Export-Package: org.red5.server.common,
  org.red5.server.common.amf,
  org.red5.server.common.rtmp,
  org.red5.server.common.rtmp.impl,
- org.red5.server.common.rtmp.packet
+ org.red5.server.common.rtmp.packet,
+ org.red5.server.common.service

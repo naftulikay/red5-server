@@ -1,7 +1,5 @@
 package org.red5.server.common.service;
 
-import java.util.Map;
-
 /**
  * The call object for a service invocation.
  * A service call is composed of
@@ -11,18 +9,18 @@ import java.util.Map;
  * A service has a number of methods.
  * (3) arguments
  * Arguments for the method.
- * (4) context map
+ * (4) context object
  * Extra parameters that facilitate the matching and invocation.
  * An example is the connection object that might be used by a service
  * method.
  * 
  * @author Steven Gong (steven.gong@gmail.com)
  */
-public class ServiceCall {
+public class ServiceCall<T> {
 	private String serviceName;
-	private String serviceMethod;
+	private String methodName;
 	private Object[] arguments;
-	private Map<String,Object> callContext;
+	private T callContext;
 	
 	public String getServiceName() {
 		return serviceName;
@@ -30,11 +28,11 @@ public class ServiceCall {
 	public void setServiceName(String serviceName) {
 		this.serviceName = serviceName;
 	}
-	public String getServiceMethod() {
-		return serviceMethod;
+	public String getMethodName() {
+		return methodName;
 	}
-	public void setServiceMethod(String serviceMethod) {
-		this.serviceMethod = serviceMethod;
+	public void setMethodName(String methodName) {
+		this.methodName = methodName;
 	}
 	public Object[] getArguments() {
 		return arguments;
@@ -42,10 +40,10 @@ public class ServiceCall {
 	public void setArguments(Object[] arguments) {
 		this.arguments = arguments;
 	}
-	public Map<String, Object> getCallContext() {
+	public T getCallContext() {
 		return callContext;
 	}
-	public void setCallContext(Map<String, Object> callContext) {
+	public void setCallContext(T callContext) {
 		this.callContext = callContext;
 	}
 	

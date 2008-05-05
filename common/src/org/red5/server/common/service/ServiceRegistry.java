@@ -3,8 +3,7 @@ package org.red5.server.common.service;
 public interface ServiceRegistry {
 	/**
 	 * Register a service object with the specified service name.
-	 * Multiple service objects can be registered with the same name.
-	 * The same service object can also be registered with multiple names.
+	 * Name should be unique.
 	 * 
 	 * @param serviceName The name of service. It could be <tt>null</tt>
 	 * to represent the default service object.
@@ -27,10 +26,9 @@ public interface ServiceRegistry {
 	 * Unregister the service by the service name and the service object.
 	 * 
 	 * @param serviceName The name of the service.
-	 * @param serviceObject
 	 * @return </tt>true</tt> if success or <tt>false</tt> otherwise.
 	 */
-	boolean unregisterService(String serviceName, Object serviceObject);
+	boolean unregisterService(String serviceName);
 	
 	/**
 	 * Get service object by registry key.
@@ -40,18 +38,18 @@ public interface ServiceRegistry {
 	Object getService(ServiceRegistryKey registryKey);
 	
 	/**
-	 * Get all the service objects by service name.
+	 * Get the service object by service name.
 	 * @param serviceName
 	 * @return
 	 */
-	Object[] getService(String serviceName);
+	Object getService(String serviceName);
 	
 	/**
-	 * Get all the service objects by service name and method name
+	 * Get the service object by service name and method name
 	 * that the service object contains.
 	 * @param serviceName
 	 * @param methodName
 	 * @return
 	 */
-	Object[] getService(String serviceName, String methodName);
+	Object getService(String serviceName, String methodName);
 }

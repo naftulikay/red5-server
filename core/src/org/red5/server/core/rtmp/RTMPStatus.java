@@ -7,7 +7,7 @@ import java.util.Map;
 public class RTMPStatus implements Serializable {
 	private static final long serialVersionUID = -1046670173218417241L;
 	
-	public static final String LEVEL_SUCCESS = "error";
+	public static final String LEVEL_ERROR   = "error";
 	public static final String LEVEL_WARNING = "warning";
 	public static final String LEVEL_STATUS  = "status";
 	
@@ -201,6 +201,7 @@ public class RTMPStatus implements Serializable {
 		this.code = code;
 		this.level = level;
 		this.description = description;
+		streamId = 0;
 	}
 	
 	public String getCode() {
@@ -246,16 +247,30 @@ public class RTMPStatus implements Serializable {
 		return additionals;
 	}
 	
+	public static RTMPStatus generateStatusResult(String code, String description) {
+		return new RTMPStatus(code, LEVEL_STATUS, description);
+	}
+	
 	public static RTMPStatus generateErrorResult(String code, Throwable error) {
 		// Construct error object to return
-		String message = "";
+		String description = "";
 		if (error != null && error.getMessage() != null) {
-			message = error.getMessage();
+			description = error.getMessage();
 		}
-		RTMPStatus status = new RTMPStatus(code, "error", message);
+		RTMPStatus status = new RTMPStatus(code, LEVEL_ERROR, description);
 		if (error != null) {
 			status.getAdditionals().put("application", error.getClass().getCanonicalName());
 		}
+		return status;
+	}
+	
+	public static RTMPStatus generateErrorResult(String code, String description) {
+		return new RTMPStatus(code, LEVEL_ERROR, description);
+	}
+	
+	public static RTMPStatus generateErrorResult(String code, String description, Object application) {
+		RTMPStatus status = new RTMPStatus(code, LEVEL_ERROR, description);
+		status.additionals.put("application", application);
 		return status;
 	}
 }

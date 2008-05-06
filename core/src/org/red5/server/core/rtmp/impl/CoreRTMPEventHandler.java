@@ -21,8 +21,8 @@ import org.red5.server.core.rtmp.RTMPStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class RTMPEventCoreHandler implements RTMPHandler<RTMPConnection> {
-	private static final Logger log = LoggerFactory.getLogger(RTMPEventCoreHandler.class);
+public class CoreRTMPEventHandler implements RTMPHandler<RTMPConnection> {
+	private static final Logger log = LoggerFactory.getLogger(CoreRTMPEventHandler.class);
 	
 	private Object connectHandler;
 	private ServiceRegistry coreRegistry;
@@ -47,7 +47,7 @@ public class RTMPEventCoreHandler implements RTMPHandler<RTMPConnection> {
 		switch (connection.getState()) {
 		case RTMPConnection.RTMP_CONN_STATE_INIT:
 			// first handshake
-			connection.setState(RTMPConnection.RTMP_CONN_STATE_HANDSHAKE);
+			connection.onReceiveHandshake(handshake);
 			RTMPHandshake response = new RTMPHandshake();
 			ExByteBuffer handshakeData = ExByteBuffer.allocate(RTMPHandshake.HANDSHAKE_SIZE*2+1);
 			handshakeData.put((byte)0x03);
@@ -64,7 +64,7 @@ public class RTMPEventCoreHandler implements RTMPHandler<RTMPConnection> {
 			break;
 		case RTMPConnection.RTMP_CONN_STATE_HANDSHAKE:
 			// second handshake
-			connection.setState(RTMPConnection.RTMP_CONN_STATE_CONNECTING);
+			connection.onReceiveHandshake(handshake);
 			break;
 		default:
 			// invalid state, ignore
@@ -132,6 +132,7 @@ public class RTMPEventCoreHandler implements RTMPHandler<RTMPConnection> {
 		Object result = null;
 		// Core services
 		try {
+			// TODO use async call instead
 			result = serviceInvoker.syncInvoke(coreRegistry, call);
 		} catch (ServiceNotFoundException e) {
 			if (connection.getState() == RTMPConnection.RTMP_CONN_STATE_CONNECTED) {
@@ -186,6 +187,7 @@ public class RTMPEventCoreHandler implements RTMPHandler<RTMPConnection> {
 		RTMPConnection connection = call.getCallContext();
 		Object result = null;
 		try {
+			// TODO use async call instead
 			result = serviceInvoker.syncInvoke(connectHandler, call);
 		} catch (ServiceNotFoundException e) {
 			result = e;
@@ -207,6 +209,7 @@ public class RTMPEventCoreHandler implements RTMPHandler<RTMPConnection> {
 		} else if (result instanceof Throwable) {
 			isError = true;
 		}
+		// close on error
 		if (isError) {
 			connection.close();
 		}

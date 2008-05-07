@@ -78,6 +78,7 @@ public class RTMPConnectionUtils {
 	 * @return <tt>true</tt> when successfully processed, <tt>false</tt> otherwise.
 	 */
 	public static boolean processConnectionParams(Map<String,Object> connectionParams) {
+		// TODO enhance the implementation with regular expression
 		String tcUrl = (String) connectionParams.get(RTMPConnection.CONNECT_PARAM_KEY_TCURL);
 		String app = (String) connectionParams.get(RTMPConnection.CONNECT_PARAM_KEY_APP);
 		int appIdx = tcUrl.lastIndexOf(app);

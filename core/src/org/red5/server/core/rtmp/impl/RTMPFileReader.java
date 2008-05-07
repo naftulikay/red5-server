@@ -8,7 +8,6 @@ import org.red5.server.common.ExByteBuffer;
 import org.red5.server.common.rtmp.RTMPCodecFactory;
 import org.red5.server.common.rtmp.RTMPHandler;
 import org.red5.server.common.rtmp.RTMPInput;
-import org.red5.server.common.rtmp.impl.DefaultRTMPCodecFactory;
 import org.red5.server.common.rtmp.packet.RTMPPacket;
 
 public class RTMPFileReader {
@@ -49,7 +48,8 @@ public class RTMPFileReader {
 	public static void main(String[] args) throws IOException {
 		RTMPFileReader reader = new RTMPFileReader();
 		reader.setRtmpHandler(new RTMPDumper());
-		RTMPCodecFactory factory = new DefaultRTMPCodecFactory();
+		// TODO get rtmp codec factory
+		RTMPCodecFactory factory = null;
 		reader.setRtmpInput(factory.newRTMPInput());
 		reader.read(new File("e:\\tmp\\h264_test.raw"));
 	}

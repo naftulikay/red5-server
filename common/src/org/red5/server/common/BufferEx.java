@@ -13,31 +13,31 @@ import java.nio.InvalidMarkException;
  * @author Steven Gong (steven.gong@gmail.com)
  *
  */
-public class ExByteBuffer implements Comparable<ExByteBuffer> {
+public class BufferEx implements Comparable<BufferEx> {
 	protected ByteBuffer wrapped;
 	private boolean autoExpand;
 	
-	public static ExByteBuffer wrap(ByteBuffer buf) {
-		return new ExByteBuffer(buf);
+	public static BufferEx wrap(ByteBuffer buf) {
+		return new BufferEx(buf);
 	}
 	
-	public static ExByteBuffer wrap(byte[] buf) {
-		return new ExByteBuffer(ByteBuffer.wrap(buf));
+	public static BufferEx wrap(byte[] buf) {
+		return new BufferEx(ByteBuffer.wrap(buf));
 	}
 	
-	public static ExByteBuffer wrap(byte[] buf, int offset, int length) {
-		return new ExByteBuffer(ByteBuffer.wrap(buf, offset, length));
+	public static BufferEx wrap(byte[] buf, int offset, int length) {
+		return new BufferEx(ByteBuffer.wrap(buf, offset, length));
 	}
 	
-	public static ExByteBuffer allocate(int capacity) {
-		return new ExByteBuffer(ByteBuffer.allocate(capacity));
+	public static BufferEx allocate(int capacity) {
+		return new BufferEx(ByteBuffer.allocate(capacity));
 	}
 	
-	public static ExByteBuffer allocateDirect(int capacity) {
-		return new ExByteBuffer(ByteBuffer.allocateDirect(capacity));
+	public static BufferEx allocateDirect(int capacity) {
+		return new BufferEx(ByteBuffer.allocateDirect(capacity));
 	}
 
-	public ExByteBuffer(ByteBuffer wrapped) {
+	public BufferEx(ByteBuffer wrapped) {
 		this.wrapped = wrapped;
 		this.autoExpand = false;
 	}
@@ -62,8 +62,8 @@ public class ExByteBuffer implements Comparable<ExByteBuffer> {
 		return wrapped.arrayOffset();
 	}
 
-	public ExByteBuffer asReadOnlyBuffer() {
-		ExByteBuffer readonly = new ExByteBuffer(wrapped.asReadOnlyBuffer());
+	public BufferEx asReadOnlyBuffer() {
+		BufferEx readonly = new BufferEx(wrapped.asReadOnlyBuffer());
 		return readonly;
 	}
 
@@ -71,31 +71,31 @@ public class ExByteBuffer implements Comparable<ExByteBuffer> {
 		return wrapped.capacity();
 	}
 
-	public final ExByteBuffer clear() {
+	public final BufferEx clear() {
 		wrapped.clear();
 		return this;
 	}
 
-	public ExByteBuffer compact() {
+	public BufferEx compact() {
 		wrapped.compact();
 		return this;
 	}
 
-	public int compareTo(ExByteBuffer that) {
+	public int compareTo(BufferEx that) {
 		return wrapped.compareTo(that.wrapped);
 	}
 
-	public ExByteBuffer duplicate() {
-		ExByteBuffer duplicated = new ExByteBuffer(wrapped.duplicate());
+	public BufferEx duplicate() {
+		BufferEx duplicated = new BufferEx(wrapped.duplicate());
 		return duplicated;
 	}
 
 	public boolean equals(Object ob) {
-		ExByteBuffer other = (ExByteBuffer) ob;
+		BufferEx other = (BufferEx) ob;
 		return wrapped.equals(other.wrapped);
 	}
 
-	public final ExByteBuffer flip() {
+	public final BufferEx flip() {
 		wrapped.flip();
 		return this;
 	}
@@ -104,12 +104,12 @@ public class ExByteBuffer implements Comparable<ExByteBuffer> {
 		return wrapped.get();
 	}
 
-	public ExByteBuffer get(byte[] dst, int offset, int length) {
+	public BufferEx get(byte[] dst, int offset, int length) {
 		wrapped.get(dst, offset, length);
 		return this;
 	}
 
-	public ExByteBuffer get(byte[] dst) {
+	public BufferEx get(byte[] dst) {
 		wrapped.get(dst);
 		return this;
 	}
@@ -190,12 +190,12 @@ public class ExByteBuffer implements Comparable<ExByteBuffer> {
 		return wrapped.limit();
 	}
 
-	public final ExByteBuffer limit(int newLimit) {
+	public final BufferEx limit(int newLimit) {
 		wrapped.limit(newLimit);
 		return this;
 	}
 
-	public final ExByteBuffer mark() {
+	public final BufferEx mark() {
 		wrapped.mark();
 		return this;
 	}
@@ -204,7 +204,7 @@ public class ExByteBuffer implements Comparable<ExByteBuffer> {
 		return wrapped.order();
 	}
 
-	public final ExByteBuffer order(ByteOrder bo) {
+	public final BufferEx order(ByteOrder bo) {
 		wrapped.order(bo);
 		return this;
 	}
@@ -213,108 +213,108 @@ public class ExByteBuffer implements Comparable<ExByteBuffer> {
 		return wrapped.position();
 	}
 
-	public final ExByteBuffer position(int newPosition) {
+	public final BufferEx position(int newPosition) {
 		wrapped.position(newPosition);
 		return this;
 	}
 
-	public ExByteBuffer put(byte b) {
+	public BufferEx put(byte b) {
 		checkExpand(1);
 		wrapped.put(b);
 		return this;
 	}
 
-	public ExByteBuffer put(byte[] src, int offset, int length) {
+	public BufferEx put(byte[] src, int offset, int length) {
 		checkExpand(length);
 		wrapped.put(src, offset, length);
 		return this;
 	}
 
-	public final ExByteBuffer put(byte[] src) {
+	public final BufferEx put(byte[] src) {
 		checkExpand(src.length);
 		wrapped.put(src);
 		return this;
 	}
 
-	public ExByteBuffer put(ExByteBuffer src) {
+	public BufferEx put(BufferEx src) {
 		checkExpand(src.remaining());
 		wrapped.put(src.wrapped);
 		return this;
 	}
 
-	public ExByteBuffer put(int index, byte b) {
+	public BufferEx put(int index, byte b) {
 		// do not support expansion for indexed operation
 		wrapped.put(index, b);
 		return this;
 	}
 
-	public ExByteBuffer putChar(char value) {
+	public BufferEx putChar(char value) {
 		checkExpand(2);
 		wrapped.putChar(value);
 		return this;
 	}
 
-	public ExByteBuffer putChar(int index, char value) {
+	public BufferEx putChar(int index, char value) {
 		// do not support expansion for indexed operation
 		wrapped.putChar(index, value);
 		return this;
 	}
 
-	public ExByteBuffer putDouble(double value) {
+	public BufferEx putDouble(double value) {
 		checkExpand(8);
 		wrapped.putDouble(value);
 		return this;
 	}
 
-	public ExByteBuffer putDouble(int index, double value) {
+	public BufferEx putDouble(int index, double value) {
 		// do not support expansion for indexed operation
 		wrapped.putDouble(index, value);
 		return this;
 	}
 
-	public ExByteBuffer putFloat(float value) {
+	public BufferEx putFloat(float value) {
 		checkExpand(4);
 		wrapped.putFloat(value);
 		return this;
 	}
 
-	public ExByteBuffer putFloat(int index, float value) {
+	public BufferEx putFloat(int index, float value) {
 		// do not support expansion for indexed operation
 		wrapped.putFloat(index, value);
 		return this;
 	}
 
-	public ExByteBuffer putInt(int index, int value) {
+	public BufferEx putInt(int index, int value) {
 		// do not support expansion for indexed operation
 		wrapped.putInt(index, value);
 		return this;
 	}
 
-	public ExByteBuffer putInt(int value) {
+	public BufferEx putInt(int value) {
 		checkExpand(4);
 		wrapped.putInt(value);
 		return this;
 	}
 
-	public ExByteBuffer putLong(int index, long value) {
+	public BufferEx putLong(int index, long value) {
 		// do not support expansion for indexed operation
 		wrapped.putLong(index, value);
 		return this;
 	}
 
-	public ExByteBuffer putLong(long value) {
+	public BufferEx putLong(long value) {
 		checkExpand(8);
 		wrapped.putLong(value);
 		return this;
 	}
 
-	public ExByteBuffer putShort(int index, short value) {
+	public BufferEx putShort(int index, short value) {
 		// do not support expansion for indexed operation
 		wrapped.putShort(index, value);
 		return this;
 	}
 
-	public ExByteBuffer putShort(short value) {
+	public BufferEx putShort(short value) {
 		checkExpand(2);
 		wrapped.putShort(value);
 		return this;
@@ -324,17 +324,17 @@ public class ExByteBuffer implements Comparable<ExByteBuffer> {
 		return wrapped.remaining();
 	}
 
-	public final ExByteBuffer reset() {
+	public final BufferEx reset() {
 		wrapped.reset();
 		return this;
 	}
 
-	public final ExByteBuffer rewind() {
+	public final BufferEx rewind() {
 		wrapped.rewind();
 		return this;
 	}
 
-	public ExByteBuffer slice() {
+	public BufferEx slice() {
 		wrapped.slice();
 		return this;
 	}

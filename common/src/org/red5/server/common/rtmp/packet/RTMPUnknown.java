@@ -1,19 +1,19 @@
 package org.red5.server.common.rtmp.packet;
 
-import org.red5.server.common.ExByteBuffer;
+import org.red5.server.common.BufferEx;
 
 public class RTMPUnknown extends RTMPPacket {
-	private ExByteBuffer unknownBody;
+	private BufferEx unknownBody;
 
 	public RTMPUnknown(int type) {
 		super(type);
 	}
 
-	public ExByteBuffer getUnknownBody() {
+	public BufferEx getUnknownBody() {
 		return unknownBody;
 	}
 
-	public void setUnknownBody(ExByteBuffer unknownBody) {
+	public void setUnknownBody(BufferEx unknownBody) {
 		this.unknownBody = unknownBody;
 	}
 	

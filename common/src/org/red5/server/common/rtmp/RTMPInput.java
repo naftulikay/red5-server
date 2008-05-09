@@ -1,6 +1,6 @@
 package org.red5.server.common.rtmp;
 
-import org.red5.server.common.ExByteBuffer;
+import org.red5.server.common.BufferEx;
 import org.red5.server.common.rtmp.packet.RTMPPacket;
 
 public interface RTMPInput {
@@ -15,7 +15,7 @@ public interface RTMPInput {
 	 * in buffer are not enough for an RTMP packet.
 	 * @throws RTMPCodecException Any problem found during decoding.
 	 */
-	RTMPPacket read(ExByteBuffer buf) throws RTMPCodecException;
+	RTMPPacket read(BufferEx buf) throws RTMPCodecException;
 	
 	/**
 	 * Decode as many RTMP packets as possible from the buffer.
@@ -27,7 +27,7 @@ public interface RTMPInput {
 	 * the bytes in buffer are not enough for an RTMP packet.
 	 * @throws RTMPCodecException Any problem found during decoding.
 	 */
-	RTMPPacket[] readAll(ExByteBuffer buf) throws RTMPCodecException;
+	RTMPPacket[] readAll(BufferEx buf) throws RTMPCodecException;
 	
 	RTMPCodecState getCodecState();
 	

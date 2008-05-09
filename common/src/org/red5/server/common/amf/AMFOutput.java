@@ -2,7 +2,7 @@ package org.red5.server.common.amf;
 
 import java.nio.BufferOverflowException;
 
-import org.red5.server.common.ExByteBuffer;
+import org.red5.server.common.BufferEx;
 
 public interface AMFOutput {
 	/**
@@ -17,7 +17,7 @@ public interface AMFOutput {
 	 * @exception AMFInputOutputException If the Java object to AMF object
 	 * mapping is not possible.
 	 */
-	void write(ExByteBuffer buf, Object object, AMFType amfType)
+	void write(BufferEx buf, Object object, AMFType amfType)
 	throws BufferOverflowException, AMFInputOutputException;
 	
 	/**
@@ -27,7 +27,7 @@ public interface AMFOutput {
 	 * @param objects Java objects to write.
 	 * @param amfTypes An array of specified AMF types for mapping.
 	 */
-	void writeAll(ExByteBuffer buf, Object[] objects, AMFType[] amfTypes)
+	void writeAll(BufferEx buf, Object[] objects, AMFType[] amfTypes)
 	throws BufferOverflowException, AMFInputOutputException;
 	
 	/**

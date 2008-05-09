@@ -1,6 +1,6 @@
 package org.red5.server.common.amf;
 
-import org.red5.server.common.ExByteBuffer;
+import org.red5.server.common.BufferEx;
 
 /**
  * Interface to read AMF objects.
@@ -30,7 +30,7 @@ public interface AMFInput {
 	 * @exception AMFInputOutputException If the input doesn't follow AMF format
 	 * or the java class mapping specified in the content is not found.
 	 */
-	<T> T read(ExByteBuffer buf, Class<T> objectClass)
+	<T> T read(BufferEx buf, Class<T> objectClass)
 	throws AMFInputOutputException, ClassCastException;
 	
 	/**
@@ -43,7 +43,7 @@ public interface AMFInput {
 	 * @return An array of mapped Java objects from AMF objects.
 	 */
 	@SuppressWarnings("unchecked")
-	Object[] readAll(ExByteBuffer buf, Class[] objectClasses)
+	Object[] readAll(BufferEx buf, Class[] objectClasses)
 	throws AMFInputOutputException, ClassCastException;
 	
 	/**

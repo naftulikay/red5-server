@@ -4,7 +4,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 
-import org.red5.server.common.ExByteBuffer;
+import org.red5.server.common.BufferEx;
 import org.red5.server.common.rtmp.RTMPCodecFactory;
 import org.red5.server.common.rtmp.RTMPHandler;
 import org.red5.server.common.rtmp.RTMPInput;
@@ -30,8 +30,8 @@ public class RTMPFileReader {
 			int bytesRead;
 			while ((bytesRead = fin.read(buf)) >= 0) {
 				if (bytesRead > 0) {
-					ExByteBuffer byteBuffer =
-						ExByteBuffer.wrap(buf, 0, bytesRead);
+					BufferEx byteBuffer =
+						BufferEx.wrap(buf, 0, bytesRead);
 					RTMPPacket packet = rtmpInput.read(byteBuffer);
 					if (packet != null) {
 						rtmpHandler.onPacket(this, packet);

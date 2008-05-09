@@ -3,8 +3,7 @@ package org.red5.server.core.rtmp.impl;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.red5.server.common.ExByteBuffer;
-import org.red5.server.common.rtmp.RTMPHandler;
+import org.red5.server.common.BufferEx;
 import org.red5.server.common.rtmp.packet.RTMPHandshake;
 import org.red5.server.common.rtmp.packet.RTMPInvoke;
 import org.red5.server.common.rtmp.packet.RTMPNotify;
@@ -17,12 +16,13 @@ import org.red5.server.common.service.ServiceRegistry;
 import org.red5.server.core.rtmp.RTMPApplicationInstance;
 import org.red5.server.core.rtmp.RTMPConnection;
 import org.red5.server.core.rtmp.RTMPConnectionUtils;
+import org.red5.server.core.rtmp.RTMPConnectorHandler;
 import org.red5.server.core.rtmp.RTMPStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class CoreRTMPEventHandler implements RTMPHandler<RTMPConnection> {
-	private static final Logger log = LoggerFactory.getLogger(CoreRTMPEventHandler.class);
+public class CoreRTMPConnectorHandler implements RTMPConnectorHandler {
+	private static final Logger log = LoggerFactory.getLogger(CoreRTMPConnectorHandler.class);
 	
 	private Object connectHandler;
 	private ServiceRegistry coreRegistry;
@@ -49,7 +49,7 @@ public class CoreRTMPEventHandler implements RTMPHandler<RTMPConnection> {
 			// first handshake
 			connection.onReceiveHandshake(handshake);
 			RTMPHandshake response = new RTMPHandshake();
-			ExByteBuffer handshakeData = ExByteBuffer.allocate(RTMPHandshake.HANDSHAKE_SIZE*2+1);
+			BufferEx handshakeData = BufferEx.allocate(RTMPHandshake.HANDSHAKE_SIZE*2+1);
 			handshakeData.put((byte)0x03);
 			// TODO: the first four bytes of the handshake reply seem to be the
 			//       server uptime - send something better here...
@@ -94,10 +94,11 @@ public class CoreRTMPEventHandler implements RTMPHandler<RTMPConnection> {
 			notify instanceof RTMPInvoke && notify.getArguments().size() == 1) {
 			RTMPInvoke invoke = (RTMPInvoke) notify;
 			Object result = invoke.getArguments().get(0);
+			// TODO pass channel and stream id?
 			if ("_result".equals(methodName)) {
-				connection.onResult(invoke.getInvokeId(), result, invoke.getChannel());
+				connection.onResult(invoke.getInvokeId(), result);
 			} else {
-				connection.onError(invoke.getInvokeId(), result, invoke.getChannel());
+				connection.onError(invoke.getInvokeId(), result);
 			}
 			return;
 		}
@@ -135,16 +136,19 @@ public class CoreRTMPEventHandler implements RTMPHandler<RTMPConnection> {
 			// TODO use async call instead
 			result = serviceInvoker.syncInvoke(coreRegistry, call);
 		} catch (ServiceNotFoundException e) {
+			result = e;
 			if (connection.getState() == RTMPConnection.RTMP_CONN_STATE_CONNECTED) {
 				// Try services in app instance
 				RTMPApplicationInstance appInstance = connection.getApplicationInstance();
 				ServiceRegistry instanceRegistry = appInstance.getInstanceRegistry();
-				try {
-					result = serviceInvoker.syncInvoke(instanceRegistry, call);
-				} catch (ServiceNotFoundException e1) {
-					result = e1;
-				} catch (ServiceInvocationException e1) {
-					result = e1;
+				if (instanceRegistry != null) {
+					try {
+						result = serviceInvoker.syncInvoke(instanceRegistry, call);
+					} catch (ServiceNotFoundException e1) {
+						result = e1;
+					} catch (ServiceInvocationException e1) {
+						result = e1;
+					}
 				}
 			}
 		} catch (ServiceInvocationException e) {
@@ -169,6 +173,22 @@ public class CoreRTMPEventHandler implements RTMPHandler<RTMPConnection> {
 				RTMPConnectionUtils.returnErrorForInvoke(connection, result, invoke);
 			}
 		}
+	}
+
+	@Override
+	public void packetSent(RTMPConnection connection, RTMPPacket packet) {
+		// TODO fire packet sent event
+	}
+
+	@Override
+	public void sessionClosed(RTMPConnection connection) {
+		// TODO fire close event
+		connection.close();
+	}
+
+	@Override
+	public void sessionOpened(RTMPConnection connection) {
+		// TODO fire open event
 	}
 
 	public void setCoreRegistry(ServiceRegistry coreRegistry) {

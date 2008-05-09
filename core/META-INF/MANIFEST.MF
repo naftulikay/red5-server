@@ -3,9 +3,11 @@ Bundle-ManifestVersion: 2
 Bundle-Name: Red5 Core Bundle
 Bundle-SymbolicName: org.red5.server.core
 Bundle-Version: 0.1.0
+Spring-Context: *
 Import-Package: org.red5.server.common,
  org.red5.server.common.amf,
  org.red5.server.common.rtmp,
  org.red5.server.common.rtmp.packet,
  org.red5.server.common.service,
  org.slf4j;version="1.4.3"
+Export-Package: org.red5.server.core.rtmp

@@ -54,12 +54,13 @@ public interface RTMPConnection {
 	 */
 	boolean connectToAppInstance(RTMPApplicationInstance appInstance, Map<String,Object> connectionParams);
 	RTMPApplicationInstance getApplicationInstance();
+	Map<String,Object> getConnectionParams();
 	
 	long call(ServiceCall<Object> call, int channel, ServiceCallback callback);
 	
 	void close();
 	
 	// TODO used by core handler only, need more modularized?
-	void onResult(long invokeId, Object result, int channel);
-	void onError(long invokeId, Object error, int channel);
+	void onResult(long invokeId, Object result);
+	void onError(long invokeId, Object error);
 }

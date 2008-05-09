@@ -21,4 +21,7 @@ public interface RTMPApplicationInstance {
 	 * @return Reject object. <tt>null</tt> if the connection is accepted.
 	 */
 	Object connect(RTMPConnection connection, Map<String,Object> connectionParams, List<Object> args);
+	
+	void acquire();
+	void release();
 }

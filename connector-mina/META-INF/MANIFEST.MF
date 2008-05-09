@@ -1,0 +1,19 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: Red5 Mina Connector
+Bundle-SymbolicName: org.red5.server.connector.mina
+Bundle-Version: 0.1.0
+Spring-Context: *
+Import-Package: org.apache.mina.common,
+ org.apache.mina.filter.codec,
+ org.apache.mina.filter.executor,
+ org.apache.mina.filter.logging,
+ org.apache.mina.transport.socket,
+ org.apache.mina.transport.socket.nio,
+ org.red5.server.common,
+ org.red5.server.common.amf,
+ org.red5.server.common.rtmp,
+ org.red5.server.common.rtmp.packet,
+ org.red5.server.common.service,
+ org.red5.server.core.rtmp,
+ org.slf4j;version="1.4.3"

@@ -13,6 +13,8 @@ public interface RTMPApplicationInstance {
 	RTMPApplication getApplication();
 	ServiceRegistry getInstanceRegistry();
 	Collection<RTMPConnection> getConnections();
+	
+	ClassLoader getClassLoader();
 	/**
 	 * Handles a connect from RTMPConnection to this instance.
 	 * @param connection

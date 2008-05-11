@@ -26,7 +26,10 @@ public class DefaultRTMPConnectHandler {
 					RTMPStatus.NC_CONNECT_FAILED, "Invalid connection state");
 		}
 		Map<String,Object> connParamsProcessed = new HashMap<String,Object>(connectionParams);
-		RTMPConnectionUtils.processConnectionParams(connParamsProcessed);
+		if (!RTMPConnectionUtils.processConnectionParams(connParamsProcessed)) {
+			return RTMPStatus.generateErrorResult(
+					RTMPStatus.NC_CONNECT_FAILED, "Invalid connection parameters");
+		}
 		
 		String host = (String) connParamsProcessed.get(RTMPConnection.CONNECT_PARAM_KEY_HOST);
 		String appName = (String) connParamsProcessed.get(RTMPConnection.CONNECT_PARAM_KEY_APP_NAME);
@@ -68,7 +71,7 @@ public class DefaultRTMPConnectHandler {
 			return rtmpStatus;
 		} finally {
 			if (appInstance != null) {
-				application.releaseInstance(appInstance.getInstanceName());
+				appInstance.release();
 			}
 		}
 	}

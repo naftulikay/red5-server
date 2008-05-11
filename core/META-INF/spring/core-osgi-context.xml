@@ -10,4 +10,6 @@
 		interface="org.red5.server.core.rtmp.RTMPApplicationManager" />
 	<osgi:service ref="coreRtmpConnectorHandler"
 		interface="org.red5.server.core.rtmp.RTMPConnectorHandler" />
+	<osgi:service ref="coreServiceRegistry"
+		interface="org.red5.server.common.service.ServiceRegistry" />
 </beans>

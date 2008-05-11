@@ -1,6 +1,7 @@
 package org.red5.server.common.rtmp.packet;
 
 public class RTMPPacket {
+	// official types start with 1
 	public static final int TYPE_RTMP_CHUNK_SIZE          = 0x01;
 	// unknown 0x02
 	public static final int TYPE_RTMP_BYTES_READ          = 0x03;

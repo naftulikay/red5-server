@@ -48,7 +48,7 @@ public interface RTMPOutput {
 	
 	RTMPCodecState getCodecState();
 	
-	RTMPMode getOutputRTMPMode();
+	boolean isServerMode();
 	
 	void resetOutputChannel(int channel);
 	

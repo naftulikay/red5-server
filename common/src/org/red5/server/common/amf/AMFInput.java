@@ -23,6 +23,38 @@ public interface AMFInput {
 	 * 
 	 * @param buf Buffer to read AMF object from.
 	 * @param objectClass The Java class the object is casted to.
+	 * @param classLoader The class loader to load the customized classes.
+	 * Current thread's loader is used when it is <tt>null</tt>.
+	 * @return The mapped Java object from AMF object. If the remaining
+	 * bytes are not enough for an object, <tt>null</tt> will be returned.
+	 * @exception ClassCastException The Java object can't be casted
+	 * to objectClass.
+	 * @exception AMFInputOutputException If the input doesn't follow AMF format
+	 * or the java class mapping specified in the content is not found.
+	 */
+	<T> T read(BufferEx buf, Class<T> objectClass, ClassLoader classLoader)
+	throws AMFInputOutputException, ClassCastException;
+	
+	/**
+	 * Read as many objects as possible from the input byte buffer.
+	 * The input buffer will be set to the original state if any exception
+	 * occurs, otherwise all bytes in the buffer will be consumed.
+	 * 
+	 * @param buf Buffer to read AMF objects from.
+	 * @param objectClasses An array of class types to cast objects to.
+	 * @param classLoader The class loader to load the customized classes.
+	 * Current thread's loader is used when it is <tt>null</tt>.
+	 * @return An array of mapped Java objects from AMF objects.
+	 */
+	@SuppressWarnings("unchecked")
+	Object[] readAll(BufferEx buf, Class[] objectClasses, ClassLoader classLoader)
+	throws AMFInputOutputException, ClassCastException;
+	
+	/**
+	 * Read an AMF object with the default class loader.
+	 * 
+	 * @param buf Buffer to read AMF object from.
+	 * @param objectClass The Java class the object is casted to.
 	 * @return The mapped Java object from AMF object. If the remaining
 	 * bytes are not enough for an object, <tt>null</tt> will be returned.
 	 * @exception ClassCastException The Java object can't be casted
@@ -34,9 +66,8 @@ public interface AMFInput {
 	throws AMFInputOutputException, ClassCastException;
 	
 	/**
-	 * Read as many objects as possible from the input byte buffer.
-	 * The input buffer will be set to the original state if any exception
-	 * occurs, otherwise all bytes in the buffer will be consumed.
+	 * Read as many objects as possible from the input byte buffer with
+	 * the default class loader.
 	 * 
 	 * @param buf Buffer to read AMF objects from.
 	 * @param objectClasses An array of class types to cast objects to.
@@ -61,14 +92,23 @@ public interface AMFInput {
 	
 	/**
 	 * Reset this input to the initial state. All the internal state
-	 * will be reset and the input mode will be set to the intial one.
+	 * will be reset and the input mode will be set to the initial one.
 	 */
 	void resetInput();
 	
 	/**
-	 * Reset this input to the initial state. All the internal state
+	 * Reset this input to the mode specified. All the internal state
 	 * will be reset and the input mode is set to the mode provided.
+	 * 
 	 * @param newMode The new mode to start with.
 	 */
 	void resetInput(AMFMode newMode);
+	
+	/**
+	 * Set the default class loader used by this input. Current thread's
+	 * class loader will be used.
+	 * 
+	 * @param defaultClassLoader
+	 */
+	void setDefaultClassLoader(ClassLoader defaultClassLoader);
 }

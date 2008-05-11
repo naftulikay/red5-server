@@ -19,6 +19,8 @@ public class RTMPMinaConnection implements RTMPConnection {
 	private int connectionId;
 	private RTMPApplicationInstance appInstance;
 	private Map<String,Object> connectionParams;
+	private RTMPInput rtmpInput;
+	private RTMPOutput rtmpOutput;
 	
 	public RTMPMinaConnection(IoSession session) {
 		this.connectionId = hashCode();
@@ -52,6 +54,7 @@ public class RTMPMinaConnection implements RTMPConnection {
 		this.connectionParams = connectionParams;
 		this.state = RTMP_CONN_STATE_CONNECTED;
 		this.appInstance.acquire();
+		rtmpInput.setDefaultClassLoader(this.appInstance.getClassLoader());
 		return true;
 	}
 
@@ -104,12 +107,18 @@ public class RTMPMinaConnection implements RTMPConnection {
 	}
 	
 	public RTMPInput getRTMPInput() {
-		// TODO
-		return null;
+		return rtmpInput;
 	}
 	
 	public RTMPOutput getRTMPOutput() {
-		// TODO
-		return null;
+		return rtmpOutput;
+	}
+	
+	public void setRTMPInput(RTMPInput rtmpInput) {
+		this.rtmpInput = rtmpInput;
+	}
+	
+	public void setRTMPOutput(RTMPOutput rtmpOutput) {
+		this.rtmpOutput = rtmpOutput;
 	}
 }

@@ -109,10 +109,17 @@ public abstract class BaseRTMPInput implements RTMPInput {
 
 	@Override
 	public void resetInput() {
+		resetInput(RTMPCodecState.HANDSHAKE_1);
+	}
+
+	@Override
+	public void resetInput(RTMPCodecState codecState) {
+		decodeState.reset();
 		internalBuf.clear();
 		amfInput.resetInput();
 		lastHeaderMap.clear();
 		decodingPacketMap.clear();
+		this.codecState = codecState;
 	}
 
 	@Override
@@ -151,6 +158,13 @@ public abstract class BaseRTMPInput implements RTMPInput {
 		return handshake;
 	}
 	
+	/**
+	 * Read a generic RTMP Packet from buffer.
+	 * @param buf
+	 * @param classLoader
+	 * @return <tt>null</tt> when input buffer is not sufficient.
+	 * @throws RTMPCodecException
+	 */
 	protected RTMPPacket readPacket(BufferEx buf, ClassLoader classLoader)
 	throws RTMPCodecException {
 		if (codecState != RTMPCodecState.GENERIC_RTMP) {
@@ -158,9 +172,12 @@ public abstract class BaseRTMPInput implements RTMPInput {
 		}
 		RTMPPacketObject packetObject = readChunk(buf);
 		while (packetObject != null) {
-			if (packetObject.isCompleteDecoding()) {
+			if (packetObject.okToDecode()) {
+				RTMPHeader header = packetObject.header;
+				decodingPacketMap.remove(header.getChannel());
+				lastHeaderMap.put(header.getChannel(), header);
 				packetObject.body.flip();
-				return decodePacket(packetObject.header, packetObject.body, classLoader);
+				return decodePacket(header, packetObject.body, classLoader);
 			} else {
 				packetObject = readChunk(buf);
 			}
@@ -172,6 +189,15 @@ public abstract class BaseRTMPInput implements RTMPInput {
 			RTMPHeader header, BufferEx body, ClassLoader classLoader)
 	throws RTMPCodecException;
 	
+	/**
+	 * Read a RTMP chunk from the buffer.
+	 * @param buf
+	 * @return The RTMPPacketObject that represents an
+	 * RTMP packet. Use RTMPPacketObject.okToDecode() to
+	 * decide whether all chunks have been read.
+	 * <tt>null</tt> if the buffer is not enough for a
+	 * chunk.
+	 */
 	private RTMPPacketObject readChunk(BufferEx buf) {
 		if (!okToReadChunk(buf)) {
 			return null;
@@ -183,14 +209,8 @@ public abstract class BaseRTMPInput implements RTMPInput {
 			decodingPacketMap.get(decodeState.channelId);
 		// read remaining bytes in the chunk
 		decodingPacket.body.put(internalBuf);
-		if (decodingPacket.remaining() == 0) {
-			decodingPacketMap.remove(decodeState.channelId);
-			lastHeaderMap.put(decodeState.channelId, decodingPacket.header);
-			return decodingPacket;
-		} else {
-			internalBuf.clear();
-			return null;
-		}
+		internalBuf.clear();
+		return decodingPacket;
 	}
 	
 	private boolean okToReadChunk(BufferEx buf) {
@@ -234,7 +254,8 @@ public abstract class BaseRTMPInput implements RTMPInput {
 					byte channelByte1, channelByte2;
 					channelByte1 = internalBuf.get();
 					channelByte2 = internalBuf.get();
-					decodeState.channelId = 64 + (channelByte1 & 0x0ff) + ((channelByte2 & 0x0ff) << 8);
+					decodeState.channelId = 320 + (channelByte1 & 0x0ff) +
+						((channelByte2 & 0x0ff) << 8);
 					break;
 				}
 
@@ -337,17 +358,12 @@ public abstract class BaseRTMPInput implements RTMPInput {
 			body.setAutoExpand(false);
 		}
 		
-		public boolean isCompleteDecoding() {
+		public boolean okToDecode() {
 			if (body.position() == header.getSize()) {
 				return true;
 			} else {
 				return false;
 			}
-		}
-		
-		public int remaining() {
-			int bodyPos = body.position();
-			return header.getSize() - bodyPos;
 		}
 	}
 	

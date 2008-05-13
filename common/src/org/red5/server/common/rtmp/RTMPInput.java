@@ -62,6 +62,8 @@ public interface RTMPInput {
 	
 	void resetInput();
 	
+	void resetInput(RTMPCodecState codecState);
+	
 	/**
 	 * Set the default class loader used by this input. Current thread's
 	 * class loader will be used.

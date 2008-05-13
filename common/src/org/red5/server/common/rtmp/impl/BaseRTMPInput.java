@@ -15,16 +15,19 @@ import org.red5.server.common.rtmp.packet.RTMPHandshake;
 import org.red5.server.common.rtmp.packet.RTMPHeader;
 import org.red5.server.common.rtmp.packet.RTMPPacket;
 
+/**
+ * Base RTMPInput that demux RTMP buffer into packets.
+ * 
+ * @author Steven Gong (steven.gong@gmail.com)
+ */
 public abstract class BaseRTMPInput implements RTMPInput {
 	private static final int INTERNAL_BUF_CAPACITY = 1024;
-	private static final int SUB_HEADER_LENGTH[] = { 11, 7, 3, 0 }; // without channel id
+	private static final int SUB_HEADER_SIZE[] = { 11, 7, 3, 0 }; // without channel id
 	
 	protected ClassLoader defaultClassLoader;
 	protected RTMPCodecState codecState;
 	protected AMFInput amfInput;
 	protected boolean isServerMode;
-	
-	protected BufferEx internalBuf;
 	protected int chunkSize = 128;
 	
 	protected Map<Integer,RTMPHeader> lastHeaderMap =
@@ -33,7 +36,8 @@ public abstract class BaseRTMPInput implements RTMPInput {
 	private Map<Integer,RTMPPacketObject> decodingPacketMap =
 		new HashMap<Integer,RTMPPacketObject>();
 	
-	private byte[] workingBuf = new byte[14];
+	private BufferEx internalBuf;
+	private RTMPDecodeState decodeState = new RTMPDecodeState();
 	
 	public BaseRTMPInput(boolean isServerMode) {
 		codecState = RTMPCodecState.HANDSHAKE_1;
@@ -169,134 +173,150 @@ public abstract class BaseRTMPInput implements RTMPInput {
 	throws RTMPCodecException;
 	
 	private RTMPPacketObject readChunk(BufferEx buf) {
-		int originInternalBufPos = internalBuf.position();
-		int originBufPos = buf.position();
+		if (!okToReadChunk(buf)) {
+			return null;
+		}
 		internalBuf.flip();
-		int bytesRemaining = internalBuf.remaining() + buf.remaining();
-		if (bytesRemaining < 1) {
-			internalBuf.limit(internalBuf.capacity());
-			internalBuf.position(originInternalBufPos);
-			return null;
-		}
-		byte channelByte0;
-		if (internalBuf.remaining() >= 1) {
-			channelByte0 = internalBuf.get();
-		} else {
-			channelByte0 = buf.get();
-		}
-		int bytesChannelId = 1;
-		if ((channelByte0 & 0x3f) == 0) {
-			bytesChannelId = 2;
-		} else if ((channelByte0 & 0x3f) == 1) {
-			bytesChannelId = 3;
-		}
-		int headerType = (channelByte0 & 0x3) >> 6;
-		int bytesHeader = bytesChannelId + SUB_HEADER_LENGTH[headerType];
-		if (bytesRemaining < bytesHeader) {
-			internalBuf.limit(internalBuf.capacity());
-			internalBuf.position(originInternalBufPos);
-			buf.position(originBufPos);
-			internalBuf.put(buf);
-			return null;
-		}
-		internalBuf.position(originInternalBufPos);
-		buf.position(originBufPos);
-		if (internalBuf.remaining() >= bytesHeader) {
-			internalBuf.put(workingBuf, 0, bytesHeader);
-		} else {
-			int internalRemaining = internalBuf.remaining();
-			internalBuf.put(workingBuf, 0, internalRemaining);
-			buf.put(workingBuf, internalRemaining, bytesHeader - internalRemaining);
-		}
-		int channelId;
-		switch (bytesChannelId) {
-		case 1:
-			channelId = workingBuf[0] & 0x3f;
-			break;
-		case 2:
-			channelId = 64 + (workingBuf[1] & 0x0ff);
-			break;
-		case 3:
-		default:
-			channelId = 64 + (workingBuf[1] & 0x0ff) + ((workingBuf[2] & 0x0ff) << 8);
-			break;
-		}
-		BufferEx subHeaderBuf = BufferEx.wrap(workingBuf, bytesChannelId, SUB_HEADER_LENGTH[headerType]);
-		RTMPPacketObject decodingPacket = decodingPacketMap.get(channelId);
-		if (decodingPacket == null) {
-			long timestamp;
-			int relativeTS = 0;
-			int size;
-			int type;
-			int streamId;
-			RTMPHeader lastHeader = lastHeaderMap.get(channelId);
-			if (headerType != 0 && lastHeader == null) {
-				throw new RTMPCodecException("Last header not found parsing headerType " + headerType);
-			}
-			switch (headerType) {
-			case 0:
-				timestamp = BufferExUtils.readMediumIntBE(subHeaderBuf);
-				size = BufferExUtils.readMediumIntBE(subHeaderBuf);
-				type = subHeaderBuf.get() & 0x0ff;
-				streamId = BufferExUtils.readMediumIntLE(subHeaderBuf);
-				break;
-			case 1:
-				relativeTS = BufferExUtils.readMediumIntBE(subHeaderBuf);
-				timestamp = lastHeader.getTimestamp() + relativeTS;
-				size = BufferExUtils.readMediumIntBE(subHeaderBuf);
-				type = subHeaderBuf.get() & 0x0ff;
-				streamId = lastHeader.getStreamId();
-				break;
-			case 2:
-				relativeTS = BufferExUtils.readMediumIntBE(subHeaderBuf);
-				timestamp = lastHeader.getTimestamp() + relativeTS;
-				size = lastHeader.getSize();
-				type = lastHeader.getSize();
-				streamId = lastHeader.getStreamId();
-				break;
-			case 3:
-				relativeTS = lastHeader.getRelativeTS();
-				timestamp = lastHeader.getTimestamp();
-				size = lastHeader.getSize();
-				type = lastHeader.getSize();
-				streamId = lastHeader.getStreamId();
-				break;
-			default:
-				// impossible value
-				throw new RTMPCodecException("Impossible code path");
-			}
-			RTMPHeader currentHeader = new RTMPHeader();
-			currentHeader.setChannel(channelId);
-			currentHeader.setRelativeTS(relativeTS);
-			currentHeader.setTimestamp(timestamp);
-			currentHeader.setSize(size);
-			currentHeader.setType(type);
-			currentHeader.setStreamId(streamId);
-			decodingPacket = new RTMPPacketObject(currentHeader);
-			decodingPacketMap.put(channelId, decodingPacket);
-		}
-		// try to read remaining bytes in the chunk
-		int bytesToRead =
-			decodingPacket.remaining() > this.chunkSize ?
-					this.chunkSize : decodingPacket.remaining();
-		bytesToRead -= internalBuf.remaining();
-		if (buf.remaining() < bytesToRead) {
-			internalBuf.limit(internalBuf.capacity());
-			internalBuf.position(originInternalBufPos);
-			buf.position(originBufPos);
-			internalBuf.put(buf);
-			return null;
-		}
+		internalBuf.position(decodeState.channelIdSize +
+				SUB_HEADER_SIZE[decodeState.headerType]);
+		RTMPPacketObject decodingPacket =
+			decodingPacketMap.get(decodeState.channelId);
+		// read remaining bytes in the chunk
 		decodingPacket.body.put(internalBuf);
-		BufferExUtils.getBufferByLength(decodingPacket.body, buf, bytesToRead);
 		if (decodingPacket.remaining() == 0) {
-			decodingPacketMap.remove(channelId);
-			lastHeaderMap.put(channelId, decodingPacket.header);
+			decodingPacketMap.remove(decodeState.channelId);
+			lastHeaderMap.put(decodeState.channelId, decodingPacket.header);
 			return decodingPacket;
 		} else {
 			internalBuf.clear();
 			return null;
 		}
+	}
+	
+	private boolean okToReadChunk(BufferEx buf) {
+		if (buf.remaining() < decodeState.bytesNeeded) {
+			decodeState.bytesNeeded -= buf.remaining();
+			internalBuf.put(buf);
+			return false;
+		}
+		boolean continueDecoding = true;
+		int originInternalBufPos;
+		while (continueDecoding) {
+			BufferExUtils.getBufferByLength(internalBuf, buf,
+					decodeState.bytesNeeded);
+			originInternalBufPos = internalBuf.position();
+			internalBuf.flip();
+			switch (decodeState.state) {
+			case RTMPDecodeState.DECODE_STATE_INIT:
+				byte channelByte0 = internalBuf.get();
+				decodeState.channelIdSize = 1;
+				if ((channelByte0 & 0x3f) == 0) {
+					decodeState.channelIdSize = 2;
+				} else if ((channelByte0 & 0x3f) == 1) {
+					decodeState.channelIdSize = 3;
+				}
+				decodeState.headerType = (channelByte0 & 0x3) >> 6;
+				int headerSize = decodeState.channelIdSize +
+					SUB_HEADER_SIZE[decodeState.headerType];
+				decodeState.bytesNeeded = headerSize - 1;
+				break;
+			case RTMPDecodeState.DECODE_STATE_NEED_HEADER:
+				channelByte0 = internalBuf.get();
+				switch (decodeState.channelIdSize) {
+				case 1:
+					decodeState.channelId = channelByte0 & 0x3f;
+					break;
+				case 2:
+					decodeState.channelId = 64 + (internalBuf.get() & 0x0ff);
+					break;
+				case 3:
+				default:
+					byte channelByte1, channelByte2;
+					channelByte1 = internalBuf.get();
+					channelByte2 = internalBuf.get();
+					decodeState.channelId = 64 + (channelByte1 & 0x0ff) + ((channelByte2 & 0x0ff) << 8);
+					break;
+				}
+
+				RTMPHeader lastHeader = lastHeaderMap.get(decodeState.channelId);
+				RTMPPacketObject decodingPacket = decodingPacketMap.get(decodeState.channelId);
+				if (decodeState.headerType != 0 && lastHeader == null) {
+					throw new RTMPCodecException("Last header not found parsing headerType " + decodeState.headerType);
+				}
+				if (decodeState.headerType != 3 && decodingPacket != null) {
+					throw new RTMPCodecException("Got non-continue header type with existing decoding packet");
+				}
+				if (decodingPacket == null) {
+					long timestamp;
+					int relativeTS = 0;
+					int size;
+					int type;
+					int streamId;
+					switch (decodeState.headerType) {
+					case 0:
+						timestamp = BufferExUtils.readMediumIntBE(internalBuf);
+						size = BufferExUtils.readMediumIntBE(internalBuf);
+						type = internalBuf.get() & 0x0ff;
+						streamId = BufferExUtils.readMediumIntLE(internalBuf);
+						break;
+					case 1:
+						relativeTS = BufferExUtils.readMediumIntBE(internalBuf);
+						timestamp = lastHeader.getTimestamp() + relativeTS;
+						size = BufferExUtils.readMediumIntBE(internalBuf);
+						type = internalBuf.get() & 0x0ff;
+						streamId = lastHeader.getStreamId();
+						break;
+					case 2:
+						relativeTS = BufferExUtils.readMediumIntBE(internalBuf);
+						timestamp = lastHeader.getTimestamp() + relativeTS;
+						size = lastHeader.getSize();
+						type = lastHeader.getSize();
+						streamId = lastHeader.getStreamId();
+						break;
+					case 3:
+						relativeTS = lastHeader.getRelativeTS();
+						timestamp = lastHeader.getTimestamp() + relativeTS;
+						size = lastHeader.getSize();
+						type = lastHeader.getSize();
+						streamId = lastHeader.getStreamId();
+						break;
+					default:
+						// impossible value
+						throw new RTMPCodecException("Impossible code path");
+					}
+					RTMPHeader currentHeader = new RTMPHeader();
+					currentHeader.setChannel(decodeState.channelId);
+					currentHeader.setRelativeTS(relativeTS);
+					currentHeader.setTimestamp(timestamp);
+					currentHeader.setSize(size);
+					currentHeader.setType(type);
+					currentHeader.setStreamId(streamId);
+					decodingPacket = new RTMPPacketObject(currentHeader);
+					decodingPacketMap.put(decodeState.channelId, decodingPacket);
+				}
+				decodeState.bytesNeeded =
+					(decodingPacket.header.getSize() - decodingPacket.body.position()) %
+					chunkSize;
+				break;
+			case RTMPDecodeState.DECODE_STATE_NEED_BODY:
+				continueDecoding = false;
+				break;
+			default:
+				// impossible state
+				throw new RTMPCodecException(
+						"Impossible code path for decode state " + decodeState.state);
+			}
+			decodeState.nextState();
+			internalBuf.limit(internalBuf.capacity());
+			internalBuf.position(originInternalBufPos);
+			
+			if (continueDecoding && buf.remaining() < decodeState.bytesNeeded) {
+				decodeState.bytesNeeded -= buf.remaining();
+				internalBuf.put(buf);
+				return false;
+			}
+		}
+		return true;
 	}
 	
 	private ClassLoader getClassLoader() {
@@ -328,6 +348,37 @@ public abstract class BaseRTMPInput implements RTMPInput {
 		public int remaining() {
 			int bodyPos = body.position();
 			return header.getSize() - bodyPos;
+		}
+	}
+	
+	private class RTMPDecodeState {
+		private static final int DECODE_STATE_INIT           = 0;
+		private static final int DECODE_STATE_NEED_HEADER    = 1;
+		private static final int DECODE_STATE_NEED_BODY      = 2;
+		private static final int DECODE_STATE_MAX            = 3;
+		
+		public int state;
+		public int channelIdSize;
+		public int channelId;
+		public int headerType;
+		
+		public int bytesNeeded;
+		
+		public RTMPDecodeState() {
+			this.reset();
+		}
+		
+		public void reset() {
+			this.state = DECODE_STATE_INIT;
+			this.bytesNeeded = 1;
+		}
+		
+		public void nextState() {
+			this.state++;
+			this.state %= DECODE_STATE_MAX;
+			if (this.state == DECODE_STATE_INIT) {
+				reset();
+			}
 		}
 	}
 }

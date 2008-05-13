@@ -9,7 +9,6 @@ import java.util.Map;
 import org.red5.server.common.BufferEx;
 import org.red5.server.common.amf.AMFInputOutputException;
 import org.red5.server.common.amf.AMFMode;
-import org.red5.server.common.amf.AMFType;
 import org.red5.server.common.amf.AMFUtils;
 import org.red5.server.common.rtmp.RTMPCodecException;
 import org.red5.server.common.rtmp.packet.RTMPAudio;
@@ -29,6 +28,11 @@ import org.red5.server.common.rtmp.packet.RTMPSharedObjectMessage;
 import org.red5.server.common.rtmp.packet.RTMPUnknown;
 import org.red5.server.common.rtmp.packet.RTMPVideo;
 
+/**
+ * The default implementation of RTMPInput.
+ * 
+ * @author Steven Gong (steven.gong@gmail.com)
+ */
 public class DefaultRTMPInput extends BaseRTMPInput {
 
 	public DefaultRTMPInput(boolean isServerMode) {

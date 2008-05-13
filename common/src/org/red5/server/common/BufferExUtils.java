@@ -3,24 +3,32 @@ package org.red5.server.common;
 import java.nio.ByteOrder;
 
 public class BufferExUtils {
-	public static int readMediumIntBE(BufferEx buf) {
+	public static int readMediumIntBE(byte[] byteArray) {
 		int result;
-		byte[] byteArray = new byte[3];
-		buf.get(byteArray);
 		result = (byteArray[0] & 0x0ff) << 16;
 		result += (byteArray[1] & 0x0ff) << 8;
 		result += (byteArray[2] & 0x0ff);
 		return result;
 	}
 	
-	public static int readMediumIntLE(BufferEx buf) {
-		int result;
+	public static int readMediumIntBE(BufferEx buf) {
 		byte[] byteArray = new byte[3];
 		buf.get(byteArray);
+		return readMediumIntBE(byteArray);
+	}
+	
+	public static int readMediumIntLE(byte[] byteArray) {
+		int result;
 		result = (byteArray[2] & 0x0ff) << 16;
 		result += (byteArray[1] & 0x0ff) << 8;
 		result += (byteArray[0] & 0x0ff);
 		return result;
+	}
+	
+	public static int readMediumIntLE(BufferEx buf) {
+		byte[] byteArray = new byte[3];
+		buf.get(byteArray);
+		return readMediumIntLE(byteArray);
 	}
 	
 	public static int readIntBE(BufferEx buf) {

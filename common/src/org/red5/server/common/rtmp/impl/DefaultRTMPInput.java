@@ -11,6 +11,7 @@ import org.red5.server.common.amf.AMFInputOutputException;
 import org.red5.server.common.amf.AMFMode;
 import org.red5.server.common.amf.AMFUtils;
 import org.red5.server.common.rtmp.RTMPCodecException;
+import org.red5.server.common.rtmp.RTMPUtils;
 import org.red5.server.common.rtmp.packet.RTMPAudio;
 import org.red5.server.common.rtmp.packet.RTMPBytesRead;
 import org.red5.server.common.rtmp.packet.RTMPChunkSize;
@@ -88,7 +89,7 @@ public class DefaultRTMPInput extends BaseRTMPInput {
 				result = decodeUnknown(header, body);
 			break;
 			}
-			copyHeader(result, header);
+			RTMPUtils.copyHeader(result, header);
 			return result;
 		} catch (RTMPCodecException e) {
 			throw e;
@@ -289,12 +290,5 @@ public class DefaultRTMPInput extends BaseRTMPInput {
 			sharedObjects.add(so);
 		}
 		soMessage.setSharedObjects(sharedObjects);
-	}
-
-	private void copyHeader(RTMPPacket dest, RTMPPacket src) {
-		dest.setChannel(src.getChannel());
-		dest.setTimestamp(src.getTimestamp());
-		dest.setSize(src.getSize());
-		dest.setStreamId(src.getStreamId());
 	}
 }

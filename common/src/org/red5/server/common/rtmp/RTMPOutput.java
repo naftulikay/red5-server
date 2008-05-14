@@ -50,7 +50,20 @@ public interface RTMPOutput {
 	
 	boolean isServerMode();
 	
+	/**
+	 * RTMP uses short headers with relative timestamps. But
+	 * sometimes it is mandatory to send a standard header with
+	 * absolute timestamp (eg. the stream packet after a stream
+	 * reset ping). Use this method to reset the output channel
+	 * and make sure the next packet uses standard header.
+	 * 
+	 * @param channel
+	 */
 	void resetOutputChannel(int channel);
 	
+	/**
+	 * Reset the output to the original state, free
+	 * all resources.
+	 */
 	void resetOutput();
 }

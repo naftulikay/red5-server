@@ -9,6 +9,7 @@ import org.red5.server.common.BufferExUtils;
 import org.red5.server.common.amf.AMFInput;
 import org.red5.server.common.rtmp.RTMPCodecException;
 import org.red5.server.common.rtmp.RTMPCodecState;
+import org.red5.server.common.rtmp.RTMPConstants;
 import org.red5.server.common.rtmp.RTMPInput;
 import org.red5.server.common.rtmp.packet.RTMPChunkSize;
 import org.red5.server.common.rtmp.packet.RTMPHandshake;
@@ -20,10 +21,9 @@ import org.red5.server.common.rtmp.packet.RTMPPacket;
  * 
  * @author Steven Gong (steven.gong@gmail.com)
  */
-public abstract class BaseRTMPInput implements RTMPInput {
+public abstract class BaseRTMPInput
+implements RTMPInput, RTMPConstants {
 	private static final int INTERNAL_BUF_CAPACITY = 1024;
-	private static final int SUB_HEADER_SIZE[] = { 11, 7, 3, 0 }; // without channel id
-	
 	protected ClassLoader defaultClassLoader;
 	protected RTMPCodecState codecState;
 	protected AMFInput amfInput;
@@ -222,7 +222,7 @@ public abstract class BaseRTMPInput implements RTMPInput {
 		boolean continueDecoding = true;
 		int originInternalBufPos;
 		while (continueDecoding) {
-			BufferExUtils.getBufferByLength(internalBuf, buf,
+			BufferExUtils.putBufferByLength(internalBuf, buf,
 					decodeState.bytesNeeded);
 			originInternalBufPos = internalBuf.position();
 			internalBuf.flip();
@@ -261,10 +261,10 @@ public abstract class BaseRTMPInput implements RTMPInput {
 
 				RTMPHeader lastHeader = lastHeaderMap.get(decodeState.channelId);
 				RTMPPacketObject decodingPacket = decodingPacketMap.get(decodeState.channelId);
-				if (decodeState.headerType != 0 && lastHeader == null) {
+				if (decodeState.headerType != HEADER_STANDARD && lastHeader == null) {
 					throw new RTMPCodecException("Last header not found parsing headerType " + decodeState.headerType);
 				}
-				if (decodeState.headerType != 3 && decodingPacket != null) {
+				if (decodeState.headerType != HEADER_CONTINUE && decodingPacket != null) {
 					throw new RTMPCodecException("Got non-continue header type with existing decoding packet");
 				}
 				if (decodingPacket == null) {
@@ -274,31 +274,31 @@ public abstract class BaseRTMPInput implements RTMPInput {
 					int type;
 					int streamId;
 					switch (decodeState.headerType) {
-					case 0:
+					case HEADER_STANDARD:
 						timestamp = BufferExUtils.readMediumIntBE(internalBuf);
 						size = BufferExUtils.readMediumIntBE(internalBuf);
 						type = internalBuf.get() & 0x0ff;
 						streamId = BufferExUtils.readMediumIntLE(internalBuf);
 						break;
-					case 1:
+					case HEADER_SAME_TARGET:
 						relativeTS = BufferExUtils.readMediumIntBE(internalBuf);
 						timestamp = lastHeader.getTimestamp() + relativeTS;
 						size = BufferExUtils.readMediumIntBE(internalBuf);
 						type = internalBuf.get() & 0x0ff;
 						streamId = lastHeader.getStreamId();
 						break;
-					case 2:
+					case HEADER_SAME_SIZE:
 						relativeTS = BufferExUtils.readMediumIntBE(internalBuf);
 						timestamp = lastHeader.getTimestamp() + relativeTS;
 						size = lastHeader.getSize();
-						type = lastHeader.getSize();
+						type = lastHeader.getType();
 						streamId = lastHeader.getStreamId();
 						break;
-					case 3:
+					case HEADER_CONTINUE:
 						relativeTS = lastHeader.getRelativeTS();
 						timestamp = lastHeader.getTimestamp() + relativeTS;
 						size = lastHeader.getSize();
-						type = lastHeader.getSize();
+						type = lastHeader.getType();
 						streamId = lastHeader.getStreamId();
 						break;
 					default:
@@ -307,6 +307,7 @@ public abstract class BaseRTMPInput implements RTMPInput {
 					}
 					RTMPHeader currentHeader = new RTMPHeader();
 					currentHeader.setChannel(decodeState.channelId);
+					currentHeader.setHeaderType(decodeState.headerType);
 					currentHeader.setRelativeTS(relativeTS);
 					currentHeader.setTimestamp(timestamp);
 					currentHeader.setSize(size);

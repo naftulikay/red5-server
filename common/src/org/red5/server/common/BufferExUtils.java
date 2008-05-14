@@ -47,7 +47,37 @@ public class BufferExUtils {
 		return result;
 	}
 	
-	public static void getBufferByLength(BufferEx dest, BufferEx src, int length) {
+	public static void writeMediumIntBE(BufferEx buf, int value) {
+		byte[] byteArray = new byte[3];
+		byteArray[0] = (byte) ((value >> 16) & 0x0ff);
+		byteArray[1] = (byte) ((value >> 8) & 0x0ff);
+		byteArray[2] = (byte) (value & 0x0ff);
+		buf.put(byteArray);
+	}
+	
+	public static void writeMediumIntLE(BufferEx buf, int value) {
+		byte[] byteArray = new byte[3];
+		byteArray[0] = (byte) (value & 0x0ff);
+		byteArray[1] = (byte) ((value >> 8) & 0x0ff);
+		byteArray[2] = (byte) ((value >> 16) & 0x0ff);
+		buf.put(byteArray);
+	}
+	
+	public static void writeIntBE(BufferEx buf, int value) {
+		ByteOrder originOrder = buf.order();
+		buf.order(ByteOrder.BIG_ENDIAN);
+		buf.putInt(value);
+		buf.order(originOrder);
+	}
+	
+	public static void writeIntLE(BufferEx buf, int value) {
+		ByteOrder originOrder = buf.order();
+		buf.order(ByteOrder.LITTLE_ENDIAN);
+		buf.putInt(value);
+		buf.order(originOrder);
+	}
+	
+	public static void putBufferByLength(BufferEx dest, BufferEx src, int length) {
 		int srcRemaining = src.remaining();
 		if (srcRemaining >= length) {
 			int originLimit = src.limit();

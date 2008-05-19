@@ -6,7 +6,6 @@ import java.util.Map;
 
 import org.red5.server.common.BufferEx;
 import org.red5.server.common.BufferExUtils;
-import org.red5.server.common.amf.AMFInput;
 import org.red5.server.common.rtmp.RTMPCodecException;
 import org.red5.server.common.rtmp.RTMPCodecState;
 import org.red5.server.common.rtmp.RTMPConstants;

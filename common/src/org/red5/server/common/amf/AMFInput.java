@@ -78,31 +78,37 @@ public interface AMFInput {
 	throws AMFInputOutputException, ClassCastException;
 	
 	/**
-	 * Get the initial input mode of this input.
-	 * An input can start with AMF0 or AMF3 input mode.
+	 * Read a direct string. The encoding depends on
+	 * the current input mode.
+	 * @param buf
 	 * @return
 	 */
-	AMFMode getInitialInputMode();
+	String readString(BufferEx buf);
 	
 	/**
-	 * Get the current input mode.
+	 * Get the default input mode: AMF0 or AMF3.
 	 * @return
 	 */
-	AMFMode getCurrentInputMode();
+	int getDefaultInputMode();
+		
+	/**
+	 * Get the current input mode.
+	 * @return AMF0 or AMF3
+	 */
+	int getInputMode();
+	
+	/**
+	 * Set the current input mode. All the internal state
+	 * will be reset.
+	 * @param mode AMF0 or AMF3
+	 */
+	void setInputMode(int mode);
 	
 	/**
 	 * Reset this input to the initial state. All the internal state
-	 * will be reset and the input mode will be set to the initial one.
+	 * will be reset and the input mode will be set to the default one.
 	 */
 	void resetInput();
-	
-	/**
-	 * Reset this input to the mode specified. All the internal state
-	 * will be reset and the input mode is set to the mode provided.
-	 * 
-	 * @param newMode The new mode to start with.
-	 */
-	void resetInput(AMFMode newMode);
 	
 	/**
 	 * Set the default class loader used by this input. Current thread's

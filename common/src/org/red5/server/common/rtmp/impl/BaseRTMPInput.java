@@ -26,7 +26,6 @@ implements RTMPInput, RTMPConstants {
 	private static final int INTERNAL_BUF_CAPACITY = 1024;
 	protected ClassLoader defaultClassLoader;
 	protected RTMPCodecState codecState;
-	protected AMFInput amfInput;
 	protected boolean isServerMode;
 	protected int chunkSize = 128;
 	
@@ -43,8 +42,6 @@ implements RTMPInput, RTMPConstants {
 		codecState = RTMPCodecState.HANDSHAKE_1;
 		this.isServerMode = isServerMode;
 		this.internalBuf = BufferEx.allocate(INTERNAL_BUF_CAPACITY);
-		// TODO initialize AMF input
-		// this.amfInput = null;
 	}
 
 	@Override
@@ -116,7 +113,6 @@ implements RTMPInput, RTMPConstants {
 	public void resetInput(RTMPCodecState codecState) {
 		decodeState.reset();
 		internalBuf.clear();
-		amfInput.resetInput();
 		lastHeaderMap.clear();
 		decodingPacketMap.clear();
 		this.codecState = codecState;

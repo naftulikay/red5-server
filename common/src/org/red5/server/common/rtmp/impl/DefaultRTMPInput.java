@@ -7,16 +7,19 @@ import java.util.List;
 import java.util.Map;
 
 import org.red5.server.common.BufferEx;
+import org.red5.server.common.amf.AMFConstants;
+import org.red5.server.common.amf.AMFInput;
 import org.red5.server.common.amf.AMFInputOutputException;
-import org.red5.server.common.amf.AMFMode;
 import org.red5.server.common.amf.AMFUtils;
 import org.red5.server.common.rtmp.RTMPCodecException;
+import org.red5.server.common.rtmp.RTMPCodecState;
 import org.red5.server.common.rtmp.RTMPUtils;
 import org.red5.server.common.rtmp.packet.RTMPAudio;
 import org.red5.server.common.rtmp.packet.RTMPBytesRead;
 import org.red5.server.common.rtmp.packet.RTMPChunkSize;
 import org.red5.server.common.rtmp.packet.RTMPClientBW;
 import org.red5.server.common.rtmp.packet.RTMPFlexMessage;
+import org.red5.server.common.rtmp.packet.RTMPFlexSharedObjectMessage;
 import org.red5.server.common.rtmp.packet.RTMPFlexStreamSend;
 import org.red5.server.common.rtmp.packet.RTMPHeader;
 import org.red5.server.common.rtmp.packet.RTMPInvoke;
@@ -34,10 +37,20 @@ import org.red5.server.common.rtmp.packet.RTMPVideo;
  * 
  * @author Steven Gong (steven.gong@gmail.com)
  */
-public class DefaultRTMPInput extends BaseRTMPInput {
+public class DefaultRTMPInput
+extends BaseRTMPInput implements AMFConstants {
+	protected AMFInput amfInput;
 
 	public DefaultRTMPInput(boolean isServerMode) {
 		super(isServerMode);
+		// TODO initialize AMF input
+		// this.amfInput = null;
+	}
+
+	@Override
+	public void resetInput(RTMPCodecState codecState) {
+		super.resetInput(codecState);
+		amfInput.resetInput();
 	}
 
 	@Override
@@ -102,24 +115,19 @@ public class DefaultRTMPInput extends BaseRTMPInput {
 	
 	protected RTMPPacket decodeFlexSharedObject(RTMPHeader header, BufferEx body,
 			ClassLoader classLoader) {
-		AMFMode amfMode;
-		byte amfEncoding = body.get();
-		if (amfEncoding == 0) {
-			amfMode = AMFMode.AMF0;
-		} else if (amfEncoding == 3) {
-			amfMode = AMFMode.AMF3;
-		} else {
+		int amfEncoding = body.get();
+		if (amfEncoding != AMF_MODE_0 && amfEncoding != AMF_MODE_3) {
 			throw new RTMPCodecException("Invalid Flex SO AMF encoding byte " + amfEncoding);
 		}
-		RTMPSharedObjectMessage soMessage = new RTMPSharedObjectMessage();
-		doDecodeSharedObject(soMessage, header, body, classLoader, amfMode);
+		RTMPSharedObjectMessage soMessage = new RTMPFlexSharedObjectMessage();
+		doDecodeSharedObject(soMessage, header, body, classLoader, amfEncoding);
 		return soMessage;
 	}
 
 	protected RTMPPacket decodeSharedObject(RTMPHeader header, BufferEx body,
 			ClassLoader classLoader) {
 		RTMPSharedObjectMessage soMessage = new RTMPSharedObjectMessage();
-		doDecodeSharedObject(soMessage, header, body, classLoader, AMFMode.AMF0);
+		doDecodeSharedObject(soMessage, header, body, classLoader, AMF_MODE_0);
 		return soMessage;
 	}
 
@@ -243,9 +251,9 @@ public class DefaultRTMPInput extends BaseRTMPInput {
 	}
 	
 	private void doDecodeSharedObject(RTMPSharedObjectMessage soMessage,
-			RTMPHeader header, BufferEx body, ClassLoader classLoader, AMFMode amfMode) {
-		amfInput.resetInput(amfMode);
-		soMessage.setName(amfInput.read(body, String.class));
+			RTMPHeader header, BufferEx body, ClassLoader classLoader, int amfMode) {
+		amfInput.setInputMode(amfMode);
+		soMessage.setName(amfInput.readString(body));
 		soMessage.setVersion(body.getInt());
 		soMessage.setPersistent(body.getInt() == 2);
 		// unknown 4 bytes
@@ -257,21 +265,21 @@ public class DefaultRTMPInput extends BaseRTMPInput {
 			so.setSoLength(body.getInt());
 			switch (so.getSoType()) {
 			case RTMPSharedObject.CLIENT_STATUS:
-				so.setKey(amfInput.read(body, String.class));
-				so.setValue(amfInput.read(body, String.class));
+				so.setKey(amfInput.readString(body));
+				so.setValue(amfInput.readString(body));
 				break;
 			case RTMPSharedObject.CLIENT_UPDATE_DATA:
 				so.setKey(null);
 				Map<String,Object> valueMap = new HashMap<String,Object>();
 				int start = body.position();
 				while (body.position() - start < so.getSoLength()) {
-					valueMap.put(amfInput.read(body, String.class),
+					valueMap.put(amfInput.readString(body),
 							AMFUtils.amfReadObject(amfInput, body));
 				}
 				so.setValue(valueMap);
 				break;
 			case RTMPSharedObject.SEND_MESSAGE:
-				so.setKey(amfInput.read(body, String.class));
+				so.setKey(amfInput.readString(body));
 				List<Object> valueList = new ArrayList<Object>();
 				start = body.position();
 				while (body.position() - start < so.getSoLength()) {

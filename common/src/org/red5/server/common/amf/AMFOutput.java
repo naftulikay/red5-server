@@ -31,26 +31,41 @@ public interface AMFOutput {
 	throws BufferOverflowException, AMFInputOutputException;
 	
 	/**
-	 * Get the initial AMF mode.
-	 * @return
+	 * Write a direct string. The encoding depends on
+	 * the current output mode.
+	 * @param buf
+	 * @param value
 	 */
-	AMFMode getInitialOutputMode();
+	void writeString(BufferEx buf, String value);
 	
 	/**
-	 * Get the current AMF mode.
+	 * The default output mode: AMF0 or AMF3.
 	 * @return
 	 */
-	AMFMode getCurrentOutputMode();
+	int getDefaultOutputMode();
+	
+	/**
+	 * The current output mode: AUTO, AMF0 or AMF3.
+	 * @return
+	 */
+	int getOutputMode();
+	
+	/**
+	 * Set output mode: AUTO, AMF0 or AMF3.
+	 * AMF0: Only output AMF0 encoding
+	 * AMF3: Only output AMF3 encoding
+	 * AUTO: When the default output is AMF0,
+	 * only AMF0 encoding is used.
+	 * When the default output is AMF3,
+	 * AMF3 encoding is wrapped in AMF0.
+	 * 
+	 * The internal state will be reset on return.
+	 * @param mode
+	 */
+	void setOutputMode(int mode);
 	
 	/**
 	 * Reset the output to the initial state.
 	 */
 	void resetOutput();
-	
-	/**
-	 * Reset the output to the initial state and set the AMF mode as
-	 * specified.
-	 * @param newMode
-	 */
-	void resetOutput(AMFMode newMode);
 }

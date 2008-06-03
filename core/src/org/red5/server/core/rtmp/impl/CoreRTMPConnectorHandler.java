@@ -24,7 +24,7 @@ import org.slf4j.LoggerFactory;
 public class CoreRTMPConnectorHandler implements RTMPConnectorHandler {
 	private static final Logger log = LoggerFactory.getLogger(CoreRTMPConnectorHandler.class);
 	
-	private Object connectHandler;
+	private Object connectService;
 	private ServiceRegistry coreRegistry;
 	private ServiceInvoker<RTMPConnection> serviceInvoker;
 
@@ -160,12 +160,10 @@ public class CoreRTMPConnectorHandler implements RTMPConnectorHandler {
 			if (result instanceof ServiceNotFoundException ||
 					result instanceof ServiceInvocationException) {
 				isSuccess = false;
-				if (result instanceof ServiceInvocationException) {
-					result = RTMPStatus.generateErrorResult(
-								RTMPStatus.NC_CALL_FAILED,
-								((ServiceInvocationException) result).getCause()
-								);
-				}
+				result = RTMPStatus.generateErrorResult(
+						RTMPStatus.NC_CALL_FAILED,
+						((ServiceInvocationException) result).getCause()
+				);
 			}
 			if (isSuccess) {
 				RTMPConnectionUtils.returnResultForInvoke(connection, result, invoke);
@@ -199,8 +197,8 @@ public class CoreRTMPConnectorHandler implements RTMPConnectorHandler {
 		this.serviceInvoker = serviceInvoker;
 	}
 
-	public void setConnectHandler(Object connectHandler) {
-		this.connectHandler = connectHandler;
+	public void setConnectService(Object connectService) {
+		this.connectService = connectService;
 	}
 	
 	protected void handleConnect(ServiceCall<RTMPConnection> call, RTMPInvoke invoke) {
@@ -208,7 +206,7 @@ public class CoreRTMPConnectorHandler implements RTMPConnectorHandler {
 		Object result = null;
 		try {
 			// TODO use async call instead
-			result = serviceInvoker.syncInvoke(connectHandler, call);
+			result = serviceInvoker.syncInvoke(connectService, call);
 		} catch (ServiceNotFoundException e) {
 			result = e;
 		} catch (ServiceInvocationException e) {

@@ -13,8 +13,8 @@ import org.red5.server.core.rtmp.RTMPStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class DefaultRTMPConnectHandler {
-	private static final Logger log = LoggerFactory.getLogger(DefaultRTMPConnectHandler.class);
+public class DefaultRTMPConnectService {
+	private static final Logger log = LoggerFactory.getLogger(DefaultRTMPConnectService.class);
 	
 	private RTMPApplicationManager applicationManager;
 	

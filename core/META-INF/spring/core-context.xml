@@ -8,14 +8,14 @@
 		http://www.springframework.org/schema/osgi/spring-osgi.xsd">
 	<bean id="coreRtmpConnectorHandler"
 		class="org.red5.server.core.rtmp.impl.CoreRTMPConnectorHandler" >
-		<property name="connectHandler" ref="defaultRTMPConnectHandler" />
+		<property name="connectService" ref="defaultRTMPConnectService" />
 		<property name="serviceInvoker" ref="defaultServiceInvoker" />
 		<property name="coreRegistry" ref="coreServiceRegistry" />
 	</bean>
 	<bean id="defaultApplicationManager"
 		class="org.red5.server.core.rtmp.impl.DefaultApplicationManager" />
-	<bean id="defaultRTMPConnectHandler"
-		class="org.red5.server.core.rtmp.impl.DefaultRTMPConnectHandler" />
+	<bean id="defaultRTMPConnectService"
+		class="org.red5.server.core.rtmp.impl.DefaultRTMPConnectService" />
 	<bean id="defaultServiceInvoker"
 		class="org.red5.server.core.rtmp.impl.DefaultServiceInvoker" />
 	<bean id="coreServiceRegistry"

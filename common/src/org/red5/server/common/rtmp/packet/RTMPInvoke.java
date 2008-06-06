@@ -5,6 +5,7 @@ import java.util.Map;
 public class RTMPInvoke extends RTMPNotify {
 	private long invokeId;
 	private Map<String,Object> connectionParams;
+	private RTMPInvoke replyTo;
 	
 	public RTMPInvoke() {
 		super();
@@ -25,6 +26,14 @@ public class RTMPInvoke extends RTMPNotify {
 
 	public void setConnectionParams(Map<String, Object> connectionParams) {
 		this.connectionParams = connectionParams;
+	}
+
+	public RTMPInvoke getReplyTo() {
+		return replyTo;
+	}
+
+	public void setReplyTo(RTMPInvoke replyTo) {
+		this.replyTo = replyTo;
 	}
 
 }

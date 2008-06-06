@@ -30,7 +30,7 @@ public interface ServiceInvoker<T> {
 	 * @return
 	 * @throws ServiceNotFoundException
 	 */
-	Object asyncInvoke(ServiceRegistry registry, ServiceCall<T> call, ServiceCallback callback)
+	void asyncInvoke(ServiceRegistry registry, ServiceCall<T> call, ServiceCallback callback)
 	throws ServiceNotFoundException;
 	
 	/**
@@ -54,6 +54,6 @@ public interface ServiceInvoker<T> {
 	 * @return
 	 * @throws ServiceNotFoundException
 	 */
-	Object asyncInvoke(Object service, ServiceCall<T> call, ServiceCallback callback)
+	void asyncInvoke(Object service, ServiceCall<T> call, ServiceCallback callback)
 	throws ServiceNotFoundException;
 }

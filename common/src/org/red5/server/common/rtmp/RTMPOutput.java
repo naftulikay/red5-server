@@ -66,4 +66,7 @@ public interface RTMPOutput {
 	 * all resources.
 	 */
 	void resetOutput();
+	
+	void setObjectEncoding(int objectEncoding);
+	int getObjectEncoding();
 }

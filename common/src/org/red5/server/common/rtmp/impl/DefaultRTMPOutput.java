@@ -28,11 +28,20 @@ import org.red5.server.common.rtmp.packet.RTMPVideo;
 public class DefaultRTMPOutput
 extends BaseRTMPOutput implements AMFConstants {
 	protected AMFOutput amfOutput;
+	private int objectEncoding;
 
 	public DefaultRTMPOutput(boolean isServerMode) {
 		super(isServerMode);
 		// TODO initialize amf output
 		// amfOutput = null;
+	}
+
+	public int getObjectEncoding() {
+		return objectEncoding;
+	}
+
+	public void setObjectEncoding(int objectEncoding) {
+		this.objectEncoding = objectEncoding;
 	}
 
 	@Override
@@ -127,7 +136,7 @@ extends BaseRTMPOutput implements AMFConstants {
 
 	protected void encodeFlexSharedObject(BufferEx buf,
 			RTMPFlexSharedObjectMessage packet) {
-		if (amfOutput.getDefaultOutputMode() == AMF_MODE_3) {
+		if (objectEncoding == AMF_MODE_3) {
 			buf.put((byte)3);
 			amfOutput.setOutputMode(AMF_MODE_3);
 		} else {
@@ -160,6 +169,7 @@ extends BaseRTMPOutput implements AMFConstants {
 
 	private void encodeNotifyOrInvoke(BufferEx buf, RTMPNotify notify) {
 		boolean isInvoke = notify instanceof RTMPInvoke;
+		int outputEncoding = objectEncoding;
 		amfOutput.setOutputMode(AMF_MODE_0);
 		amfOutput.write(buf, notify.getAction(), AMFType.AMF_STRING);
 		if (isInvoke) {
@@ -172,8 +182,11 @@ extends BaseRTMPOutput implements AMFConstants {
 			} else {
 				amfOutput.write(buf, null, AMFType.AMF_NULL);
 			}
+			if (invoke.getReplyTo() != null && "connect".equals(invoke.getReplyTo().getAction())) {
+				outputEncoding = AMF_MODE_0;
+			}
 		}
-		amfOutput.resetOutput();
+		amfOutput.setOutputMode(outputEncoding);
 		for (Object arg : notify.getArguments()) {
 			amfOutput.write(buf, arg, null); // use auto java->amf mapping
 		}

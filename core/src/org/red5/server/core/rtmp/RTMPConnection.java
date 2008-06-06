@@ -43,9 +43,9 @@ public interface RTMPConnection {
 	
 	/**
 	 * Associate the connection to the application instance.
-	 * Switch the connection state to CONNECTED mode. The implementation
-	 * should acquire the instance from application object to avoid
-	 * it from being released.
+	 * Switch the connection state to CONNECTED mode.
+	 * The implementation should acquire the instance from application
+	 * object to avoid it from being released.
 	 * 
 	 * @param appInstance
 	 * @param connectionParams The connection parameters.

@@ -156,20 +156,14 @@ public class CoreRTMPConnectorHandler implements RTMPConnectorHandler {
 		}
 		if (notify instanceof RTMPInvoke) {
 			RTMPInvoke invoke = (RTMPInvoke) notify;
-			boolean isSuccess = true;
 			if (result instanceof ServiceNotFoundException ||
 					result instanceof ServiceInvocationException) {
-				isSuccess = false;
 				result = RTMPStatus.generateErrorResult(
 						RTMPStatus.NC_CALL_FAILED,
 						((ServiceInvocationException) result).getCause()
 				);
 			}
-			if (isSuccess) {
-				RTMPConnectionUtils.returnResultForInvoke(connection, result, invoke);
-			} else {
-				RTMPConnectionUtils.returnErrorForInvoke(connection, result, invoke);
-			}
+			RTMPConnectionUtils.returnResultForInvoke(connection, result, invoke);
 		}
 	}
 
@@ -219,11 +213,7 @@ public class CoreRTMPConnectorHandler implements RTMPConnectorHandler {
 			if (!rtmpStatus.getCode().equals(RTMPStatus.NC_CONNECT_SUCCESS)) {
 				isError = true;
 			}
-			if (isError) {
-				RTMPConnectionUtils.returnErrorForInvoke(connection, result, invoke);
-			} else {
-				RTMPConnectionUtils.returnResultForInvoke(connection, result, invoke);
-			}
+			RTMPConnectionUtils.returnResultForInvoke(connection, result, invoke);
 		} else if (result instanceof Throwable) {
 			isError = true;
 		}

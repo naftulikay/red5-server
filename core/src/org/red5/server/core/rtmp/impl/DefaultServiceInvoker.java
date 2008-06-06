@@ -11,18 +11,16 @@ import org.red5.server.core.rtmp.RTMPConnection;
 public class DefaultServiceInvoker implements ServiceInvoker<RTMPConnection> {
 
 	@Override
-	public Object asyncInvoke(Object service, ServiceCall<RTMPConnection> call,
+	public void asyncInvoke(Object service, ServiceCall<RTMPConnection> call,
 			ServiceCallback callback) throws ServiceNotFoundException {
 		// TODO Auto-generated method stub
-		return null;
 	}
 
 	@Override
-	public Object asyncInvoke(ServiceRegistry registry,
+	public void asyncInvoke(ServiceRegistry registry,
 			ServiceCall<RTMPConnection> call, ServiceCallback callback)
 			throws ServiceNotFoundException {
 		// TODO Auto-generated method stub
-		return null;
 	}
 
 	@Override

@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.red5.server.common.amf.AMFConstants;
 import org.red5.server.core.rtmp.RTMPApplication;
 import org.red5.server.core.rtmp.RTMPApplicationInstance;
 import org.red5.server.core.rtmp.RTMPApplicationManager;
@@ -67,6 +68,11 @@ public class DefaultRTMPConnectService {
 						RTMPStatus.NC_CONNECT_REJECTED,
 						"Application instance " + appInstanceName + " is rejected from " + appName + ", host " + host,
 						errorObject);
+			}
+			if (Integer.valueOf(AMFConstants.AMF_MODE_3).equals(connParamsProcessed.get(
+					RTMPConnection.CONNECT_PARAM_KEY_ENCODING))) {
+				rtmpStatus.getAdditionals().put(
+						RTMPConnection.CONNECT_PARAM_KEY_ENCODING, AMFConstants.AMF_MODE_3);
 			}
 			return rtmpStatus;
 		} finally {

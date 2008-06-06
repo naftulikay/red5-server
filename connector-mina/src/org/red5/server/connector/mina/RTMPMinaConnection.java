@@ -4,6 +4,7 @@ import java.util.Collections;
 import java.util.Map;
 
 import org.apache.mina.common.IoSession;
+import org.red5.server.common.amf.AMFConstants;
 import org.red5.server.common.rtmp.RTMPInput;
 import org.red5.server.common.rtmp.RTMPOutput;
 import org.red5.server.common.rtmp.packet.RTMPHandshake;
@@ -53,6 +54,10 @@ public class RTMPMinaConnection implements RTMPConnection {
 		this.appInstance = appInstance;
 		this.connectionParams = connectionParams;
 		this.state = RTMP_CONN_STATE_CONNECTED;
+		if (Integer.valueOf(AMFConstants.AMF_MODE_3).equals(
+				connectionParams.get(CONNECT_PARAM_KEY_ENCODING))) {
+			rtmpOutput.setObjectEncoding(AMFConstants.AMF_MODE_3);
+		}
 		this.appInstance.acquire();
 		rtmpInput.setDefaultClassLoader(this.appInstance.getClassLoader());
 		return true;

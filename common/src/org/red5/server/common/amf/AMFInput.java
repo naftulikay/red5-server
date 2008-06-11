@@ -46,8 +46,7 @@ public interface AMFInput {
 	 * Current thread's loader is used when it is <tt>null</tt>.
 	 * @return An array of mapped Java objects from AMF objects.
 	 */
-	@SuppressWarnings("unchecked")
-	Object[] readAll(BufferEx buf, Class[] objectClasses, ClassLoader classLoader)
+	Object[] readAll(BufferEx buf, Class<?>[] objectClasses, ClassLoader classLoader)
 	throws AMFInputOutputException, ClassCastException;
 	
 	/**
@@ -73,8 +72,7 @@ public interface AMFInput {
 	 * @param objectClasses An array of class types to cast objects to.
 	 * @return An array of mapped Java objects from AMF objects.
 	 */
-	@SuppressWarnings("unchecked")
-	Object[] readAll(BufferEx buf, Class[] objectClasses)
+	Object[] readAll(BufferEx buf, Class<?>[] objectClasses)
 	throws AMFInputOutputException, ClassCastException;
 	
 	/**

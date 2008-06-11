@@ -1,5 +1,9 @@
 package org.red5.server.common;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.nio.BufferOverflowException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.InvalidMarkException;
@@ -65,6 +69,121 @@ public class BufferEx implements Comparable<BufferEx> {
 	public BufferEx asReadOnlyBuffer() {
 		BufferEx readonly = new BufferEx(wrapped.asReadOnlyBuffer());
 		return readonly;
+	}
+	
+	public InputStream asInputStream() {
+		return new InputStream() {
+
+			@Override
+			public int read() throws IOException {
+				return BufferEx.this.get();
+			}
+
+			@Override
+			public int available() throws IOException {
+				return BufferEx.this.remaining();
+			}
+
+			@Override
+			public void close() throws IOException {
+				// do nothing
+			}
+
+			@Override
+			public synchronized void mark(int readlimit) {
+				BufferEx.this.mark();
+			}
+
+			@Override
+			public boolean markSupported() {
+				return true;
+			}
+
+			@Override
+			public int read(byte[] b, int off, int len) throws IOException {
+				int bytesRead;
+				if (len > BufferEx.this.remaining()) {
+					bytesRead = BufferEx.this.remaining();
+				} else {
+					bytesRead = len;
+				}
+				BufferEx.this.get(b, off, bytesRead);
+				return bytesRead;
+			}
+
+			@Override
+			public int read(byte[] b) throws IOException {
+				int bytesRead;
+				if (b.length > BufferEx.this.remaining()) {
+					bytesRead = BufferEx.this.remaining();
+				} else {
+					bytesRead = b.length;
+				}
+				BufferEx.this.get(b, 0, bytesRead);
+				return bytesRead;
+			}
+
+			@Override
+			public synchronized void reset() throws IOException {
+				BufferEx.this.reset();
+			}
+
+			@Override
+			public long skip(long n) throws IOException {
+				int bytesSkip;
+				if (n > BufferEx.this.remaining()) {
+					bytesSkip = BufferEx.this.remaining();
+				} else {
+					bytesSkip = (int) n;
+				}
+				BufferEx.this.position(BufferEx.this.position() + bytesSkip);
+				return bytesSkip;
+			}
+			
+		};
+	}
+	
+	public OutputStream asOutputStream() {
+		return new OutputStream() {
+
+			@Override
+			public void close() throws IOException {
+				// do nothing
+			}
+
+			@Override
+			public void flush() throws IOException {
+				// do nothing
+			}
+
+			@Override
+			public void write(byte[] b, int off, int len) throws IOException {
+				try {
+					BufferEx.this.put(b, off, len);
+				} catch (BufferOverflowException e) {
+					throw new IOException(e);
+				}
+			}
+
+			@Override
+			public void write(byte[] b) throws IOException {
+				try {
+					BufferEx.this.put(b);
+				} catch (BufferOverflowException e) {
+					throw new IOException(e);
+				}
+			}
+
+			@Override
+			public void write(int b) throws IOException {
+				try {
+					BufferEx.this.put((byte) b);
+				} catch (BufferOverflowException e) {
+					throw new IOException(e);
+				}
+			}
+			
+		};
 	}
 
 	public final int capacity() {

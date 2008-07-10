@@ -207,10 +207,20 @@ public class RTMPProtocolDecoder implements Constants, SimpleProtocolDecoder, IE
 		int byteCount;
 		if ((headerByte & 0x3f) == 0) {
 			// Two byte header
+			if (remaining < 2) {
+				in.position(position);
+				rtmp.bufferDecoding(2);
+				return null;
+			}
 			headerValue = ((int) headerByte & 0xff) << 8 | ((int) in.get() & 0xff); 
 			byteCount = 2;
 		} else if ((headerByte & 0x3f) == 1) {
 			// Three byte header
+			if (remaining < 3) {
+				in.position(position);
+				rtmp.bufferDecoding(3);
+				return null;
+			}
 			headerValue = ((int) headerByte & 0xff) << 16 | ((int) in.get() & 0xff) << 8 | ((int) in.get() & 0xff); 
 			byteCount = 3;
 		} else {
@@ -225,10 +235,10 @@ public class RTMPProtocolDecoder implements Constants, SimpleProtocolDecoder, IE
 		final byte headerSize = (byte) RTMPUtils.decodeHeaderSize(headerValue, byteCount);
 		int headerLength = RTMPUtils.getHeaderLength(headerSize);
 		
-		if(headerLength > remaining) {
+		if(headerLength+byteCount-1 > remaining) {
 			log.debug("Header too small, buffering. remaining: "+remaining);
 			in.position(position);
-			rtmp.bufferDecoding(headerLength);
+			rtmp.bufferDecoding(headerLength+byteCount-1);
 			return null;
 		}
 		

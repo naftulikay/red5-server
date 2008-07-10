@@ -150,6 +150,11 @@ public class RTMPTConnection extends RTMPConnection {
 	 * @return a list of decoded objects
 	 */
 	public List decode(ByteBuffer data) {
+		if (state.getState() == RTMP.STATE_DISCONNECTED) {
+			// Don't try to decode buffer as the connection has already been closed
+			return null;
+		}
+		
 		readBytes += data.limit();
 		this.buffer.put(data);
 		this.buffer.flip();

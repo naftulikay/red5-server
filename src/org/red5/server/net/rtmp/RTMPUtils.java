@@ -60,13 +60,9 @@ public class RTMPUtils implements Constants {
 		byte b = in.get();
 		byte c = in.get();
 		int val = 0;
-		// Fix unsigned values
-		if (a < 0) val += ((a + 256) << 16);
-		else       val += (a << 16);
-		if (b < 0) val += ((b + 256) << 8);
-		else       val += (b << 8);
-		if (c < 0) val += c + 256;
-		else       val += c;
+		val += (int) (a & 0xff) << 16;
+		val += (int) (b & 0xff) << 8;
+		val += (int) (c & 0xff);
 		return val;
 	}
 	
@@ -96,14 +92,10 @@ public class RTMPUtils implements Constants {
 		byte a = in.get();
 		byte b = in.get();
 		byte c = in.get();
-		// Fix unsigned values
 		int val = 0;
-		if (a < 0) val += ((a + 256) << 16);
-		else       val += (a << 16);
-		if (b < 0) val += ((b + 256) << 8);
-		else       val += (b << 8);
-		if (c < 0) val += c + 256;
-		else       val += c;
+		val += (int) (a & 0xff) << 16;
+		val += (int) (b & 0xff) << 8;
+		val += (int) (c & 0xff);
 		return val;
 	}
 	
@@ -113,10 +105,10 @@ public class RTMPUtils implements Constants {
 		byte c = in.get();
 		byte d = in.get();
 		int val = 0;
-		val += d << 24;
-		val += c << 16;
-		val += b << 8;
-		val += a;
+		val += (int) (d & 0xff) << 24;
+		val += (int) (c & 0xff) << 16;
+		val += (int) (b & 0xff) << 8;
+		val += (int) (a & 0xff);
 		return val;
 	}
 	

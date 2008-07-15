@@ -327,14 +327,14 @@ public class RTMPProtocolDecoder implements Constants, SimpleProtocolDecoder, IE
 		
 		case HEADER_NEW:
 			header.setTimer(RTMPUtils.readUnsignedMediumInt(in)); 
-			header.setSize(RTMPUtils.readMediumInt(in)); 
+			header.setSize(RTMPUtils.readUnsignedMediumInt(in)); 
 			header.setDataType(in.get()); 
 			header.setStreamId(RTMPUtils.readReverseInt(in)); 
 			break;
 			
 		case HEADER_SAME_SOURCE:			
 			header.setTimer(RTMPUtils.readUnsignedMediumInt(in));
-			header.setSize(RTMPUtils.readMediumInt(in));
+			header.setSize(RTMPUtils.readUnsignedMediumInt(in));
 			header.setDataType(in.get());
 			header.setStreamId(lastHeader.getStreamId());
 			break;

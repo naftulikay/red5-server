@@ -19,13 +19,14 @@ package org.red5.server;
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA 
  */
 
-import org.red5.server.api.Red5;
 import java.io.File;
 import java.io.FileInputStream;
 import java.util.Properties;
 
+import org.red5.server.api.Red5;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.bridge.SLF4JBridgeHandler;
 import org.springframework.context.access.ContextSingletonBeanFactoryLocator;
 
 /**
@@ -67,7 +68,10 @@ public class Standalone {
 	 */
 	public static void main(String[] args) throws Throwable {
 
-        //System.setProperty("DEBUG", "true");
+		//install the slf4j bridge (mostly for JUL logging)
+		SLF4JBridgeHandler.install();
+		
+		//System.setProperty("DEBUG", "true");
 
 		/*
 		if (false) {
@@ -80,7 +84,7 @@ public class Standalone {
 			red5Config = args[0];
 		}
 
-		long time = System.currentTimeMillis();
+		long t1 = System.nanoTime();
 
 		log.info("{} (http://www.osflash.org/red5)", Red5.getVersion());
 		log.info("Loading Red5 global context from: {}", red5Config);
@@ -90,6 +94,9 @@ public class Standalone {
         String root = System.getProperty("red5.root");
         String conf;
         if (root != null) {
+            if (System.getProperty("file.separator").equals("\\")) {
+                root = root.replace('\\', '/');
+            }
             conf = root + "/conf";
         } else {
     		// Detect root of Red5 configuration and set as system property
@@ -100,7 +107,7 @@ public class Standalone {
     			String[] paths = classpath.split(System
     					.getProperty("path.separator"));
     			for (String element : paths) {
-    				fp = new File(element + '/' + red5Config);
+    				fp = new File(element + System.getProperty("file.separator") + red5Config);
     				fp = fp.getCanonicalFile();
     				if (fp.isFile()) {
     					break;
@@ -119,19 +126,14 @@ public class Standalone {
     		int idx = root.lastIndexOf('/');
     		conf = root.substring(0, idx);
 
-            // Store root directory of Red5
     		idx = conf.lastIndexOf('/');
     		root = conf.substring(0, idx);
-    		if (System.getProperty("file.separator").equals("/")) {
-    			// Workaround for linux systems
-    			root = '/' + root;
-    		}
-    
-            // Set Red5 root as environment variable
-            System.setProperty("red5.root", root);
-    		log.info("Setting Red5 root to {}", root);
 
     	}
+		// Set Red5 root as environment variable
+		System.setProperty("red5.root", root);
+		log.info("Setting Red5 root to {}", root);
+
 		System.setProperty("red5.config_root", conf);
 		log.info("Setting configuation root to {}", conf);                    
 
@@ -155,10 +157,10 @@ public class Standalone {
 			// Don't raise wrapped exceptions as their stacktraces may confuse
 			// people...
 			raiseOriginalException(e);
+		} finally {
+			long t2 = System.nanoTime();
+			log.info("Startup done in: {} ms", ((t2 - t1) / 1000000));
 		}
-
-		long startupIn = System.currentTimeMillis() - time;
-		log.info("Startup done in: {} ms", startupIn);
 
 	}
 

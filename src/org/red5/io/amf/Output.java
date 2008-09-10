@@ -30,6 +30,8 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.TimeZone;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.apache.commons.collections.BeanMap;
 import org.apache.commons.collections.map.LRUMap;
@@ -41,7 +43,6 @@ import org.red5.io.object.BaseOutput;
 import org.red5.io.object.ICustomSerializable;
 import org.red5.io.object.RecordSet;
 import org.red5.io.object.Serializer;
-import org.red5.io.utils.HexDump;
 import org.red5.io.utils.XMLUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -59,12 +60,18 @@ public class Output extends BaseOutput implements org.red5.io.object.Output {
 	/**
 	 * Cache encoded strings.
 	 */
-	protected static Map<String, byte[]> stringCache = (Map<String, byte[]>) new LRUMap(10000, true);
+	protected static final Map<String, byte[]> stringCache = (Map<String, byte[]>) new LRUMap(10000, true);
 
     /**
      * Output buffer
      */
     protected ByteBuffer buf;
+    
+	private static final ReentrantReadWriteLock readWriteLock = new ReentrantReadWriteLock();
+
+	private static final Lock read = readWriteLock.readLock();
+
+	private static final Lock write = readWriteLock.writeLock();    
 
     /**
      * Creates output with given byte buffer
@@ -77,6 +84,7 @@ public class Output extends BaseOutput implements org.red5.io.object.Output {
 
 	/** {@inheritDoc} */
     public boolean isCustom(Object custom) {
+		// TODO Auto-generated method stub
 		return false;
 	}
 
@@ -244,20 +252,13 @@ public class Output extends BaseOutput implements org.red5.io.object.Output {
 	public void writeNumber(Number num) {
 		buf.put(AMF.TYPE_NUMBER);
 		buf.putDouble(num.doubleValue());
-		
-//		ByteBuffer tmp = ByteBuffer.allocate(8);
-//		tmp.setAutoExpand(true);
-//		tmp.put(AMF.TYPE_NUMBER);
-//		tmp.putDouble(num.doubleValue());
-//		tmp.flip();
-//		byte[] arr = tmp.array();
-//		log.warn("writeNumber: {}", HexDump.byteArrayToHexString(arr));
-//		tmp.release();
 	}
 
 	/** {@inheritDoc} */
     public void writeReference(Object obj) {
-		log.debug("Write reference");
+		if (log.isDebugEnabled()) {
+			log.debug("Write reference");
+		}
 		buf.put(AMF.TYPE_REFERENCE);
 		buf.putShort(getReferenceId(obj));
 	}
@@ -322,7 +323,7 @@ public class Output extends BaseOutput implements org.red5.io.object.Output {
                 boolean dontSerialize = field.isAnnotationPresent(DontSerialize.class);
                 boolean isTransient = Modifier.isTransient(field.getModifiers());
 
-                if (dontSerialize) {
+                if (dontSerialize && log.isDebugEnabled()) {
                 	log.debug("Skipping {} because its marked with @DontSerialize", field.getName());
                 }
                 if (isTransient) {
@@ -365,7 +366,7 @@ public class Output extends BaseOutput implements org.red5.io.object.Output {
 	 * @param object        Object to write
 	 */
 	protected void writeArbitraryObject(Object object, Serializer serializer) {
-		log.debug("writeObject");
+			log.debug("writeObject");
         // If we need to serialize class information...
 		Class<?> objectClass = object.getClass();
 		if (!objectClass.isAnnotationPresent(Anonymous.class)) {
@@ -382,7 +383,9 @@ public class Output extends BaseOutput implements org.red5.io.object.Output {
         // Iterate thru fields of an object to build "name-value" map from it
         for (Field field : objectClass.getFields()) {
 			if (field.isAnnotationPresent(DontSerialize.class)) {
-				log.debug("Skipping {} because its marked with @DontSerialize", field.getName());
+				if (log.isDebugEnabled()) {
+					log.debug("Skipping " + field.getName() + " because its marked with @DontSerialize");
+				}
 				continue;
 			} else {
 				int modifiers = field.getModifiers();
@@ -449,16 +452,26 @@ public class Output extends BaseOutput implements org.red5.io.object.Output {
      */
     protected static byte[] encodeString(String string) {
     	byte[] encoded;
-    	synchronized (stringCache) {
+    	
+		read.lock();
+		try {
     		encoded = stringCache.get(string);
-    	}
-    	if (encoded == null) {
+		} finally {
+			read.unlock();
+		}
+
+		if (encoded == null) {
     		java.nio.ByteBuffer buf = AMF.CHARSET.encode(string);
     		encoded = new byte[buf.limit()];
     		buf.get(encoded);
-    		synchronized (stringCache) {
+    		
+			write.lock();
+			try {
     			stringCache.put(string, encoded);
-    		}
+			} finally {
+				write.unlock();
+			}    			
+			
     	}
     	return encoded;
     }
@@ -485,6 +498,17 @@ public class Output extends BaseOutput implements org.red5.io.object.Output {
 		putString(XMLUtils.docToString(xml));
 	}
 
+	/**
+	 * Convenience method to allow XML text to be used, instead
+	 * of requiring an XML Document.
+	 * 
+	 * @param xml
+	 */
+	public void writeXML(String xml) {
+		buf.put(AMF.TYPE_XML);
+		putString(xml);
+	}	
+	
     /**
      * Return buffer of this Output object
      * @return        Byte buffer of this Output object

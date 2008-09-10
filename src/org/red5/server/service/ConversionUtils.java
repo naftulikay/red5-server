@@ -40,14 +40,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Misc utils for convertions
+ * Misc utils for conversions
  * 
  * @author The Red5 Project (red5@osflash.org)
  * @author Luke Hubbard, Codegent Ltd (luke@codegent.com)
  */
 public class ConversionUtils {
 
-	protected static Logger log = LoggerFactory.getLogger(Deserializer.class);
+	private static final Logger log = LoggerFactory.getLogger(Deserializer.class);
 
 	private static final Class<?>[] PRIMITIVES = { boolean.class, byte.class,
 			char.class, short.class, int.class, long.class, float.class,
@@ -277,9 +277,7 @@ public class ConversionUtils {
 		LinkedList<Method> list = new LinkedList<Method>();
 		Method[] methods = object.getClass().getMethods();
 		for (Method m : methods) {
-			if (log.isDebugEnabled()) {
-				log.debug("Method name: " + m.getName());
-			}
+			log.debug("Method name: {}", m.getName());
 			if (!m.getName().equals(method)) {
 				log.debug("Method name not the same");
 				continue;
@@ -374,13 +372,14 @@ public class ConversionUtils {
      * @return            Instance of given class
      */
     protected static Object newInstance(String className) {
+    	//System.out.println(">>>>> conversion utils: " + Thread.currentThread().getContextClassLoader());
 		Object instance = null;
 		try {
 			Class<?> clazz = Thread.currentThread().getContextClassLoader()
 					.loadClass(className);
 			instance = clazz.newInstance();
 		} catch (Exception ex) {
-			log.error("Error loading class: " + className, ex);
+			log.error("Error loading class: {}", className, ex);
 		}
 		return instance;
 	}

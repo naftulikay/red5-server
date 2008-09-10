@@ -406,9 +406,7 @@ public class Context implements IContext, ApplicationContextAware, ContextMBean 
 		try {
 			bean = applicationContext.getBean(beanId);
 		} catch (NoSuchBeanDefinitionException e) {
-			logger.info("Bean lookup failed for " + beanId
-					+ " in the application context");
-			logger.debug("", e);
+			logger.warn("Bean lookup failed for {} in the application context", beanId, e);
 		}
 		if (bean == null) {
 			bean = getCoreService(beanId);
@@ -439,6 +437,8 @@ public class Context implements IContext, ApplicationContextAware, ContextMBean 
 	 * @return Classloder context of current thread
 	 */
 	public ClassLoader getClassLoader() {
+		//System.out.println(">>>>> context: " + Thread.currentThread().getContextClassLoader());
+		//System.out.println(">>>>> context (app ctx): " + applicationContext.getClassLoader());
 		return applicationContext.getClassLoader();
 	}
 

@@ -45,11 +45,30 @@ import org.slf4j.LoggerFactory;
  */
 public class ProviderService implements IProviderService {
 
-	/**
-	 * Logger
-	 */
-	private static final Logger log = LoggerFactory
-			.getLogger(ProviderService.class);
+	private static final Logger log = LoggerFactory.getLogger(ProviderService.class);
+
+	/** {@inheritDoc} */
+	public INPUT_TYPE lookupProviderInput(IScope scope, String name) {
+		INPUT_TYPE result = INPUT_TYPE.NOT_FOUND;
+		if (scope.getBasicScope(IBroadcastScope.TYPE, name) != null) {
+			//we have live input
+			result = INPUT_TYPE.LIVE;
+		} else {
+    		try {
+    			File file = getStreamFile(scope, name);
+    			if (file != null) {
+    				//we have vod input
+    				result = INPUT_TYPE.VOD;    				
+        			//null it to prevent leak or file locking
+        			file = null;
+    			}
+    		} catch (IOException e) {
+    			log.warn("Exception attempting to lookup file: {}", name, e);
+    			e.printStackTrace();
+    		}
+		}
+		return result;
+	}
 
 	/** {@inheritDoc} */
 	public IMessageInput getProviderInput(IScope scope, String name) {
@@ -88,6 +107,7 @@ public class ProviderService implements IProviderService {
 
 	/** {@inheritDoc} */
 	public IMessageInput getVODProviderInput(IScope scope, String name) {
+		log.debug("getVODProviderInput - scope: {} name: {}", scope, name);
 		File file = getVODProviderFile(scope, name);
 		if (file == null) {
 			return null;
@@ -99,15 +119,16 @@ public class ProviderService implements IProviderService {
 
 	/** {@inheritDoc} */
 	public File getVODProviderFile(IScope scope, String name) {
+		log.debug("getVODProviderFile - scope: {} name: {}", scope, name);
 		File file = null;
 		try {
-			log.info("getVODProviderFile scope path: " + scope.getContextPath()
-					+ " name: " + name);
+			log.info("getVODProviderFile scope path: {} name: {}", scope.getContextPath(), name);
 			file = getStreamFile(scope, name);
 		} catch (IOException e) {
-			log.error("Problem getting file: " + name);
+			log.error("Problem getting file: {}", name, e);
 		}
 		if (file == null || !file.exists()) {
+			log.warn("File was null or did not exist: {}", name);
 			return null;
 		}
 		return file;
@@ -142,6 +163,7 @@ public class ProviderService implements IProviderService {
 		while (it.hasNext()) {
 			result.add(it.next());
 		}
+		it = null;
 		return result;
 	}
 
@@ -166,8 +188,7 @@ public class ProviderService implements IProviderService {
 			// Default to .flv files if no prefix and no extension is given.
 			name = "flv:" + name;
 		}
-		log.info("getStreamFile null check - factory: " + factory + " name: "
-				+ name);
+		log.debug("getStreamFile null check - factory: {} name: {}", factory, name);
 		for (IStreamableFileService service : factory.getServices()) {
 			if (name.startsWith(service.getPrefix() + ':')) {
 				name = service.prepareFilename(name);
@@ -186,6 +207,11 @@ public class ProviderService implements IProviderService {
 			file = new File(filename);
 		} else {
 			file = scope.getContext().getResource(filename).getFile();
+		}
+		//check files existence
+		if (file != null && !file.exists()) {
+			//if it does not exist then null it out
+			file = null;
 		}
 		return file;
 

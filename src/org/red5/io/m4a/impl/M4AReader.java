@@ -423,6 +423,15 @@ public class M4AReader implements IoConstants, ITagReader {
     	M4AReader.keyframeCache = keyframeCache;
     }
 
+	public long getTotalBytes() {
+		try {
+			return channel.size();
+		} catch (Exception e) {
+			log.error("Error getTotalBytes", e);
+			return 0;
+		}
+	}
+    
     /** {@inheritDoc} */
     public boolean hasVideo() {
     	return false;

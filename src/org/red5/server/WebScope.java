@@ -136,7 +136,7 @@ public class WebScope extends Scope implements ServletContextAware {
 	 *            Server instance
 	 */
 	public void setServer(IServer server) {
-		log.info("Set server", server);
+		log.info("Set server {}", server);
 		this.server = server;
 	}
 
@@ -184,9 +184,10 @@ public class WebScope extends Scope implements ServletContextAware {
 	 */
 	public synchronized void register() {
 		if (registered) {
-			// Already registered
+			log.info("Webscope already registered");
 			return;
 		}
+		log.debug("Webscope registering: {}", contextPath);		
 		appContext = LoaderBase.getRed5ApplicationContext(contextPath);
 		appLoader = LoaderBase.getApplicationLoader();
 		// Release references
@@ -208,10 +209,10 @@ public class WebScope extends Scope implements ServletContextAware {
 	 */
 	public synchronized void unregister() {
 		if (!registered) {
-			// Not registered
+			log.info("Webscope not registered");
 			return;
 		}
-
+		log.debug("Webscope un-registering: {}", contextPath);	
 		shuttingDown = true;
 		keepOnDisconnect = false;
 		uninit();
@@ -226,18 +227,28 @@ public class WebScope extends Scope implements ServletContextAware {
 				server.removeMapping(element, getName());
 			}
 		}
+		//check for null
+		if (appContext == null) {
+			log.debug("Application context is null, trying retrieve from loader");
+			appContext = LoaderBase.getRed5ApplicationContext(contextPath);			
+		}
+		//try to stop the app context
 		if (appContext != null) {
+			log.debug("Stopping app context");
 			appContext.stop();
+		} else {
+			log.debug("Application context is null, could not be stopped");
 		}
 		// Various cleanup tasks
 		setStore(null);
-		super.setParent(null);
 		setServletContext(null);
 		setServer(null);
 		setName(null);
 		appContext = null;
 		registered = false;
 		shuttingDown = false;
+		//is this needed?
+		//super.setParent(null);
 	}
 
 	/** {@inheritDoc} */

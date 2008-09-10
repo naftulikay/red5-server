@@ -229,15 +229,16 @@ public abstract class RTMPConnection extends BaseConnection implements
 	private int maxHandshakeTimeout = 5000;
 
 	protected int clientId;
-	
+
 	protected RTMP state;
-	
+
 	private ISchedulingService schedulingService;
-	
+
 	/**
 	 * Creates anonymous RTMP connection without scope.
 	 * 
-	 * @param type	Connection type
+	 * @param type
+	 *            Connection type
 	 */
 	public RTMPConnection(String type) {
 		// We start with an anonymous connection without a scope.
@@ -259,6 +260,7 @@ public abstract class RTMPConnection extends BaseConnection implements
 	}
 
 	public void setState(RTMP state) {
+		log.debug("Set state: {}", state);
 		this.state = state;
 	}
 
@@ -279,6 +281,7 @@ public abstract class RTMPConnection extends BaseConnection implements
 				waitForHandshakeService.removeScheduledJob(waitForHandshakeJob);
 				waitForHandshakeJob = null;
 				waitForHandshakeService = null;
+				log.debug("Removed waitForHandshakeJob for: {}", getId());
 			}
 		}
 		return success;
@@ -345,7 +348,8 @@ public abstract class RTMPConnection extends BaseConnection implements
 	/**
 	 * Return channel by id.
 	 * 
-	 * @param channelId		Channel id
+	 * @param channelId
+	 *            Channel id
 	 * @return Channel by id
 	 */
 	public Channel getChannel(int channelId) {
@@ -360,7 +364,8 @@ public abstract class RTMPConnection extends BaseConnection implements
 	/**
 	 * Closes channel.
 	 * 
-	 * @param channelId		Channel id
+	 * @param channelId
+	 *            Channel id
 	 */
 	public void closeChannel(int channelId) {
 		channels.remove(channelId);
@@ -395,8 +400,9 @@ public abstract class RTMPConnection extends BaseConnection implements
 	 * audio, data and video channels.
 	 * 
 	 * @see org.red5.server.stream.OutputStream
-	 *
-	 * @param streamId	Stream id
+	 * 
+	 * @param streamId
+	 *            Stream id
 	 * @return Output stream object
 	 */
 	public OutputStream createOutputStream(int streamId) {
@@ -495,7 +501,7 @@ public abstract class RTMPConnection extends BaseConnection implements
 			return pss;
 		}
 	}
-	
+
 	public void addClientStream(IClientStream stream) {
 		int streamId = stream.getStreamId();
 		if (reservedStreams.get(streamId - 1)) {
@@ -507,7 +513,7 @@ public abstract class RTMPConnection extends BaseConnection implements
 			usedStreams++;
 		}
 	}
-	
+
 	public void removeClientStream(int streamId) {
 		unreserveStreamId(streamId);
 	}
@@ -563,9 +569,9 @@ public abstract class RTMPConnection extends BaseConnection implements
 	 * @param stream
 	 */
 	protected void registerStream(IClientStream stream) {
-		streams.put(stream.getStreamId()-1, stream);
+		streams.put(stream.getStreamId() - 1, stream);
 	}
-	
+
 	/**
 	 * Remove a stream from the connection.
 	 * 
@@ -574,7 +580,7 @@ public abstract class RTMPConnection extends BaseConnection implements
 	protected void unregisterStream(IClientStream stream) {
 		streams.remove(stream.getStreamId());
 	}
-	
+
 	/** {@inheritDoc} */
 	@Override
 	public void close() {
@@ -634,7 +640,8 @@ public abstract class RTMPConnection extends BaseConnection implements
 	/**
 	 * Handler for ping event.
 	 * 
-	 * @param ping	Ping event context
+	 * @param ping
+	 *            Ping event context
 	 */
 	public void ping(Ping ping) {
 		getChannel(2).write(ping);
@@ -664,8 +671,8 @@ public abstract class RTMPConnection extends BaseConnection implements
 		if (bytesRead >= nextBytesRead) {
 			BytesRead sbr = new BytesRead((int) bytesRead);
 			getChannel(2).write(sbr);
-			//@todo: what do we want to see printed here?
-			//log.info(sbr);
+			// @todo: what do we want to see printed here?
+			// log.info(sbr);
 			nextBytesRead += bytesReadInterval;
 		}
 	}
@@ -673,10 +680,15 @@ public abstract class RTMPConnection extends BaseConnection implements
 	/**
 	 * Read number of received bytes.
 	 * 
-	 * @param bytes		Number of bytes
+	 * @param bytes
+	 *            Number of bytes
 	 */
 	public void receivedBytesRead(int bytes) {
-		log.info("Client received {} bytes, written {} bytes, {} messages pending", new Object[]{bytes, getWrittenBytes(), getPendingMessages()});
+		log
+				.debug(
+						"Client received {} bytes, written {} bytes, {} messages pending",
+						new Object[] { bytes, getWrittenBytes(),
+								getPendingMessages() });
 		clientBytesRead = bytes;
 	}
 
@@ -699,7 +711,7 @@ public abstract class RTMPConnection extends BaseConnection implements
 	 * 
 	 * @return Next invoke id for RPC
 	 */
-	protected int getInvokeId() {
+	public int getInvokeId() {
 		return invokeId.incrementAndGet();
 	}
 
@@ -711,7 +723,7 @@ public abstract class RTMPConnection extends BaseConnection implements
 	 * @param call
 	 *            Call service
 	 */
-	protected void registerPendingCall(int invokeId, IPendingServiceCall call) {
+	public void registerPendingCall(int invokeId, IPendingServiceCall call) {
 		pendingCalls.put(invokeId, call);
 	}
 
@@ -840,10 +852,9 @@ public abstract class RTMPConnection extends BaseConnection implements
 	protected IPendingServiceCall getPendingCall(int invokeId) {
 		return pendingCalls.get(invokeId);
 	}
-	
+
 	/**
-	 * Retrieve pending call service by id.
-	 * The call will be removed afterwards.
+	 * Retrieve pending call service by id. The call will be removed afterwards.
 	 * 
 	 * @param invokeId
 	 *            Pending call service id
@@ -865,7 +876,8 @@ public abstract class RTMPConnection extends BaseConnection implements
 	/**
 	 * Mark message as being written.
 	 * 
-	 * @param message	Message to mark
+	 * @param message
+	 *            Message to mark
 	 */
 	protected void writingMessage(Packet message) {
 		if (message.getMessage() instanceof VideoData) {
@@ -940,7 +952,8 @@ public abstract class RTMPConnection extends BaseConnection implements
 	/**
 	 * Marks that pingback was received.
 	 * 
-	 * @param pong	Ping object
+	 * @param pong
+	 *            Ping object
 	 */
 	protected void pingReceived(Ping pong) {
 		lastPongReceived = System.currentTimeMillis();
@@ -968,8 +981,8 @@ public abstract class RTMPConnection extends BaseConnection implements
 	 * Setter for maximum inactivity.
 	 * 
 	 * @param maxInactivity
-	 *            Maximum time in ms after which a client is disconnected in case
-	 *            of inactivity.
+	 *            Maximum time in ms after which a client is disconnected in
+	 *            case of inactivity.
 	 */
 	public void setMaxInactivity(int maxInactivity) {
 		this.maxInactivity = maxInactivity;
@@ -982,13 +995,15 @@ public abstract class RTMPConnection extends BaseConnection implements
 		if (pingInterval <= 0) {
 			// Ghost detection code disabled
 			return;
-        }
+		}
 		if (keepAliveJobName == null) {
-    		//log.debug("Scope null = {}", (scope == null));
-    		//log.debug("getScope null = {}", (getScope() == null));
-    		//log.debug("Context null = {}", (scope.getContext() == null));
-    		//ISchedulingService schedulingService = (ISchedulingService) scope.getContext().getBean(ISchedulingService.BEAN_NAME);
-    		keepAliveJobName = schedulingService.addScheduledJob(pingInterval, new KeepAliveJob());
+			// log.debug("Scope null = {}", (scope == null));
+			// log.debug("getScope null = {}", (getScope() == null));
+			// log.debug("Context null = {}", (scope.getContext() == null));
+			// ISchedulingService schedulingService = (ISchedulingService)
+			// scope.getContext().getBean(ISchedulingService.BEAN_NAME);
+			keepAliveJobName = schedulingService.addScheduledJob(pingInterval,
+					new KeepAliveJob());
 		}
 		log.debug("Keep alive job name {}", keepAliveJobName);
 	}
@@ -1001,7 +1016,7 @@ public abstract class RTMPConnection extends BaseConnection implements
 	public void setSchedulingService(ISchedulingService schedulingService) {
 		this.schedulingService = schedulingService;
 	}
-	
+
 	/**
 	 * Inactive state event handler.
 	 */
@@ -1010,9 +1025,13 @@ public abstract class RTMPConnection extends BaseConnection implements
 	/** {@inheritDoc} */
 	@Override
 	public String toString() {
-		//http://java.sun.com/j2se/1.5.0/docs/api/java/lang/String.html#format(java.lang.String,%20java.lang.Object...)
-		Object[] args = new Object[]{getClass().getSimpleName(), getRemoteAddress(), getRemotePort(), getHost(), getReadBytes(), getWrittenBytes()};
-		return String.format("%1$s from %2$s : %3$s to %4$s (in: %5$s out %6$s )", args);
+		// http://java.sun.com/j2se/1.5.0/docs/api/java/lang/String.html#format(
+		// java.lang.String,%20java.lang.Object...)
+		Object[] args = new Object[] { getClass().getSimpleName(),
+				getRemoteAddress(), getRemotePort(), getHost(), getReadBytes(),
+				getWrittenBytes() };
+		return String.format(
+				"%1$s from %2$s : %3$s to %4$s (in: %5$s out %6$s )", args);
 	}
 
 	/**
@@ -1042,7 +1061,8 @@ public abstract class RTMPConnection extends BaseConnection implements
 	/**
 	 * Set maximum time to wait for valid handshake in milliseconds.
 	 * 
-	 * @param maxHandshakeTimeout	Maximum time in milliseconds
+	 * @param maxHandshakeTimeout
+	 *            Maximum time in milliseconds
 	 */
 	public void setMaxHandshakeTimeout(int maxHandshakeTimeout) {
 		this.maxHandshakeTimeout = maxHandshakeTimeout;
@@ -1051,7 +1071,8 @@ public abstract class RTMPConnection extends BaseConnection implements
 	/**
 	 * Start waiting for a valid handshake.
 	 * 
-	 * @param service	The scheduling service to use
+	 * @param service
+	 *            The scheduling service to use
 	 */
 	protected void startWaitForHandshake(ISchedulingService service) {
 		waitForHandshakeService = service;
@@ -1080,14 +1101,16 @@ public abstract class RTMPConnection extends BaseConnection implements
 				// disconnect
 				log.debug("Keep alive job name {}", keepAliveJobName);
 				if (log.isDebugEnabled()) {
-    				log.debug("Scheduled job list");
-    				for (String jobName : service.getScheduledJobNames()) {
-    					log.debug("Job: {}", jobName);
-    				}
+					log.debug("Scheduled job list");
+					for (String jobName : service.getScheduledJobNames()) {
+						log.debug("Job: {}", jobName);
+					}
 				}
 				service.removeScheduledJob(keepAliveJobName);
 				keepAliveJobName = null;
-				log.warn("Closing {} due to too much inactivity ({}).", RTMPConnection.this, (lastPingSent - lastPongReceived));
+				log.warn("Closing {}, with id {}, due to too much inactivity ({}).",
+					new Object[] { RTMPConnection.this, getId(),
+					(lastPingSent - lastPongReceived) });
 				onInactive();
 				return;
 			}
@@ -1107,7 +1130,9 @@ public abstract class RTMPConnection extends BaseConnection implements
 		public void execute(ISchedulingService service) {
 			waitForHandshakeJob = null;
 			waitForHandshakeService = null;
-			// Client didn't send a valid handshake, disconnect.
+			// Client didn't send a valid handshake, disconnect
+			log.warn("Closing {}, with id {} due to long handshake",
+					RTMPConnection.this, getId());
 			onInactive();
 		}
 

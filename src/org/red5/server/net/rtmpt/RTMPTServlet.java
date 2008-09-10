@@ -83,12 +83,13 @@ public class RTMPTServlet extends HttpServlet {
 	 * Reference to RTMPT handler;
 	 */
 	private static RTMPTHandler handler;
-	
-    private static IRTMPConnManager rtmpConnManager;
 
-    public void setRtmpConnManager(IRTMPConnManager rtmpConnManager) {
+	private static IRTMPConnManager rtmpConnManager;
+
+	public void setRtmpConnManager(IRTMPConnManager rtmpConnManager) {
 		RTMPTServlet.rtmpConnManager = rtmpConnManager;
 	}
+
 	/**
 	 * Set the RTMPTHandler to use in this servlet.
 	 * 
@@ -177,9 +178,7 @@ public class RTMPTServlet extends HttpServlet {
 		resp.setHeader("Connection", "Keep-Alive");
 		resp.setHeader("Cache-Control", "no-cache");
 		resp.setContentType(CONTENT_TYPE);
-		if (log.isDebugEnabled()) {
-			log.debug("Sending " + buffer.limit() + " bytes.");
-		}
+		log.debug("Sending {} bytes", buffer.limit());
 		resp.setContentLength(buffer.limit() + 1);
 		ServletOutputStream output = resp.getOutputStream();
 		output.write(client.getPollingDelay());
@@ -223,7 +222,7 @@ public class RTMPTServlet extends HttpServlet {
 	 *            Servlet request
 	 * @return RTMP client connection
 	 */
-	protected RTMPTConnection getClient(HttpServletRequest req) {
+	protected RTMPTConnection getClientConnection(HttpServletRequest req) {
 		final Integer id = getClientId(req);
 		return getConnection(id);
 	}
@@ -290,16 +289,16 @@ public class RTMPTServlet extends HttpServlet {
 		skipData(req);
 
 		// TODO: should we evaluate the pathinfo?
-		RTMPTConnection client = createConnection();
-		client.setServlet(this);
-		if (client.getId() == 0) {
+		RTMPTConnection connection = createConnection();
+		connection.setServlet(this);
+		if (connection.getId() == 0) {
 			// no more clients are available for serving
 			returnMessage((byte) 0, resp);
 			return;
 		}
 
 		// Return connection id to client
-		returnMessage(client.getId() + "\n", resp);
+		returnMessage(connection.getId() + "\n", resp);
 	}
 
 	/**
@@ -320,18 +319,19 @@ public class RTMPTServlet extends HttpServlet {
 		// Skip sent data
 		skipData(req);
 
-		RTMPTConnection client = getClient(req);
-		if (client == null) {
-			handleBadRequest("Unknown client.", resp);
+		RTMPTConnection connection = getClientConnection(req);
+		if (connection == null) {
+			handleBadRequest("Close: unknown client with id: "
+					+ getClientId(req), resp);
 			return;
 		}
-		removeConnection(client.getId());
+		removeConnection(connection.getId());
 
-		client.setServletRequest(req);
-		handler.connectionClosed(client, client.getState());
+		connection.setServletRequest(req);
+		handler.connectionClosed(connection, connection.getState());
 
 		returnMessage((byte) 0, resp);
-		client.realClose();
+		connection.realClose();
 	}
 
 	/**
@@ -349,17 +349,18 @@ public class RTMPTServlet extends HttpServlet {
 	protected void handleSend(HttpServletRequest req, HttpServletResponse resp)
 			throws ServletException, IOException {
 
-		RTMPTConnection client = getClient(req);
-		if (client == null) {
-			handleBadRequest("Unknown client.", resp);
+		RTMPTConnection connection = getClientConnection(req);
+		if (connection == null) {
+			handleBadRequest("Send: unknown client with id: "
+					+ getClientId(req), resp);
 			return;
-		} else if (client.getState().getState() == RTMP.STATE_DISCONNECTED) {
-			removeConnection(client.getId());
+		} else if (connection.getState().getState() == RTMP.STATE_DISCONNECTED) {
+			removeConnection(connection.getId());
 			handleBadRequest("Connection already closed.", resp);
 			return;
 		}
 
-		client.setServletRequest(req);
+		connection.setServletRequest(req);
 
 		// Put the received data in a ByteBuffer
 		int length = req.getContentLength();
@@ -368,25 +369,25 @@ public class RTMPTServlet extends HttpServlet {
 		data.flip();
 
 		// Decode the objects in the data
-		List messages = client.decode(data);
+		List messages = connection.decode(data);
 		data.release();
 		data = null;
 		if (messages == null || messages.isEmpty()) {
-			returnMessage(client.getPollingDelay(), resp);
+			returnMessage(connection.getPollingDelay(), resp);
 			return;
 		}
 
 		// Execute the received RTMP messages
 		for (Object message : messages) {
 			try {
-				handler.messageReceived(client, client.getState(), message);
+				handler.messageReceived(connection, connection.getState(), message);
 			} catch (Exception e) {
 				log.error("Could not process message.", e);
 			}
 		}
 
 		// Send results to client
-		returnPendingMessages(client, resp);
+		returnPendingMessages(connection, resp);
 	}
 
 	/**
@@ -407,23 +408,24 @@ public class RTMPTServlet extends HttpServlet {
 		// Skip sent data
 		skipData(req);
 
-		RTMPTConnection client = getClient(req);
-		if (client == null) {
-			handleBadRequest("Unknown client.", resp);
+		RTMPTConnection connection = getClientConnection(req);
+		if (connection == null) {
+			handleBadRequest("Idle: unknown client with id: "
+					+ getClientId(req), resp);
 			return;
-		} else if (client.isClosing()) {
+		} else if (connection.isClosing()) {
 			// Tell client to close the connection
 			returnMessage((byte) 0, resp);
-			client.realClose();
+			connection.realClose();
 			return;
-		} else if (client.getState().getState() == RTMP.STATE_DISCONNECTED) {
-			removeConnection(client.getId());
+		} else if (connection.getState().getState() == RTMP.STATE_DISCONNECTED) {
+			removeConnection(connection.getId());
 			handleBadRequest("Connection already closed.", resp);
 			return;
 		}
 
-		client.setServletRequest(req);
-		returnPendingMessages(client, resp);
+		connection.setServletRequest(req);
+		returnPendingMessages(connection, resp);
 	}
 
 	/**
@@ -449,7 +451,7 @@ public class RTMPTServlet extends HttpServlet {
 		// XXX Paul: since the only current difference in the type of request
 		// that we are interested in is the 'second' character, we can double
 		// the speed of this entry point by using a switch on the second
-		// charater.
+		// character.
 		String path = req.getServletPath();
 		char p = path.charAt(1);
 		switch (p) {
@@ -490,7 +492,7 @@ public class RTMPTServlet extends HttpServlet {
 	public void destroy() {
 		// Cleanup connections
 		Collection<RTMPConnection> conns = rtmpConnManager.removeConnections();
-		for (RTMPConnection conn: conns) {
+		for (RTMPConnection conn : conns) {
 			conn.close();
 		}
 		super.destroy();
@@ -504,19 +506,25 @@ public class RTMPTServlet extends HttpServlet {
 	protected void notifyClosed(RTMPTConnection conn) {
 		rtmpConnManager.removeConnection(conn.getId());
 	}
-	
-    protected RTMPTConnection getConnection(int clientId) {
-    	return (RTMPTConnection) rtmpConnManager.getConnection(clientId);
-    }
-    
-    protected RTMPTConnection createConnection() {
-    	RTMPTConnection conn = (RTMPTConnection) rtmpConnManager.createConnection(RTMPTConnection.class);
-    	conn.setRTMPTHandle(handler);
-    	handler.connectionOpened(conn, conn.getState());
-    	return conn;
-    }
-    
-    protected void removeConnection(int clientId) {
-    	rtmpConnManager.removeConnection(clientId);
-    }
+
+	protected RTMPTConnection getConnection(int clientId) {
+		RTMPTConnection connection = (RTMPTConnection) rtmpConnManager
+				.getConnection(clientId);
+		if (connection == null) {
+			log.warn("Null connection for clientId: {}", clientId);
+		}
+		return connection;
+	}
+
+	protected RTMPTConnection createConnection() {
+		RTMPTConnection conn = (RTMPTConnection) rtmpConnManager
+				.createConnection(RTMPTConnection.class);
+		conn.setRTMPTHandler(handler);
+		handler.connectionOpened(conn, conn.getState());
+		return conn;
+	}
+
+	protected void removeConnection(int clientId) {
+		rtmpConnManager.removeConnection(clientId);
+	}
 }

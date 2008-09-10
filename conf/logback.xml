@@ -1,34 +1,24 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
 	<consolePlugin/>
-	<!-- Appenders http://logback.qos.ch/manual/appenders.html -->
 	<appender name="CONSOLE"
 		class="ch.qos.logback.core.ConsoleAppender">
-		<filter class="ch.qos.logback.classic.filter.LevelFilter">
-      		<level>INFO</level>
-      		<onMatch>ACCEPT</onMatch>
-      		<onMismatch>DENY</onMismatch>
-    	</filter>		
 		<layout class="ch.qos.logback.classic.PatternLayout">
-			<Pattern>		
-			%date [%thread] %-5level %logger - %msg%n
-			</Pattern>
+			<Pattern>[%p] [%thread] %logger - %msg%n</Pattern>
 		</layout>
 	</appender>
 	<appender name="FILE" class="ch.qos.logback.core.FileAppender">
-		<File>red5.log</File>
+		<File>../log/red5.log</File>
 		<Append>false</Append>
 		<Encoding>UTF-8</Encoding>
 		<BufferedIO>false</BufferedIO>
 		<ImmediateFlush>true</ImmediateFlush>
 		<layout class="ch.qos.logback.classic.PatternLayout">
-			<Pattern>
-				%date [%thread] %-5level %logger{35} - %msg%n
-			</Pattern>
+			<Pattern>%d{ISO8601} [%thread] %-5level %logger{35} - %msg%n</Pattern>
 		</layout>
 	</appender>
 	<appender name="ERRORFILE" class="ch.qos.logback.core.FileAppender">
-		<File>error.log</File>
+		<File>../log/error.log</File>
 		<Append>false</Append>
 		<Encoding>UTF-8</Encoding>
 		<BufferedIO>false</BufferedIO>
@@ -37,17 +27,9 @@
       		<level>WARN</level>
     	</filter>
 		<layout class="ch.qos.logback.classic.PatternLayout">
-			<Pattern>
-				%date [%thread] %-5level %logger{35} - %msg%n
-			</Pattern>
+			<Pattern>%d{ISO8601} [%thread] %-5level %logger{35} - %msg%n</Pattern>
 		</layout>
 	</appender>
-	<appender name="SOCKET" class="ch.qos.logback.classic.net.SocketAppender">
-	    <RemoteHost>localhost</RemoteHost>
-	    <Port>4321</Port>
-	    <ReconnectionDelay>10000</ReconnectionDelay>
-	    <IncludeCallerData>true</IncludeCallerData>
-	</appender>	
 	<root>
 		<level value="DEBUG" />
 		<appender-ref ref="CONSOLE" />
@@ -56,10 +38,7 @@
 	</root>
 	<!-- Red5 -->
 	<logger name="org.red5.io">
-		<level value="DEBUG" />
-	</logger>
-	<logger name="org.red5.io.object">
-		<level value="WARN" />
+		<level value="INFO" />
 	</logger>
 	<logger name="org.red5.server">
 		<level value="WARN" />
@@ -169,6 +148,9 @@
 		<level value="WARN" />
 	</logger>
 	<!-- Apache commons -->
+	<logger name="org.apache.commons">
+		<level value="WARN" />
+	</logger>
 	<logger name="org.apache.commons.modeler">
 		<level value="WARN" />
 	</logger>
@@ -185,9 +167,6 @@
 	<logger name="org.apache.catalina">
 		<level value="INFO" />
 	</logger>
-	<logger name="org.apache.catalina.authenticator">
-		<level value="INFO" />
-	</logger>
 	<logger name="org.apache.catalina.realm">
 		<level value="WARN" />
 	</logger>
@@ -196,6 +175,12 @@
 	</logger>
 	<logger name="org.apache.jasper">
 		<level value="INFO" />
+	</logger>
+	<logger name="org.apache.tomcat">
+		<level value="INFO" />
+	</logger>
+	<logger name="org.apache.tomcat.util.net">
+		<level value="WARN" />
 	</logger>
 	<!-- Jetty -->
 	<logger name="org.mortbay">
@@ -230,10 +215,5 @@
 	<logger name="net.sf.ehcache">
 		<level value="INFO" />
 	</logger>
-	<logger name="com.whirlycott.cache">
-		<level value="WARN" />
-	</logger>
-	<logger name="com.whirlycott.cache.policy">
-		<level value="WARN" />
-	</logger>
+
 </configuration>

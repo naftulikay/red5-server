@@ -25,8 +25,8 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
-import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CopyOnWriteArraySet;
 
 import javax.management.MalformedObjectNameException;
@@ -52,6 +52,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.core.io.Resource;
 import org.springframework.core.style.ToStringCreator;
 
+import org.apache.commons.lang.StringUtils;
+
 /**
  * The scope object.
  * 
@@ -67,8 +69,6 @@ import org.springframework.core.style.ToStringCreator;
  */
 public class Scope extends BasicScope implements IScope, IScopeStatistics,
 		ScopeMBean {
-
-	private static final Logger logger = LoggerFactory.getLogger(Scope.class);
 
 	/**
 	 * Iterates through connections
@@ -263,12 +263,12 @@ public class Scope extends BasicScope implements IScope, IScopeStatistics,
 	/**
 	 * Statistics about clients connected to the scope.
 	 */
-	private final StatisticsCounter clientStats = new StatisticsCounter();
+	protected final StatisticsCounter clientStats = new StatisticsCounter();
 
 	/**
 	 * Statistics about connections to the scope.
 	 */
-	private final StatisticsCounter connectionStats = new StatisticsCounter();
+	protected final StatisticsCounter connectionStats = new StatisticsCounter();
 
 	/**
 	 * Scope context
@@ -304,17 +304,17 @@ public class Scope extends BasicScope implements IScope, IScopeStatistics,
 	 * Registered service handlers for this scope. The map is created on-demand
 	 * only if it's accessed for writing.
 	 */
-	private volatile Map<String, Object> serviceHandlers;
+	private volatile ConcurrentMap<String, Object> serviceHandlers;
 
 	/**
 	 * Statistics about subscopes.
 	 */
-	private final StatisticsCounter subscopeStats = new StatisticsCounter();
+	protected final StatisticsCounter subscopeStats = new StatisticsCounter();
 
 	/**
 	 * Mbean object name.
 	 */
-	private ObjectName oName;
+	protected ObjectName oName;
 
 	/**
 	 * Creates unnamed scope
@@ -399,9 +399,9 @@ public class Scope extends BasicScope implements IScope, IScopeStatistics,
 	 * @return <code>true</code> on success, <code>false</code> otherwise
 	 */
 	public boolean connect(IConnection conn, Object[] params) {
-		logger.debug("Has connection: {}", (conn != null));		
-		logger.debug("Has handler: {}", (handler != null));
-		logger.debug("Has parent: {}", (parent != null));		
+//		logger.debug("Has connection: {}", (conn != null));		
+//		logger.debug("Has handler: {}", (handler != null));
+//		logger.debug("Has parent: {}", (parent != null));		
 		if (hasParent() && !parent.connect(conn, params)) {
 			return false;
 		}
@@ -462,12 +462,21 @@ public class Scope extends BasicScope implements IScope, IScopeStatistics,
 	 * Destroys scope
 	 */
 	public void destroy() {
+		log.debug("Destroy scope");
 		if (hasParent()) {
 			parent.removeChildScope(this);
 		}
 		if (hasHandler()) {
 			handler.stop(this);
-			// TODO: kill all child scopes
+		}
+		// TODO: kill all child scopes
+		Set<Map.Entry<String, IBasicScope>> entries = children.entrySet();
+		for (Map.Entry<String, IBasicScope> entry : entries) {
+			log.debug("Stopping child scope: {}", entry.getKey());
+			IBasicScope basic = entry.getValue();
+			if (basic instanceof Scope) {
+				((Scope) basic).uninit();
+			}
 		}
 	}
 
@@ -594,6 +603,8 @@ public class Scope extends BasicScope implements IScope, IScopeStatistics,
 	 * @return Current thread context classloader
 	 */
 	public ClassLoader getClassLoader() {
+		//System.out.println(">>>>> scope: " + Thread.currentThread().getContextClassLoader());		
+		//System.out.println(">>>>> scope (context): " + getContext().getClassLoader());		
 		return getContext().getClassLoader();
 	}
 
@@ -825,14 +836,8 @@ public class Scope extends BasicScope implements IScope, IScopeStatistics,
 	 */
 	protected Map<String, Object> getServiceHandlers(boolean allowCreate) {
 		if (serviceHandlers == null) {
-			if (!allowCreate)
-				return null;
-
-			// Only synchronize if potentially needs to be created
-			synchronized (this) {
-				if (serviceHandlers == null) {
-					serviceHandlers = new ConcurrentHashMap<String, Object>();
-				}
+			if (allowCreate) {
+				serviceHandlers = new ConcurrentHashMap<String, Object>();
 			}
 		}
 		return serviceHandlers;
@@ -933,6 +938,7 @@ public class Scope extends BasicScope implements IScope, IScopeStatistics,
 	 * Initialization actions, start if autostart is set to <code>true</code>
 	 */
 	public void init() {
+		log.debug("Init scope");
 		if (hasParent()) {
 			if (!parent.hasChildScope(name)) {
 				if (!parent.addChildScope(this)) {
@@ -949,6 +955,7 @@ public class Scope extends BasicScope implements IScope, IScopeStatistics,
 	 * Uninitialize scope and unregister from parent.
 	 */
 	public void uninit() {
+		log.debug("Un-init scope");
 		for (IBasicScope child : children.values()) {
 			if (child instanceof Scope) {
 				((Scope) child).uninit();
@@ -971,6 +978,13 @@ public class Scope extends BasicScope implements IScope, IScopeStatistics,
 	public boolean isEnabled() {
 		return enabled;
 	}
+	
+	/**
+	 * Here for JMX only, uses isEnabled()
+	 */
+	public boolean getEnabled() {
+		return isEnabled();
+	}	
 
 	/**
 	 * Check if scope is in running state
@@ -981,6 +995,13 @@ public class Scope extends BasicScope implements IScope, IScopeStatistics,
 	public boolean isRunning() {
 		return running;
 	}
+	
+	/**
+	 * Here for JMX only, uses isEnabled()
+	 */	
+	public boolean getRunning() {
+		return isRunning();
+	}	
 
 	/**
 	 * Child scopes iterator
@@ -1023,6 +1044,7 @@ public class Scope extends BasicScope implements IScope, IScopeStatistics,
 	 *            Child scope to remove
 	 */
 	public void removeChildScope(IBasicScope scope) {
+		log.debug("Remove child scope: {}" , scope);
 		if (scope instanceof IScope) {
 			if (hasHandler()) {
 				getHandler().stop((IScope) scope);
@@ -1071,6 +1093,7 @@ public class Scope extends BasicScope implements IScope, IScopeStatistics,
 	 *            Context object
 	 */
 	public void setContext(IContext context) {
+		log.debug("Set context: {}", context);
 		this.context = context;
 	}
 
@@ -1101,6 +1124,7 @@ public class Scope extends BasicScope implements IScope, IScopeStatistics,
 	 *            Event handler
 	 */
 	public void setHandler(IScopeHandler handler) {
+		log.debug("Set handler: {}", handler);
 		this.handler = handler;
 		if (handler instanceof IScopeAware) {
 			((IScopeAware) handler).setScope(this);
@@ -1115,16 +1139,22 @@ public class Scope extends BasicScope implements IScope, IScopeStatistics,
 	 */
 	@Override
 	public void setName(String name) {
+		log.debug("Set name: {}", name);
 		if (oName != null) {
 			JMXAgent.unregisterMBean(oName);
 			oName = null;
 		}
 		this.name = name;
 
-		if (name != null) {
+		if (StringUtils.isNotBlank(name)) {
 			try {
+				String className = getClass().getName();
+				if (className.indexOf('.') != -1) {
+    				//strip package stuff
+    				className = className.substring(className.lastIndexOf('.') + 1);
+				}
 				oName = new ObjectName(JMXFactory.getDefaultDomain() + ":type="
-						+ getClass().getName() + ",name=" + name);
+						+ className + ",name=" + name);
 			} catch (MalformedObjectNameException e) {
 				log.error("Invalid object name. {}", e);
 			}
@@ -1140,6 +1170,7 @@ public class Scope extends BasicScope implements IScope, IScopeStatistics,
 	 *            Parent scope
 	 */
 	public void setParent(IScope parent) {
+		log.debug("Set parent scope: {}", parent);
 		this.parent = parent;
 	}
 
@@ -1168,6 +1199,7 @@ public class Scope extends BasicScope implements IScope, IScopeStatistics,
 	 *         returned true, <code>false</code> otherwise
 	 */
 	public synchronized boolean start() {
+		log.debug("Start scope");
 		boolean result = false;
 		if (enabled && !running) {
 			if (hasHandler()) {
@@ -1194,6 +1226,7 @@ public class Scope extends BasicScope implements IScope, IScopeStatistics,
 	 * Stops scope
 	 */
 	public synchronized void stop() {
+		log.debug("Stop scope");
 		if (enabled && running && hasHandler()) {
 			try {
 				// if we dont have a handler of our own dont try to stop it

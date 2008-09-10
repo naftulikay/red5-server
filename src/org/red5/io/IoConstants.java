@@ -3,7 +3,7 @@ package org.red5.io;
 /*
  * RED5 Open Source Flash Server - http://www.osflash.org/red5
  * 
- * Copyright (c) 2006-2007 by respective authors (see below). All rights reserved.
+ * Copyright (c) 2006-2008 by respective authors (see below). All rights reserved.
  * 
  * This library is free software; you can redistribute it and/or modify it under the 
  * terms of the GNU Lesser General Public License as published by the Free Software 
@@ -35,12 +35,8 @@ public interface IoConstants {
     /**
      * Metadata
      */
-	public static final byte TYPE_METADATA = 0x12; //this is actually a Notify
+	public static final byte TYPE_METADATA = 0x12;
     /**
-     * Chunk size
-     */
-	public static final byte TYPE_CHUNK_SIZE = 0x01;	
-	/**
      * Mask sound type
      */
 	public static final byte MASK_SOUND_TYPE = 0x01;

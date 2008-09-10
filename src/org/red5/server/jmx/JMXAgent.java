@@ -77,10 +77,18 @@ public class JMXAgent implements NotificationListener {
 	private static MBeanServer mbs;
 
 	private static String rmiAdapterPort = "9999";
+	
+	private static String rmiAdapterRemotePort = "";
+	
+	private static String rmiAdapterHost = "localhost";
 
 	private static String remotePasswordProperties;
 
 	private static String remoteAccessProperties;
+	
+	private static String remoteSSLKeystore;
+	
+	private static String remoteSSLKeystorePass;
 
 	static {
 		//in the war version the jmxfactory is not created before
@@ -91,6 +99,22 @@ public class JMXAgent implements NotificationListener {
 		}
 	}
 
+	/**
+	 * Convienence to remove packages etc from a class name.
+	 * 
+	 * @param className
+	 * @return
+	 */
+	public static String trimClassName(String className) {
+		if (StringUtils.isNotBlank(className)) {		
+    		if (className.indexOf('.') != -1) {
+    			//strip package stuff
+    			className = className.substring(className.lastIndexOf('.') + 1);
+    		}		
+		}
+		return className;
+	}
+	
 	public static boolean registerMBean(Object instance, String className,
 			Class interfaceClass) {
 		boolean status = false;
@@ -271,12 +295,13 @@ public class JMXAgent implements NotificationListener {
 	}
 
 	public void handleNotification(Notification notification, Object handback) {
-		log.debug("handleNotification " + notification.getMessage());
+		log.debug("handleNotification {}", notification.getMessage());
 	}
 
 	public void init() {
 		//environmental var holder
 		HashMap env = null;
+		 
 		if (enableHtmlAdapter) {
 			// setup the adapter
 			try {
@@ -303,6 +328,10 @@ public class JMXAgent implements NotificationListener {
 		if (enableRmiAdapter) {
 			// Create an RMI connector server
 			log.debug("Create an RMI connector server");
+			
+			// bind the rmi hostname for systems with nat and multiple binded addresses !
+			System.setProperty("java.rmi.server.hostname", rmiAdapterHost); 
+			
 			try {
 
 				Registry r = null;
@@ -328,11 +357,27 @@ public class JMXAgent implements NotificationListener {
 								.valueOf(rmiAdapterPort));
 					}
 				}
-				JMXServiceURL url = new JMXServiceURL(
+			
+				JMXServiceURL url = null;
+				
+				// Configure the remote objects exported port for firewalls !!
+				if (StringUtils.isNotEmpty(rmiAdapterRemotePort)) {
+    				url = new JMXServiceURL("service:jmx:rmi://"
+                            + rmiAdapterHost + ":" + rmiAdapterRemotePort + "/jndi/rmi://" + rmiAdapterHost + ":" + rmiAdapterPort + "/red5"); 
+				} else {
+					url = new JMXServiceURL(
 						"service:jmx:rmi:///jndi/rmi://:" + rmiAdapterPort
 								+ "/red5");
+				}
+				
 				//if SSL is requested to secure rmi connections
 				if (enableSsl) {
+					
+					// Setup keystore for SSL transparently
+					System.setProperty("javax.net.ssl.keyStore", remoteSSLKeystore);
+					System.setProperty("javax.net.ssl.keyStorePassword", remoteSSLKeystorePass);
+
+					
 					// Environment map
 					log.debug("Initialize the environment map");
 					env = new HashMap();
@@ -373,7 +418,9 @@ public class JMXAgent implements NotificationListener {
 					env.put("jmx.remote.x.password.file",
 							remotePasswordProperties);
 				}
-
+				
+				
+				
 				// create the connector server
 				cs = JMXConnectorServerFactory.newJMXConnectorServer(url, env,
 						mbs);
@@ -441,9 +488,25 @@ public class JMXAgent implements NotificationListener {
 	public void setRemotePasswordProperties(String remotePasswordProperties) {
 		JMXAgent.remotePasswordProperties = remotePasswordProperties;
 	}
-
+	
+	public void setRemoteSSLKeystore(String remoteSSLKeystore) {
+		JMXAgent.remoteSSLKeystore = remoteSSLKeystore;
+	}
+	
+	public void setRemoteSSLKeystorePass(String remoteSSLKeystorePass) {
+		JMXAgent.remoteSSLKeystorePass = remoteSSLKeystorePass;
+	}
+	
+	public void setRmiAdapterRemotePort(String rmiAdapterRemotePort) {
+		JMXAgent.rmiAdapterRemotePort = rmiAdapterRemotePort;
+	}
+	
 	public void setRmiAdapterPort(String rmiAdapterPort) {
 		JMXAgent.rmiAdapterPort = rmiAdapterPort;
+	}
+	
+	public void setRmiAdapterHost(String rmiAdapterHost) {
+		JMXAgent.rmiAdapterHost = rmiAdapterHost;
 	}
 
 	public void setStartRegistry(boolean startRegistry) {

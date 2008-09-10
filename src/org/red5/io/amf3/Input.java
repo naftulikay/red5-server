@@ -53,7 +53,6 @@ public class Input extends org.red5.io.amf.Input implements org.red5.io.object.I
 	 * Holds informations about already deserialized classes.
 	 */
 	protected class ClassReference {
-		
 		/** Name of the deserialized class. */
 		protected String className;
 		/** Type of the class. */
@@ -116,6 +115,16 @@ public class Input extends org.red5.io.amf.Input implements org.red5.io.object.I
 		}
 	}
 	
+	/**
+	 * Class used to collect AMF3 references.
+	 * In AMF3 references should be collected through the whole "body" (across several Input objects).
+	 */
+	public static class RefStorage {
+		private List<ClassReference> classReferences = new ArrayList<ClassReference>();
+		private List<String> stringReferences = new ArrayList<String>();
+		private Map<Integer, Object> refMap = new HashMap<Integer, Object>();
+	} 
+	
     /**
      * Logger
      */
@@ -143,6 +152,27 @@ public class Input extends org.red5.io.amf.Input implements org.red5.io.object.I
 		amf3_mode = 0;
 		stringReferences = new ArrayList<String>();
 		classReferences = new ArrayList<ClassReference>();
+	}
+	
+	/**
+	 * Creates Input object for AMF3 from byte buffer and initializes references
+	 * from passed RefStorage
+	 * @param buf
+	 * @param refStorage
+	 */
+	public Input(ByteBuffer buf, RefStorage refStorage) {
+    	super(buf);
+    	this.stringReferences = refStorage.stringReferences;
+    	this.classReferences = refStorage.classReferences;
+    	this.refMap = refStorage.refMap;
+    	amf3_mode = 0;
+	}
+	
+	/**
+	 * Force using AMF3 everywhere
+	 */
+	public void enforceAMF3() {
+		amf3_mode++;
 	}
 
 	/**
@@ -179,10 +209,10 @@ public class Input extends org.red5.io.amf.Input implements org.red5.io.object.I
 		}
 
 		switch (currentDataType) {
+			case AMF3.TYPE_UNDEFINED:
 			case AMF3.TYPE_NULL:
 				coreType = DataTypes.CORE_NULL;
 				break;
-
 			case AMF3.TYPE_INTEGER:
 			case AMF3.TYPE_NUMBER:
 				coreType = DataTypes.CORE_NUMBER;
@@ -198,7 +228,7 @@ public class Input extends org.red5.io.amf.Input implements org.red5.io.object.I
 				break;
 			// TODO check XML_SPECIAL
 			case AMF3.TYPE_XML:
-			case AMF3.TYPE_XML_SPECIAL:
+			case AMF3.TYPE_XML_DOCUMENT:
                 coreType = DataTypes.CORE_XML;
 				break;
 			case AMF3.TYPE_OBJECT:
@@ -279,11 +309,11 @@ public class Input extends org.red5.io.amf.Input implements org.red5.io.object.I
 			// Empty string
 			return "";
 		}
-		//if the refs are empty an IndexOutOfBoundsEx will be thrown
-		if (stringReferences.isEmpty()) {
-			log.warn("String reference list is empty");
-		}
 		if ((len & 1) == 0) {
+			//if the refs are empty an IndexOutOfBoundsEx will be thrown
+			if (stringReferences.isEmpty()) {
+				log.debug("String reference list is empty");
+			}
 			// Reference
 			return stringReferences.get(len >> 1);
 		}
@@ -438,17 +468,30 @@ public class Input extends org.red5.io.amf.Input implements org.red5.io.object.I
 			((IExternalizable) result).readExternal(new DataInput(this, deserializer));
 			break;
 		case AMF3.TYPE_OBJECT_VALUE:
-			// Load object properties into map
-			classReferences.add(new ClassReference(className, AMF3.TYPE_OBJECT_VALUE, null));
-			properties = new ObjectMap<String, Object>();
-			attributes = new LinkedList<String>();
-			String key = readString();
-			while (!"".equals(key)) {
-				attributes.add(key);
-				Object value = deserializer.deserialize(this, getPropertyType(instance, key));
-				properties.put(key, value);
-				key = readString();
-			}
+			// First, we should read typed (non-dynamic) properties ("sealed traits" according to AMF3 specification).
+			// Property names are stored in the beginning, then values are stored.
+			count = type >> 2;
+            properties = new ObjectMap<String, Object>();
+            if (attributes == null) {
+            	attributes = new ArrayList<String>(count);
+            	for (int i = 0; i < count; i++) {
+            		attributes.add(readString());
+            	}
+            	classReferences.add(new ClassReference(className, AMF3.TYPE_OBJECT_VALUE, attributes));
+            }
+            for (int i = 0; i < count; i++) {
+            	String key = attributes.get(i);
+            	properties.put(key, deserializer.deserialize(this, getPropertyType(instance, key)));
+            }
+
+            // Now we should read dynamic properties which are stored as name-value pairs.
+            // Dynamic properties are NOT remembered in 'classReferences'.
+            String key = readString();
+            while (!"".equals(key)) {
+            	Object value = deserializer.deserialize(this, getPropertyType(instance, key));
+            	properties.put(key, value);
+            	key = readString();
+            }
 			break;
 		default:
 		case AMF3.TYPE_OBJECT_PROXY:
@@ -509,15 +552,19 @@ public class Input extends org.red5.io.amf.Input implements org.red5.io.object.I
 						}
 						
 						try {
-							try {
-								final Field field = resultClass.getField(key);
-								final Class fieldType = field.getType();
-								if (!fieldType.isAssignableFrom(value.getClass())) {
-									value = ConversionUtils.convert(value, fieldType);
-								}
-								field.set(result, value);
-							} catch (Exception e) {
-								BeanUtils.setProperty(result, key, value);
+							if (value != null) { 
+    							try {
+    								final Field field = resultClass.getField(key);
+    								final Class fieldType = field.getType();
+    								if (!fieldType.isAssignableFrom(value.getClass())) {
+    									value = ConversionUtils.convert(value, fieldType);
+    								}
+    								field.set(result, value);
+    							} catch (Exception e) {
+    								BeanUtils.setProperty(result, key, value);
+    							}
+							} else {
+								log.debug("Skipping null property: {}", key);
 							}
 						} catch (Exception e) {
 							log.error("Error mapping property: {} ({})", key, value);
@@ -593,7 +640,7 @@ public class Input extends org.red5.io.amf.Input implements org.red5.io.object.I
 		} else {
 			/* Use all 8 bits from the 4th byte */
 			result <<= 8;
-			result |= b;
+			result |= b & 0x0ff;
 
 			/* Check if the integer should be negative */
 			if ((result & 0x10000000) != 0) {

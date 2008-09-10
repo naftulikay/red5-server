@@ -28,6 +28,7 @@ import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Vector;
@@ -159,6 +160,12 @@ public class MP4Reader implements IoConstants, ITagReader, IKeyFrameDataAnalyzer
 	private long firstAudioTag;
 	private long firstVideoTag;
 	
+	/**
+	 * Container for metadata and any other tags that should
+	 * be sent prior to media data.
+	 */
+	private LinkedList<ITag> firstTags = new LinkedList<ITag>();
+	
 	/** Constructs a new MP4Reader. */
 	MP4Reader() {
 	}
@@ -186,8 +193,14 @@ public class MP4Reader implements IoConstants, ITagReader, IKeyFrameDataAnalyzer
     	this.file = f;
 		this.fis = new MP4DataStream(new FileInputStream(f));
 		channel = fis.getChannel();
-
+		//decode all the info from the atoms
 		decodeHeader();
+		//build the keyframe meta data
+		analyzeKeyFrames();
+		//add meta data
+		firstTags.add(createFileMeta());
+		//create / add the pre-streaming tags
+		createPreStreamingTags();
 	}
     
 	/**
@@ -581,7 +594,7 @@ public class MP4Reader implements IoConstants, ITagReader, IKeyFrameDataAnalyzer
 	 *
 	 * @return          Total readable bytes
 	 */
-	private long getTotalBytes() {
+	public long getTotalBytes() {
 		try {
 			return channel.size();
 		} catch (Exception e) {
@@ -724,6 +737,7 @@ public class MP4Reader implements IoConstants, ITagReader, IKeyFrameDataAnalyzer
      * @return         Metadata event tag
      */
     ITag createFileMeta() {
+    	log.debug("Creating onMetaData notify");
 		// Create tag for onMetaData event
 		ByteBuffer buf = ByteBuffer.allocate(1024);
 		buf.setAutoExpand(true);
@@ -780,11 +794,7 @@ public class MP4Reader implements IoConstants, ITagReader, IKeyFrameDataAnalyzer
 		return result;
 	}
 
-    private int prevFrameSize = 0;
-    private int currentTime = 0;
-    private int initPackets = 0;
-    
-	/**
+    /**
 	 * Tag sequence
 	 * Notify - onMetaData
 	 * Video - ts=0 size=2 bytes {52 00}
@@ -804,90 +814,110 @@ public class MP4Reader implements IoConstants, ITagReader, IKeyFrameDataAnalyzer
 	 * Audio config:
 	 * af 00 12 10 = AAC LC
 	 * af 00 13 90 56 e5 a5 48 00 = HE-AAC
+	 */
+    private void createPreStreamingTags() {
+    	//video tag #1
+    	ITag tag = new Tag(IoConstants.TYPE_VIDEO, 0, 2, null, 0);
+		ByteBuffer body = ByteBuffer.allocate(tag.getBodySize());
+		body.setAutoExpand(true);
+		body.put(new byte[]{(byte) 0x52, (byte) 0});
+		body.flip();
+		tag.setBody(body);
+
+		//add tag
+		firstTags.add(tag);
+		//clear body for re-use
+		body.clear();
+		
+		//video tag #2
+		tag = new Tag(IoConstants.TYPE_VIDEO, 0, 5, null, tag.getBodySize());
+		body.put(new byte[]{(byte) 0x17, (byte) 0x02, (byte) 00, (byte) 00, (byte) 00});
+		body.flip();
+		tag.setBody(body);
+		
+		//add tag
+		firstTags.add(tag);
+		//clear body for re-use
+		body.clear();
+		
+    	//video tag #3
+		tag = new Tag(IoConstants.TYPE_VIDEO, 0, 2, null, tag.getBodySize());
+		body.put(new byte[]{(byte) 0x52, (byte) 0x01});
+		body.flip();
+		tag.setBody(body);				
+
+		//add tag
+		firstTags.add(tag);
+		//clear body for re-use
+		body.clear();
+		
+		//audio tag #1
+		tag = new Tag(IoConstants.TYPE_AUDIO, 0, 4, null, tag.getBodySize());
+		body.put(new byte[]{(byte) 0xaf, (byte) 00, (byte) 0x12, (byte) 0x10});
+		body.flip();
+		tag.setBody(body);
+
+		//add tag
+		firstTags.add(tag);
+		//clear body for re-use
+		body.clear();
+		
+		//audio tag #2
+		tag = new Tag(IoConstants.TYPE_AUDIO, 0, 9, null, tag.getBodySize());
+		body.put(new byte[]{(byte) 0xaf, (byte) 0x01, (byte) 0x20, (byte) 00, (byte) 00, (byte) 00, (byte) 00, (byte) 00, (byte) 0x0e});
+		body.flip();
+		tag.setBody(body);    	
+
+		//add tag
+		firstTags.add(tag);
+		//clear body for release
+		body.clear();
+		
+		body.release();  
+    }
+    
+    private int prevFrameSize = 0;
+    
+	/**
 	 * 
 	 */
     public synchronized ITag readTag() {
 		log.debug("Read tag - currentSample {}, prevFrameSize {}", new Object[]{currentSample, prevFrameSize});
-		ITag tag = null;
-		ByteBuffer body = null;
-		switch (initPackets) {
-			case 0: //notify
-				log.debug("Creating onMetaData notify");
-				analyzeKeyFrames();
-				tag = createFileMeta();
-				initPackets++;
-				break;
-			case 1: // video 1
-				tag = new Tag(IoConstants.TYPE_VIDEO, 0, 2, null, prevFrameSize);
-				body = ByteBuffer.allocate(tag.getBodySize());
-				body.put(new byte[]{(byte) 0x52, (byte) 0});
-				body.flip();
-				tag.setBody(body);
-				initPackets++;
-				break;
-			case 2: // video 2
-				tag = new Tag(IoConstants.TYPE_VIDEO, 0, 5, null, prevFrameSize);
-				body = ByteBuffer.allocate(tag.getBodySize());
-				body.put(new byte[]{(byte) 0x17, (byte) 0x02, (byte) 00, (byte) 00, (byte) 00});
-				body.flip();
-				tag.setBody(body);
-				initPackets++;
-				break;
-			case 3: // video 3
-				tag = new Tag(IoConstants.TYPE_VIDEO, 0, 2, null, prevFrameSize);
-				body = ByteBuffer.allocate(tag.getBodySize());
-				body.put(new byte[]{(byte) 0x52, (byte) 0x01});
-				body.flip();
-				tag.setBody(body);				
-				initPackets++;
-				break;
-			case 4: // audio 1
-				tag = new Tag(IoConstants.TYPE_AUDIO, 0, 4, null, prevFrameSize);
-				body = ByteBuffer.allocate(tag.getBodySize());
-				body.put(new byte[]{(byte) 0xaf, (byte) 00, (byte) 0x12, (byte) 0x10});
-				body.flip();
-				tag.setBody(body);
-				initPackets++;
-				break;
-			case 5: // audio 2
-				tag = new Tag(IoConstants.TYPE_AUDIO, 0, 9, null, prevFrameSize);
-				body = ByteBuffer.allocate(tag.getBodySize());
-				body.put(new byte[]{(byte) 0xaf, (byte) 0x01, (byte) 0x20, (byte) 00, (byte) 00, (byte) 00, (byte) 00, (byte) 00, (byte) 0x0e});
-				body.flip();
-				tag.setBody(body);
-				initPackets++;
-				break;
-			default: 				
-				int sampleSize = (Integer) videoSamples.get(currentSample) + 5;
-				int ts = videoSampleDuration * currentSample; //Math.round((currentSample * timeScale) / videoSampleDuration);
-    			log.debug("Read tag - sample dur / scale {}", new Object[]{((currentSample * timeScale) / videoSampleDuration)});				
-    			long samplePos = samplePosMap.get(currentSample);
-    			log.debug("Read tag - sampleSize {} ts {}", new Object[]{sampleSize, ts});
+		//empty-out the pre-streaming tags first
+		if (!firstTags.isEmpty()) {
+			// Return first tags before media data
+			return firstTags.removeFirst();
+		}		
 
-    			//once video works we will try adding audio
-    			//tag = new Tag(IoConstants.TYPE_AUDIO, ts, sampleSize, null, prevFrameSize);
-    			tag = new Tag(IoConstants.TYPE_VIDEO, ts, sampleSize, null, prevFrameSize);
-    			log.debug("Read tag - body size: {}", tag.getBodySize());
-    			body = ByteBuffer.allocate(tag.getBodySize());
-    			log.debug("Read tag - current pos {} sample pos {}", getCurrentPosition(), samplePos);
-    			//prefix is different for keyframes
-    			if (posTimeMap.containsKey(samplePos)) {
-    				log.debug("Writing keyframe prefix");
-    				body.put(PREFIX_VIDEO_KEYFRAME);
-    			} else {  			
-    				log.debug("Writing interframe prefix");
-    				body.put(PREFIX_VIDEO_FRAME);
-    			}
-    			try {
-    				channel.position(samplePos);
-					channel.read(body.buf());
-				} catch (IOException e) {
-					log.error("Error handling position", e);
-				}
-    			body.flip();
-    			tag.setBody(body);			
-    			currentSample++;			
+		int sampleSize = (Integer) videoSamples.get(currentSample) + 5;
+		int ts = videoSampleDuration * currentSample; //Math.round((currentSample * timeScale) / videoSampleDuration);
+		log.debug("Read tag - sample dur / scale {}", new Object[]{((currentSample * timeScale) / videoSampleDuration)});				
+		long samplePos = samplePosMap.get(currentSample);
+		log.debug("Read tag - sampleSize {} ts {}", new Object[]{sampleSize, ts});
+
+		//once video works we will try adding audio
+		//tag = new Tag(IoConstants.TYPE_AUDIO, ts, sampleSize, null, prevFrameSize);
+		ITag tag = new Tag(IoConstants.TYPE_VIDEO, ts, sampleSize, null, prevFrameSize);
+		log.debug("Read tag - body size: {}", tag.getBodySize());
+		ByteBuffer body = ByteBuffer.allocate(tag.getBodySize());
+		log.debug("Read tag - current pos {} sample pos {}", getCurrentPosition(), samplePos);
+		//prefix is different for keyframes
+		if (posTimeMap.containsKey(samplePos)) {
+			log.debug("Writing keyframe prefix");
+			body.put(PREFIX_VIDEO_KEYFRAME);
+		} else {  			
+			log.debug("Writing interframe prefix");
+			body.put(PREFIX_VIDEO_FRAME);
 		}
+		try {
+			channel.position(samplePos);
+			channel.read(body.buf());
+		} catch (IOException e) {
+			log.error("Error handling position", e);
+		}
+		body.flip();
+		tag.setBody(body);			
+		currentSample++;			
 		
 		prevFrameSize = tag.getBodySize();
 	

@@ -24,6 +24,9 @@ import static org.red5.server.api.ScopeUtils.getScopeService;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.mina.common.ByteBuffer;
+import org.red5.io.amf.Output;
+import org.red5.io.object.Serializer;
 import org.red5.server.api.IContext;
 import org.red5.server.api.IGlobalScope;
 import org.red5.server.api.IScope;
@@ -61,6 +64,7 @@ import org.red5.server.so.SharedObjectMessage;
 import org.red5.server.so.SharedObjectService;
 import org.red5.server.stream.IBroadcastScope;
 import org.red5.server.stream.StreamService;
+import org.red5.server.stream.message.RTMPMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -82,7 +86,7 @@ public class RTMPHandler extends BaseRTMPHandler {
 	 * Red5 server instance.
 	 */
 	protected IServer server;
-	
+
 	/**
 	 * Setter for server object.
 	 * 
@@ -125,7 +129,7 @@ public class RTMPHandler extends BaseRTMPHandler {
 				}
 				setChunkSize.getServiceParamMap().put("chunkSize", chunkSize.getSize());
 				scope.sendOOBControlMessage((IConsumer) null, setChunkSize);
-				log.debug("Sending chunksize {} to {} ", chunkSize, bs.getProvider());
+				log.debug("Sending chunksize {} to {}", chunkSize, bs.getProvider());
 			}
 		}
 	}
@@ -184,11 +188,12 @@ public class RTMPHandler extends BaseRTMPHandler {
 
 		// Get call
 		final IServiceCall call = invoke.getCall();
+		// method name
+		final String action = call.getServiceMethodName();
 
 		// If it's a callback for server remote call then pass it over to
 		// callbacks handler and return
-		if (call.getServiceMethodName().equals("_result")
-				|| call.getServiceMethodName().equals("_error")) {
+		if ("_result".equals(action) || "_error".equals(action)) {
 			handlePendingCallResult(conn, invoke);
 			return;
 		}
@@ -198,7 +203,6 @@ public class RTMPHandler extends BaseRTMPHandler {
 		// If this is not a service call then handle connection...
 		if (call.getServiceName() == null) {
 			log.debug("call: {}", call);
-			final String action = call.getServiceMethodName();
 			if (!conn.isConnected()) {
 				// Handle connection
 				if (action.equals(ACTION_CONNECT)) {
@@ -275,6 +279,10 @@ public class RTMPHandler extends BaseRTMPHandler {
 							if (scope != null) {
 								log.info("Connecting to: {}", scope);
 								// Setup application's classloader to be used for deserializing
+								
+								//System.out.println(">>>>> rtmp handler: " + Thread.currentThread().getContextClassLoader());		
+								//System.out.println(">>>>> rtmp handler (class): " + getClass().getClassLoader());	
+								
 								ClassLoader loader = scope.getClassLoader();
 								if (loader == null) {
 									// Fallback, should never happen
@@ -284,8 +292,8 @@ public class RTMPHandler extends BaseRTMPHandler {
 								
 								boolean okayToConnect;
 								try {
-								    log.info("DEBUG - conn {}, scope {}, call {}", new Object[]{conn, scope, call});
-								    log.info("DEBUG - args {}", call.getArguments());
+								    log.debug("Conn {}, scope {}, call {}", new Object[]{conn, scope, call});
+								    log.debug("Call args {}", call.getArguments());
 									if (call.getArguments() != null) {
 										okayToConnect = conn.connect(scope, call.getArguments());
 									} else {
@@ -299,14 +307,12 @@ public class RTMPHandler extends BaseRTMPHandler {
 											//send fmsver and capabilities
 									    	StatusObject result = getStatus(NC_CONNECT_SUCCESS);
 									    	result.setAdditional("fmsVer", "RED5/0,7,1,0");
-											result.setAdditional("capabilities", 31.0);
+											result.setAdditional("capabilities", Integer.valueOf(31));
 									    	pc.setResult(result);
 										}
 										// Measure initial roundtrip time after connecting
 										conn.ping(new Ping(Ping.STREAM_CLEAR, 0, -1));
 										conn.startRoundTripMeasurement();
-										// fms sends a couple items that we do not
-										//conn.sendChunkSize();
 									} else {
 										log.debug("Connect failed");
 										call.setStatus(Call.STATUS_ACCESS_DENIED);

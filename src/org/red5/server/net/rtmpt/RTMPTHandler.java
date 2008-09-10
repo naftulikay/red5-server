@@ -20,10 +20,12 @@ package org.red5.server.net.rtmpt;
  */
 
 import org.apache.mina.common.ByteBuffer;
+import org.red5.server.api.Red5;
 import org.red5.server.net.protocol.ProtocolState;
 import org.red5.server.net.protocol.SimpleProtocolCodecFactory;
 import org.red5.server.net.rtmp.RTMPConnection;
 import org.red5.server.net.rtmp.RTMPHandler;
+import org.red5.server.net.rtmp.RTMPHandshake;
 import org.red5.server.net.rtmp.codec.RTMP;
 import org.red5.server.net.rtmp.message.Constants;
 import org.slf4j.Logger;
@@ -40,7 +42,7 @@ public class RTMPTHandler extends RTMPHandler {
     /**
      * Logger
      */
-    protected static Logger log = LoggerFactory.getLogger(RTMPTHandler.class);
+    private static final Logger log = LoggerFactory.getLogger(RTMPTHandler.class);
 
     /**
      * Handler constant
@@ -87,17 +89,21 @@ public class RTMPTHandler extends RTMPHandler {
 		ByteBuffer out = ByteBuffer
 				.allocate((Constants.HANDSHAKE_SIZE * 2) + 1);
 
-		if (log.isDebugEnabled()) {
-			log.debug("Writing handshake reply");
-			log.debug("handskake size:" + in.remaining());
+		log.debug("Writing handshake reply, handskake size: {}", in.remaining());
+
+		if (in.get(4) == 0) {
+			log.debug("Using old style handshake");
+			out = ByteBuffer.allocate((Constants.HANDSHAKE_SIZE * 2) + 1);
+			out.put((byte) 0x03);
+			// set server uptime in seconds
+			out.putInt((int) Red5.getUpTime() / 1000);
+			out.put(RTMPHandshake.HANDSHAKE_PAD_BYTES).put(in).flip();
+		} else {
+			log.debug("Using new style handshake");
+			RTMPHandshake shake = new RTMPHandshake();
+			out = shake.generateResponse(in);
 		}
 
-		out.put((byte) 0x03);
-		// TODO: the first four bytes of the handshake reply seem to be the
-		//       server uptime - send something better here...
-		out.putInt(0x01);
-		out.fill((byte) 0x00, Constants.HANDSHAKE_SIZE-4);
-		out.put(in).flip();
 		// Skip first 8 bytes when comparing the handshake, they seem to
 		// be changed when connecting from a Mac client.
 		rtmp.setHandshake(out, 9, Constants.HANDSHAKE_SIZE-8);

@@ -36,10 +36,11 @@ import java.lang.ref.WeakReference;
  * r5 = new Red5(conn);<br />
  * IClient client = r5.getClient();<br />
  * </code>
- * </p> 
+ * </p>  
  *  
  * @author The Red5 Project (red5@osflash.org) 
- * @author Luke Hubbard (luke@codegent.com)
+ * @author Luke Hubbard (luke@codegent.com)  
+ * @author Paul Gregoire (mondain@gmail.com)  
  */
 public final class Red5 implements Red5MBean {
 
@@ -49,16 +50,21 @@ public final class Red5 implements Red5MBean {
 	 * the current connection.
 	 */
 	private static ThreadLocal<WeakReference<IConnection>> connThreadLocal = new ThreadLocal<WeakReference<IConnection>>();
-
+ 
 	/**
-	 * Connection local to the current thread
+	 * Connection local to the current thread 
 	 */
 	public IConnection conn; 
-
+ 
     /**
      * Current server version with revision
      */
-    public static final String VERSION = "Red5 Server 0.7.1-dev $Revision: 2698 $"; 
+    public static final String VERSION = "Red5 Server 0.7.1-dev $Revision: 3020 $";
+    
+    /**
+     * Server start time
+     */
+    private static final long START_TIME = System.currentTimeMillis();
 
 	/**
 	 * Create a new Red5 object using given connection.
@@ -100,7 +106,7 @@ public final class Red5 implements Red5MBean {
 			return ref.get();
 		} else {
 			return null;
-		}
+		} 
 	}
 
 	/**
@@ -147,5 +153,14 @@ public final class Red5 implements Red5MBean {
 	public static String getVersion() {
 	    return VERSION;
 	}
+	
+	/**
+	 * Returns server uptime in milliseconds.
+	 *
+	 * @return String version
+	 */
+	public static long getUpTime() {
+	    return START_TIME - System.currentTimeMillis();
+	}	
 
 }

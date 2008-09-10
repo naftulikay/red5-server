@@ -19,12 +19,18 @@ package org.red5.server.net.rtmpt;
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA 
  */
 
+import java.io.File;
+import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.catalina.Context;
-import org.apache.catalina.Host;
+import org.apache.catalina.Engine;
+import org.apache.catalina.Loader;
 import org.apache.catalina.Server;
-import org.apache.catalina.Wrapper;
+import org.apache.catalina.Valve;
+import org.apache.catalina.core.StandardHost;
+import org.apache.catalina.core.StandardWrapper;
+import org.apache.catalina.loader.WebappLoader;
 import org.red5.server.api.IServer;
 import org.red5.server.tomcat.TomcatLoader;
 import org.slf4j.Logger;
@@ -39,30 +45,30 @@ import org.slf4j.LoggerFactory;
 public class TomcatRTMPTLoader extends TomcatLoader {
 
 	// Initialize Logging
-	protected static Logger log = LoggerFactory.getLogger(TomcatRTMPTLoader.class
-			.getName());
+	private static Logger log = LoggerFactory.getLogger(TomcatRTMPTLoader.class);
 
 	/**
-	 * RTMP server instance
+	 * RTMPT Tomcat engine.
 	 */
-	protected Server rtmptServer;
-
+	protected Engine rtmptEngine;	
+	
 	/**
 	 * Server instance
 	 */
 	protected IServer server;
 
 	/**
-	 * Host
-	 */
-	private Host host;
-
-	/**
 	 * Context, in terms of JEE context is web application in a servlet
 	 * container
 	 */
-	private Context context;
+	protected Context context;
 
+	/**
+	 * Extra servlet mappings to add
+	 */
+	protected Map<String, String> servletMappings = new HashMap<String, String>();
+	
+	
 	/**
 	 * Setter for server
 	 * 
@@ -79,24 +85,74 @@ public class TomcatRTMPTLoader extends TomcatLoader {
 	public void init() {
 		log.info("Loading RTMPT context");
 
-		try {
-			getApplicationContext();
-		} catch (Exception e) {
-			log.error("Error loading tomcat configuration", e);
-		}
+		ClassLoader classloader = Thread.currentThread().getContextClassLoader();
 
-		// embedded.setRealm(realm);
-
-		host.addChild(context);
-		if (log.isDebugEnabled()) {
-			log.debug("Null check - engine: " + (null == engine) + " host: "
-					+ (null == host));
+		rtmptEngine = embedded.createEngine();
+		rtmptEngine.setDefaultHost(host.getName());
+		rtmptEngine.setName("red5RTMPTEngine");
+		rtmptEngine.setParentClassLoader(classloader);
+		
+		host.setParentClassLoader(classloader);		
+		
+		// add the valves to the host
+		for (Valve valve : valves) {
+			log.debug("Adding host valve: {}", valve);
+			((StandardHost) host).addValve(valve);
+		}				
+		
+		// create and add root context
+		File appDirBase = new File(webappFolder);
+		String webappContextDir = formatPath(appDirBase.getAbsolutePath(), "/root");
+		Context ctx = embedded.createContext("/", webappContextDir);
+		ctx.setReloadable(false);
+		log.debug("Context name: {}", ctx.getName());
+		Object ldr = ctx.getLoader();
+		if (ldr != null) {
+			if (ldr instanceof WebappLoader) {
+				log.debug("Replacing context loader");				
+				((WebappLoader) ldr).setLoaderClass("org.red5.server.tomcat.WebappClassLoader");
+			} else {
+				log.debug("Context loader was instance of {}", ldr.getClass().getName());
+			}
+		} else {
+			log.debug("Context loader was null");
+			WebappLoader wldr = new WebappLoader(classloader);
+			wldr.setLoaderClass("org.red5.server.tomcat.WebappClassLoader");
+			ctx.setLoader(wldr);
 		}
-		engine.addChild(host);
+		appDirBase = null;
+		webappContextDir = null;
+		
+		host.addChild(ctx);
+		
+		// add servlet wrapper
+		StandardWrapper wrapper = new StandardWrapper();
+		wrapper.setServletName("RTMPTServlet");
+		wrapper.setServletClass("org.red5.server.net.servlet.RTMPTServlet");
+		ctx.addChild(wrapper);
+		
+		// add servlet mappings
+		ctx.addServletMapping("/open/*", "RTMPTServlet");
+		ctx.addServletMapping("/close/*", "RTMPTServlet");
+		ctx.addServletMapping("/send/*", "RTMPTServlet");
+		ctx.addServletMapping("/idle/*", "RTMPTServlet");	
+		
+		// add any additional mappings
+		for (String key : servletMappings.keySet()) {
+			context.addServletMapping(servletMappings.get(key), key);
+		}		
+		
+		rtmptEngine.addChild(host);
 
 		// add new Engine to set of Engine for embedded server
-		embedded.addEngine(engine);
+		embedded.addEngine(rtmptEngine);
 
+		// set connection properties
+		for (String key : connectionProperties.keySet()) {
+			log.debug("Setting connection property: {} = {}", key, connectionProperties.get(key));
+			connector.setProperty(connectionProperties.get(key), key);
+		}		
+		
 		// add new Connector to set of Connectors for embedded server,
 		// associated with Engine
 		embedded.addConnector(connector);
@@ -104,58 +160,24 @@ public class TomcatRTMPTLoader extends TomcatLoader {
 		// start server
 		try {
 			log.info("Starting RTMPT engine");
-			embedded.start();
-		} catch (org.apache.catalina.LifecycleException e) {
+			//embedded.start();
+			connector.start();
+		} catch (Exception e) {
 			log.error("Error loading tomcat", e);
+		} finally {
+			registerJMX();		
 		}
 
 	}
-
-	/**
-	 * Set a host
-	 * 
-	 * @param host
-	 */
-	public void setHost(Host host) {
-		log.debug("RTMPT setHost");
-		this.host = host;
-	}
-
-	/**
-	 * Set primary context
-	 * 
-	 * @param contextMap
-	 * @param contextMap
-	 */
-	public void setContext(Map<String, String> contextMap) {
-		log.debug("RTMPT setContext (map)");
-		context = embedded.createContext(contextMap.get("path"), contextMap
-				.get("docBase"));
-		context.setReloadable(false);
-	}
-
-	/**
-	 * Set primary wrapper / servlet
-	 * 
-	 * @param wrapper
-	 */
-	public void setWrapper(Wrapper wrapper) {
-		log.debug("RTMPT setWrapper");
-		context.addChild(wrapper);
-	}
-
+	
 	/**
 	 * Set servlet mappings
 	 * 
 	 * @param mappings
 	 */
 	public void setMappings(Map<String, String> mappings) {
-		if (log.isDebugEnabled()) {
-			log.debug("Servlet mappings: " + mappings.size());
-		}
-		for (String key : mappings.keySet()) {
-			context.addServletMapping(mappings.get(key), key);
-		}
+		log.debug("Servlet mappings: {}", mappings.size());
+		servletMappings.putAll(mappings);
 	}
-
+	
 }

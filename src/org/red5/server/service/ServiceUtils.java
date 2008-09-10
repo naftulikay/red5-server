@@ -34,10 +34,11 @@ public class ServiceUtils {
 	/**
 	 * Returns (method, params) for the given service or (null, null) if no
 	 * method was found.
-     * @param args             Arguments
-     * @return                 Method/params pairs
+	 * 
      * @param service          Service
      * @param methodName       Method name
+     * @param args             Arguments
+     * @return                 Method/params pairs
      */
 	public static Object[] findMethodWithExactParameters(Object service,
 			String methodName, List args) {
@@ -53,19 +54,18 @@ public class ServiceUtils {
 	 * Returns (method, params) for the given service or (null, null) if not
 	 * method was found. XXX use ranking for method matching rather than exact
 	 * type matching plus type conversion.
+	 * 
      * @param service          Service
      * @param methodName       Method name
-     * @return                 Method/params pairs
      * @param args             Arguments
+     * @return                 Method/params pairs
      */
 	public static Object[] findMethodWithExactParameters(Object service,
 			String methodName, Object[] args) {
 		int numParams = (args == null) ? 0 : args.length;
 		List methods = ConversionUtils.findMethodsByNameAndNumParams(service,
 				methodName, numParams);
-		if (log.isDebugEnabled()) {
-			log.debug("Found " + methods.size() + " methods");
-		}
+		log.debug("Found {} methods", methods.size());
 		if (methods.isEmpty()) {
 			return new Object[] { null, null };
 		} else if (methods.size() > 1) {
@@ -110,7 +110,7 @@ public class ServiceUtils {
 
 				return new Object[] { method, params };
 			} catch (Exception ex) {
-				log.debug("Parameter conversion failed for " + method);
+				log.debug("Parameter conversion failed for {}", method);
 			}
 		}
 
@@ -120,10 +120,11 @@ public class ServiceUtils {
 	/**
 	 * Returns (method, params) for the given service or (null, null) if not
 	 * method was found.
-     * @param args              Arguments
-     * @param methodName        Method name
-     * @return                  Method/params pairs
+	 * 
      * @param service           Service
+     * @param methodName        Method name
+     * @param args              Arguments
+     * @return                  Method/params pairs
      */
 	public static Object[] findMethodWithListParameters(Object service,
 			String methodName, List args) {
@@ -138,18 +139,17 @@ public class ServiceUtils {
 	/**
 	 * Returns (method, params) for the given service or (null, null) if not
 	 * method was found.
-     * @param methodName       Method name
-     * @return                 Method/params pairs
-     * @param args             Arguments
+	 * 
      * @param service          Service
+     * @param methodName       Method name
+     * @param args             Arguments
+     * @return                 Method/params pairs
      */
 	public static Object[] findMethodWithListParameters(Object service,
 			String methodName, Object[] args) {
 		List methods = ConversionUtils.findMethodsByNameAndNumParams(service,
 				methodName, 1);
-		if (log.isDebugEnabled()) {
-			log.debug("Found " + methods.size() + " methods");
-		}
+		log.debug("Found {} methods", methods.size());
 		if (methods.isEmpty()) {
 			return new Object[] { null, null };
 		} else if (methods.size() > 1) {

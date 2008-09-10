@@ -144,6 +144,7 @@
 	</bean>
 	
 	<!-- RTMPS -->
+	<!--
 	<bean id="rtmps.server" class="org.red5.server.net.rtmps.TomcatRTMPSLoader" init-method="init" lazy-init="true">
 	
 		<property name="webappFolder" value="${red5.root}/webapps" />
@@ -196,20 +197,20 @@
 		</property>	
 
 		<property name="valves">
-      		<list>
-	    		<bean id="valve.access" class="org.apache.catalina.valves.AccessLogValve">
-	                <property name="directory" value="log" />
-	                <property name="prefix" value="${rtmps.host}_rtmps_access." />
-	                <property name="suffix" value=".log" />
-	                <property name="pattern" value="common" />
-	                <property name="resolveHosts" value="false" />
-	                <property name="rotatable" value="true" />
-	        	</bean>
-        	</list>
-        </property>			
+	      		<list>
+		    		<bean id="valve.access" class="org.apache.catalina.valves.AccessLogValve">
+					<property name="directory" value="log" />
+					<property name="prefix" value="${rtmps.host}_rtmps_access." />
+					<property name="suffix" value=".log" />
+					<property name="pattern" value="common" />
+					<property name="resolveHosts" value="false" />
+					<property name="rotatable" value="true" />
+				</bean>
+			</list>
+		</property>			
 	
 	</bean>	
-
+	-->
 	
 	<!-- Enable when you need it. - - >
 	<bean id="rtmpProxyTransport" class="org.red5.server.net.rtmp.RTMPMinaTransport" init-method="start" destroy-method="stop">

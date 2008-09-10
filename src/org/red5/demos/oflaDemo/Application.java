@@ -1,4 +1,4 @@
-package org.red5.server.webapp.oflaDemo;
+package org.red5.demos.oflaDemo;
 
 import org.red5.server.adapter.ApplicationAdapter;
 import org.red5.server.api.IBandwidthConfigure;

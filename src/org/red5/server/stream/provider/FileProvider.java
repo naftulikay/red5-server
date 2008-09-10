@@ -217,6 +217,7 @@ public class FileProvider implements IPassive, ISeekableProvider,
      * Initializes file provider. Creates streamable file factory and service, seeks to start position
      */
     private void init() throws IOException {
+    	log.debug("Initialize");    	
 		IStreamableFileFactory factory = (IStreamableFileFactory) ScopeUtils
 				.getScopeService(scope, IStreamableFileFactory.class,
 						StreamableFileFactory.class);
@@ -227,6 +228,8 @@ public class FileProvider implements IPassive, ISeekableProvider,
 		}
 		IStreamableFile streamFile = service.getStreamableFile(file);
 		reader = streamFile.getReader();
+    	log.debug("Reader: {}", reader.getClass().getName());
+    	//TODO: may want to do init of readers here
 		if (start > 0) {
 			seek(start);
 		}
@@ -244,6 +247,7 @@ public class FileProvider implements IPassive, ISeekableProvider,
 
 	/** {@inheritDoc} */
     public synchronized int seek(int ts) {
+    	log.debug("Seek ts: {}", ts);
 		if (keyFrameMeta == null) {
 			if (!(reader instanceof IKeyFrameDataAnalyzer)) {
 				// Seeking not supported

@@ -1,9 +1,8 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	 xmlns:lang="http://www.springframework.org/schema/lang" xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-2.0.xsd                            http://www.springframework.org/schema/lang http://www.springframework.org/schema/lang/spring-lang-2.0.xsd">
-	<bean id="placeholderConfig"
-		class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
-		<property name="location" value="classpath:/red5.properties" />
+	<bean id="placeholderConfig" class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+		<property name="location" value="classpath:/red5.properties"/>
 	</bean>
 	<!-- This context is shared between all child contexts. -->
 	<!-- Server bean -->
@@ -14,6 +13,7 @@
 	</bean>
 	<bean id="jmxAgent" class="org.red5.server.jmx.JMXAgent" init-method="init">
 		<!-- The RMI adapter allows remote connections to the MBeanServer -->
+
 		<property name="enableRmiAdapter" value="true"/>
 		<property name="rmiAdapterPort" value="${jmx.rmi.port.registry}"/>
 		<property name="rmiAdapterRemotePort" value="${jmx.rmi.port.remoteobjects}"/>
@@ -79,6 +79,8 @@
 					<property name="generateMetadata" value="true"/>
 				</bean>
 				<bean id="mp3FileService" class="org.red5.io.mp3.impl.MP3Service"/>
+				<bean id="mp4FileService" class="org.red5.io.mp4.impl.MP4Service"/>
+				<bean id="m4aFileService" class="org.red5.io.m4a.impl.M4AService"/>
 			</list>
 		</property>
 	</bean>
@@ -97,7 +99,8 @@
 	<!-- Provides output to consumers -->
 	<bean id="consumerService" class="org.red5.server.stream.ConsumerService"/>
 	<!-- Simple bandwidth control -->
-	<bean id="BWControlService" class="org.red5.server.stream.SimpleBWControlService" init-method="init" destroy-method="shutdown">
+	<bean id="BWControlService" class="org.red5.server.stream.SimpleBWControlService" init-method="init"
+		 destroy-method="shutdown">
 		<property name="interval" value="100"/>
 		<property name="defaultCapacity" value="104857600"/>
 		<!-- 100MB -->
@@ -106,15 +109,15 @@
 	<!--
     <bean id="BWControlService" class="org.red5.server.stream.DummyBWControlService"/> -->
 	<!-- Scheduling service -->
-	<bean id="schedulingService" class="org.red5.server.scheduling.QuartzSchedulingService" destroy-method="shutdown"/>
-		 
-    <!-- War deployer -->
-    <bean id="warDeployService" class="org.red5.server.service.WarDeployer" init-method="init" destroy-method="shutdown">
-        <property name="scheduler" ref="schedulingService"/>
-        <property name="checkInterval" value="600000"/>
-        <property name="deploymentDirectory" value="${red5.root}/webapps"/>
-    </bean>		 
-		 
+	<bean id="schedulingService" class="org.red5.server.scheduling.QuartzSchedulingService"
+		 destroy-method="shutdown"/>
+	<!-- War deployer -->
+	<bean id="warDeployService" class="org.red5.server.service.WarDeployer" init-method="init"
+		 destroy-method="shutdown">
+		<property name="scheduler" ref="schedulingService"/>
+		<property name="checkInterval" value="600000"/>
+		<property name="deploymentDirectory" value="${red5.root}/webapps"/>
+	</bean>
 	<!-- Threadpool settings for the remoting clients -->
 	<bean id="remotingPool" class="org.red5.server.pooling.ThreadPool">
 		<property name="poolSize" value="8"/>
@@ -156,7 +159,7 @@
 	    Cache to use for keyframe metadata.
 	-->
 	<bean id="keyframe.cache" class="org.red5.io.CachingFileKeyFrameMetaCache">
-		<property name="maxCacheEntry" value="500" />
+		<property name="maxCacheEntry" value="500"/>
 	</bean>
 	<!--
 	    Represents FLV files
@@ -169,6 +172,12 @@
 	</bean>
 	<!-- Use injection to set the keyframe cache for FLV files -->
 	<bean id="flvreader.impl" class="org.red5.io.flv.impl.FLVReader">
+		<property name="keyFrameCache">
+			<ref bean="keyframe.cache"/>
+		</property>
+	</bean>
+	<!-- Use injection to set the keyframe cache for MP4 files -->
+	<bean id="mp4reader.impl" class="org.red5.io.mp4.impl.MP4Reader">
 		<property name="keyFrameCache">
 			<ref bean="keyframe.cache"/>
 		</property>

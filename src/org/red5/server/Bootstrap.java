@@ -44,6 +44,7 @@ import org.springframework.context.support.FileSystemXmlApplicationContext;
 public class Bootstrap {
 
     protected static Logger log = LoggerFactory.getLogger(Bootstrap.class);
+    
 	public static void launch(URLClassLoader loader) {
 		System.setProperty("red5.deployment.type", "bootstrap");
 		try {				
@@ -110,7 +111,6 @@ public class Bootstrap {
 		
 		//set conf sysprop
 		System.setProperty("red5.config_root", conf);
-
 		System.out.println("Configuation root: " + conf);
 		
 		// expect a conf/red5.xml or we fail!
@@ -129,11 +129,23 @@ public class Bootstrap {
 		List<URL> urls = new ArrayList<URL>(57); //use prime
 		// add red5.jar
 		urls.add(new File(root, "red5.jar").toURI().toURL());
-		// add all other libs
-		for (File lib : new File(root, "lib").listFiles()) {
-			URL url = lib.toURI().toURL();
-			urls.add(url);
+
+		// look for lib dir
+		String libDirectory = System.getProperty("red5.lib");		
+		if (libDirectory == null) {	
+    		// add all other libs
+    		for (File lib : new File(root, "lib").listFiles()) {
+    			URL url = lib.toURI().toURL();
+    			urls.add(url);
+    		}
+		} else {			
+			System.out.println("Library directory: " + libDirectory);
+    		for (File lib : new File(libDirectory).listFiles()) {
+    			URL url = lib.toURI().toURL();
+    			urls.add(url);
+    		}
 		}
+		
 		//look over the libraries and remove the old versions
 		scrubList(urls);
 		// add config dir

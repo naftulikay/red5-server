@@ -1,4 +1,4 @@
-package org.red5.server.webapp.oflaDemo;
+package org.red5.demos.oflaDemo;
 
 import java.io.File;
 import java.io.IOException;

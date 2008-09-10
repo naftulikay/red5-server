@@ -737,7 +737,7 @@ public class MP4Reader implements IoConstants, ITagReader, IKeyFrameDataAnalyzer
      * @return         Metadata event tag
      */
     ITag createFileMeta() {
-    	log.debug("Creating onMetaData notify");
+    	log.debug("Creating onMetaData");
 		// Create tag for onMetaData event
 		ByteBuffer buf = ByteBuffer.allocate(1024);
 		buf.setAutoExpand(true);
@@ -816,10 +816,10 @@ public class MP4Reader implements IoConstants, ITagReader, IKeyFrameDataAnalyzer
 	 * af 00 13 90 56 e5 a5 48 00 = HE-AAC
 	 */
     private void createPreStreamingTags() {
+    	log.debug("Creating pre-streaming tags");
     	//video tag #1
     	ITag tag = new Tag(IoConstants.TYPE_VIDEO, 0, 2, null, 0);
 		ByteBuffer body = ByteBuffer.allocate(tag.getBodySize());
-		body.setAutoExpand(true);
 		body.put(new byte[]{(byte) 0x52, (byte) 0});
 		body.flip();
 		tag.setBody(body);
@@ -827,10 +827,11 @@ public class MP4Reader implements IoConstants, ITagReader, IKeyFrameDataAnalyzer
 		//add tag
 		firstTags.add(tag);
 		//clear body for re-use
-		body.clear();
+		//body.clear();
 		
 		//video tag #2
 		tag = new Tag(IoConstants.TYPE_VIDEO, 0, 5, null, tag.getBodySize());
+		body = ByteBuffer.allocate(tag.getBodySize());
 		body.put(new byte[]{(byte) 0x17, (byte) 0x02, (byte) 00, (byte) 00, (byte) 00});
 		body.flip();
 		tag.setBody(body);
@@ -838,10 +839,11 @@ public class MP4Reader implements IoConstants, ITagReader, IKeyFrameDataAnalyzer
 		//add tag
 		firstTags.add(tag);
 		//clear body for re-use
-		body.clear();
+		//body.clear();
 		
     	//video tag #3
 		tag = new Tag(IoConstants.TYPE_VIDEO, 0, 2, null, tag.getBodySize());
+		body = ByteBuffer.allocate(tag.getBodySize());
 		body.put(new byte[]{(byte) 0x52, (byte) 0x01});
 		body.flip();
 		tag.setBody(body);				
@@ -849,10 +851,11 @@ public class MP4Reader implements IoConstants, ITagReader, IKeyFrameDataAnalyzer
 		//add tag
 		firstTags.add(tag);
 		//clear body for re-use
-		body.clear();
+		//body.clear();
 		
 		//audio tag #1
 		tag = new Tag(IoConstants.TYPE_AUDIO, 0, 4, null, tag.getBodySize());
+		body = ByteBuffer.allocate(tag.getBodySize());
 		body.put(new byte[]{(byte) 0xaf, (byte) 00, (byte) 0x12, (byte) 0x10});
 		body.flip();
 		tag.setBody(body);
@@ -860,10 +863,11 @@ public class MP4Reader implements IoConstants, ITagReader, IKeyFrameDataAnalyzer
 		//add tag
 		firstTags.add(tag);
 		//clear body for re-use
-		body.clear();
+		//body.clear();
 		
 		//audio tag #2
 		tag = new Tag(IoConstants.TYPE_AUDIO, 0, 9, null, tag.getBodySize());
+		body = ByteBuffer.allocate(tag.getBodySize());
 		body.put(new byte[]{(byte) 0xaf, (byte) 0x01, (byte) 0x20, (byte) 00, (byte) 00, (byte) 00, (byte) 00, (byte) 00, (byte) 0x0e});
 		body.flip();
 		tag.setBody(body);    	
@@ -871,9 +875,9 @@ public class MP4Reader implements IoConstants, ITagReader, IKeyFrameDataAnalyzer
 		//add tag
 		firstTags.add(tag);
 		//clear body for release
-		body.clear();
+		//body.clear();
 		
-		body.release();  
+		//body.release();  
     }
     
     private int prevFrameSize = 0;
@@ -885,13 +889,15 @@ public class MP4Reader implements IoConstants, ITagReader, IKeyFrameDataAnalyzer
 		log.debug("Read tag - currentSample {}, prevFrameSize {}", new Object[]{currentSample, prevFrameSize});
 		//empty-out the pre-streaming tags first
 		if (!firstTags.isEmpty()) {
+			log.debug("Returning pre-tag");
 			// Return first tags before media data
 			return firstTags.removeFirst();
 		}		
 
 		int sampleSize = (Integer) videoSamples.get(currentSample) + 5;
 		int ts = videoSampleDuration * currentSample; //Math.round((currentSample * timeScale) / videoSampleDuration);
-		log.debug("Read tag - sample dur / scale {}", new Object[]{((currentSample * timeScale) / videoSampleDuration)});				
+		log.debug("Read tag - sample dur / scale {}", new Object[]{((currentSample * timeScale) / videoSampleDuration)});		
+		log.debug("Sample position map: {}", samplePosMap);
 		long samplePos = samplePosMap.get(currentSample);
 		log.debug("Read tag - sampleSize {} ts {}", new Object[]{sampleSize, ts});
 
@@ -910,6 +916,7 @@ public class MP4Reader implements IoConstants, ITagReader, IKeyFrameDataAnalyzer
 			body.put(PREFIX_VIDEO_FRAME);
 		}
 		try {
+			//do we need to add the mdat offset to the sample position?
 			channel.position(samplePos);
 			channel.read(body.buf());
 		} catch (IOException e) {
@@ -921,7 +928,7 @@ public class MP4Reader implements IoConstants, ITagReader, IKeyFrameDataAnalyzer
 		
 		prevFrameSize = tag.getBodySize();
 	
-		log.debug("Tag: {}", tag);
+		//log.debug("Tag: {}", tag);
 		return tag;
 	}
 
@@ -936,6 +943,7 @@ public class MP4Reader implements IoConstants, ITagReader, IKeyFrameDataAnalyzer
 			log.debug("Key frame meta already generated");
 			return keyframeMeta;
 		}
+		log.debug("Analyzing key frames");
 			
 		//key frame sample numbers are stored in the syncSamples collection
 		int keyframeCount = syncSamples.size();

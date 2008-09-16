@@ -37,7 +37,7 @@ public class FLVData {
 	 * soundSize (byte & 0x02) == 1 0: 8-bit, 2: 16-bit 
 	 * soundRate (byte & 0x0C) == 2 0: 5.5kHz, 1: 11kHz, 2: 22kHz, 3: 44kHz 
 	 * soundFormat (byte & 0xf0) == 4 0: Uncompressed, 1: ADPCM, 2: MP3, 
-	 *     5: Nellymoser 8kHz mono, 6: Nellymoser
+	 *     5: Nellymoser 8kHz mono, 6: Nellymoser, 11: Speex
 	 */
 
 	/*
@@ -53,7 +53,7 @@ public class FLVData {
 	/**
      * Getter for disposable state
      *
-     * @return  <code>true</code> if FVL data is disposable, <code>false</code> otherwise
+     * @return  <code>true</code> if FLV data is disposable, <code>false</code> otherwise
      */
     public boolean isDisposable() {
 		return false;
@@ -116,6 +116,10 @@ public class FLVData {
      */
 	public static final int AUDIO_NELLYMOOSER = 6;
     /**
+     * Speex encoded data
+     */
+	public static final int AUDIO_SPEEX = 11;
+	/**
      * Sound size when 8 khz quality marker
      */
 	public static final int SOUND_SIZE_8_BIT = 0;

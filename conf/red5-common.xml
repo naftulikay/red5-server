@@ -1,9 +1,12 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	 xmlns:lang="http://www.springframework.org/schema/lang" xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-2.0.xsd                            http://www.springframework.org/schema/lang http://www.springframework.org/schema/lang/spring-lang-2.0.xsd">
-	<bean id="placeholderConfig" class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
-		<property name="location" value="classpath:/red5.properties"/>
-	</bean>
+
+	<bean id="placeholderConfig"
+		class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+		<property name="location" value="classpath:/red5.properties" />
+	</bean>	
+	
 	<!-- This context is shared between all child contexts. -->
 	<!-- Server bean -->
 	<bean id="red5.server" class="org.red5.server.Server"/>
@@ -13,11 +16,16 @@
 	</bean>
 	<bean id="jmxAgent" class="org.red5.server.jmx.JMXAgent" init-method="init">
 		<!-- The RMI adapter allows remote connections to the MBeanServer -->
-
 		<property name="enableRmiAdapter" value="true"/>
 		<property name="rmiAdapterPort" value="${jmx.rmi.port.registry}"/>
 		<property name="rmiAdapterRemotePort" value="${jmx.rmi.port.remoteobjects}"/>
 		<property name="rmiAdapterHost" value="${jmx.rmi.host}"/>
+		<!-- SSL
+			To use jmx with ssl you must also supply the location of the keystore and its password
+			when starting the server with the following JVM options:
+				-Djavax.net.ssl.keyStore=keystore
+     			-Djavax.net.ssl.keyStorePassword=password
+		-->
 		<property name="enableSsl" value="${jmx.rmi.ssl}"/>
 		<!-- Starts a registry if it doesnt exist -->
 		<property name="startRegistry" value="true"/>
@@ -94,7 +102,7 @@
 	</bean>
 	<!-- High level access to streams -->
 	<bean id="streamService" class="org.red5.server.stream.StreamService"/>
-	<!-- High level access to broadcasted streams -->
+	<!-- Hight level access to broadcasted streams -->
 	<bean id="providerService" class="org.red5.server.stream.ProviderService"/>
 	<!-- Provides output to consumers -->
 	<bean id="consumerService" class="org.red5.server.stream.ConsumerService"/>
@@ -208,7 +216,7 @@
 		the client buffer filled.
 	-->
 	<bean id="streamExecutor" class="java.util.concurrent.ScheduledThreadPoolExecutor">
-		<constructor-arg value="4"/>
+		<constructor-arg value="2"/>
 		<property name="maximumPoolSize" value="32"/>
 	</bean>
 	<!-- ClientBroadcastStream and PlaylistSubscriberStream

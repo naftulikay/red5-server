@@ -889,9 +889,11 @@ public final class PlayEngine implements IFilter, IPushableConsumer,
 			}
 		}
 		lastMessage = message.getBody();
-		if (lastMessage instanceof IStreamData) {
-			bytesSent += ((IStreamData) lastMessage).getData().limit();
-		}
+		//XXX Paul: bytesSent is updated in the doPushMessage() so I assume we dont
+		//also want to do it here?
+		//if (lastMessage instanceof IStreamData) {
+		//	bytesSent += ((IStreamData) lastMessage).getData().limit();
+		//}
 		doPushMessage(message);
 	}
 

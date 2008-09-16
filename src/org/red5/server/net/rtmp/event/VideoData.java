@@ -22,10 +22,13 @@ package org.red5.server.net.rtmp.event;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
+
 import org.apache.mina.common.ByteBuffer;
 import org.red5.io.IoConstants;
 import org.red5.server.api.stream.IStreamPacket;
 import org.red5.server.stream.IStreamData;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Video data event
@@ -33,7 +36,10 @@ import org.red5.server.stream.IStreamData;
 public class VideoData extends BaseEvent implements IoConstants, IStreamData, IStreamPacket {
 
 	private static final long serialVersionUID = 5538859593815804830L;
-    /**
+
+    private static Logger log = LoggerFactory.getLogger(VideoData.class);
+    
+	/**
      * Videoframe type
      */
     public static enum FrameType {
@@ -65,15 +71,20 @@ public class VideoData extends BaseEvent implements IoConstants, IStreamData, IS
 		if (data != null && data.limit() > 0) {
 			int oldPos = data.position();
 			int firstByte = (data.get()) & 0xff;
+			log.debug("old pos: {} first byte: {}", oldPos, firstByte);
 			data.position(oldPos);
 			int frameType = (firstByte & MASK_VIDEO_FRAMETYPE) >> 4;
 			if (frameType == FLAG_FRAMETYPE_KEYFRAME) {
+				log.debug("Frame type = Keyframe");
 				this.frameType = FrameType.KEYFRAME;
 			} else if (frameType == FLAG_FRAMETYPE_INTERFRAME) {
+				log.debug("Frame type = Interframe");
 				this.frameType = FrameType.INTERFRAME;
 			} else if (frameType == FLAG_FRAMETYPE_DISPOSABLE) {
+				log.debug("Frame type = Disposable interframe");
 				this.frameType = FrameType.DISPOSABLE_INTERFRAME;
 			} else {
+				log.debug("Frame type = Unknown");
 				this.frameType = FrameType.UNKNOWN;
 			}
 		}

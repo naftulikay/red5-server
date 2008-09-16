@@ -26,6 +26,7 @@ import java.nio.channels.FileChannel;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -45,26 +46,27 @@ import org.red5.io.flv.IKeyFrameDataAnalyzer;
 import org.red5.io.flv.impl.Tag;
 import org.red5.io.mp4.MP4Atom;
 import org.red5.io.mp4.MP4DataStream;
+import org.red5.io.mp4.MP4Frame;
 import org.red5.io.object.Serializer;
-import org.red5.server.api.IConnection;
-import org.red5.server.api.Red5;
-import org.red5.server.net.rtmp.Channel;
-import org.red5.server.net.rtmp.event.Invoke;
-import org.red5.server.service.PendingCall;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * A Reader is used to read the contents of a MP4 file.
- * NOTE: This class is not implemented as threading-safe. The caller
- * should make sure the threading-safety.
+ * This reader is used to read the contents of an MP4 file.
+ * 
+ * NOTE: This class is not implemented as thread-safe, the caller
+ * should ensure the thread-safety.
  * <p>
  * New NetStream notifications
  * <br />
  * Two new notifications facilitate the implementation of the playback components:
  * <ul>
- * <li>NetStream.Play.FileStructureInvalid: This event is sent if the player detects an MP4 with an invalid file structure. Flash Player cannot play files that have invalid file structures.</li>
- * <li>NetStream.Play.NoSupportedTrackFound: This event is sent if the player does not detect any supported tracks. If there aren't any supported video, audio or data tracks found, Flash Player does not play the file.</li>
+ * <li>NetStream.Play.FileStructureInvalid: This event is sent if the player detects 
+ * an MP4 with an invalid file structure. Flash Player cannot play files that have 
+ * invalid file structures.</li>
+ * <li>NetStream.Play.NoSupportedTrackFound: This event is sent if the player does not 
+ * detect any supported tracks. If there aren't any supported video, audio or data 
+ * tracks found, Flash Player does not play the file.</li>
  * </ul>
  * </p>
  * 
@@ -86,6 +88,8 @@ public class MP4Reader implements IoConstants, ITagReader, IKeyFrameDataAnalyzer
     
 	/** Video packet prefix for standard frames (interframe)*/
 	private final static byte[] PREFIX_VIDEO_FRAME = new byte[]{(byte) 0x27, (byte) 0x01, (byte) 0, (byte) 0, (byte) 0};
+	
+	private final static byte[] CHUNK_MARKER = new byte[]{(byte) 0xc5};
     
     /**
      * File
@@ -118,7 +122,9 @@ public class MP4Reader implements IoConstants, ITagReader, IKeyFrameDataAnalyzer
 	private static IKeyFrameMetaCache keyframeCache;
 	
 	/** Whether or not the clip contains a video track */
-	private boolean hasVideo = false;
+	private boolean hasVideo = false;	
+	/** Whether or not the clip contains an audio track */
+	private boolean hasAudio = false;
 	
 	//
 	private String videoCodecId = "avc1";
@@ -155,10 +161,14 @@ public class MP4Reader implements IoConstants, ITagReader, IKeyFrameDataAnalyzer
 	private int audioSampleDuration = 1024;
 	
 	//keep track of current sample
-	private int currentSample = 0;
+	private int currentSample = 1;
 	
-	private long firstAudioTag;
-	private long firstVideoTag;
+    private int prevFrameSize = 0;
+	
+    private List<MP4Frame> frames = new ArrayList<MP4Frame>();
+    
+	private long audioCount;
+	private long videoCount;
 	
 	/**
 	 * Container for metadata and any other tags that should
@@ -193,7 +203,7 @@ public class MP4Reader implements IoConstants, ITagReader, IKeyFrameDataAnalyzer
     	this.file = f;
 		this.fis = new MP4DataStream(new FileInputStream(f));
 		channel = fis.getChannel();
-		//decode all the info from the atoms
+		//decode all the info that we want from the atoms
 		decodeHeader();
 		//build the keyframe meta data
 		analyzeKeyFrames();
@@ -204,8 +214,8 @@ public class MP4Reader implements IoConstants, ITagReader, IKeyFrameDataAnalyzer
 	}
     
 	/**
-	 * Currently this expects the moov atom at the beginning of the file, later we will
-	 * have to handle the mdat at the beginning instead.
+	 * This handles the moov atom being at the beginning or end of the file, so the mdat may also
+	 * be before or after the moov atom.
 	 */
 	public void decodeHeader() {
 		try {
@@ -282,8 +292,11 @@ public class MP4Reader implements IoConstants, ITagReader, IKeyFrameDataAnalyzer
     									// soun or vide
     									log.debug("Handler type: {}", MP4Atom
     											.intToType(hdlr.getHandlerType()));
-    									if (MP4Atom.intToType(hdlr.getHandlerType()) == "vide") {
+    									String hdlrType = MP4Atom.intToType(hdlr.getHandlerType());
+    									if ("vide".equals(hdlrType)) {
     										hasVideo = true;
+    									} else if ("soun".equals(hdlrType)) {
+    										hasAudio = true;
     									}
     									i++;
     								}
@@ -391,8 +404,8 @@ public class MP4Reader implements IoConstants, ITagReader, IKeyFrameDataAnalyzer
     												//vector full of integers
     												audioChunkOffsets = stco.getChunks();
     												log.debug("Chunk count: {}", audioChunkOffsets.size());
-    												//set the first video offset
-    												firstAudioTag = (Long) audioChunkOffsets.get(0);
+    												//set the first audio offset
+    												//firstAudioChunkOffset = (Long) audioChunkOffsets.get(0);
     											}
     											//stts - has TimeSampleRecords
     											MP4Atom stts = stbl.lookup(MP4Atom.typeToInt("stts"), 0);
@@ -404,6 +417,7 @@ public class MP4Reader implements IoConstants, ITagReader, IKeyFrameDataAnalyzer
     												log.debug("Record data: Consecutive samples={} Duration={}", rec.getConsecutiveSamples(), rec.getSampleDuration());
     												//if we have 1 record then all samples have the same duration
     												if (records.size() > 1) {
+    													//TODO: handle audio samples with varying durations
     													log.warn("Audio samples have differing durations, audio playback may fail");
     												}
     												audioSampleDuration = rec.getSampleDuration();
@@ -442,7 +456,7 @@ public class MP4Reader implements IoConstants, ITagReader, IKeyFrameDataAnalyzer
     											// stco - chunk offset
     											// ctts - (composition) time to sample
     											// stss - sync sample
-    											// sdtp - independent and disposible samples
+    											// sdtp - independent and disposable samples
     
     											//stsd - has codec child
     											MP4Atom stsd = stbl.lookup(MP4Atom.typeToInt("stsd"), 0);
@@ -479,8 +493,8 @@ public class MP4Reader implements IoConstants, ITagReader, IKeyFrameDataAnalyzer
     												//if sample size is 0 then the table must be checked due
     												//to variable sample sizes
     												log.debug("Sample size: {}", stsz.getSampleSize());
-    												log.debug("Sample count: {}", videoSamples.size());
     												videoSampleCount = videoSamples.size();
+    												log.debug("Sample count: {}", videoSampleCount);
     											}
     											//stco - has Chunks
     											MP4Atom stco = stbl.lookup(MP4Atom.typeToInt("stco"), 0);
@@ -490,7 +504,7 @@ public class MP4Reader implements IoConstants, ITagReader, IKeyFrameDataAnalyzer
     												videoChunkOffsets = stco.getChunks();
     												log.debug("Chunk count: {}", videoChunkOffsets.size());
     												//set the first video offset
-    												firstVideoTag = (Long) videoChunkOffsets.get(0);
+    												//firstVideoChunkOffset = (Long) videoChunkOffsets.get(0);
     											}									
     											//stss - has Sync - no sync means all samples are keyframes
     											MP4Atom stss = stbl.lookup(MP4Atom.typeToInt("stss"), 0);
@@ -510,6 +524,7 @@ public class MP4Reader implements IoConstants, ITagReader, IKeyFrameDataAnalyzer
     												log.debug("Record data: Consecutive samples={} Duration={}", rec.getConsecutiveSamples(), rec.getSampleDuration());
     												//if we have 1 record then all samples have the same duration
     												if (records.size() > 1) {
+    													//TODO: handle video samples with varying durations
     													log.warn("Video samples have differing durations, video playback may fail");
     												}
     												videoSampleDuration = rec.getSampleDuration();
@@ -549,7 +564,7 @@ public class MP4Reader implements IoConstants, ITagReader, IKeyFrameDataAnalyzer
     					MP4Atom mdat = atom;	    				
 	    				dataSize = mdat.getSize();
 	    				log.debug("{}", ToStringBuilder.reflectionToString(mdat));    
-	    				mdatOffset = fis.getOffset() - mdat.getSize();
+	    				mdatOffset = fis.getOffset() - dataSize;
     					log.debug("File size: {} mdat size: {}", file.length(), dataSize);
     					
     					break;
@@ -561,7 +576,7 @@ public class MP4Reader implements IoConstants, ITagReader, IKeyFrameDataAnalyzer
     			}
 			}
 
-			//the tag name to the offsets
+			//add the tag name (size) to the offsets
 			moovOffset += 8;
 			mdatOffset += 8;
 			log.debug("Offsets moov: {} mdat: {}", moovOffset, mdatOffset);
@@ -599,6 +614,11 @@ public class MP4Reader implements IoConstants, ITagReader, IKeyFrameDataAnalyzer
 			return channel.size();
 		} catch (Exception e) {
 			log.error("Error getTotalBytes", e);
+		} 
+		if (file != null) {
+			//just return the file size
+			return file.length();
+		} else {
 			return 0;
 		}
 	}
@@ -678,7 +698,7 @@ public class MP4Reader implements IoConstants, ITagReader, IKeyFrameDataAnalyzer
 	/** {@inheritDoc}
 	 */
 	public boolean hasMoreTags() {
-		return currentSample < videoSampleCount;
+		return currentSample < frames.size();
 	}
 
     /**
@@ -801,131 +821,128 @@ public class MP4Reader implements IoConstants, ITagReader, IKeyFrameDataAnalyzer
 	 * Video - ts=0 size=5 bytes {17 02 00 00 00}
 	 * Video - ts=0 size=2 bytes {52 01}
 	 * Audio - ts=0 size=4 bytes {af 00 12 10}
-	 * Audio - ts=0 size=9 bytes {af 01 20 00 00 00 00 00 0e}
-	 * Regular packets follow - prefix video with 5 bytes {17 01 00 00 00} 
+	 * Audio - ts=0 size=9 bytes {af 01 20 00 00 00 00 00 0e} 
 	 * 
 	 * Packet prefixes:
-	 * 17 00 00 00 00 = Video config?
+	 * 17 00 00 00 00 = Video extra data (first video packet)
 	 * 17 01 00 00 00 = Keyframe
 	 * 27 01 00 00 00 = Interframe
-	 * af 00 = Audio config?
+	 * af 00 = Audio extra data (first audio packet)
 	 * af 01 = Audio
 	 * 
-	 * Audio config:
-	 * af 00 12 10 = AAC LC
+	 * Audio extra data(s):
+	 * af 00 12 10 06 = AAC LC
 	 * af 00 13 90 56 e5 a5 48 00 = HE-AAC
 	 */
     private void createPreStreamingTags() {
     	log.debug("Creating pre-streaming tags");
-    	//video tag #1
-    	ITag tag = new Tag(IoConstants.TYPE_VIDEO, 0, 2, null, 0);
-		ByteBuffer body = ByteBuffer.allocate(tag.getBodySize());
-		body.put(new byte[]{(byte) 0x52, (byte) 0});
-		body.flip();
-		tag.setBody(body);
-
-		//add tag
-		firstTags.add(tag);
-		//clear body for re-use
-		//body.clear();
-		
-		//video tag #2
-		tag = new Tag(IoConstants.TYPE_VIDEO, 0, 5, null, tag.getBodySize());
-		body = ByteBuffer.allocate(tag.getBodySize());
-		body.put(new byte[]{(byte) 0x17, (byte) 0x02, (byte) 00, (byte) 00, (byte) 00});
-		body.flip();
-		tag.setBody(body);
-		
-		//add tag
-		firstTags.add(tag);
-		//clear body for re-use
-		//body.clear();
-		
-    	//video tag #3
-		tag = new Tag(IoConstants.TYPE_VIDEO, 0, 2, null, tag.getBodySize());
-		body = ByteBuffer.allocate(tag.getBodySize());
-		body.put(new byte[]{(byte) 0x52, (byte) 0x01});
-		body.flip();
-		tag.setBody(body);				
-
-		//add tag
-		firstTags.add(tag);
-		//clear body for re-use
-		//body.clear();
-		
-		//audio tag #1
-		tag = new Tag(IoConstants.TYPE_AUDIO, 0, 4, null, tag.getBodySize());
-		body = ByteBuffer.allocate(tag.getBodySize());
-		body.put(new byte[]{(byte) 0xaf, (byte) 00, (byte) 0x12, (byte) 0x10});
-		body.flip();
-		tag.setBody(body);
-
-		//add tag
-		firstTags.add(tag);
-		//clear body for re-use
-		//body.clear();
-		
-		//audio tag #2
-		tag = new Tag(IoConstants.TYPE_AUDIO, 0, 9, null, tag.getBodySize());
-		body = ByteBuffer.allocate(tag.getBodySize());
-		body.put(new byte[]{(byte) 0xaf, (byte) 0x01, (byte) 0x20, (byte) 00, (byte) 00, (byte) 00, (byte) 00, (byte) 00, (byte) 0x0e});
-		body.flip();
-		tag.setBody(body);    	
-
-		//add tag
-		firstTags.add(tag);
-		//clear body for release
-		//body.clear();
-		
-		//body.release();  
-    }
+    	ITag tag = null;
+    	ByteBuffer body = null;
+    	
+    	if (hasVideo) {
+        	//video tag #1
+        	tag = new Tag(IoConstants.TYPE_VIDEO, 0, 43, null, 0);
+    		body = ByteBuffer.allocate(tag.getBodySize());
+    		body.put(new byte[]{(byte) 0x17, (byte) 0, (byte) 0, (byte) 0, (byte) 0,
+    		(byte) 0x01, (byte) 0x4d, (byte) 0x40, (byte) 0x33, (byte) 0xff, (byte) 0xff, (byte) 0,
+    		(byte) 0x17, (byte) 0x67, (byte) 0x4d, (byte) 0x40, (byte) 0x33, (byte) 0x9a, (byte) 0x76,
+    		(byte) 0x02, (byte) 0x80, (byte) 0x2d, (byte) 0xd0, (byte) 0x80, (byte) 0,    (byte) 0,
+    		(byte) 0x03, (byte) 0,    (byte) 0x80, (byte) 0,    (byte) 0,    (byte) 0x19, (byte) 0x47,
+    		(byte) 0x8c, (byte) 0x18, (byte) 0x9c, (byte) 0x01, (byte) 0,    (byte) 0x04, (byte) 0x68,
+    		(byte) 0xce, (byte) 0x3c, (byte) 0x80});
+    		
+    		body.flip();
+    		tag.setBody(body);
     
-    private int prevFrameSize = 0;
+    		//add tag
+    		firstTags.add(tag);
+    	}
+    	
+    	if (hasAudio) {
+    		//audio tag #1
+    		tag = new Tag(IoConstants.TYPE_AUDIO, 0, 5, null, tag.getBodySize());
+    		body = ByteBuffer.allocate(tag.getBodySize());
+    		body.put(new byte[]{(byte) 0xaf, (byte) 0, (byte) 0x12, (byte) 0x10, (byte) 0x06});
+    		body.flip();
+    		tag.setBody(body);
+    
+    		//add tag
+    		firstTags.add(tag);
+    	}
+    }
     
 	/**
 	 * 
 	 */
     public synchronized ITag readTag() {
-		log.debug("Read tag - currentSample {}, prevFrameSize {}", new Object[]{currentSample, prevFrameSize});
+		log.debug("Read tag");
 		//empty-out the pre-streaming tags first
 		if (!firstTags.isEmpty()) {
 			log.debug("Returning pre-tag");
 			// Return first tags before media data
 			return firstTags.removeFirst();
 		}		
-
-		int sampleSize = (Integer) videoSamples.get(currentSample) + 5;
-		int ts = videoSampleDuration * currentSample; //Math.round((currentSample * timeScale) / videoSampleDuration);
-		log.debug("Read tag - sample dur / scale {}", new Object[]{((currentSample * timeScale) / videoSampleDuration)});		
-		log.debug("Sample position map: {}", samplePosMap);
-		long samplePos = samplePosMap.get(currentSample);
+		log.debug("Read tag - currentSample {}, prevFrameSize {}", new Object[]{currentSample, prevFrameSize});
+		
+		//get the current frame
+		MP4Frame frame = frames.get(currentSample - 1);
+		int sampleSize = frame.getSize();
+		//int sampleSize = (Integer) videoSamples.get(currentSample) + 5;
+		int ts = frame.getTime();
+		//int ts = videoSampleDuration * currentSample; 
 		log.debug("Read tag - sampleSize {} ts {}", new Object[]{sampleSize, ts});
+		log.debug("Read tag - sample dur / scale {}", new Object[]{((currentSample * timeScale) / videoSampleDuration)});		
+		
+		long samplePos = frame.getOffset();
+		//long samplePos = samplePosMap.get(currentSample);
+		log.debug("Read tag - samplePos {}", samplePos);
+		log.debug("Sample position map: {}", samplePosMap);
 
-		//once video works we will try adding audio
-		//tag = new Tag(IoConstants.TYPE_AUDIO, ts, sampleSize, null, prevFrameSize);
-		ITag tag = new Tag(IoConstants.TYPE_VIDEO, ts, sampleSize, null, prevFrameSize);
-		log.debug("Read tag - body size: {}", tag.getBodySize());
-		ByteBuffer body = ByteBuffer.allocate(tag.getBodySize());
-		log.debug("Read tag - current pos {} sample pos {}", getCurrentPosition(), samplePos);
-		//prefix is different for keyframes
-		if (posTimeMap.containsKey(samplePos)) {
-			log.debug("Writing keyframe prefix");
-			body.put(PREFIX_VIDEO_KEYFRAME);
-		} else {  			
-			log.debug("Writing interframe prefix");
-			body.put(PREFIX_VIDEO_FRAME);
+		//determine frame type and packet body padding
+		byte type = frame.getType();
+		//assume video type
+		int pad = 5;
+		if (type == TYPE_AUDIO) {
+			pad = 2;
 		}
+
+		//create a byte buffer of the size of the sample
+		java.nio.ByteBuffer data = java.nio.ByteBuffer.allocate(sampleSize + pad);
 		try {
+			//prefix is different for keyframes
+			if (type == TYPE_VIDEO) {
+	    		if (frame.isKeyFrame()) {
+	    			log.debug("Writing keyframe prefix");
+	    			data.put(PREFIX_VIDEO_KEYFRAME);
+	    		} else {  			
+	    			log.debug("Writing interframe prefix");
+	    			data.put(PREFIX_VIDEO_FRAME);
+	    		}
+	    		
+	    		videoCount++;
+			} else {
+				log.debug("Writing audio prefix");
+				data.put(PREFIX_AUDIO_FRAME);
+				
+				audioCount++;
+			}
 			//do we need to add the mdat offset to the sample position?
 			channel.position(samplePos);
-			channel.read(body.buf());
+			channel.read(data);
 		} catch (IOException e) {
-			log.error("Error handling position", e);
+			log.error("Error on channel position / read", e);
 		}
-		body.flip();
-		tag.setBody(body);			
-		currentSample++;			
 		
+		//chunk the data
+		ByteBuffer payload = getChunkedPayload(data.array());		
+		
+		//create the tag
+		ITag tag = new Tag(type, ts, payload.limit(), payload, prevFrameSize);
+		log.debug("Read tag - type: {} body size: {}", (type == TYPE_AUDIO ? "Audio" : "Video"), tag.getBodySize());
+		
+		//increment the sample number
+		currentSample++;			
+		//set the frame / tag size
 		prevFrameSize = tag.getBodySize();
 	
 		//log.debug("Tag: {}", tag);
@@ -933,8 +950,7 @@ public class MP4Reader implements IoConstants, ITagReader, IKeyFrameDataAnalyzer
 	}
 
     /**
-     * Key frames analysis may be used as a utility method so
-	 * synchronize it.
+     * Performs frame analysis and generates metadata for use in seeking.
 	 *
      * @return             Keyframe metadata
      */
@@ -955,36 +971,81 @@ public class MP4Reader implements IoConstants, ITagReader, IKeyFrameDataAnalyzer
         posTagMap = new HashMap<Long, Integer>();
         samplePosMap = new HashMap<Integer, Long>();
         // tag == sample
-		int sample = 0;
+		int sample = 1;
 		Long pos = null;
 		Enumeration records = videoSamplesToChunks.elements();
 		while (records.hasMoreElements()) {
 			MP4Atom.Record record = (MP4Atom.Record) records.nextElement();
 			int firstChunk = record.getFirstChunk();
 			int sampleCount = record.getSamplesPerChunk();
-			//log.debug("First chunk: {} count:{}", firstChunk, sampleCount);
+			log.debug("Video first chunk: {} count:{}", firstChunk, sampleCount);
 			pos = (Long) videoChunkOffsets.elementAt(firstChunk - 1);
 			while (sampleCount > 0) {
-				//log.debug("Position: {}", pos);
+				log.debug("Position: {}", pos);
     			posTagMap.put(pos, sample);
     			samplePosMap.put(sample, pos);
+				//calculate ts
+				int ts = ((int) videoSampleDuration * sample);
     			//check to see if the sample is a keyframe
-    			if (syncSamples.contains(sample)) {
-    				//log.debug("Keyframe - sample: {}", sample);
+    			boolean keyframe = syncSamples.contains(sample);
+    			if (keyframe) {
+    				log.debug("Keyframe - sample: {}", sample);
     				positionList.add(pos);
-    				//need to calculate ts
-    				Integer ts = ((int) videoSampleDuration * (sample));
     				//log.debug("Keyframe - timestamp: {}", ts);
     				timestampList.add(ts);
     			}
-    			pos = pos + (Integer) videoSamples.get(sample);
+    			int size = ((Integer) videoSamples.get(sample - 1)).intValue();
+
+    			//create a frame
+    			MP4Frame frame = new MP4Frame();
+    			frame.setKeyFrame(keyframe);
+    			frame.setOffset(pos);
+    			frame.setSize(size);
+    			frame.setTime(ts);
+    			frame.setType(TYPE_VIDEO);
+    			frames.add(frame);
+    			
+    			//inc and dec stuff
+    			pos += size;
     			sampleCount--;
-    			sample++;
+    			sample++;    			
 			}
 		}
 
 		log.debug("Position Tag Map size: {}", posTagMap.size());
 		log.debug("Keyframe position list size: {}", positionList.size());
+		
+		//add the audio frames / samples / chunks
+		sample = 1;
+		records = audioSamplesToChunks.elements();
+		while (records.hasMoreElements()) {
+			MP4Atom.Record record = (MP4Atom.Record) records.nextElement();
+			int firstChunk = record.getFirstChunk();
+			int sampleCount = record.getSamplesPerChunk();
+			log.debug("Audio first chunk: {} count:{}", firstChunk, sampleCount);
+			pos = (Long) audioChunkOffsets.elementAt(firstChunk - 1);
+			while (sampleCount > 0) {
+    			//calculate ts
+    			int ts = ((int) audioSampleDuration * sample);
+    			//sample size
+    			int size = ((Integer) audioSamples.get(sample - 1)).intValue();
+    			//create a frame
+        		MP4Frame frame = new MP4Frame();
+        		frame.setOffset(pos);
+        		frame.setSize(size);
+        		frame.setTime(ts);
+        		frame.setType(TYPE_AUDIO);
+        		frames.add(frame);
+        		
+    			//inc and dec stuff
+    			pos += size;
+    			sampleCount--;
+    			sample++;    
+            }		
+		}
+
+		//sort the frames
+		Collections.sort(frames);
 		
 		keyframeMeta = new KeyFrameMeta();
 		keyframeMeta.duration = duration;
@@ -1005,6 +1066,40 @@ public class MP4Reader implements IoConstants, ITagReader, IKeyFrameDataAnalyzer
 		return keyframeMeta;
 	}
 
+    /**
+     * Handler for data chunks.
+     * 
+     * @param payload
+     * @return
+     */
+    private ByteBuffer getChunkedPayload(byte[] payload) {
+    	log.debug("Get chunked payload");
+    	int len = payload.length;
+    	log.debug("Payload length: {}", len);
+    	int chunkLen = 0;
+    	int offset = 0;
+    	//extra bytes needed for chunk markers and such
+    	int extra = Math.max(0, Math.round(len / 4096));
+    	//size the return array as good as possible to prevent resize
+    	ByteBuffer ret = ByteBuffer.allocate(len + extra);
+    	//allow resize
+    	ret.setAutoExpand(true);
+    	while (len > 0) {
+        	chunkLen = Math.min(len, 4096);
+        	log.debug("Chunk len: {}", chunkLen);
+        	ret.put(payload, offset, chunkLen);
+        	log.debug("read: {}", ret.position());
+        	offset += chunkLen;
+        	len -= chunkLen;
+        	log.debug("len: {}", len);
+        	if (len > 0) {
+        		ret.put(CHUNK_MARKER);
+        	}
+    	}
+    	ret.flip();
+    	return ret;
+    }
+    
 	/**
 	 * Put the current position to pos.
 	 * The caller must ensure the pos is a valid one

@@ -135,10 +135,11 @@ public class MP4Reader implements IoConstants, ITagReader, IKeyFrameDataAnalyzer
 	private int timeScale;
 	private int width;
 	private int height;
-	private int audioSampleRate;
+	private double audioSampleRate;
 	private int audioChannels;
 	private int videoSampleCount;
 	private double fps;
+	private double videoSampleRate = 2997.0; //not sure where to get this value from?
 	private int avcLevel;
 	private int avcProfile;
 	private String formattedDuration;
@@ -169,6 +170,8 @@ public class MP4Reader implements IoConstants, ITagReader, IKeyFrameDataAnalyzer
     
 	private long audioCount;
 	private long videoCount;
+	
+	private double baseTs = 0f;
 	
 	/**
 	 * Container for metadata and any other tags that should
@@ -208,7 +211,7 @@ public class MP4Reader implements IoConstants, ITagReader, IKeyFrameDataAnalyzer
 		//build the keyframe meta data
 		analyzeKeyFrames();
 		//add meta data
-		firstTags.add(createFileMeta());
+		//firstTags.add(createFileMeta());
 		//create / add the pre-streaming tags
 		createPreStreamingTags();
 	}
@@ -350,9 +353,9 @@ public class MP4Reader implements IoConstants, ITagReader, IKeyFrameDataAnalyzer
     												setAudioCodecId(MP4Atom.intToType(mp4a.getType()));
     												//log.debug("{}", ToStringBuilder.reflectionToString(mp4a));
     												log.debug("Sample size: {}", mp4a.getSampleSize());										
-    												audioSampleRate = mp4a.getTimeScale();
+    												audioSampleRate = mp4a.getTimeScale() * 1.0;
     												audioChannels = mp4a.getChannelCount();
-    												log.debug("Sample rate: {}", audioSampleRate);			
+    												log.debug("Sample rate (time scale): {}", audioSampleRate);			
     												log.debug("Channels: {}", audioChannels);										
     												/* no data we care about right now
     												//mp4a: esds
@@ -465,6 +468,7 @@ public class MP4Reader implements IoConstants, ITagReader, IKeyFrameDataAnalyzer
     												MP4Atom avc1 = stsd.getChildren().get(0);
     												//could set the video codec here
     												setVideoCodecId(MP4Atom.intToType(avc1.getType()));
+    												log.debug("Sample rate (time scale): {}", videoSampleRate);
     												//
     												MP4Atom avcC = avc1.lookup(MP4Atom.typeToInt("avcC"), 0);
     												if (avcC != null) {
@@ -545,6 +549,7 @@ public class MP4Reader implements IoConstants, ITagReader, IKeyFrameDataAnalyzer
     					//real duration
     					StringBuilder sb = new StringBuilder();
     					double videoTime = ((double) duration / (double) timeScale);
+    					log.debug("Video time: {}", videoTime);
     					int minutes = (int) (videoTime / 60);
     					if (minutes > 0) {
     		    			sb.append(minutes);
@@ -851,6 +856,13 @@ public class MP4Reader implements IoConstants, ITagReader, IKeyFrameDataAnalyzer
     		(byte) 0x8c, (byte) 0x18, (byte) 0x9c, (byte) 0x01, (byte) 0,    (byte) 0x04, (byte) 0x68,
     		(byte) 0xce, (byte) 0x3c, (byte) 0x80});
     		
+    		//fake avcc
+    		//(byte) 0x01, (byte) 0x4D, (byte) 0x40, (byte) 0x1F, (byte) 0xFF, (byte) 0xE1, (byte) 0x00,
+    		//(byte) 0x14, (byte) 0x27, (byte) 0x4D, (byte) 0x40, (byte) 0x1F, (byte) 0xA9, (byte) 0x18,
+    		//(byte) 0x0A, (byte) 0x00, (byte) 0x8B, (byte) 0x60, (byte) 0x0D, (byte) 0x41, (byte) 0x80,
+    		//(byte) 0x41, (byte) 0x8C, (byte) 0x2B, (byte) 0x5E, (byte) 0xF7, (byte) 0xC0, (byte) 0x40,
+    		//(byte) 0x01, (byte) 0x00, (byte) 0x04, (byte) 0x28, (byte) 0xCE, (byte) 0x09, (byte) 0xC8
+
     		body.flip();
     		tag.setBody(body);
     
@@ -882,21 +894,22 @@ public class MP4Reader implements IoConstants, ITagReader, IKeyFrameDataAnalyzer
 			// Return first tags before media data
 			return firstTags.removeFirst();
 		}		
-		log.debug("Read tag - currentSample {}, prevFrameSize {}", new Object[]{currentSample, prevFrameSize});
+		log.debug("Read tag - sample {} prevFrameSize {} audio: {} video: {}", new Object[]{currentSample, prevFrameSize, audioCount, videoCount});
 		
 		//get the current frame
 		MP4Frame frame = frames.get(currentSample - 1);
+		log.debug("Playback {}", frame);
+		
 		int sampleSize = frame.getSize();
-		//int sampleSize = (Integer) videoSamples.get(currentSample) + 5;
-		int ts = frame.getTime();
-		//int ts = videoSampleDuration * currentSample; 
-		log.debug("Read tag - sampleSize {} ts {}", new Object[]{sampleSize, ts});
-		log.debug("Read tag - sample dur / scale {}", new Object[]{((currentSample * timeScale) / videoSampleDuration)});		
+		
+		double frameTs = (frame.getTime() - baseTs) * 1000.0;
+		int time = (int) Math.round(frameTs);
+		log.debug("Read tag - dst: {} base: {} time: {}", new Object[]{frameTs, baseTs, time});
+		//log.debug("Read tag - sampleSize {} ts {}", new Object[]{sampleSize, ts});
+		//log.debug("Read tag - sample dur / scale {}", new Object[]{((currentSample * timeScale) / videoSampleDuration)});		
 		
 		long samplePos = frame.getOffset();
-		//long samplePos = samplePosMap.get(currentSample);
-		log.debug("Read tag - samplePos {}", samplePos);
-		log.debug("Sample position map: {}", samplePosMap);
+		//log.debug("Read tag - samplePos {}", samplePos);
 
 		//determine frame type and packet body padding
 		byte type = frame.getType();
@@ -937,7 +950,7 @@ public class MP4Reader implements IoConstants, ITagReader, IKeyFrameDataAnalyzer
 		ByteBuffer payload = getChunkedPayload(data.array());		
 		
 		//create the tag
-		ITag tag = new Tag(type, ts, payload.limit(), payload, prevFrameSize);
+		ITag tag = new Tag(type, time, payload.limit(), payload, prevFrameSize);
 		log.debug("Read tag - type: {} body size: {}", (type == TYPE_AUDIO ? "Audio" : "Video"), tag.getBodySize());
 		
 		//increment the sample number
@@ -945,12 +958,14 @@ public class MP4Reader implements IoConstants, ITagReader, IKeyFrameDataAnalyzer
 		//set the frame / tag size
 		prevFrameSize = tag.getBodySize();
 	
+		baseTs += frameTs / 1000.0;
 		//log.debug("Tag: {}", tag);
 		return tag;
 	}
 
     /**
-     * Performs frame analysis and generates metadata for use in seeking.
+     * Performs frame analysis and generates metadata for use in seeking. The
+     * method name is a little misleading since it analyzes all the frames.
 	 *
      * @return             Keyframe metadata
      */
@@ -960,13 +975,13 @@ public class MP4Reader implements IoConstants, ITagReader, IKeyFrameDataAnalyzer
 			return keyframeMeta;
 		}
 		log.debug("Analyzing key frames");
-			
+					
 		//key frame sample numbers are stored in the syncSamples collection
 		int keyframeCount = syncSamples.size();
 		
         // Lists of video positions and timestamps
         List<Long> positionList = new ArrayList<Long>(keyframeCount);
-        List<Integer> timestampList = new ArrayList<Integer>(keyframeCount);     
+        List<Float> timestampList = new ArrayList<Float>(keyframeCount);     
         // Maps positions to tags
         posTagMap = new HashMap<Long, Integer>();
         samplePosMap = new HashMap<Integer, Long>();
@@ -981,18 +996,18 @@ public class MP4Reader implements IoConstants, ITagReader, IKeyFrameDataAnalyzer
 			log.debug("Video first chunk: {} count:{}", firstChunk, sampleCount);
 			pos = (Long) videoChunkOffsets.elementAt(firstChunk - 1);
 			while (sampleCount > 0) {
-				log.debug("Position: {}", pos);
+				//log.debug("Position: {}", pos);
     			posTagMap.put(pos, sample);
     			samplePosMap.put(sample, pos);
 				//calculate ts
-				int ts = ((int) videoSampleDuration * sample);
+    			double ts = (videoSampleDuration * (sample - 1)) / videoSampleRate;
     			//check to see if the sample is a keyframe
     			boolean keyframe = syncSamples.contains(sample);
     			if (keyframe) {
     				log.debug("Keyframe - sample: {}", sample);
     				positionList.add(pos);
     				//log.debug("Keyframe - timestamp: {}", ts);
-    				timestampList.add(ts);
+    				//timestampList.add(ts);
     			}
     			int size = ((Integer) videoSamples.get(sample - 1)).intValue();
 
@@ -1005,6 +1020,8 @@ public class MP4Reader implements IoConstants, ITagReader, IKeyFrameDataAnalyzer
     			frame.setType(TYPE_VIDEO);
     			frames.add(frame);
     			
+    			log.debug("Sample #{} {}", sample, frame);
+    			
     			//inc and dec stuff
     			pos += size;
     			sampleCount--;
@@ -1012,10 +1029,10 @@ public class MP4Reader implements IoConstants, ITagReader, IKeyFrameDataAnalyzer
 			}
 		}
 
-		log.debug("Position Tag Map size: {}", posTagMap.size());
-		log.debug("Keyframe position list size: {}", positionList.size());
-		
-		//add the audio frames / samples / chunks
+		log.debug("Position map size: {} keyframe list size: {}", posTagMap.size(), positionList.size());
+		log.debug("Sample position map (video): {}", samplePosMap);
+			
+		//add the audio frames / samples / chunks		
 		sample = 1;
 		records = audioSamplesToChunks.elements();
 		while (records.hasMoreElements()) {
@@ -1026,7 +1043,7 @@ public class MP4Reader implements IoConstants, ITagReader, IKeyFrameDataAnalyzer
 			pos = (Long) audioChunkOffsets.elementAt(firstChunk - 1);
 			while (sampleCount > 0) {
     			//calculate ts
-    			int ts = ((int) audioSampleDuration * sample);
+				double ts = (audioSampleDuration * (sample - 1)) / audioSampleRate;
     			//sample size
     			int size = ((Integer) audioSamples.get(sample - 1)).intValue();
     			//create a frame
@@ -1037,6 +1054,8 @@ public class MP4Reader implements IoConstants, ITagReader, IKeyFrameDataAnalyzer
         		frame.setType(TYPE_AUDIO);
         		frames.add(frame);
         		
+    			log.debug("Sample #{} {}", sample, frame);
+    			
     			//inc and dec stuff
     			pos += size;
     			sampleCount--;
@@ -1044,25 +1063,31 @@ public class MP4Reader implements IoConstants, ITagReader, IKeyFrameDataAnalyzer
             }		
 		}
 
+		records = null;
+		
 		//sort the frames
 		Collections.sort(frames);
 		
+		log.debug("Frames count (expect 16042 for backcountry): {}", frames.size());
+		log.debug("Frames: {}", frames);
+		
 		keyframeMeta = new KeyFrameMeta();
 		keyframeMeta.duration = duration;
+		/*
 		posTimeMap = new HashMap<Long, Long>();
 
 		keyframeMeta.positions = new long[positionList.size()];
-		keyframeMeta.timestamps = new int[timestampList.size()];
+		keyframeMeta.timestamps = new float[timestampList.size()];
 		for (int i = 0; i < keyframeMeta.positions.length; i++) {
 			keyframeMeta.positions[i] = positionList.get(i);
 			keyframeMeta.timestamps[i] = timestampList.get(i);
-			posTimeMap.put((long) positionList.get(i), (long) timestampList
+			posTimeMap.put((long) positionList.get(i), (float) timestampList
 					.get(i));
 		}
 		if (keyframeCache != null) {
 			keyframeCache.saveKeyFrameMeta(file, keyframeMeta);
 		}
-		
+		*/
 		return keyframeMeta;
 	}
 
@@ -1073,9 +1098,9 @@ public class MP4Reader implements IoConstants, ITagReader, IKeyFrameDataAnalyzer
      * @return
      */
     private ByteBuffer getChunkedPayload(byte[] payload) {
-    	log.debug("Get chunked payload");
+    	//log.debug("Get chunked payload");
     	int len = payload.length;
-    	log.debug("Payload length: {}", len);
+    	//log.debug("Payload length: {}", len);
     	int chunkLen = 0;
     	int offset = 0;
     	//extra bytes needed for chunk markers and such
@@ -1086,12 +1111,12 @@ public class MP4Reader implements IoConstants, ITagReader, IKeyFrameDataAnalyzer
     	ret.setAutoExpand(true);
     	while (len > 0) {
         	chunkLen = Math.min(len, 4096);
-        	log.debug("Chunk len: {}", chunkLen);
+        	//log.debug("Chunk len: {}", chunkLen);
         	ret.put(payload, offset, chunkLen);
-        	log.debug("read: {}", ret.position());
+        	//log.debug("read: {}", ret.position());
         	offset += chunkLen;
         	len -= chunkLen;
-        	log.debug("len: {}", len);
+        	//log.debug("len: {}", len);
         	if (len > 0) {
         		ret.put(CHUNK_MARKER);
         	}

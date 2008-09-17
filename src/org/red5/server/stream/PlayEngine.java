@@ -351,6 +351,7 @@ public final class PlayEngine implements IFilter, IPushableConsumer,
 					if (stream != null && stream.getCodecInfo() != null) {
 						IVideoStreamCodec videoCodec = stream.getCodecInfo()
 								.getVideoCodec();
+						log.debug("Stream video codec: {}", videoCodec);
 						if (videoCodec != null) {
 							ByteBuffer keyFrame = videoCodec.getKeyframe();
 							if (keyFrame != null) {
@@ -372,6 +373,7 @@ public final class PlayEngine implements IFilter, IPushableConsumer,
 									videoFrameDropper.reset();
 								} finally {
 									video.release();
+									video = null;
 								}
 							}
 						}
@@ -439,13 +441,11 @@ public final class PlayEngine implements IFilter, IPushableConsumer,
 						if (msg == null) {
 							break;
 						}
-						if (!(msg instanceof RTMPMessage)) {
-							continue;
+						if (msg instanceof RTMPMessage) {
+							body = ((RTMPMessage) msg).getBody();
 						}
-						body = ((RTMPMessage) msg).getBody();
 					}
 				}
-
 				if (body != null) {
 					// Adjust timestamp when playing lists
 					body.setTimestamp(body.getTimestamp() + timestampOffset);

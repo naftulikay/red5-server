@@ -131,7 +131,7 @@ public class VideoData extends BaseEvent implements IoConstants, IStreamData, IS
 		frameType = (FrameType) in.readObject();
 		byte[] byteBuf = (byte[]) in.readObject();
 		if (byteBuf != null) {
-			data = ByteBuffer.allocate(0);
+			data = ByteBuffer.allocate(byteBuf.length);
 			data.setAutoExpand(true);
 			SerializeUtils.ByteArrayToByteBuffer(byteBuf, data);
 		}

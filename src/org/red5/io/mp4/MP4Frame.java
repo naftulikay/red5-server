@@ -20,7 +20,7 @@ package org.red5.io.mp4;
  */
 
 /**
- * Represents an MP4 frame.
+ * Represents an MP4 frame / chunk sample
  * 
  * @author Paul Gregoire (mondain@gmail.com)
  */
@@ -32,7 +32,7 @@ public class MP4Frame implements Comparable<MP4Frame> {
 
 	private int size;
 
-	private int time;
+	private double time;
 
 	private boolean keyFrame;
 
@@ -80,11 +80,11 @@ public class MP4Frame implements Comparable<MP4Frame> {
 	 * 
 	 * @return
 	 */
-	public int getTime() {
+	public double getTime() {
 		return time;
 	}
 
-	public void setTime(int time) {
+	public void setTime(double time) {
 		this.time = time;
 	}
 
@@ -101,6 +101,46 @@ public class MP4Frame implements Comparable<MP4Frame> {
 		this.keyFrame = keyFrame;
 	}
 
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + (int) (offset ^ (offset >>> 32));
+		result = prime * result + type;
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		MP4Frame other = (MP4Frame) obj;
+		if (offset != other.offset)
+			return false;
+		if (type != other.type)
+			return false;
+		return true;
+	}
+
+	@Override
+	public String toString() {
+		StringBuilder sb = new StringBuilder("MP4Frame type=");
+		sb.append(type);
+		sb.append(", time=");
+		sb.append(time);
+		sb.append(", size=");
+		sb.append(size);
+		sb.append(", offset=");
+		sb.append(offset);
+		sb.append(", keyframe=");
+		sb.append(keyFrame);
+		return sb.toString();
+	}
+
 	/**
 	 * The frames are expected to be sorted by their timestamp
 	 */
@@ -110,6 +150,10 @@ public class MP4Frame implements Comparable<MP4Frame> {
 			ret = 1;
 		} else if (this.time < that.getTime()) {
 			ret = -1;
+		} else if (this.time == that.getTime() && this.offset > that.getOffset()) {
+			ret = 1;
+		} else if (this.time == that.getTime() && this.offset < that.getOffset()) {
+			ret = -1;			
 		}
 		return ret;
 	}

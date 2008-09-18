@@ -692,17 +692,15 @@ public final class PlayEngine implements IFilter, IPushableConsumer,
 		// check client buffer length when we've already sent some messages
 		if (lastMessage != null) {
 			// Duration the stream is playing
+			log.debug("okayToSendMessage: now {} playback start {}", now, playbackStart);
 			final long delta = now - playbackStart;
 			// Buffer size as requested by the client
 			final long buffer = playlistSubscriberStream.getClientBufferDuration();
 
 			// Expected amount of data present in client buffer
 			final long buffered = lastMessage.getTimestamp() - delta;
-			log
-					.debug(
-							"okayToSendMessage: timestamp {} delta {} buffered {} buffer {}",
-							new Object[] { lastMessage.getTimestamp(), delta,
-									buffered, buffer });
+			log.debug("okayToSendMessage: timestamp {} delta {} buffered {} buffer {}",
+					new Object[] { lastMessage.getTimestamp(), delta, buffered, buffer });
 			if (buffer > 0 && buffered > buffer) {
 				// Client is likely to have enough data in the buffer
 				return false;
@@ -1010,7 +1008,7 @@ public final class PlayEngine implements IFilter, IPushableConsumer,
 	 * Send playlist switch status notification
 	 */
 	private void sendSwitchStatus() {
-		// TODO: find correct duration to sent
+		// TODO: find correct duration to send
 		int duration = 1;
 		sendOnPlayStatus(StatusCodes.NS_PLAY_SWITCH, duration, bytesSent);
 	}
@@ -1253,6 +1251,7 @@ public final class PlayEngine implements IFilter, IPushableConsumer,
 							.getAttribute(IBroadcastScope.STREAM_ATTRIBUTE);
 					if (stream != null && stream.getCodecInfo() != null) {
 						videoCodec = stream.getCodecInfo().getVideoCodec();
+						log.debug("Video codec: {}", videoCodec);
 					}
 				}
 
@@ -1280,7 +1279,7 @@ public final class PlayEngine implements IFilter, IPushableConsumer,
 					}
 
 					//Long[] writeDelta = getWriteDelta();
-					if (pendingVideos > 1 /*|| writeDelta[0] > writeDelta[1]*/) {
+					if (pendingVideos > 1) {
 						// We drop because the client has insufficient bandwidth.
 						long now = System.currentTimeMillis();
 						if (bufferCheckInterval > 0
@@ -1369,24 +1368,6 @@ public final class PlayEngine implements IFilter, IPushableConsumer,
 		return playlistSubscriberStream.getConnection().getPendingMessages();
 	}
 
-	/**
-	 * Get informations about bytes send and number of bytes the client reports
-	 * to have received.
-	 * 
-	 * @return          Written bytes and number of bytes the client received
-	 */
-//	private Long[] getWriteDelta() {
-//		OOBControlMessage pendingRequest = new OOBControlMessage();
-//		pendingRequest.setTarget("ConnectionConsumer");
-//		pendingRequest.setServiceName("writeDelta");
-//		msgOut.sendOOBControlMessage(this, pendingRequest);
-//		if (pendingRequest.getResult() != null) {
-//			return (Long[]) pendingRequest.getResult();
-//		} else {
-//			return new Long[] { Long.valueOf(0), Long.valueOf(0) };
-//		}
-//	}	
-	
 	public boolean isPullMode() {
 		return pullMode;
 	}

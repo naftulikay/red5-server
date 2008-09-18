@@ -910,11 +910,13 @@ public class RTMPProtocolDecoder implements Constants, SimpleProtocolDecoder,
 
 	/** {@inheritDoc} */
 	public AudioData decodeAudioData(ByteBuffer in) {
+		log.debug("decodeAudioData");
 		return new AudioData(in.asReadOnlyBuffer());
 	}
 
 	/** {@inheritDoc} */
 	public VideoData decodeVideoData(ByteBuffer in) {
+		log.debug("decodeVideoData");
 		return new VideoData(in.asReadOnlyBuffer());
 	}
 

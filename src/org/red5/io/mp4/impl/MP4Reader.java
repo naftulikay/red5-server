@@ -857,12 +857,17 @@ public class MP4Reader implements IoConstants, ITagReader, IKeyFrameDataAnalyzer
     		(byte) 0xce, (byte) 0x3c, (byte) 0x80});
     		
     		//fake avcc
-    		//(byte) 0x01, (byte) 0x4D, (byte) 0x40, (byte) 0x1F, (byte) 0xFF, (byte) 0xE1, (byte) 0x00,
-    		//(byte) 0x14, (byte) 0x27, (byte) 0x4D, (byte) 0x40, (byte) 0x1F, (byte) 0xA9, (byte) 0x18,
-    		//(byte) 0x0A, (byte) 0x00, (byte) 0x8B, (byte) 0x60, (byte) 0x0D, (byte) 0x41, (byte) 0x80,
-    		//(byte) 0x41, (byte) 0x8C, (byte) 0x2B, (byte) 0x5E, (byte) 0xF7, (byte) 0xC0, (byte) 0x40,
-    		//(byte) 0x01, (byte) 0x00, (byte) 0x04, (byte) 0x28, (byte) 0xCE, (byte) 0x09, (byte) 0xC8
-
+    		/*
+    		byte[] fakeAvcc = new byte[]{
+    		(byte) 0x01, (byte) 0x4D, (byte) 0x40, (byte) 0x1F, (byte) 0xFF, (byte) 0xE1, (byte) 0x00,
+    		(byte) 0x14, (byte) 0x27, (byte) 0x4D, (byte) 0x40, (byte) 0x1F, (byte) 0xA9, (byte) 0x18,
+    		(byte) 0x0A, (byte) 0x00, (byte) 0x8B, (byte) 0x60, (byte) 0x0D, (byte) 0x41, (byte) 0x80,
+    		(byte) 0x41, (byte) 0x8C, (byte) 0x2B, (byte) 0x5E, (byte) 0xF7, (byte) 0xC0, (byte) 0x40,
+    		(byte) 0x01, (byte) 0x00, (byte) 0x04, (byte) 0x28, (byte) 0xCE, (byte) 0x09, (byte) 0xC8
+    		};
+    		log.debug("Fake: {}", new String(fakeAvcc));
+			*/
+    		
     		body.flip();
     		tag.setBody(body);
     
@@ -1069,7 +1074,7 @@ public class MP4Reader implements IoConstants, ITagReader, IKeyFrameDataAnalyzer
 		Collections.sort(frames);
 		
 		log.debug("Frames count (expect 16042 for backcountry): {}", frames.size());
-		log.debug("Frames: {}", frames);
+		//log.debug("Frames: {}", frames);
 		
 		keyframeMeta = new KeyFrameMeta();
 		keyframeMeta.duration = duration;

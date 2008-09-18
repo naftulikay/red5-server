@@ -105,6 +105,7 @@ public class ConnectionConsumer implements IPushableConsumer,
 
 	/** {@inheritDoc} */
     public void pushMessage(IPipe pipe, IMessage message) {
+    	log.debug("pushMessage");
 		if (message instanceof ResetMessage) {
 			streamTracker.reset();
 		} else if (message instanceof StatusMessage) {
@@ -153,9 +154,7 @@ public class ConnectionConsumer implements IPushableConsumer,
 					audio.write(audioData);
 					break;
 				case Constants.TYPE_PING:
-					Ping ping = new Ping(((Ping) msg).getValue1(), ((Ping) msg)
-							.getValue2(), ((Ping) msg).getValue3(),
-							((Ping) msg).getValue4());
+					Ping ping = new Ping(((Ping) msg));
 					header.setTimerRelative(false);
 					header.setTimer(0);
 					ping.setHeader(header);

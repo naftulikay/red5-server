@@ -199,16 +199,15 @@ public class PlaylistSubscriberStream extends AbstractClientStream implements
     			IConsumerService consumerService = (IConsumerService) ctx.getBean(IConsumerService.KEY);
     			IProviderService providerService = (IProviderService) ctx.getBean(IProviderService.BEAN_NAME);
     		
-    			engine = new PlayEngine.Builder(this, schedulingService, consumerService, providerService).build();
+    			//engine = new PlayEngine.Builder(this, schedulingService, consumerService, providerService).build();
+    			createEngine(schedulingService, consumerService, providerService);
     		} else {
     			log.info("Scope was null on start");
     		}		
 		}
-		// Create bw control service from Spring bean factory
-		// and register myself
-		// XXX Bandwidth control service should not be bound to
-		// a specific scope because it's designed to control
-		// the bandwidth system-wide.
+		// Create bw control service from Spring bean factory and register myself
+		// XXX Bandwidth control service should not be bound to a specific scope 
+		// because it's designed to control the bandwidth system-wide.
 		if (bwController == null) {
 			bwController = (IBWControlService) getScope().getContext().getBean(IBWControlService.KEY);
 		}

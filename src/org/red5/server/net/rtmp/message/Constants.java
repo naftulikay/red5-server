@@ -126,6 +126,18 @@ public interface Constants {
     public static final byte HEADER_CONTINUE = 0x03;
 
     /**
+     * New H264 header marker. This will be sent for the "first" 
+     * sets of data, the audio / video "extra" data and the first
+     * samples. 
+     */
+    public static final byte HEADER_H264_INIT = 0x05;
+    
+    /**
+     * There's more audio / video
+     */
+    public static final byte HEADER_H264_DATA = 0x45;
+    
+    /**
      * Size of initial handshake between client and server
      */
     public static final int HANDSHAKE_SIZE = 1536;

@@ -117,6 +117,7 @@ public class FileProvider implements IPassive, ISeekableProvider,
     
 	/** {@inheritDoc} */
     public synchronized IMessage pullMessage(IPipe pipe) throws IOException {
+    	log.debug("pullMessage");
 		if (this.pipe != pipe) {
 			return null;
 		}

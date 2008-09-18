@@ -178,7 +178,7 @@ public class Header implements Constants, Externalizable {
 	public String toString() {
 		StringBuffer sb = new StringBuffer();
 		sb.append("ChannelId: ").append(channelId).append(", ");
-		sb.append("Timer: ").append(timer).append(" (" + (timerRelative ? "relative" : "absolute") + ')').append(", ");
+		sb.append("Timer: ").append(timer).append(" (").append(timerRelative ? "relative" : "absolute").append("), ");
 		sb.append("Size: ").append(size).append(", ");
 		sb.append("DataType: ").append(dataType).append(", ");
 		sb.append("StreamId: ").append(streamId);

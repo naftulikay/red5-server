@@ -256,7 +256,18 @@ public class RTMPProtocolEncoder extends BaseProtocolEncoder
 				RTMPUtils.writeMediumInt(buf, header.getTimer());
 				break;
 			case HEADER_CONTINUE:
+				break;				
+			case HEADER_H264_INIT:
+				RTMPUtils.writeMediumInt(buf, header.getTimer());
+				RTMPUtils.writeMediumInt(buf, header.getSize());
+				buf.put(header.getDataType());
+				RTMPUtils.writeReverseInt(buf, header.getStreamId());
 				break;
+			case HEADER_H264_DATA:
+				RTMPUtils.writeMediumInt(buf, header.getTimer());
+				RTMPUtils.writeMediumInt(buf, header.getSize());
+				buf.put(header.getDataType());
+				break;				
 			default:
 		}
 	}

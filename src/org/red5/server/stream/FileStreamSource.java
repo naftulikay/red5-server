@@ -70,7 +70,7 @@ public class FileStreamSource implements ISeekableStreamSource, Constants {
      * @return  RTMP event
      */
     public IRTMPEvent dequeue() {
-
+    	log.debug("dequeue");
 		if (!reader.hasMoreTags()) {
 			return null;
 		}

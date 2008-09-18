@@ -53,7 +53,7 @@ public class StreamTracker implements Constants {
     /**
      * RTMP event handler
      * @param event      RTMP event
-     * @return           Timeframe since last notification (or auido or video packet sending)
+     * @return           Timeframe since last notification (or audio or video packet sending)
      */
     public int add(IRTMPEvent event) {
 		relative = true;

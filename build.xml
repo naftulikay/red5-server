@@ -37,8 +37,10 @@
 	        http://ant.apache.org/ivy
 	        http://testearly.com/2007/06/24/ivy-in-42-steps
 	-->
-	<taskdef uri="antlib:org.apache.ivy.ant" resource="org/apache/ivy/ant/antlib.xml" classpath="${lib.dir}/${ivy.version}.jar"/>
-	<property name="ivy.lib.dir" value="${lib.dir}"/>
+	<taskdef uri="antlib:org.apache.ivy.ant" resource="org/apache/ivy/ant/antlib.xml"
+		 classpath="${lib.dir}/${ivy.version}.jar"/>
+	<!-- Latest ivy 9/2008 seems to want absolute path -->
+	<property name="ivy.lib.dir" value="${basedir}/lib"/>
 
 	<tstamp prefix="build">
 		<format property="TODAY" pattern="d-MMMM-yyyy" locale="en"/>
@@ -156,18 +158,21 @@
 	<target name="retrieve" unless="library.installed" description="Retrieves the libraries if needed">
 		<!-- Ivy configuration -->
 		<ivy:settings file="ivysettings.xml"/>
-		<condition property="ivy.conf.name" value="default">
+		<condition property="ivy.conf.name" value="java6">
 			<not>
 				<isset property="ivy.conf.name"/>
 			</not>
 		</condition>
 		<echo message="Ivy conf name: ${ivy.conf.name}"/>
-		<ivy:resolve conf="${ivy.conf.name}"/>
+		<ivy:resolve file="ivy.xml" conf="${ivy.conf.name}"/>
 		<ivy:retrieve conf="${ivy.conf.name}"/>
 	</target>
 
 	<target name="ivyclear" description="Clears out the Ivy cache">
-		<delete dir="${user.home}/.ivy/cache"/>
+		<!--
+    	<delete dir="${user.home}/.ivy/cache"/>
+    	-->
+        <delete dir="${user.home}/.ivy2/cache"/>
 		<delete includeemptydirs="true">
 			<fileset dir="${lib.dir}" excludes="**/ivy*.jar"/>
 		</delete>

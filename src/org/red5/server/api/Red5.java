@@ -59,12 +59,12 @@ public final class Red5 implements Red5MBean {
     /**
      * Current server version with revision
      */
-    public static final String VERSION = "Red5 Server 0.7.2-dev $Revision: 3020 $";
+    public static final String VERSION = "Red5 Server 0.9.0-dev $Revision: 3020 $";
 
     /**
      * Current server version for fmsVer requests
      */
-    public static final String FMS_VERSION = "RED5/0,7,2,0";    
+    public static final String FMS_VERSION = "RED5/0,9,0,0";    
     
     /**
      * Server start time

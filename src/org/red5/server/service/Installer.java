@@ -57,6 +57,8 @@ public class Installer {
 	
 	private String applicationRepositoryUrl;
 
+	private static final String userAgent = "Mozilla/4.0 (compatible; Red5 Server)";
+	
 	{
 		log.info("Installer service created");
 	}
@@ -103,7 +105,7 @@ public class Installer {
 		client.getHttpConnectionManager().getParams().setConnectionTimeout(5000);
 		//get the params for the client
 		HttpClientParams params = client.getParams();
-		params.setParameter(HttpMethodParams.USER_AGENT, "Mozilla/4.0 (compatible; Red5 Server)");
+		params.setParameter(HttpMethodParams.USER_AGENT, userAgent);
 		//try the wav version first
 		HttpMethod method = new GetMethod(applicationRepositoryUrl + "registry.xml");
 		//follow any 302's although there shouldnt be any
@@ -198,7 +200,7 @@ public class Installer {
 				client.getHttpConnectionManager().getParams().setConnectionTimeout(5000);
 				//get the params for the client
 				HttpClientParams params = client.getParams();
-				params.setParameter(HttpMethodParams.USER_AGENT, "Mozilla/4.0 (compatible; Red5 Server)");
+				params.setParameter(HttpMethodParams.USER_AGENT, userAgent);
 				params.setParameter(HttpMethodParams.STRICT_TRANSFER_ENCODING, Boolean.TRUE);
 				
 				//try the wav version first
@@ -215,12 +217,11 @@ public class Installer {
 					//create output file
 					fos = new FileOutputStream(srcDir + '/' + applicationWarName);
 					log.debug("Writing response to {}/{}", srcDir, applicationWarName);								
-					InputStream is = method.getResponseBodyAsStream();
-					byte[] buf = new byte[512];
-					while (is.read(buf) != -1) {
+					
+					// have to receive the response as a byte array.  This has the advantage of writing to the filesystem
+					// faster and it also works on macs ;)
+					byte[] buf = method.getResponseBody();
 						fos.write(buf);
-					}
-					is.close();
 					fos.flush();
 					//
 					result = true;

@@ -211,7 +211,7 @@ public class MP4Reader implements IoConstants, ITagReader, IKeyFrameDataAnalyzer
 		//build the keyframe meta data
 		analyzeKeyFrames();
 		//add meta data
-		//firstTags.add(createFileMeta());
+		firstTags.add(createFileMeta());
 		//create / add the pre-streaming tags
 		createPreStreamingTags();
 	}
@@ -846,6 +846,7 @@ public class MP4Reader implements IoConstants, ITagReader, IKeyFrameDataAnalyzer
     	
     	if (hasVideo) {
         	//video tag #1
+    		//TODO: this data is only for backcountry bombshells - make this dynamic
         	tag = new Tag(IoConstants.TYPE_VIDEO, 0, 43, null, 0);
     		body = ByteBuffer.allocate(tag.getBodySize());
     		body.put(new byte[]{(byte) 0x17, (byte) 0, (byte) 0, (byte) 0, (byte) 0,
@@ -877,6 +878,7 @@ public class MP4Reader implements IoConstants, ITagReader, IKeyFrameDataAnalyzer
     	
     	if (hasAudio) {
     		//audio tag #1
+    		//TODO: this data is only for backcountry bombshells - make this dynamic
     		tag = new Tag(IoConstants.TYPE_AUDIO, 0, 5, null, tag.getBodySize());
     		body = ByteBuffer.allocate(tag.getBodySize());
     		body.put(new byte[]{(byte) 0xaf, (byte) 0, (byte) 0x12, (byte) 0x10, (byte) 0x06});
@@ -889,7 +891,8 @@ public class MP4Reader implements IoConstants, ITagReader, IKeyFrameDataAnalyzer
     }
     
 	/**
-	 * 
+	 * Packages media data for return to providers.
+	 *
 	 */
     public synchronized ITag readTag() {
 		log.debug("Read tag");
@@ -907,6 +910,7 @@ public class MP4Reader implements IoConstants, ITagReader, IKeyFrameDataAnalyzer
 		
 		int sampleSize = frame.getSize();
 		
+		//time routines are based on izumi code
 		double frameTs = (frame.getTime() - baseTs) * 1000.0;
 		int time = (int) Math.round(frameTs);
 		log.debug("Read tag - dst: {} base: {} time: {}", new Object[]{frameTs, baseTs, time});
@@ -970,7 +974,8 @@ public class MP4Reader implements IoConstants, ITagReader, IKeyFrameDataAnalyzer
 
     /**
      * Performs frame analysis and generates metadata for use in seeking. The
-     * method name is a little misleading since it analyzes all the frames.
+     * method name is a little misleading since it analyzes all the frames. Additionally
+     * the frames are sorted together based on time and offset.
 	 *
      * @return             Keyframe metadata
      */
@@ -1079,6 +1084,9 @@ public class MP4Reader implements IoConstants, ITagReader, IKeyFrameDataAnalyzer
 		keyframeMeta = new KeyFrameMeta();
 		keyframeMeta.duration = duration;
 		/*
+		 * TODO: keyframes are handled differently with h.264 media so we will need
+		 * some tweaking here. For one thing our timestamps are doubles instead of longs.
+		 * 
 		posTimeMap = new HashMap<Long, Long>();
 
 		keyframeMeta.positions = new long[positionList.size()];

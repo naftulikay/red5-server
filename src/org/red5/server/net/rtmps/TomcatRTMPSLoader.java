@@ -142,12 +142,12 @@ public class TomcatRTMPSLoader extends TomcatRTMPTLoader {
 			connector.setProperty(key, connectionProperties.get(key));
 		}		
 		
-		// add new Connector to set of Connectors for embedded server,
-		// associated with Engine
-		embedded.addConnector(connector);
-
 		// start server
 		try {
+    		// add new Connector to set of Connectors for embedded server,
+    		// associated with Engine
+    		embedded.addConnector(connector);
+
 			log.info("Starting RTMPS engine");
 			//embedded.start();
 			connector.start();

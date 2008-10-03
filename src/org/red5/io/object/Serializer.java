@@ -25,11 +25,14 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 
-import org.apache.commons.collections.BeanMap;
+import org.apache.commons.beanutils.BeanMap;
 import org.red5.io.amf3.ByteArray;
 import org.red5.io.amf3.IExternalizable;
 import org.red5.io.utils.ObjectMap;
+import org.red5.annotations.DontSerialize;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
@@ -43,9 +46,9 @@ import org.w3c.dom.Document;
  */
 public class Serializer {
 
-    /**
-     * Logger
-     */
+	/**
+	 * Logger
+	 */
 	protected static Logger log = LoggerFactory.getLogger(Serializer.class);
 
 	/**
@@ -55,6 +58,20 @@ public class Serializer {
 	 * @param any          Object to serialize
 	 */
 	public void serialize(Output out, Object any) {
+		serialize(out, null, any);
+	}
+
+	/**
+	 * Serializes output to a core data type object
+	 * 
+	 * @param out
+	 *            Output writer
+	 * @param field
+	 *            The field to serialize
+	 * @param any
+	 *            Object to serialize
+	 */
+	public void serialize(Output out, Field field, Object any) {
 		log.debug("serialize");
 		if (any instanceof IExternalizable) {
 			// Make sure all IExternalizable objects are serialized as objects
@@ -203,8 +220,9 @@ public class Serializer {
 	 */
 	protected void writeIterator(Output out, Iterator<Object> it) {
 		log.debug("writeIterator");
-        // Create LinkedList of collection we iterate thru and write it out later
-        LinkedList<Object> list = new LinkedList<Object>();
+		// Create LinkedList of collection we iterate thru and write it out
+		// later
+		LinkedList<Object> list = new LinkedList<Object>();
 		while (it.hasNext()) {
 			list.addLast(it.next());
 		}
@@ -293,4 +311,31 @@ public class Serializer {
 		}
 	}
 
+	/**
+	 * Checks whether the field should be serialized or not
+	 * 
+	 * @param field
+	 *            The field to be serialized
+	 * @return <code>true</code> if the field should be serialized, otherwise
+	 *         <code>false</code>
+	 */
+	public boolean serializeField(Field field) {
+		log.debug("Serialize field: {}", field);
+		// null fields must be prevented from reaching this method
+		boolean dontSerialize = field.isAnnotationPresent(DontSerialize.class);
+		if (dontSerialize) {
+			log.debug("Skipping {} because its marked with @DontSerialize",
+					field.getName());
+		}
+
+		boolean isTransient = Modifier.isTransient(field.getModifiers());
+		if (isTransient) {
+			log
+					.warn("Using \"transient\" to declare fields not to be serialized is deprecated and will be removed in Red5 0.8, use \"@DontSerialize\" instead.");
+		}
+
+		boolean isClass = "class".equals(field.getName());
+
+		return !(dontSerialize || isTransient || isClass);
+	}
 }

@@ -22,8 +22,6 @@ package org.red5.server.so;
 import static org.red5.server.api.so.ISharedObject.TYPE;
 
 import java.io.IOException;
-import java.util.Collections;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -359,6 +357,9 @@ public class SharedObject extends AttributeStore implements ISharedObjectStatist
 		}
 
 		sendUpdates();
+		
+		//APPSERVER-291
+		modified = false;
 	}
 
     /**
@@ -648,7 +649,7 @@ public class SharedObject extends AttributeStore implements ISharedObjectStatist
 		Deserializer deserializer = new Deserializer();
 		name = deserializer.deserialize(input, String.class);
 		persistentSO = persistent = true;
-		super.setAttributes(deserializer.deserialize(input, Map.class));
+		super.setAttributes(deserializer.<Map>deserialize(input, Map.class));
 		ownerMessage.setName(name);
 		ownerMessage.setIsPersistent(true);
 	}

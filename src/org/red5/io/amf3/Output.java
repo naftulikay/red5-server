@@ -21,20 +21,16 @@ package org.red5.io.amf3;
 
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
-import java.lang.reflect.Modifier;
 import java.util.Collection;
 import java.util.Date;
-import java.util.HashMap;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.commons.collections.BeanMap;
+import org.apache.commons.beanutils.BeanMap;
 import org.apache.mina.common.ByteBuffer;
 import org.red5.annotations.Anonymous;
-import org.red5.annotations.DontSerialize;
 import org.red5.compatibility.flex.messaging.io.ObjectProxy;
 import org.red5.io.amf.AMF;
 import org.red5.io.object.RecordSet;
@@ -395,23 +391,13 @@ public class Output extends org.red5.io.amf.Output implements org.red5.io.object
 
     	// Store key/value pairs
     	amf3_mode += 1;
-		// Get public field values
-		Map<String, Object> values = new HashMap<String, Object>();
         // Iterate thru fields of an object to build "name-value" map from it
         for (Field field : objectClass.getFields()) {
-			if (field.isAnnotationPresent(DontSerialize.class)) {
-				if (log.isDebugEnabled()) {
-					log.debug("Skipping " + field.getName() + " because its marked with @DontSerialize");
-				}
-				continue;
-			} else {
-				int modifiers = field.getModifiers();
-				if (Modifier.isTransient(modifiers)) {
-					log.warn("Using \"transient\" to declare fields not to be serialized is " +
-						"deprecated and will be removed in Red5 0.8, use \"@DontSerialize\" instead.");
-					continue;
-				}
-			}
+        	log.debug("Field: {} class: {}", field, objectClass);
+            // Check if the Field corresponding to the getter/setter pair is transient
+            if (field == null || !serializer.serializeField(field)) {
+            	continue;
+            }
 
 			Object value;
 			try {
@@ -421,19 +407,11 @@ public class Output extends org.red5.io.amf.Output implements org.red5.io.object
                 // Swallow on private and protected properties access exception
                 continue;
 			}
-            // Put field to the map of "name-value" pairs
-            values.put(field.getName(), value);
-		}
 
-		// Output public values
-		Iterator<Map.Entry<String, Object>> it = values.entrySet().iterator();
-        // Iterate thru map and write out properties with separators
-        while (it.hasNext()) {
-			Map.Entry<String, Object> entry = it.next();
             // Write out prop name
-			putString(entry.getKey());
+			putString(field.getName());
             // Write out
-            serializer.serialize(this, entry.getValue());
+            serializer.serialize(this, field, value);
 		}
     	amf3_mode -= 1;
         // Write out end of object marker
@@ -441,7 +419,8 @@ public class Output extends org.red5.io.amf.Output implements org.red5.io.object
 	}
 
     /** {@inheritDoc} */
-    public void writeObject(Object object, Serializer serializer) {
+    @SuppressWarnings("unchecked")
+	public void writeObject(Object object, Serializer serializer) {
 		writeAMF3();
 		buf.put(AMF3.TYPE_OBJECT);
     	if (hasReference(object)) {
@@ -480,7 +459,7 @@ public class Output extends org.red5.io.amf.Output implements org.red5.io.object
         // Create new map out of bean properties
         BeanMap beanMap = new BeanMap(object);
         // Set of bean attributes
-        Set<BeanMap.Entry<?, ?>> set = beanMap.entrySet();
+        Set<Map.Entry<?, ?>> set = beanMap.entrySet();
 		if ((set.size() == 0) || (set.size() == 1 && beanMap.containsKey("class"))) {
 			// BeanMap is empty or can only access "class" attribute, skip it
 			writeArbitraryObject(object, serializer);
@@ -498,17 +477,19 @@ public class Output extends org.red5.io.amf.Output implements org.red5.io.object
 
     	// Store key/value pairs
     	amf3_mode += 1;
-    	for (BeanMap.Entry<?, ?> entry: set) {
-			String keyName = entry.getKey().toString();
-			if ("class".equals(keyName)) {
-				continue;
-			}
+    	for (Map.Entry<?, ?> entry: set) {
+			String fieldName = entry.getKey().toString();
+            log.debug("Field name: {} class: {}", fieldName, objectClass);
+
+			Field field = getField(objectClass, fieldName);
 
 			// Check if the Field corresponding to the getter/setter pair is transient
-            if (dontSerializeField(objectClass, keyName)) continue;
+            if (field == null || !serializer.serializeField(field)) {
+            	continue;
+            }
 
-			putString(keyName);
-			serializer.serialize(this, entry.getValue());
+			putString(fieldName);
+			serializer.serialize(this, field, entry.getValue());
 		}
     	amf3_mode -= 1;
 

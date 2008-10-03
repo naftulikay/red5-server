@@ -441,11 +441,13 @@ public final class PlayEngine implements IFilter, IPushableConsumer,
 						if (msg == null) {
 							break;
 						}
-						if (msg instanceof RTMPMessage) {
-							body = ((RTMPMessage) msg).getBody();
+						if (!(msg instanceof RTMPMessage)) {
+							continue;
 						}
+						body = ((RTMPMessage) msg).getBody();
 					}
 				}
+
 				if (body != null) {
 					// Adjust timestamp when playing lists
 					body.setTimestamp(body.getTimestamp() + timestampOffset);
@@ -942,7 +944,7 @@ public final class PlayEngine implements IFilter, IPushableConsumer,
 		Status reset = new Status(StatusCodes.NS_PLAY_RESET);
 		reset.setClientid(streamId);
 		reset.setDetails(item.getName());
-		reset.setDesciption("Playing and resetting " + item.getName() + '.');
+		reset.setDesciption(String.format("Playing and resetting %s.", item.getName()));
 
 		StatusMessage resetMsg = new StatusMessage();
 		resetMsg.setBody(reset);
@@ -957,7 +959,7 @@ public final class PlayEngine implements IFilter, IPushableConsumer,
 		Status start = new Status(StatusCodes.NS_PLAY_START);
 		start.setClientid(streamId);
 		start.setDetails(item.getName());
-		start.setDesciption("Started playing " + item.getName() + '.');
+		start.setDesciption(String.format("Started playing %s.", item.getName()));
 
 		StatusMessage startMsg = new StatusMessage();
 		startMsg.setBody(start);
@@ -971,7 +973,7 @@ public final class PlayEngine implements IFilter, IPushableConsumer,
 	private void sendStopStatus(IPlayItem item) {
 		Status stop = new Status(StatusCodes.NS_PLAY_STOP);
 		stop.setClientid(streamId);
-		stop.setDesciption("Stopped playing " + item.getName() + ".");
+		stop.setDesciption(String.format("Stopped playing %s.", item.getName()));
 		stop.setDetails(item.getName());
 
 		StatusMessage stopMsg = new StatusMessage();
@@ -1032,8 +1034,7 @@ public final class PlayEngine implements IFilter, IPushableConsumer,
 		Status seek = new Status(StatusCodes.NS_SEEK_NOTIFY);
 		seek.setClientid(streamId);
 		seek.setDetails(item.getName());
-		seek.setDesciption("Seeking " + position + " (stream ID: "
-				+ streamId + ").");
+		seek.setDesciption(String.format("Seeking %d (stream ID: %d).", position, streamId));
 
 		StatusMessage seekMsg = new StatusMessage();
 		seekMsg.setBody(seek);
@@ -1238,9 +1239,7 @@ public final class PlayEngine implements IFilter, IPushableConsumer,
 			RTMPMessage rtmpMessage = (RTMPMessage) message;
 			IRTMPEvent body = rtmpMessage.getBody();
 			if (!(body instanceof IStreamData)) {
-				throw new RuntimeException("expected IStreamData but got "
-						+ body.getClass() + " (type " + body.getDataType()
-						+ ")");
+				throw new RuntimeException(String.format("Expected IStreamData but got %s (type %s)", body.getClass(), body.getDataType()));
 			}
 
 			int size = ((IStreamData) body).getData().limit();
@@ -1255,7 +1254,8 @@ public final class PlayEngine implements IFilter, IPushableConsumer,
 					}
 				}
 
-				if (videoCodec == null || videoCodec.canDropFrames()) {
+				//dont try to drop frames if video codec is null - related to SN-77
+				if (videoCodec != null && videoCodec.canDropFrames()) {
 					if (playlistSubscriberStream.state == State.PAUSED) {
 						// The subscriber paused the video
 						videoFrameDropper.dropPacket(rtmpMessage);
@@ -1278,7 +1278,6 @@ public final class PlayEngine implements IFilter, IPushableConsumer,
 						return;
 					}
 
-					//Long[] writeDelta = getWriteDelta();
 					if (pendingVideos > 1) {
 						// We drop because the client has insufficient bandwidth.
 						long now = System.currentTimeMillis();

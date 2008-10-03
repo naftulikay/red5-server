@@ -20,6 +20,7 @@ package org.red5.io.utils;
  */
 
 import java.io.IOException;
+import java.io.Reader;
 import java.io.StringReader;
 import java.io.StringWriter;
 
@@ -32,6 +33,7 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 
+import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
@@ -56,14 +58,24 @@ public class XMLUtils {
      * @throws IOException     I/O exception
      */
     public static Document stringToDoc(String str) throws IOException {
-		try {
-			DocumentBuilder db = DocumentBuilderFactory.newInstance()
-					.newDocumentBuilder();
-			return db.parse(new InputSource(new StringReader(str)));
-		} catch (Exception ex) {
-			throw new IOException("Error converting from string to doc "
-					+ ex.getMessage());
-		}
+    	if (StringUtils.isNotEmpty(str)) {
+    		try {    			
+    			Reader reader = new StringReader(str);
+    			
+    			DocumentBuilder db = DocumentBuilderFactory.newInstance()
+    					.newDocumentBuilder();
+    			Document doc = db.parse(new InputSource(reader));
+    			    			
+    			reader.close();
+    	        
+    			return doc;
+    		} catch (Exception ex) {
+    			log.debug("String: {}", str);
+    			throw new IOException(String.format("Error converting from string to doc %s", ex.getMessage()));
+    		}
+    	} else {
+    		throw new IOException("Error - could not convert empty string to doc");
+    	}
 	}
 
     /**
@@ -102,8 +114,7 @@ public class XMLUtils {
 			trans.transform(new DOMSource(domDoc), result);
 			return sw.toString();
 		} catch (Exception ex) {
-			throw new IOException("Error converting from doc to string "
-					+ ex.getMessage());
+			throw new IOException(String.format("Error converting from doc to string %s", ex.getMessage()));
 		}
 	}
 

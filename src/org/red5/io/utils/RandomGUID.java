@@ -147,7 +147,7 @@ public class RandomGUID extends Object {
      */
     private void getRandomGUID(boolean secure) {
         MessageDigest md5 = null;
-        StringBuffer sbValueBeforeMD5 = new StringBuffer();
+        StringBuilder sbValueBeforeMD5 = new StringBuilder();
 
         try {
             md5 = MessageDigest.getInstance("MD5");
@@ -181,7 +181,7 @@ public class RandomGUID extends Object {
             md5.update(valueBeforeMD5.getBytes());
 
             byte[] array = md5.digest();
-            StringBuffer sb = new StringBuffer();
+            StringBuilder sb = new StringBuilder();
             for (int j = 0; j < array.length; ++j) {
                 int b = array[j] & 0xFF;
                 if (b < 0x10) sb.append('0');
@@ -203,18 +203,7 @@ public class RandomGUID extends Object {
      */
     public String toString() {
         String raw = valueAfterMD5.toUpperCase();
-        StringBuffer sb = new StringBuffer();
-        sb.append(raw.substring(0, 8));
-        sb.append("-");
-        sb.append(raw.substring(8, 12));
-        sb.append("-");
-        sb.append(raw.substring(12, 16));
-        sb.append("-");
-        sb.append(raw.substring(16, 20));
-        sb.append("-");
-        sb.append(raw.substring(20));
-
-        return sb.toString();
+        return String.format("%s-%s-%s-%s-%s", new Object[]{raw.substring(0, 8), raw.substring(8, 12), raw.substring(12, 16), raw.substring(16, 20), raw.substring(20)});
     }
 
     /*

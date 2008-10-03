@@ -144,10 +144,10 @@ public class RTMPProtocolDecoder implements Constants, SimpleProtocolDecoder,
 				log.error("Handshake validation failed but no current connection!?");
 			}
 			return null;
-		// Exception handling is patched by Victor - we catch any exception in the decoding
-		// Then clear the buffer to eliminate memory leaks when we can't parse protocol
-			// Also close Connection because we can't parse data from it
 		} catch (Exception ex) {
+			// Exception handling is patched by Victor - we catch any exception in the decoding
+			// Then clear the buffer to eliminate memory leaks when we can't parse protocol
+			// Also close Connection because we can't parse data from it
 			log.error("Error decoding buffer", ex);
 			buffer.clear();
 			IConnection conn = Red5.getConnectionLocal();
@@ -822,8 +822,7 @@ public class RTMPProtocolDecoder implements Constants, SimpleProtocolDecoder,
 		log.debug("Action {}", action);
 
 		if (header == null || header.getStreamId() == 0) {
-			int invokeId = deserializer.deserialize(input, Number.class)
-					.intValue();
+			int invokeId = deserializer.<Number>deserialize(input, Number.class).intValue();
 			notify.setInvokeId(invokeId);
 		}
 
@@ -943,7 +942,7 @@ public class RTMPProtocolDecoder implements Constants, SimpleProtocolDecoder,
 		
 		Input input = new org.red5.io.amf.Input(in);
 		String action = deserializer.deserialize(input, String.class);
-		int invokeId = deserializer.deserialize(input, Number.class).intValue();
+		int invokeId = deserializer.<Number>deserialize(input, Number.class).intValue();
 		FlexMessage msg = new FlexMessage();
 		msg.setInvokeId(invokeId);
 		Object[] params = new Object[] {};

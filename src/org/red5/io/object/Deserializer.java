@@ -22,6 +22,8 @@ package org.red5.io.object;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.lang.reflect.Type;
+
 /**
  * The Deserializer class reads data input and handles the data 
  * according to the core data types 
@@ -41,7 +43,8 @@ public class Deserializer {
 	 * @param target
      * @return Object
 	 */
-	public <T> T deserialize(Input in, Class<T> target) {
+	@SuppressWarnings("unchecked")
+	public <T> T deserialize(Input in, Type target) {
 
 		byte type = in.readDataType();
 		log.debug("Type: {}", type);
@@ -51,46 +54,46 @@ public class Deserializer {
 			log.debug("Type (skip): {}", type);
 		}
 
-		log.debug("Datatype: " + DataTypes.toStringValue(type));
+		log.debug("Datatype: {}", DataTypes.toStringValue(type));
 
 		Object result;
 
 		switch (type) {
 			case DataTypes.CORE_NULL:
-				result = in.readNull();
+				result = in.readNull(target);
 				break;
 			case DataTypes.CORE_BOOLEAN:
-				result = in.readBoolean();
+				result = in.readBoolean(target);
 				break;
 			case DataTypes.CORE_NUMBER:
-				result = in.readNumber();
+				result = in.readNumber(target);
 				break;
 			case DataTypes.CORE_STRING:
-				result = in.readString();
+				result = in.readString(target);
 				break;
 			case DataTypes.CORE_DATE:
-				result = in.readDate();
+				result = in.readDate(target);
 				break;
 			case DataTypes.CORE_ARRAY:
-				result = in.readArray(this);
+				result = in.readArray(this, target);
 				break;
 			case DataTypes.CORE_MAP:
-				result = in.readMap(this);
+				result = in.readMap(this, target);
 				break;
 			case DataTypes.CORE_XML:
-				result = in.readXML();
+				result = in.readXML(target);
 				break;
 			case DataTypes.CORE_OBJECT:
-				result = in.readObject(this);
+				result = in.readObject(this, target);
 				break;
 			case DataTypes.CORE_BYTEARRAY:
-				result = in.readByteArray();
+				result = in.readByteArray(target);
 				break;
 			case DataTypes.OPT_REFERENCE:
-				result = in.readReference();
+				result = in.readReference(target);
 				break;
 			default:
-				result = in.readCustom();
+				result = in.readCustom(target);
 				break;
 		}
 
@@ -104,7 +107,7 @@ public class Deserializer {
      * @param target
      * @return
      */
-	protected Object postProcessExtension(Object result, Class target) {
+	protected Object postProcessExtension(Object result, Type target) {
 		// does nothing at the moment, but will later!
 		return result;
 	}

@@ -358,9 +358,9 @@ public class FileUtil {
 		} catch (IOException e) {
 			log.debug("Error unzipping", e);
 			e.printStackTrace();
-					}
-				}				
-
+		}
+	}
+	
 	public static void copy(InputStream in, OutputStream out) throws IOException {
 		synchronized(in) {
 			synchronized(out) {

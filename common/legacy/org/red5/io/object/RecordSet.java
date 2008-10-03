@@ -26,6 +26,9 @@ import java.util.List;
 import java.util.Map;
 
 /**
+ * TODO this class is not functional at the moment as RemotingClient is
+ * removed to make it compiled.
+ * 
  * Read only RecordSet object that might be received through remoting calls. There are 3 types of data fetching:
  *
  * <ul>

@@ -577,6 +577,10 @@ public class Input extends BaseInput implements org.red5.io.object.Input {
 	public void reset() {
 		reset(ReferenceMode.MODE_RTMP);
 	}
+	
+	public void wrapBuffer(BufferEx buf) {
+		this.buf = buf;
+	}
 
     protected Class getPropertyType(Object instance, String propertyName) {
         try {

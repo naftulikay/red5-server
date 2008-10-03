@@ -41,12 +41,11 @@ public interface AMFInput {
 	 * occurs, otherwise all bytes in the buffer will be consumed.
 	 * 
 	 * @param buf Buffer to read AMF objects from.
-	 * @param objectClasses An array of class types to cast objects to.
 	 * @param classLoader The class loader to load the customized classes.
 	 * Current thread's loader is used when it is <tt>null</tt>.
 	 * @return An array of mapped Java objects from AMF objects.
 	 */
-	Object[] readAll(BufferEx buf, Class<?>[] objectClasses, ClassLoader classLoader)
+	Object[] readAll(BufferEx buf, ClassLoader classLoader)
 	throws AMFInputOutputException, ClassCastException;
 	
 	/**
@@ -69,10 +68,9 @@ public interface AMFInput {
 	 * the default class loader.
 	 * 
 	 * @param buf Buffer to read AMF objects from.
-	 * @param objectClasses An array of class types to cast objects to.
 	 * @return An array of mapped Java objects from AMF objects.
 	 */
-	Object[] readAll(BufferEx buf, Class<?>[] objectClasses)
+	Object[] readAll(BufferEx buf)
 	throws AMFInputOutputException, ClassCastException;
 	
 	/**

@@ -81,7 +81,7 @@ public class BufferExUtils {
 		int srcRemaining = src.remaining();
 		if (srcRemaining >= length) {
 			int originLimit = src.limit();
-			src.limit(src.position() + srcRemaining);
+			src.limit(src.position() + length);
 			dest.put(src);
 			src.limit(originLimit);
 		} else {

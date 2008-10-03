@@ -61,4 +61,10 @@ public class RTMPPacket {
 	public void setStreamId(int streamId) {
 		this.streamId = streamId;
 	}
+	
+	public String toString() {
+		return String.format(
+				"Type: %1$d, Size: %2$d, Channel %3$d, Timestamp %4$d, StreamId %5$d",
+				type, size, channel, timestamp, streamId);
+	}
 }

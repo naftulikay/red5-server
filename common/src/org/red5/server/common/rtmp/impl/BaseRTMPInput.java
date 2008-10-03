@@ -22,7 +22,7 @@ import org.red5.server.common.rtmp.packet.RTMPPacket;
  */
 public abstract class BaseRTMPInput
 implements RTMPInput, RTMPConstants {
-	private static final int INTERNAL_BUF_CAPACITY = 1024;
+	private static final int INTERNAL_BUF_CAPACITY = 2048;
 	protected ClassLoader defaultClassLoader;
 	protected RTMPCodecState codecState;
 	protected boolean isServerMode;
@@ -41,6 +41,7 @@ implements RTMPInput, RTMPConstants {
 		codecState = RTMPCodecState.HANDSHAKE_1;
 		this.isServerMode = isServerMode;
 		this.internalBuf = BufferEx.allocate(INTERNAL_BUF_CAPACITY);
+		this.internalBuf.setAutoExpand(true);
 	}
 
 	@Override
@@ -91,7 +92,7 @@ implements RTMPInput, RTMPConstants {
 				packets.add(packet);
 				packet = read(buf, classLoader);
 			}
-			return (RTMPPacket[]) packets.toArray();
+			return (RTMPPacket[]) packets.toArray(new RTMPPacket[]{});
 		} catch (RTMPCodecException e) {
 			buf.position(originPos);
 			throw e;
@@ -145,6 +146,7 @@ implements RTMPInput, RTMPConstants {
 			buf.get(handshakeBuf, internalBufLength, handshakeSize-internalBufLength);
 			handshake = new RTMPHandshake();
 			handshake.setHandshakeData(BufferEx.wrap(handshakeBuf));
+			handshake.setSize(handshakeSize);
 			codecState = nextState;
 			return handshake;
 		} else {
@@ -230,7 +232,7 @@ implements RTMPInput, RTMPConstants {
 				} else if ((channelByte0 & 0x3f) == 1) {
 					decodeState.channelIdSize = 3;
 				}
-				decodeState.headerType = (channelByte0 & 0x3) >> 6;
+				decodeState.headerType = (channelByte0 & 0x0c0) >> 6;
 				int headerSize = decodeState.channelIdSize +
 					SUB_HEADER_SIZE[decodeState.headerType];
 				decodeState.bytesNeeded = headerSize - 1;
@@ -256,11 +258,13 @@ implements RTMPInput, RTMPConstants {
 
 				RTMPHeader lastHeader = lastHeaderMap.get(decodeState.channelId);
 				RTMPPacketObject decodingPacket = decodingPacketMap.get(decodeState.channelId);
-				if (decodeState.headerType != HEADER_STANDARD && lastHeader == null) {
-					throw new RTMPCodecException("Last header not found parsing headerType " + decodeState.headerType);
-				}
 				if (decodeState.headerType != HEADER_CONTINUE && decodingPacket != null) {
 					throw new RTMPCodecException("Got non-continue header type with existing decoding packet");
+				}
+				if (decodeState.headerType != HEADER_STANDARD &&
+						!(decodingPacket != null && decodeState.headerType == HEADER_CONTINUE) &&
+						lastHeader == null) {
+					throw new RTMPCodecException("Last header not found parsing headerType " + decodeState.headerType);
 				}
 				if (decodingPacket == null) {
 					long timestamp;
@@ -311,9 +315,8 @@ implements RTMPInput, RTMPConstants {
 					decodingPacket = new RTMPPacketObject(currentHeader);
 					decodingPacketMap.put(decodeState.channelId, decodingPacket);
 				}
-				decodeState.bytesNeeded =
-					(decodingPacket.header.getSize() - decodingPacket.body.position()) %
-					chunkSize;
+				int bodyBytesRemaining = decodingPacket.header.getSize() - decodingPacket.body.position();
+				decodeState.bytesNeeded = bodyBytesRemaining > chunkSize ? chunkSize : bodyBytesRemaining;
 				break;
 			case RTMPDecodeState.DECODE_STATE_NEED_BODY:
 				continueDecoding = false;

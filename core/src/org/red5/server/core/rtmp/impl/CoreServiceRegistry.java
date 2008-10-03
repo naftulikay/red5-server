@@ -16,13 +16,7 @@ public class CoreServiceRegistry implements ServiceRegistry {
 		// TODO Auto-generated method stub
 		return null;
 	}
-
-	@Override
-	public Object getService(String serviceName, String methodName) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
+	
 	@Override
 	public ServiceRegistryKey registerService(String serviceName,
 			Object serviceObject) {

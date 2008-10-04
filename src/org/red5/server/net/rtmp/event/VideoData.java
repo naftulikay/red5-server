@@ -54,7 +54,7 @@ public class VideoData extends BaseEvent implements IoConstants, IStreamData, IS
     /**
      * Frame type, unknown by default
      */
-    private FrameType frameType = FrameType.UNKNOWN;
+    protected FrameType frameType = FrameType.UNKNOWN;
 
 	/** Constructs a new VideoData. */
     public VideoData() {

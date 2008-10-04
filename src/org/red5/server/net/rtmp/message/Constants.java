@@ -104,7 +104,7 @@ public interface Constants {
      * Invoke operation (remoting call but also used for streaming) marker
      */
     public static final byte TYPE_INVOKE = 0x14;
-
+    
     /**
      * New header marker
      */
@@ -227,5 +227,8 @@ public interface Constants {
 	public static final String ACTION_RECEIVE_VIDEO = "receiveVideo";
 
 	public static final String ACTION_RECEIVE_AUDIO = "receiveAudio";
+
+	public static final byte TYPE_AUDIO_DATA_CONFIG = 0x32;
+	public static final byte TYPE_VIDEO_DATA_CONFIG = 0x36;
 
 }

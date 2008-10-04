@@ -48,6 +48,7 @@ import org.red5.io.mp4.MP4Atom;
 import org.red5.io.mp4.MP4DataStream;
 import org.red5.io.mp4.MP4Frame;
 import org.red5.io.object.Serializer;
+import org.red5.server.net.rtmp.message.Constants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -847,7 +848,7 @@ public class MP4Reader implements IoConstants, ITagReader, IKeyFrameDataAnalyzer
     	if (hasVideo) {
         	//video tag #1
     		//TODO: this data is only for backcountry bombshells - make this dynamic
-        	tag = new Tag(IoConstants.TYPE_VIDEO, 0, 43, null, 0);
+        	tag = new Tag(Constants.TYPE_VIDEO_DATA_CONFIG, 0, 43, null, 0);
     		body = ByteBuffer.allocate(tag.getBodySize());
     		body.put(new byte[]{(byte) 0x17, (byte) 0, (byte) 0, (byte) 0, (byte) 0,
     		(byte) 0x01, (byte) 0x4d, (byte) 0x40, (byte) 0x33, (byte) 0xff, (byte) 0xff, (byte) 0,
@@ -879,7 +880,7 @@ public class MP4Reader implements IoConstants, ITagReader, IKeyFrameDataAnalyzer
     	if (hasAudio) {
     		//audio tag #1
     		//TODO: this data is only for backcountry bombshells - make this dynamic
-    		tag = new Tag(IoConstants.TYPE_AUDIO, 0, 5, null, tag.getBodySize());
+    		tag = new Tag(Constants.TYPE_AUDIO_DATA_CONFIG, 0, 5, null, tag.getBodySize());
     		body = ByteBuffer.allocate(tag.getBodySize());
     		body.put(new byte[]{(byte) 0xaf, (byte) 0, (byte) 0x12, (byte) 0x10, (byte) 0x06});
     		body.flip();
@@ -961,6 +962,14 @@ public class MP4Reader implements IoConstants, ITagReader, IKeyFrameDataAnalyzer
 		//create the tag
 		ITag tag = new Tag(type, time, payload.limit(), payload, prevFrameSize);
 		log.debug("Read tag - type: {} body size: {}", (type == TYPE_AUDIO ? "Audio" : "Video"), tag.getBodySize());
+		
+		//the first audio and video packets are special
+		if (audioCount == 1 && type == TYPE_AUDIO) {
+			tag.setDataType(Constants.TYPE_AUDIO_DATA_CONFIG);
+		}
+		if (videoCount == 1 && type == TYPE_VIDEO) {
+			tag.setDataType(Constants.TYPE_VIDEO_DATA_CONFIG);
+		}
 		
 		//increment the sample number
 		currentSample++;			

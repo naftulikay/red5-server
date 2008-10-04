@@ -27,7 +27,9 @@ import org.red5.server.api.stream.IStreamPacket;
 import org.red5.server.stream.IStreamData;
 
 public class AudioData extends BaseEvent implements IStreamData, IStreamPacket {
+	
 	private static final long serialVersionUID = -4102940670913999407L;
+	
 	protected ByteBuffer data;
 
 	/** Constructs a new AudioData. */

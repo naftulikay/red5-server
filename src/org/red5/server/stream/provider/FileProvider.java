@@ -40,11 +40,13 @@ import org.red5.server.messaging.IPipeConnectionListener;
 import org.red5.server.messaging.IPullableProvider;
 import org.red5.server.messaging.OOBControlMessage;
 import org.red5.server.messaging.PipeConnectionEvent;
+import org.red5.server.net.rtmp.event.AudioConfigData;
 import org.red5.server.net.rtmp.event.AudioData;
 import org.red5.server.net.rtmp.event.IRTMPEvent;
 import org.red5.server.net.rtmp.event.Invoke;
 import org.red5.server.net.rtmp.event.Notify;
 import org.red5.server.net.rtmp.event.Unknown;
+import org.red5.server.net.rtmp.event.VideoConfigData;
 import org.red5.server.net.rtmp.event.VideoData;
 import org.red5.server.net.rtmp.message.Constants;
 import org.red5.server.stream.ISeekableProvider;
@@ -146,6 +148,16 @@ public class FileProvider implements IPassive, ISeekableProvider,
 			case Constants.TYPE_NOTIFY:
 				msg = new Notify(tag.getBody());
 				break;
+			case Constants.TYPE_AUDIO_DATA_CONFIG:
+				//reset tag type
+				tag.setDataType(Constants.TYPE_AUDIO_DATA);				
+				msg = new AudioConfigData(tag.getBody());
+				break;
+			case Constants.TYPE_VIDEO_DATA_CONFIG:
+				//reset tag type
+				tag.setDataType(Constants.TYPE_VIDEO_DATA);
+				msg = new VideoConfigData(tag.getBody());
+				break;				
 			default:
 				log.warn("Unexpected type? {}", tag.getDataType());
 				msg = new Unknown(tag.getDataType(), tag.getBody());

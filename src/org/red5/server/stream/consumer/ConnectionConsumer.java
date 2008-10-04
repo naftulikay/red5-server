@@ -32,6 +32,7 @@ import org.red5.server.messaging.OOBControlMessage;
 import org.red5.server.messaging.PipeConnectionEvent;
 import org.red5.server.net.rtmp.Channel;
 import org.red5.server.net.rtmp.RTMPConnection;
+import org.red5.server.net.rtmp.event.AudioConfigData;
 import org.red5.server.net.rtmp.event.AudioData;
 import org.red5.server.net.rtmp.event.BytesRead;
 import org.red5.server.net.rtmp.event.ChunkSize;
@@ -39,6 +40,7 @@ import org.red5.server.net.rtmp.event.FlexStreamSend;
 import org.red5.server.net.rtmp.event.IRTMPEvent;
 import org.red5.server.net.rtmp.event.Notify;
 import org.red5.server.net.rtmp.event.Ping;
+import org.red5.server.net.rtmp.event.VideoConfigData;
 import org.red5.server.net.rtmp.event.VideoData;
 import org.red5.server.net.rtmp.message.Constants;
 import org.red5.server.net.rtmp.message.Header;
@@ -54,48 +56,62 @@ import org.slf4j.LoggerFactory;
  */
 public class ConnectionConsumer implements IPushableConsumer,
 		IPipeConnectionListener {
-    /**
-     * Logger
-     */
-    private static final Logger log = LoggerFactory.getLogger(ConnectionConsumer.class);
-    /**
-     * Connection consumer class name
-     */
+	/**
+	 * Logger
+	 */
+	private static final Logger log = LoggerFactory
+			.getLogger(ConnectionConsumer.class);
+
+	/**
+	 * Connection consumer class name
+	 */
 	public static final String KEY = ConnectionConsumer.class.getName();
-    /**
-     * Connection object
-     */
+
+	/**
+	 * Connection object
+	 */
 	private RTMPConnection conn;
-    /**
-     * Video channel
-     */
+
+	/**
+	 * Video channel
+	 */
 	private Channel video;
-    /**
-     * Audio channel
-     */
+
+	/**
+	 * Audio channel
+	 */
 	private Channel audio;
-    /**
-     * Data channel
-     */
+
+	/**
+	 * Data channel
+	 */
 	private Channel data;
-    /**
-     * Chunk size. Packets are sent chunk-by-chunk.
-     */
-	private int chunkSize = -1;
-    /**
-     * Stream tracker
-     */
+
+	/**
+	 * Chunk size. Packets are sent chunk-by-chunk.
+	 */
+	private int chunkSize = 4096;
+
+	/**
+	 * Stream tracker
+	 */
 	private StreamTracker streamTracker;
 
-    /**
-     * Create rtmp connection consumer for given connection and channels
-     * @param conn                 RTMP connection
-     * @param videoChannel         Video channel
-     * @param audioChannel         Audio channel
-     * @param dataChannel          Data channel
-     */
-    public ConnectionConsumer(RTMPConnection conn, int videoChannel,
-    		int audioChannel, int dataChannel) {
+	/**
+	 * Create rtmp connection consumer for given connection and channels
+	 * 
+	 * @param conn
+	 *            RTMP connection
+	 * @param videoChannel
+	 *            Video channel
+	 * @param audioChannel
+	 *            Audio channel
+	 * @param dataChannel
+	 *            Data channel
+	 */
+	public ConnectionConsumer(RTMPConnection conn, int videoChannel,
+			int audioChannel, int dataChannel) {
+		log.debug("Channel ids - video: {} audio: {} data: {}", new Object[]{videoChannel, audioChannel, dataChannel});
 		this.conn = conn;
 		this.video = conn.getChannel(videoChannel);
 		this.audio = conn.getChannel(audioChannel);
@@ -104,8 +120,8 @@ public class ConnectionConsumer implements IPushableConsumer,
 	}
 
 	/** {@inheritDoc} */
-    public void pushMessage(IPipe pipe, IMessage message) {
-    	log.debug("pushMessage");
+	public void pushMessage(IPipe pipe, IMessage message) {
+		log.debug("pushMessage - type: {}", message.getMessageType());
 		if (message instanceof ResetMessage) {
 			streamTracker.reset();
 		} else if (message instanceof StatusMessage) {
@@ -117,13 +133,50 @@ public class ConnectionConsumer implements IPushableConsumer,
 			Header header = new Header();
 			int timestamp = streamTracker.add(msg);
 			if (timestamp < 0) {
-				log.warn("Skipping message with negative timestamp.");
+				log.warn("Skipping message with negative timestamp: {}",
+						timestamp);
 				return;
 			}
 			header.setTimerRelative(streamTracker.isRelative());
 			header.setTimer(timestamp);
 
+			log.debug("RTMP event data type: {}", msg.getDataType());
+			//switch is sorted to handle most common to least common
 			switch (msg.getDataType()) {
+				case Constants.TYPE_AUDIO_DATA:
+					AudioData audioData = new AudioData(((AudioData) msg)
+							.getData().asReadOnlyBuffer());
+					audioData.setHeader(header);
+					audioData.setTimestamp(header.getTimer());
+					if (msg instanceof AudioConfigData) {
+						log.debug("Audio data config");
+						data.write(audioData);
+						//conn.getChannel((byte) 5).write(audioData);
+					} else {
+						audio.write(audioData);
+					}
+					break;
+				case Constants.TYPE_VIDEO_DATA:
+					VideoData videoData = new VideoData(((VideoData) msg)
+							.getData().asReadOnlyBuffer());
+					videoData.setHeader(header);
+					videoData.setTimestamp(header.getTimer());
+					if (msg instanceof VideoConfigData) {
+						log.debug("Video data config");
+						data.write(videoData);
+						//conn.getChannel((byte) 5).write(videoData);
+					} else {
+						video.write(videoData);
+					}
+					break;
+				case Constants.TYPE_PING:
+					Ping ping = new Ping(((Ping) msg));
+					header.setTimerRelative(false);
+					header.setTimer(0);
+					ping.setHeader(header);
+					ping.setTimestamp(header.getTimer());
+					conn.ping(ping);
+					break;
 				case Constants.TYPE_STREAM_METADATA:
 					Notify notify = new Notify(((Notify) msg).getData()
 							.asReadOnlyBuffer());
@@ -133,33 +186,11 @@ public class ConnectionConsumer implements IPushableConsumer,
 					break;
 				case Constants.TYPE_FLEX_STREAM_SEND:
 					// TODO: okay to send this also to AMF0 clients?
-					FlexStreamSend send = new FlexStreamSend(((Notify) msg).getData()
-							.asReadOnlyBuffer());
+					FlexStreamSend send = new FlexStreamSend(((Notify) msg)
+							.getData().asReadOnlyBuffer());
 					send.setHeader(header);
 					send.setTimestamp(header.getTimer());
 					data.write(send);
-					break;
-				case Constants.TYPE_VIDEO_DATA:
-					VideoData videoData = new VideoData(((VideoData) msg)
-							.getData().asReadOnlyBuffer());
-					videoData.setHeader(header);
-					videoData.setTimestamp(header.getTimer());
-					video.write(videoData);
-					break;
-				case Constants.TYPE_AUDIO_DATA:
-					AudioData audioData = new AudioData(((AudioData) msg)
-							.getData().asReadOnlyBuffer());
-					audioData.setHeader(header);
-					audioData.setTimestamp(header.getTimer());
-					audio.write(audioData);
-					break;
-				case Constants.TYPE_PING:
-					Ping ping = new Ping(((Ping) msg));
-					header.setTimerRelative(false);
-					header.setTimer(0);
-					ping.setHeader(header);
-					ping.setTimestamp(header.getTimer());
-					conn.ping(ping);
 					break;
 				case Constants.TYPE_BYTES_READ:
 					BytesRead bytesRead = new BytesRead(((BytesRead) msg)
@@ -172,27 +203,25 @@ public class ConnectionConsumer implements IPushableConsumer,
 					break;
 				default:
 					data.write(msg);
-					break;
 			}
 		}
 	}
 
 	/** {@inheritDoc} */
-    public void onPipeConnectionEvent(PipeConnectionEvent event) {
-    	switch (event.getType()) {
-    		case PipeConnectionEvent.PROVIDER_DISCONNECT:
-    			// XXX should put the channel release code in ConsumerService
-    			conn.closeChannel(this.video.getId());
-    			conn.closeChannel(this.audio.getId());
-    			conn.closeChannel(this.data.getId());
-    			break;
-    		default:
-    			break;
-    	}
+	public void onPipeConnectionEvent(PipeConnectionEvent event) {
+		switch (event.getType()) {
+			case PipeConnectionEvent.PROVIDER_DISCONNECT:
+				// XXX should put the channel release code in ConsumerService
+				conn.closeChannel(this.video.getId());
+				conn.closeChannel(this.audio.getId());
+				conn.closeChannel(this.data.getId());
+				break;
+			default:
+		}
 	}
 
 	/** {@inheritDoc} */
-    public void onOOBControlMessage(IMessageComponent source, IPipe pipe,
+	public void onOOBControlMessage(IMessageComponent source, IPipe pipe,
 			OOBControlMessage oobCtrlMsg) {
 		if (!"ConnectionConsumer".equals(oobCtrlMsg.getTarget())) {
 			return;
@@ -212,25 +241,33 @@ public class ConnectionConsumer implements IPushableConsumer,
 			long maxStream = 0;
 			IBWControllable bwControllable = conn;
 			// Search FC containing valid BWC
-			while (bwControllable != null && bwControllable.getBandwidthConfigure() == null) {
+			while (bwControllable != null
+					&& bwControllable.getBandwidthConfigure() == null) {
 				bwControllable = bwControllable.getParentBWControllable();
 			}
-			if (bwControllable != null && bwControllable.getBandwidthConfigure() != null) {
-				IBandwidthConfigure bwc = bwControllable.getBandwidthConfigure();
+			if (bwControllable != null
+					&& bwControllable.getBandwidthConfigure() != null) {
+				IBandwidthConfigure bwc = bwControllable
+						.getBandwidthConfigure();
 				if (bwc instanceof IConnectionBWConfig) {
-					maxStream = ((IConnectionBWConfig) bwc).getDownstreamBandwidth() / 8;
+					maxStream = ((IConnectionBWConfig) bwc)
+							.getDownstreamBandwidth() / 8;
 				}
 			}
 			if (maxStream <= 0) {
 				// Use default value
-				// TODO: this should be configured somewhere and sent to the client when connecting
-				maxStream = 120*1024;
+				// TODO: this should be configured somewhere and sent to the
+				// client when connecting
+				maxStream = 120 * 1024;
 			}
-			
+
 			// Return the current delta between sent bytes and bytes the client
 			// reported to have received, and the interval the client should use
-			// for generating BytesRead messages (half of the allowed bandwidth).
-			oobCtrlMsg.setResult(new Long[]{conn.getWrittenBytes() - conn.getClientBytesRead(), maxStream / 2});
+			// for generating BytesRead messages (half of the allowed
+			// bandwidth).
+			oobCtrlMsg.setResult(new Long[] {
+					conn.getWrittenBytes() - conn.getClientBytesRead(),
+					maxStream / 2 });
 		} else if ("chunkSize".equals(oobCtrlMsg.getServiceName())) {
 			int newSize = (Integer) oobCtrlMsg.getServiceParamMap().get(
 					"chunkSize");

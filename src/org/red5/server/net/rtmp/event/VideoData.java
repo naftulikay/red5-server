@@ -50,6 +50,11 @@ public class VideoData extends BaseEvent implements IoConstants, IStreamData, IS
      * Video data
      */
     protected ByteBuffer data;
+    
+    /**
+     * Data type
+     */
+    private byte dataType = TYPE_VIDEO_DATA;
 
     /**
      * Frame type, unknown by default
@@ -93,7 +98,11 @@ public class VideoData extends BaseEvent implements IoConstants, IStreamData, IS
 	/** {@inheritDoc} */
     @Override
 	public byte getDataType() {
-		return TYPE_VIDEO_DATA;
+		return dataType;
+	}
+
+	public void setDataType(byte dataType) {
+		this.dataType = dataType;
 	}
 
 	/** {@inheritDoc} */

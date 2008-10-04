@@ -96,6 +96,13 @@ public class ConnectionConsumer implements IPushableConsumer,
 	 * Stream tracker
 	 */
 	private StreamTracker streamTracker;
+	
+	
+	/**
+	 * Whether or not the chunk size has been sent. This seems to be 
+	 * required for h264.
+	 */
+	private boolean chunkSizeSent;
 
 	/**
 	 * Create rtmp connection consumer for given connection and channels
@@ -144,32 +151,23 @@ public class ConnectionConsumer implements IPushableConsumer,
 			//switch is sorted to handle most common to least common
 			switch (msg.getDataType()) {
 				case Constants.TYPE_AUDIO_DATA:
+					log.debug("Audio data");
 					AudioData audioData = new AudioData(((AudioData) msg)
 							.getData().asReadOnlyBuffer());
 					audioData.setHeader(header);
 					audioData.setTimestamp(header.getTimer());
-					if (msg instanceof AudioConfigData) {
-						log.debug("Audio data config");
-						data.write(audioData);
-						//conn.getChannel((byte) 5).write(audioData);
-					} else {
-						audio.write(audioData);
-					}
+					audio.write(audioData);
 					break;
 				case Constants.TYPE_VIDEO_DATA:
+					log.debug("Video data");
 					VideoData videoData = new VideoData(((VideoData) msg)
 							.getData().asReadOnlyBuffer());
 					videoData.setHeader(header);
 					videoData.setTimestamp(header.getTimer());
-					if (msg instanceof VideoConfigData) {
-						log.debug("Video data config");
-						data.write(videoData);
-						//conn.getChannel((byte) 5).write(videoData);
-					} else {
-						video.write(videoData);
-					}
+					video.write(videoData);
 					break;
 				case Constants.TYPE_PING:
+					log.debug("Ping");					
 					Ping ping = new Ping(((Ping) msg));
 					header.setTimerRelative(false);
 					header.setTimer(0);
@@ -177,7 +175,38 @@ public class ConnectionConsumer implements IPushableConsumer,
 					ping.setTimestamp(header.getTimer());
 					conn.ping(ping);
 					break;
+				case Constants.TYPE_AUDIO_DATA_CONFIG:
+					log.debug("Audio data config");
+					AudioData audioDataConfig = new AudioData(((AudioData) msg)
+							.getData().asReadOnlyBuffer());
+					audioDataConfig.setHeader(header);
+					audioDataConfig.setTimestamp(header.getTimer());				
+					audioDataConfig.setDataType(Constants.TYPE_AUDIO_DATA_CONFIG);
+					if (!chunkSizeSent) {
+						log.debug("Sending chunk size");
+						ChunkSize chunkSizeMsg = new ChunkSize(chunkSize);
+						conn.getChannel((byte) 2).write(chunkSizeMsg);		
+						chunkSizeSent = true;
+					}
+					audio.write(audioDataConfig);
+					break;
+				case Constants.TYPE_VIDEO_DATA_CONFIG:
+					log.debug("Video data config");
+					VideoData videoDataConfig = new VideoData(((VideoData) msg)
+							.getData().asReadOnlyBuffer());
+					videoDataConfig.setHeader(header);
+					videoDataConfig.setTimestamp(header.getTimer());
+					videoDataConfig.setDataType(Constants.TYPE_VIDEO_DATA_CONFIG);
+					if (!chunkSizeSent) {
+						log.debug("Sending chunk size");
+						ChunkSize chunkSizeMsg = new ChunkSize(chunkSize);
+						conn.getChannel((byte) 2).write(chunkSizeMsg);		
+						chunkSizeSent = true;
+					}
+					video.write(videoDataConfig);				
+					break;
 				case Constants.TYPE_STREAM_METADATA:
+					log.debug("Meta data");
 					Notify notify = new Notify(((Notify) msg).getData()
 							.asReadOnlyBuffer());
 					notify.setHeader(header);
@@ -185,6 +214,7 @@ public class ConnectionConsumer implements IPushableConsumer,
 					data.write(notify);
 					break;
 				case Constants.TYPE_FLEX_STREAM_SEND:
+					log.debug("Flex stream send");
 					// TODO: okay to send this also to AMF0 clients?
 					FlexStreamSend send = new FlexStreamSend(((Notify) msg)
 							.getData().asReadOnlyBuffer());
@@ -193,6 +223,7 @@ public class ConnectionConsumer implements IPushableConsumer,
 					data.write(send);
 					break;
 				case Constants.TYPE_BYTES_READ:
+					log.debug("Bytes read");
 					BytesRead bytesRead = new BytesRead(((BytesRead) msg)
 							.getBytesRead());
 					header.setTimerRelative(false);
@@ -202,6 +233,7 @@ public class ConnectionConsumer implements IPushableConsumer,
 					conn.getChannel((byte) 2).write(bytesRead);
 					break;
 				default:
+					log.debug("Default");
 					data.write(msg);
 			}
 		}
@@ -212,9 +244,9 @@ public class ConnectionConsumer implements IPushableConsumer,
 		switch (event.getType()) {
 			case PipeConnectionEvent.PROVIDER_DISCONNECT:
 				// XXX should put the channel release code in ConsumerService
-				conn.closeChannel(this.video.getId());
-				conn.closeChannel(this.audio.getId());
-				conn.closeChannel(this.data.getId());
+				conn.closeChannel(video.getId());
+				conn.closeChannel(audio.getId());
+				conn.closeChannel(data.getId());
 				break;
 			default:
 		}

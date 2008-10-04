@@ -883,6 +883,7 @@ public class MP4Reader implements IoConstants, ITagReader, IKeyFrameDataAnalyzer
     		tag = new Tag(Constants.TYPE_AUDIO_DATA_CONFIG, 0, 5, null, tag.getBodySize());
     		body = ByteBuffer.allocate(tag.getBodySize());
     		body.put(new byte[]{(byte) 0xaf, (byte) 0, (byte) 0x12, (byte) 0x10, (byte) 0x06});
+    		
     		body.flip();
     		tag.setBody(body);
     

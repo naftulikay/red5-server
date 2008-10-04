@@ -32,6 +32,11 @@ public class AudioData extends BaseEvent implements IStreamData, IStreamPacket {
 	
 	protected ByteBuffer data;
 
+    /**
+     * Data type
+     */
+    private byte dataType = TYPE_AUDIO_DATA;
+	
 	/** Constructs a new AudioData. */
     public AudioData() {
 		this(ByteBuffer.allocate(0).flip());
@@ -45,7 +50,11 @@ public class AudioData extends BaseEvent implements IStreamData, IStreamPacket {
 	/** {@inheritDoc} */
     @Override
 	public byte getDataType() {
-		return TYPE_AUDIO_DATA;
+		return dataType;
+	}
+    
+	public void setDataType(byte dataType) {
+		this.dataType = dataType;
 	}
 
 	/** {@inheritDoc} */

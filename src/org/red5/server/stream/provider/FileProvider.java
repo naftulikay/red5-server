@@ -135,6 +135,7 @@ public class FileProvider implements IPassive, ISeekableProvider,
 		ITag tag = reader.readTag();
 		IRTMPEvent msg = null;
 		int timestamp = tag.getTimestamp();
+		log.debug("Got tag - timestamp: {} data type: {}", timestamp, tag.getDataType());
 		switch (tag.getDataType()) {
 			case Constants.TYPE_AUDIO_DATA:
 				msg = new AudioData(tag.getBody());
@@ -149,14 +150,12 @@ public class FileProvider implements IPassive, ISeekableProvider,
 				msg = new Notify(tag.getBody());
 				break;
 			case Constants.TYPE_AUDIO_DATA_CONFIG:
-				//reset tag type
-				tag.setDataType(Constants.TYPE_AUDIO_DATA);				
-				msg = new AudioConfigData(tag.getBody());
+				msg = new AudioData(tag.getBody());
+				((AudioData) msg).setDataType(Constants.TYPE_AUDIO_DATA_CONFIG);
 				break;
 			case Constants.TYPE_VIDEO_DATA_CONFIG:
-				//reset tag type
-				tag.setDataType(Constants.TYPE_VIDEO_DATA);
-				msg = new VideoConfigData(tag.getBody());
+				msg = new VideoData(tag.getBody());
+				((VideoData) msg).setDataType(Constants.TYPE_VIDEO_DATA_CONFIG);
 				break;				
 			default:
 				log.warn("Unexpected type? {}", tag.getDataType());

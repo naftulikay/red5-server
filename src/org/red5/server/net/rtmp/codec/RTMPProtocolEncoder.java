@@ -203,13 +203,13 @@ public class RTMPProtocolEncoder extends BaseProtocolEncoder
     private int calculateHeaderSize(Header header, Header lastHeader) {
 		final byte headerType = getHeaderType(header, lastHeader);
 		int channelIdAdd;
-		if (header.getChannelId() > 320)
+		if (header.getChannelId() > 320) {
 			channelIdAdd = 2;
-		else if (header.getChannelId() > 63)
+		} else if (header.getChannelId() > 63) {
 			channelIdAdd = 1;
-		else
+		} else {
 			channelIdAdd = 0;
-		
+		}
 		return RTMPUtils.getHeaderLength(headerType) + channelIdAdd;
     }
     
@@ -237,8 +237,7 @@ public class RTMPProtocolEncoder extends BaseProtocolEncoder
     public void encodeHeader(Header header, Header lastHeader, ByteBuffer buf) {
 		final byte headerType = getHeaderType(header, lastHeader);
 		log.debug("Header byte (type): {}", headerType);
-		RTMPUtils.encodeHeaderByte(buf, headerType, header
-				.getChannelId());
+		RTMPUtils.encodeHeaderByte(buf, headerType, header.getChannelId());
 
 		switch (headerType) {
 			case HEADER_NEW:
@@ -256,20 +255,11 @@ public class RTMPProtocolEncoder extends BaseProtocolEncoder
 				RTMPUtils.writeMediumInt(buf, header.getTimer());
 				break;
 			case HEADER_CONTINUE:
-				break;				
-			case HEADER_H264_INIT:
-				RTMPUtils.writeMediumInt(buf, header.getTimer());
-				RTMPUtils.writeMediumInt(buf, header.getSize());
-				buf.put(header.getDataType());
-				RTMPUtils.writeReverseInt(buf, header.getStreamId());
-				break;
-			case HEADER_H264_DATA:
-				RTMPUtils.writeMediumInt(buf, header.getTimer());
-				RTMPUtils.writeMediumInt(buf, header.getSize());
-				buf.put(header.getDataType());
-				break;				
+				break;					
 			default:
 		}
+		
+		
 	}
 
     /**
@@ -297,8 +287,10 @@ public class RTMPProtocolEncoder extends BaseProtocolEncoder
 			case TYPE_BYTES_READ:
 				return encodeBytesRead((BytesRead) message);
 			case TYPE_AUDIO_DATA:
+			case TYPE_AUDIO_DATA_CONFIG:
 				return encodeAudioData((AudioData) message);
 			case TYPE_VIDEO_DATA:
+			case TYPE_VIDEO_DATA_CONFIG:
 				return encodeVideoData((VideoData) message);
 			case TYPE_FLEX_SHARED_OBJECT:
 				return encodeFlexSharedObject((ISharedObjectMessage) message, rtmp);
@@ -606,7 +598,7 @@ public class RTMPProtocolEncoder extends BaseProtocolEncoder
 		result.acquire();
 		return result;
 	}
-
+	
 	/** {@inheritDoc} */
 	public ByteBuffer encodeVideoData(VideoData videoData) {
 		final ByteBuffer result = videoData.getData();

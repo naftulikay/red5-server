@@ -20,15 +20,26 @@ package org.red5.server.net.rtmp;
  */
 
 import org.apache.mina.common.ByteBuffer;
+import org.mortbay.log.Log;
+import org.red5.server.net.rtmp.codec.RTMPProtocolEncoder;
 import org.red5.server.net.rtmp.message.Constants;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * RTMP utilities class.
  *
  * @author The Red5 Project (red5@osflash.org)
  * @author Luke Hubbard, Codegent Ltd (luke@codegent.com)
+ * @author Paul Gregoire (mondain@gmail.com)
  */
 public class RTMPUtils implements Constants {
+	
+    /**
+     * Logger.
+     */
+    protected static Logger log = LoggerFactory.getLogger(RTMPUtils.class);	
+	
     /**
      * Writes reversed integer to buffer.
 	 *
@@ -185,14 +196,17 @@ public class RTMPUtils implements Constants {
 	public static void encodeHeaderByte(ByteBuffer out, byte headerSize, int channelId) {
 		if (channelId <= 63) {
 			out.put((byte) ((headerSize << 6) + channelId));
+			log.debug("Header byte: {}", ((headerSize << 6) + channelId));
 		} else if (channelId <= 320) {
 			out.put((byte) (headerSize << 6));
 			out.put((byte) (channelId - 64));
+			log.debug("Header byte(s): {} {}", (headerSize << 6), (channelId - 64));
 		} else {
 			out.put((byte) ((headerSize << 6) | 1));
 			channelId -= 64;
 			out.put((byte) (channelId & 0xff));
 			out.put((byte) (channelId >> 8));
+			log.debug("Header byte(s): {} {} {}", new Object[]{((headerSize << 6) | 1), (channelId & 0xff), (channelId >> 8)});
 		}
 	}
 

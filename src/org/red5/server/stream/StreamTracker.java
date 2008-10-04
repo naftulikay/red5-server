@@ -72,6 +72,7 @@ public class StreamTracker implements Constants {
 		switch (event.getDataType()) {
 
 			case TYPE_AUDIO_DATA:
+			case TYPE_AUDIO_DATA_CONFIG:
 				if (firstAudio) {
 					tsOut = timestamp;
 					relative = false;
@@ -88,6 +89,7 @@ public class StreamTracker implements Constants {
 				break;
 
 			case TYPE_VIDEO_DATA:
+			case TYPE_VIDEO_DATA_CONFIG:
 				if (firstVideo) {
 					tsOut = timestamp;
 					relative = false;

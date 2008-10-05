@@ -1021,82 +1021,90 @@ public class MP4Reader implements IoConstants, ITagReader, IKeyFrameDataAnalyzer
         // tag == sample
 		int sample = 1;
 		Long pos = null;
-		Enumeration records = videoSamplesToChunks.elements();
-		while (records.hasMoreElements()) {
-			MP4Atom.Record record = (MP4Atom.Record) records.nextElement();
+		for (int i = 0; i < videoSamplesToChunks.size(); i++) {
+			MP4Atom.Record record = (MP4Atom.Record) videoSamplesToChunks.get(i);
 			int firstChunk = record.getFirstChunk();
-			int sampleCount = record.getSamplesPerChunk();
-			log.debug("Video first chunk: {} count:{}", firstChunk, sampleCount);
-			pos = (Long) videoChunkOffsets.elementAt(firstChunk - 1);
-			while (sampleCount > 0) {
-				//log.debug("Position: {}", pos);
-    			posTagMap.put(pos, sample);
-    			samplePosMap.put(sample, pos);
-				//calculate ts
-    			double ts = (videoSampleDuration * (sample - 1)) / videoTimeScale;
-    			//check to see if the sample is a keyframe
-    			boolean keyframe = syncSamples.contains(sample);
-    			if (keyframe) {
-    				log.debug("Keyframe - sample: {}", sample);
-    				positionList.add(pos);
-    				//log.debug("Keyframe - timestamp: {}", ts);
-    				//timestampList.add(ts);
-    			}
-    			int size = ((Integer) videoSamples.get(sample - 1)).intValue();
-
-    			//create a frame
-    			MP4Frame frame = new MP4Frame();
-    			frame.setKeyFrame(keyframe);
-    			frame.setOffset(pos);
-    			frame.setSize(size);
-    			frame.setTime(ts);
-    			frame.setType(TYPE_VIDEO);
-    			frames.add(frame);
-    			
-    			log.debug("Sample #{} {}", sample, frame);
-    			
-    			//inc and dec stuff
-    			pos += size;
-    			sampleCount--;
-    			sample++;    			
+			int lastChunk = videoChunkOffsets.size();
+			if (i < videoSamplesToChunks.size() - 1) {
+				MP4Atom.Record nextRecord = (MP4Atom.Record) videoSamplesToChunks.get(i + 1);
+				lastChunk = nextRecord.getFirstChunk() - 1;
 			}
+			for (int chunk = firstChunk; chunk <= lastChunk; chunk++) {
+				int sampleCount = record.getSamplesPerChunk();
+				pos = (Long) videoChunkOffsets.elementAt(chunk - 1);			
+    			while (sampleCount > 0) {
+    				//log.debug("Position: {}", pos);
+        			posTagMap.put(pos, sample);
+        			samplePosMap.put(sample, pos);
+    				//calculate ts
+        			double ts = (videoSampleDuration * (sample - 1)) / videoTimeScale;
+        			//check to see if the sample is a keyframe
+        			boolean keyframe = syncSamples.contains(sample);
+        			if (keyframe) {
+        				log.debug("Keyframe - sample: {}", sample);
+        				positionList.add(pos);
+        				//log.debug("Keyframe - timestamp: {}", ts);
+        				//timestampList.add(ts);
+        			}
+        			int size = ((Integer) videoSamples.get(sample - 1)).intValue();
+    
+        			//create a frame
+        			MP4Frame frame = new MP4Frame();
+        			frame.setKeyFrame(keyframe);
+        			frame.setOffset(pos);
+        			frame.setSize(size);
+        			frame.setTime(ts);
+        			frame.setType(TYPE_VIDEO);
+        			frames.add(frame);
+        			
+        			log.debug("Sample #{} {}", sample, frame);
+        			
+        			//inc and dec stuff
+        			pos += size;
+        			sampleCount--;
+        			sample++;    			
+    			}
+    		}
 		}
-
+		
 		log.debug("Position map size: {} keyframe list size: {}", posTagMap.size(), positionList.size());
 		log.debug("Sample position map (video): {}", samplePosMap);
 			
 		//add the audio frames / samples / chunks		
 		sample = 1;
-		records = audioSamplesToChunks.elements();
-		while (records.hasMoreElements()) {
-			MP4Atom.Record record = (MP4Atom.Record) records.nextElement();
+		for (int i = 0; i < audioSamplesToChunks.size(); i++) {
+			MP4Atom.Record record = (MP4Atom.Record) audioSamplesToChunks.get(i);
 			int firstChunk = record.getFirstChunk();
-			int sampleCount = record.getSamplesPerChunk();
-			log.debug("Audio first chunk: {} count:{}", firstChunk, sampleCount);
-			pos = (Long) audioChunkOffsets.elementAt(firstChunk - 1);
-			while (sampleCount > 0) {
-    			//calculate ts
-				double ts = (audioSampleDuration * (sample - 1)) / audioTimeScale;
-    			//sample size
-    			int size = ((Integer) audioSamples.get(sample - 1)).intValue();
-    			//create a frame
-        		MP4Frame frame = new MP4Frame();
-        		frame.setOffset(pos);
-        		frame.setSize(size);
-        		frame.setTime(ts);
-        		frame.setType(TYPE_AUDIO);
-        		frames.add(frame);
-        		
-    			log.debug("Sample #{} {}", sample, frame);
-    			
-    			//inc and dec stuff
-    			pos += size;
-    			sampleCount--;
-    			sample++;    
-            }		
+			int lastChunk = audioChunkOffsets.size();
+			if (i < audioSamplesToChunks.size() - 1) {
+				MP4Atom.Record nextRecord = (MP4Atom.Record) audioSamplesToChunks.get(i + 1);
+				lastChunk = nextRecord.getFirstChunk() - 1;
+			}
+			for (int chunk = firstChunk; chunk <= lastChunk; chunk++) {
+				int sampleCount = record.getSamplesPerChunk();
+				pos = (Long) audioChunkOffsets.elementAt(chunk - 1);
+    			while (sampleCount > 0) {
+        			//calculate ts
+    				double ts = (audioSampleDuration * (sample - 1)) / audioTimeScale;
+        			//sample size
+        			int size = ((Integer) audioSamples.get(sample - 1)).intValue();
+        			//create a frame
+            		MP4Frame frame = new MP4Frame();
+            		frame.setOffset(pos);
+            		frame.setSize(size);
+            		frame.setTime(ts);
+            		frame.setType(TYPE_AUDIO);
+            		frames.add(frame);
+            		
+        			log.debug("Sample #{} {}", sample, frame);
+        			
+        			//inc and dec stuff
+        			pos += size;
+        			sampleCount--;
+        			sample++;    
+                }		
+    		}
 		}
-
-		records = null;
 		
 		//sort the frames
 		Collections.sort(frames);

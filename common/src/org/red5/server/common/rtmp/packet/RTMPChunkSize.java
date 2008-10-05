@@ -14,4 +14,9 @@ public class RTMPChunkSize extends RTMPPacket {
 	public void setChunkSize(int chunkSize) {
 		this.chunkSize = chunkSize;
 	}
+
+	@Override
+	public String toString() {
+		return String.format("%1$s, ChunkSize=%2$d", super.toString(), chunkSize);
+	}
 }

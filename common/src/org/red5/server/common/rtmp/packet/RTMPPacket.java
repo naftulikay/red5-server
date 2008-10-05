@@ -64,7 +64,7 @@ public class RTMPPacket {
 	
 	public String toString() {
 		return String.format(
-				"Type: %1$d, Size: %2$d, Channel %3$d, Timestamp %4$d, StreamId %5$d",
+				"Type=0x%1$x, Size=%2$d, Channel=%3$d, Timestamp=%4$d, StreamId=%5$d",
 				type, size, channel, timestamp, streamId);
 	}
 }

@@ -156,7 +156,7 @@ public class ConnectionConsumer implements IPushableConsumer,
 							.getData().asReadOnlyBuffer());
 					audioData.setHeader(header);
 					audioData.setTimestamp(header.getTimer());
-					audio.write(audioData);
+					video.write(audioData);
 					break;
 				case Constants.TYPE_VIDEO_DATA:
 					log.debug("Video data");
@@ -188,7 +188,7 @@ public class ConnectionConsumer implements IPushableConsumer,
 						conn.getChannel((byte) 2).write(chunkSizeMsg);		
 						chunkSizeSent = true;
 					}
-					audio.write(audioDataConfig);
+					video.write(audioDataConfig);
 					break;
 				case Constants.TYPE_VIDEO_DATA_CONFIG:
 					log.debug("Video data config");

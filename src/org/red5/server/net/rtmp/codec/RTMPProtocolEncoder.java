@@ -259,7 +259,6 @@ public class RTMPProtocolEncoder extends BaseProtocolEncoder
 			default:
 		}
 		
-		
 	}
 
     /**

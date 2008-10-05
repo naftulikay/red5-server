@@ -32,7 +32,6 @@ import org.red5.server.messaging.OOBControlMessage;
 import org.red5.server.messaging.PipeConnectionEvent;
 import org.red5.server.net.rtmp.Channel;
 import org.red5.server.net.rtmp.RTMPConnection;
-import org.red5.server.net.rtmp.event.AudioConfigData;
 import org.red5.server.net.rtmp.event.AudioData;
 import org.red5.server.net.rtmp.event.BytesRead;
 import org.red5.server.net.rtmp.event.ChunkSize;
@@ -40,7 +39,6 @@ import org.red5.server.net.rtmp.event.FlexStreamSend;
 import org.red5.server.net.rtmp.event.IRTMPEvent;
 import org.red5.server.net.rtmp.event.Notify;
 import org.red5.server.net.rtmp.event.Ping;
-import org.red5.server.net.rtmp.event.VideoConfigData;
 import org.red5.server.net.rtmp.event.VideoData;
 import org.red5.server.net.rtmp.message.Constants;
 import org.red5.server.net.rtmp.message.Header;
@@ -135,6 +133,14 @@ public class ConnectionConsumer implements IPushableConsumer,
 			StatusMessage statusMsg = (StatusMessage) message;
 			data.sendStatus(statusMsg.getBody());
 		} else if (message instanceof RTMPMessage) {
+			//make sure chunk size has been sent
+			if (!chunkSizeSent) {
+				log.debug("Sending chunk size");
+				ChunkSize chunkSizeMsg = new ChunkSize(chunkSize);
+				conn.getChannel((byte) 2).write(chunkSizeMsg);		
+				chunkSizeSent = true;
+			}
+			
 			RTMPMessage rtmpMsg = (RTMPMessage) message;
 			IRTMPEvent msg = rtmpMsg.getBody();
 			Header header = new Header();
@@ -174,36 +180,6 @@ public class ConnectionConsumer implements IPushableConsumer,
 					ping.setHeader(header);
 					ping.setTimestamp(header.getTimer());
 					conn.ping(ping);
-					break;
-				case Constants.TYPE_AUDIO_DATA_CONFIG:
-					log.debug("Audio data config");
-					AudioData audioDataConfig = new AudioData(((AudioData) msg)
-							.getData().asReadOnlyBuffer());
-					audioDataConfig.setHeader(header);
-					audioDataConfig.setTimestamp(header.getTimer());				
-					audioDataConfig.setDataType(Constants.TYPE_AUDIO_DATA_CONFIG);
-					if (!chunkSizeSent) {
-						log.debug("Sending chunk size");
-						ChunkSize chunkSizeMsg = new ChunkSize(chunkSize);
-						conn.getChannel((byte) 2).write(chunkSizeMsg);		
-						chunkSizeSent = true;
-					}
-					video.write(audioDataConfig);
-					break;
-				case Constants.TYPE_VIDEO_DATA_CONFIG:
-					log.debug("Video data config");
-					VideoData videoDataConfig = new VideoData(((VideoData) msg)
-							.getData().asReadOnlyBuffer());
-					videoDataConfig.setHeader(header);
-					videoDataConfig.setTimestamp(header.getTimer());
-					videoDataConfig.setDataType(Constants.TYPE_VIDEO_DATA_CONFIG);
-					if (!chunkSizeSent) {
-						log.debug("Sending chunk size");
-						ChunkSize chunkSizeMsg = new ChunkSize(chunkSize);
-						conn.getChannel((byte) 2).write(chunkSizeMsg);		
-						chunkSizeSent = true;
-					}
-					video.write(videoDataConfig);				
 					break;
 				case Constants.TYPE_STREAM_METADATA:
 					log.debug("Meta data");

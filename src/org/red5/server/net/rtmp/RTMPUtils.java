@@ -20,8 +20,6 @@ package org.red5.server.net.rtmp;
  */
 
 import org.apache.mina.common.ByteBuffer;
-import org.mortbay.log.Log;
-import org.red5.server.net.rtmp.codec.RTMPProtocolEncoder;
 import org.red5.server.net.rtmp.message.Constants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -48,6 +48,7 @@ import org.red5.io.mp4.MP4Atom;
 import org.red5.io.mp4.MP4DataStream;
 import org.red5.io.mp4.MP4Frame;
 import org.red5.io.object.Serializer;
+import org.red5.io.utils.ByteBufferUtil;
 import org.red5.server.net.rtmp.message.Constants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -133,14 +134,15 @@ public class MP4Reader implements IoConstants, ITagReader, IKeyFrameDataAnalyzer
 	
 	/** Duration in milliseconds. */
 	private long duration;	
+	/** Movies time scale */
 	private int timeScale;
 	private int width;
 	private int height;
-	private double audioSampleRate;
+	private double audioTimeScale; //aka sample rate kHz
 	private int audioChannels;
 	private int videoSampleCount;
 	private double fps;
-	private double videoSampleRate = 2997.0; //not sure where to get this value from?
+	private double videoTimeScale;
 	private int avcLevel;
 	private int avcProfile;
 	private String formattedDuration;
@@ -245,9 +247,10 @@ public class MP4Reader implements IoConstants, ITagReader, IKeyFrameDataAnalyzer
     					MP4Atom mvhd = moov.lookup(MP4Atom.typeToInt("mvhd"), 0);
     					if (mvhd != null) {
     						log.debug("Movie header atom found");
-    						log.debug("Time scale {} Duration {}", mvhd.getTimeScale(), mvhd.getDuration());
+    						//get the initial timescale
     						timeScale = mvhd.getTimeScale();
     						duration = mvhd.getDuration();
+    						log.debug("Time scale {} Duration {}", timeScale, duration);
     					}
     
     					/* nothing needed here yet
@@ -289,6 +292,17 @@ public class MP4Reader implements IoConstants, ITagReader, IKeyFrameDataAnalyzer
     							if (mdia != null) {
     								log.debug("Media atom found");
     								// mdia: mdhd, hdlr, minf
+    								
+    								int scale = 0;
+    								//get the media header atom
+    								MP4Atom mdhd = mdia.lookup(MP4Atom.typeToInt("mdhd"), 0);
+    								if (mdhd != null) {
+    									log.debug("Media data header atom found");
+    									//this will be for either video or audio depending media info
+    									scale = mdhd.getTimeScale();
+    									log.debug("Time scale {}", scale);
+    								}
+    								
     								MP4Atom hdlr = mdia
     										.lookup(MP4Atom.typeToInt("hdlr"), 0);
     								if (hdlr != null) {
@@ -299,8 +313,16 @@ public class MP4Reader implements IoConstants, ITagReader, IKeyFrameDataAnalyzer
     									String hdlrType = MP4Atom.intToType(hdlr.getHandlerType());
     									if ("vide".equals(hdlrType)) {
     										hasVideo = true;
+    										if (scale > 0) {
+    											videoTimeScale = scale * 1.0;
+    											log.debug("Video time scale: {}", videoTimeScale);
+    										}    										                
     									} else if ("soun".equals(hdlrType)) {
     										hasAudio = true;
+    										if (scale > 0) {
+    											audioTimeScale = scale * 1.0;
+    											log.debug("Audio time scale: {}", audioTimeScale);
+    										}    										                
     									}
     									i++;
     								}
@@ -354,9 +376,9 @@ public class MP4Reader implements IoConstants, ITagReader, IKeyFrameDataAnalyzer
     												setAudioCodecId(MP4Atom.intToType(mp4a.getType()));
     												//log.debug("{}", ToStringBuilder.reflectionToString(mp4a));
     												log.debug("Sample size: {}", mp4a.getSampleSize());										
-    												audioSampleRate = mp4a.getTimeScale() * 1.0;
+    												audioTimeScale = mp4a.getTimeScale() * 1.0;
     												audioChannels = mp4a.getChannelCount();
-    												log.debug("Sample rate (time scale): {}", audioSampleRate);			
+    												log.debug("Sample rate (audio time scale): {}", audioTimeScale);			
     												log.debug("Channels: {}", audioChannels);										
     												/* no data we care about right now
     												//mp4a: esds
@@ -469,7 +491,6 @@ public class MP4Reader implements IoConstants, ITagReader, IKeyFrameDataAnalyzer
     												MP4Atom avc1 = stsd.getChildren().get(0);
     												//could set the video codec here
     												setVideoCodecId(MP4Atom.intToType(avc1.getType()));
-    												log.debug("Sample rate (time scale): {}", videoSampleRate);
     												//
     												MP4Atom avcC = avc1.lookup(MP4Atom.typeToInt("avcC"), 0);
     												if (avcC != null) {
@@ -783,7 +804,7 @@ public class MP4Reader implements IoConstants, ITagReader, IKeyFrameDataAnalyzer
 		// Audio codec id - watch for mp3 instead of aac
         props.put("audiocodecid", audioCodecId);
         props.put("aacaot", 2);
-        props.put("audiosamplerate", audioSampleRate);
+        props.put("audiosamplerate", audioTimeScale);
         props.put("audiochannels", audioChannels);
         
         props.put("moovposition", moovOffset);
@@ -848,7 +869,7 @@ public class MP4Reader implements IoConstants, ITagReader, IKeyFrameDataAnalyzer
     	if (hasVideo) {
         	//video tag #1
     		//TODO: this data is only for backcountry bombshells - make this dynamic
-        	tag = new Tag(Constants.TYPE_VIDEO_DATA_CONFIG, 0, 43, null, 0);
+        	tag = new Tag(Constants.TYPE_VIDEO_DATA, 0, 43, null, 0);
     		body = ByteBuffer.allocate(tag.getBodySize());
     		body.put(new byte[]{(byte) 0x17, (byte) 0, (byte) 0, (byte) 0, (byte) 0,
     		(byte) 0x01, (byte) 0x4d, (byte) 0x40, (byte) 0x33, (byte) 0xff, (byte) 0xff, (byte) 0,
@@ -880,7 +901,7 @@ public class MP4Reader implements IoConstants, ITagReader, IKeyFrameDataAnalyzer
     	if (hasAudio) {
     		//audio tag #1
     		//TODO: this data is only for backcountry bombshells - make this dynamic
-    		tag = new Tag(Constants.TYPE_AUDIO_DATA_CONFIG, 0, 5, null, tag.getBodySize());
+    		tag = new Tag(Constants.TYPE_AUDIO_DATA, 0, 5, null, tag.getBodySize());
     		body = ByteBuffer.allocate(tag.getBodySize());
     		body.put(new byte[]{(byte) 0xaf, (byte) 0, (byte) 0x12, (byte) 0x10, (byte) 0x06});
     		
@@ -958,19 +979,11 @@ public class MP4Reader implements IoConstants, ITagReader, IKeyFrameDataAnalyzer
 		}
 		
 		//chunk the data
-		ByteBuffer payload = getChunkedPayload(data.array());		
+		ByteBuffer payload = ByteBuffer.wrap(data.array());		
 		
 		//create the tag
 		ITag tag = new Tag(type, time, payload.limit(), payload, prevFrameSize);
 		log.debug("Read tag - type: {} body size: {}", (type == TYPE_AUDIO ? "Audio" : "Video"), tag.getBodySize());
-		
-		//the first audio and video packets are special
-		if (audioCount == 1 && type == TYPE_AUDIO) {
-			tag.setDataType(Constants.TYPE_AUDIO_DATA_CONFIG);
-		}
-		if (videoCount == 1 && type == TYPE_VIDEO) {
-			tag.setDataType(Constants.TYPE_VIDEO_DATA_CONFIG);
-		}
 		
 		//increment the sample number
 		currentSample++;			
@@ -1020,7 +1033,7 @@ public class MP4Reader implements IoConstants, ITagReader, IKeyFrameDataAnalyzer
     			posTagMap.put(pos, sample);
     			samplePosMap.put(sample, pos);
 				//calculate ts
-    			double ts = (videoSampleDuration * (sample - 1)) / videoSampleRate;
+    			double ts = (videoSampleDuration * (sample - 1)) / videoTimeScale;
     			//check to see if the sample is a keyframe
     			boolean keyframe = syncSamples.contains(sample);
     			if (keyframe) {
@@ -1063,7 +1076,7 @@ public class MP4Reader implements IoConstants, ITagReader, IKeyFrameDataAnalyzer
 			pos = (Long) audioChunkOffsets.elementAt(firstChunk - 1);
 			while (sampleCount > 0) {
     			//calculate ts
-				double ts = (audioSampleDuration * (sample - 1)) / audioSampleRate;
+				double ts = (audioSampleDuration * (sample - 1)) / audioTimeScale;
     			//sample size
     			int size = ((Integer) audioSamples.get(sample - 1)).intValue();
     			//create a frame

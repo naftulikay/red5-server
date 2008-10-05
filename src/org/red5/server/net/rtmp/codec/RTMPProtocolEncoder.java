@@ -286,10 +286,8 @@ public class RTMPProtocolEncoder extends BaseProtocolEncoder
 			case TYPE_BYTES_READ:
 				return encodeBytesRead((BytesRead) message);
 			case TYPE_AUDIO_DATA:
-			case TYPE_AUDIO_DATA_CONFIG:
 				return encodeAudioData((AudioData) message);
 			case TYPE_VIDEO_DATA:
-			case TYPE_VIDEO_DATA_CONFIG:
 				return encodeVideoData((VideoData) message);
 			case TYPE_FLEX_SHARED_OBJECT:
 				return encodeFlexSharedObject((ISharedObjectMessage) message, rtmp);
@@ -317,7 +315,12 @@ public class RTMPProtocolEncoder extends BaseProtocolEncoder
      */
     private ByteBuffer encodeServerBW(ServerBW serverBW) {
 		final ByteBuffer out = ByteBuffer.allocate(4);
-		out.putInt(serverBW.getBandwidth());
+		//copy what fms3 and izumi send
+		out.put((byte) 0);
+		out.put((byte) 0x26);
+		out.put((byte) 0x25);
+		out.put((byte) 0xa0);
+		//out.putInt(serverBW.getBandwidth());
 		return out;
 	}
 
@@ -405,7 +408,7 @@ public class RTMPProtocolEncoder extends BaseProtocolEncoder
                 case CLIENT_UPDATE_DATA:
                     if (event.getKey() == null) {
                         // Update multiple attributes in one request
-                        Map initialData = (Map) event.getValue();
+                        Map<?, ?> initialData = (Map<?, ?>) event.getValue();
                         for (Object o : initialData.keySet()) {
                             out.put(type);
                             mark = out.position();
@@ -440,7 +443,7 @@ public class RTMPProtocolEncoder extends BaseProtocolEncoder
                     // Serialize name of the handler to call...
                     serializer.serialize(output, event.getKey());
                     // ...and the arguments
-                    for (Object arg : (List) event.getValue()) {
+                    for (Object arg : (List<?>) event.getValue()) {
                         serializer.serialize(output, arg);
                     }
                     len = out.position() - mark - 4;

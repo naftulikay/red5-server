@@ -69,16 +69,6 @@ public interface Constants {
     public static final byte TYPE_VIDEO_DATA = 0x09;
 
 	// Unknown: 0x0A ...  0x0E
-
-	/**
-	 * Made-up type to denote an audio data config, only used in h.264.
-	 */
-	public static final byte TYPE_AUDIO_DATA_CONFIG = 0x32;
-
-	/**
-	 * Made-up type to denote an video data config, only used in h.264.
-	 */
-	public static final byte TYPE_VIDEO_DATA_CONFIG = 0x36;    
     
     /**
      * AMF3 stream send

@@ -646,7 +646,7 @@ public final class PlayEngine implements IFilter, IPushableConsumer,
 				sendCompleteStatus();
 			}
 			bytesSent = 0;
-			sendClearPing();
+			//sendClearPing();
 			sendStopStatus(currentItem);
 		} else {
 			if (lastMessage != null) {
@@ -681,67 +681,6 @@ public final class PlayEngine implements IFilter, IPushableConsumer,
 	 * @return
 	 */
 	private boolean okayToSendMessage(IRTMPEvent message) {
-		if (!(message instanceof IStreamData)) {
-			String itemName = "Undefined";
-			//if current item exists get the name to help debug this issue
-			if (currentItem != null) {
-				itemName = currentItem.getName();
-			}
-			Object[] errorItems = new Object[]{message.getClass(), message.getDataType(), itemName};
-			throw new RuntimeException(String.format("Expected IStreamData but got %s (type %s) for %s", errorItems));
-		}
-		final long now = System.currentTimeMillis();
-		// check client buffer length when we've already sent some messages
-		if (lastMessage != null) {
-			// Duration the stream is playing
-			log.debug("okayToSendMessage: now {} playback start {}", now, playbackStart);
-			final long delta = now - playbackStart;
-			// Buffer size as requested by the client
-			final long buffer = playlistSubscriberStream.getClientBufferDuration();
-
-			// Expected amount of data present in client buffer
-			final long buffered = lastMessage.getTimestamp() - delta;
-			log.debug("okayToSendMessage: timestamp {} delta {} buffered {} buffer {}",
-					new Object[] { lastMessage.getTimestamp(), delta, buffered, buffer });
-			if (buffer > 0 && buffered > buffer) {
-				// Client is likely to have enough data in the buffer
-				return false;
-			}
-		}
-
-		long pending = pendingMessages();
-		if (bufferCheckInterval > 0 && now >= nextCheckBufferUnderrun) {
-			if (pending > underrunTrigger) {
-				// Client is playing behind speed, notify him
-				sendInsufficientBandwidthStatus(currentItem);
-			}
-			nextCheckBufferUnderrun = now + bufferCheckInterval;
-		}
-
-		if (pending > underrunTrigger) {
-			// Too many messages already queued on the connection
-			return false;
-		}
-
-		if (((IStreamData) message).getData() == null) {
-			// TODO: when can this happen?
-			return true;
-		}
-
-		final int size = ((IStreamData) message).getData().limit();
-		if (message instanceof VideoData) {
-			if (checkBandwidth
-					&& !videoBucket.acquireTokenNonblocking(size, this)) {
-				waitingForToken = true;
-				return false;
-			}
-		} else if (message instanceof AudioData) {
-			if (checkBandwidth
-					&& !audioBucket.acquireTokenNonblocking(size, this)) {
-				waitingForToken = true;
-				return false;
-			}
-		}
 
 		return true;
 	}

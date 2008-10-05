@@ -181,6 +181,8 @@ public class MP4Reader implements IoConstants, ITagReader, IKeyFrameDataAnalyzer
 	 * be sent prior to media data.
 	 */
 	private LinkedList<ITag> firstTags = new LinkedList<ITag>();
+	private ITag audioConfTag, videoConfTag;
+	private boolean isAudioConfTagSent = false, isVideoConfTagSent = false;
 	
 	/** Constructs a new MP4Reader. */
 	MP4Reader() {
@@ -214,7 +216,7 @@ public class MP4Reader implements IoConstants, ITagReader, IKeyFrameDataAnalyzer
 		//build the keyframe meta data
 		analyzeKeyFrames();
 		//add meta data
-		firstTags.add(createFileMeta());
+		//firstTags.add(createFileMeta());
 		//create / add the pre-streaming tags
 		createPreStreamingTags();
 	}
@@ -869,15 +871,20 @@ public class MP4Reader implements IoConstants, ITagReader, IKeyFrameDataAnalyzer
     	if (hasVideo) {
         	//video tag #1
     		//TODO: this data is only for backcountry bombshells - make this dynamic
-        	tag = new Tag(Constants.TYPE_VIDEO_DATA, 0, 43, null, 0);
-    		body = ByteBuffer.allocate(tag.getBodySize());
-    		body.put(new byte[]{(byte) 0x17, (byte) 0, (byte) 0, (byte) 0, (byte) 0,
-    		(byte) 0x01, (byte) 0x4d, (byte) 0x40, (byte) 0x33, (byte) 0xff, (byte) 0xff, (byte) 0,
-    		(byte) 0x17, (byte) 0x67, (byte) 0x4d, (byte) 0x40, (byte) 0x33, (byte) 0x9a, (byte) 0x76,
-    		(byte) 0x02, (byte) 0x80, (byte) 0x2d, (byte) 0xd0, (byte) 0x80, (byte) 0,    (byte) 0,
-    		(byte) 0x03, (byte) 0,    (byte) 0x80, (byte) 0,    (byte) 0,    (byte) 0x19, (byte) 0x47,
-    		(byte) 0x8c, (byte) 0x18, (byte) 0x9c, (byte) 0x01, (byte) 0,    (byte) 0x04, (byte) 0x68,
-    		(byte) 0xce, (byte) 0x3c, (byte) 0x80});
+    		body = ByteBuffer.allocate(1024);
+    		body.setAutoExpand(true);
+    		body.put(new byte[]{
+    		(byte) 0x17, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x01, (byte) 0x42, (byte) 0x00,
+    		(byte) 0x1e, (byte) 0xff, (byte) 0xe1, (byte) 0x00, (byte) 0x24, (byte) 0x67, (byte) 0x42, (byte) 0x80,
+    		(byte) 0x1e, (byte) 0x96, (byte) 0x56, (byte) 0x05, (byte) 0x01, (byte) 0x7f, (byte) 0xcb, (byte) 0x80,
+    		(byte) 0xa8, (byte) 0x40, (byte) 0x00, (byte) 0x00, (byte) 0xfa, (byte) 0x40, (byte) 0x00, (byte) 0x2e,
+    		(byte) 0xe0, (byte) 0x38, (byte) 0x18, (byte) 0x00, (byte) 0x19, (byte) 0xf0, (byte) 0x80, (byte) 0x00,
+    		(byte) 0x49, (byte) 0x3e, (byte) 0x3f, (byte) 0x18, (byte) 0xe0, (byte) 0xed, (byte) 0x0a, (byte) 0x15,
+    		(byte) 0x70, (byte) 0x01, (byte) 0x00, (byte) 0x04, (byte) 0x68, (byte) 0xca, (byte) 0x43, (byte) 0x52,
+    		(byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x1c, (byte) 0x75, (byte) 0x75, (byte) 0x69, (byte) 0x64,
+    		(byte) 0x6b, (byte) 0x68, (byte) 0x40, (byte) 0xf2, (byte) 0x5f, (byte) 0x24, (byte) 0x4f, (byte) 0xc5,
+    		(byte) 0xba, (byte) 0x39, (byte) 0xa5, (byte) 0x1b, (byte) 0xcf, (byte) 0x03, (byte) 0x23, (byte) 0xf3,
+    		(byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x01});
     		
     		//fake avcc
     		/*
@@ -890,26 +897,28 @@ public class MP4Reader implements IoConstants, ITagReader, IKeyFrameDataAnalyzer
     		};
     		log.debug("Fake: {}", new String(fakeAvcc));
 			*/
-    		
+        	tag = new Tag(IoConstants.TYPE_VIDEO, 0, body.position(), null, 0);
     		body.flip();
     		tag.setBody(body);
     
     		//add tag
     		firstTags.add(tag);
+    		videoConfTag = tag;
     	}
     	
     	if (hasAudio) {
     		//audio tag #1
     		//TODO: this data is only for backcountry bombshells - make this dynamic
-    		tag = new Tag(Constants.TYPE_AUDIO_DATA, 0, 5, null, tag.getBodySize());
-    		body = ByteBuffer.allocate(tag.getBodySize());
-    		body.put(new byte[]{(byte) 0xaf, (byte) 0, (byte) 0x12, (byte) 0x10, (byte) 0x06});
-    		
+    		body = ByteBuffer.allocate(1024);
+    		body.setAutoExpand(true);
+    		body.put(new byte[]{(byte) 0xaf, (byte) 0, (byte) 0x11, (byte) 0x90, (byte) 0x4f, (byte) 0x14, (byte) 0x06});
+    		tag = new Tag(IoConstants.TYPE_AUDIO, 0, body.position(), null, tag.getBodySize());
     		body.flip();
     		tag.setBody(body);
     
     		//add tag
     		firstTags.add(tag);
+    		audioConfTag = tag;
     	}
     }
     
@@ -920,11 +929,11 @@ public class MP4Reader implements IoConstants, ITagReader, IKeyFrameDataAnalyzer
     public synchronized ITag readTag() {
 		log.debug("Read tag");
 		//empty-out the pre-streaming tags first
-		if (!firstTags.isEmpty()) {
-			log.debug("Returning pre-tag");
-			// Return first tags before media data
-			return firstTags.removeFirst();
-		}		
+//		if (!firstTags.isEmpty()) {
+//			log.debug("Returning pre-tag");
+//			// Return first tags before media data
+//			return firstTags.removeFirst();
+//		}		
 		log.debug("Read tag - sample {} prevFrameSize {} audio: {} video: {}", new Object[]{currentSample, prevFrameSize, audioCount, videoCount});
 		
 		//get the current frame
@@ -935,7 +944,7 @@ public class MP4Reader implements IoConstants, ITagReader, IKeyFrameDataAnalyzer
 		
 		//time routines are based on izumi code
 		double frameTs = (frame.getTime() - baseTs) * 1000.0;
-		int time = (int) Math.round(frameTs);
+		int time = (int) Math.round(frame.getTime() * 1000.0);
 		log.debug("Read tag - dst: {} base: {} time: {}", new Object[]{frameTs, baseTs, time});
 		//log.debug("Read tag - sampleSize {} ts {}", new Object[]{sampleSize, ts});
 		//log.debug("Read tag - sample dur / scale {}", new Object[]{((currentSample * timeScale) / videoSampleDuration)});		
@@ -949,6 +958,14 @@ public class MP4Reader implements IoConstants, ITagReader, IKeyFrameDataAnalyzer
 		int pad = 5;
 		if (type == TYPE_AUDIO) {
 			pad = 2;
+		}
+		
+		if (type == TYPE_AUDIO && !isAudioConfTagSent) {
+			isAudioConfTagSent = true;
+			return audioConfTag;
+		} else if (type == TYPE_VIDEO && !isVideoConfTagSent) {
+			isVideoConfTagSent = true;
+			return videoConfTag;
 		}
 
 		//create a byte buffer of the size of the sample

@@ -814,7 +814,7 @@ public abstract class RTMPConnection extends BaseConnection implements
 		}
 		if (bwConfig.getUpstreamBandwidth() > 0) {
 			ClientBW clientBW = new ClientBW((int) bwConfig
-					.getUpstreamBandwidth() / 8, (byte) 0);
+					.getUpstreamBandwidth() / 8, (byte) 2);
 			getChannel(2).write(clientBW);
 			// Update generation of BytesRead messages
 			// TODO: what are the correct values here?

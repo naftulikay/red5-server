@@ -19,6 +19,7 @@ package org.red5.server.stream.consumer;
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA 
  */
 
+import org.apache.mina.common.ByteBuffer;
 import org.red5.server.api.IBWControllable;
 import org.red5.server.api.IBandwidthConfigure;
 import org.red5.server.api.IConnectionBWConfig;
@@ -131,7 +132,7 @@ public class ConnectionConsumer implements IPushableConsumer,
 			streamTracker.reset();
 		} else if (message instanceof StatusMessage) {
 			StatusMessage statusMsg = (StatusMessage) message;
-			data.sendStatus(statusMsg.getBody());
+			video.sendStatus(statusMsg.getBody());
 		} else if (message instanceof RTMPMessage) {
 			//make sure chunk size has been sent
 			if (!chunkSizeSent) {
@@ -162,6 +163,16 @@ public class ConnectionConsumer implements IPushableConsumer,
 							.getData().asReadOnlyBuffer());
 					audioData.setHeader(header);
 					audioData.setTimestamp(header.getTimer());
+					// XXX for H.264 only
+					ByteBuffer audioBuf = audioData.getData();
+					audioBuf.mark();
+					byte[] audioPrefix = new byte[2];
+					audioBuf.get(audioPrefix);
+					audioBuf.reset();
+					if ((audioPrefix[0] & 0xff) == 0xaf && audioPrefix[1] == 0x00) {
+						header.setTimerRelative(false);
+						streamTracker.reset();
+					}
 					video.write(audioData);
 					break;
 				case Constants.TYPE_VIDEO_DATA:
@@ -170,6 +181,18 @@ public class ConnectionConsumer implements IPushableConsumer,
 							.getData().asReadOnlyBuffer());
 					videoData.setHeader(header);
 					videoData.setTimestamp(header.getTimer());
+					// XXX for H.264 only
+					ByteBuffer videoBuf = videoData.getData();
+					videoBuf.mark();
+					byte[] videoPrefix = new byte[5];
+					videoBuf.get(videoPrefix);
+					videoBuf.reset();
+					if (videoPrefix[0] == 0x17 && videoPrefix[1] == 0x00 &&
+							videoPrefix[2] == 0x00 && videoPrefix[3] == 0x00 &&
+							videoPrefix[4] == 0x00) {
+						header.setTimerRelative(false);
+						streamTracker.reset();
+					}
 					video.write(videoData);
 					break;
 				case Constants.TYPE_PING:
@@ -187,7 +210,7 @@ public class ConnectionConsumer implements IPushableConsumer,
 							.asReadOnlyBuffer());
 					notify.setHeader(header);
 					notify.setTimestamp(header.getTimer());
-					data.write(notify);
+					video.write(notify);
 					break;
 				case Constants.TYPE_FLEX_STREAM_SEND:
 					log.debug("Flex stream send");
@@ -196,7 +219,7 @@ public class ConnectionConsumer implements IPushableConsumer,
 							.getData().asReadOnlyBuffer());
 					send.setHeader(header);
 					send.setTimestamp(header.getTimer());
-					data.write(send);
+					video.write(send);
 					break;
 				case Constants.TYPE_BYTES_READ:
 					log.debug("Bytes read");
@@ -210,7 +233,7 @@ public class ConnectionConsumer implements IPushableConsumer,
 					break;
 				default:
 					log.debug("Default");
-					data.write(msg);
+					video.write(msg);
 			}
 		}
 	}

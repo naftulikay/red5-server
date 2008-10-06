@@ -163,16 +163,6 @@ public class ConnectionConsumer implements IPushableConsumer,
 							.getData().asReadOnlyBuffer());
 					audioData.setHeader(header);
 					audioData.setTimestamp(header.getTimer());
-					// XXX for H.264 only
-					ByteBuffer audioBuf = audioData.getData();
-					audioBuf.mark();
-					byte[] audioPrefix = new byte[2];
-					audioBuf.get(audioPrefix);
-					audioBuf.reset();
-					if ((audioPrefix[0] & 0xff) == 0xaf && audioPrefix[1] == 0x00) {
-						header.setTimerRelative(false);
-						streamTracker.reset();
-					}
 					audio.write(audioData);
 					break;
 				case Constants.TYPE_VIDEO_DATA:
@@ -181,18 +171,6 @@ public class ConnectionConsumer implements IPushableConsumer,
 							.getData().asReadOnlyBuffer());
 					videoData.setHeader(header);
 					videoData.setTimestamp(header.getTimer());
-					// XXX for H.264 only
-					ByteBuffer videoBuf = videoData.getData();
-					videoBuf.mark();
-					byte[] videoPrefix = new byte[5];
-					videoBuf.get(videoPrefix);
-					videoBuf.reset();
-					if (videoPrefix[0] == 0x17 && videoPrefix[1] == 0x00 &&
-							videoPrefix[2] == 0x00 && videoPrefix[3] == 0x00 &&
-							videoPrefix[4] == 0x00) {
-						header.setTimerRelative(false);
-						streamTracker.reset();
-					}
 					video.write(videoData);
 					break;
 				case Constants.TYPE_PING:

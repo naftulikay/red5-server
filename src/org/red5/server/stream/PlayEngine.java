@@ -646,7 +646,7 @@ public final class PlayEngine implements IFilter, IPushableConsumer,
 				sendCompleteStatus();
 			}
 			bytesSent = 0;
-			//sendClearPing();
+			sendClearPing();
 			sendStopStatus(currentItem);
 		} else {
 			if (lastMessage != null) {

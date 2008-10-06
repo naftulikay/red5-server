@@ -72,9 +72,6 @@ public class StreamTracker implements Constants {
 		switch (event.getDataType()) {
 
 			case TYPE_AUDIO_DATA:
-			case TYPE_VIDEO_DATA:
-			case TYPE_NOTIFY:
-			case TYPE_INVOKE:
 				if (firstAudio) {
 					tsOut = timestamp;
 					relative = false;
@@ -88,6 +85,34 @@ public class StreamTracker implements Constants {
 					//dont update timestamp if ts was negative
 					lastAudio = timestamp;
 				}
+				break;
+
+			case TYPE_VIDEO_DATA:
+				if (firstVideo) {
+					tsOut = timestamp;
+					relative = false;
+					firstVideo = false;
+				} else {
+					tsOut = timestamp - lastVideo;
+				}
+				if (tsOut < 0) {
+					tsOut = lastVideo;
+				} else {
+					//dont update timestamp if ts was negative
+					lastVideo = timestamp;
+				}
+				break;
+
+			case TYPE_NOTIFY:
+			case TYPE_INVOKE:
+				if (firstNotify) {
+					tsOut = timestamp;
+					relative = false;
+					firstNotify = false;
+				} else {
+					tsOut = timestamp - lastNotify;
+				}
+				lastNotify = timestamp;
 				break;
 
 			default:

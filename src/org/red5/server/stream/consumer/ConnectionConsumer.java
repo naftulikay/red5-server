@@ -173,7 +173,7 @@ public class ConnectionConsumer implements IPushableConsumer,
 						header.setTimerRelative(false);
 						streamTracker.reset();
 					}
-					video.write(audioData);
+					audio.write(audioData);
 					break;
 				case Constants.TYPE_VIDEO_DATA:
 					log.debug("Video data");
@@ -210,7 +210,7 @@ public class ConnectionConsumer implements IPushableConsumer,
 							.asReadOnlyBuffer());
 					notify.setHeader(header);
 					notify.setTimestamp(header.getTimer());
-					video.write(notify);
+					data.write(notify);
 					break;
 				case Constants.TYPE_FLEX_STREAM_SEND:
 					log.debug("Flex stream send");
@@ -219,7 +219,7 @@ public class ConnectionConsumer implements IPushableConsumer,
 							.getData().asReadOnlyBuffer());
 					send.setHeader(header);
 					send.setTimestamp(header.getTimer());
-					video.write(send);
+					data.write(send);
 					break;
 				case Constants.TYPE_BYTES_READ:
 					log.debug("Bytes read");

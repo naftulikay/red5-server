@@ -959,7 +959,6 @@ public class MP4Reader implements IoConstants, ITagReader, IKeyFrameDataAnalyzer
 		if (type == TYPE_AUDIO) {
 			pad = 2;
 		}
-		
 		if (type == TYPE_AUDIO && !isAudioConfTagSent) {
 			isAudioConfTagSent = true;
 			return audioConfTag;

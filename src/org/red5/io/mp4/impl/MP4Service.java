@@ -56,7 +56,7 @@ public class MP4Service extends BaseStreamableFileService implements IMP4Service
      * File extensions handled by this service. If there are more than one, they
      * are comma separated.
      */
-    private static String extension = ".f4v,.mp4,.mov";
+    private static String extension = ".f4v,.mp4,.mov,.3gp,.3g2";
     
     private static String prefix = "f4v";
     

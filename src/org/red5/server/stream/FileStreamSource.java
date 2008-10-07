@@ -23,6 +23,7 @@ import org.red5.io.ITag;
 import org.red5.io.ITagReader;
 import org.red5.io.flv.IKeyFrameDataAnalyzer;
 import org.red5.io.flv.IKeyFrameDataAnalyzer.KeyFrameMeta;
+import org.red5.io.mp4.impl.MP4Reader;
 import org.red5.server.net.rtmp.event.AudioData;
 import org.red5.server.net.rtmp.event.IRTMPEvent;
 import org.red5.server.net.rtmp.event.Invoke;
@@ -108,6 +109,14 @@ public class FileStreamSource implements ISeekableStreamSource, Constants {
 	/** {@inheritDoc} */
     public synchronized int seek(int ts) {
 		if (keyFrameMeta == null) {
+			//the mp4 reader expects the seekpoint / sample number from
+			//meta data in the seekpoints array
+			if (reader instanceof MP4Reader) {
+				//its not really a position or timestamp
+				reader.position(ts);
+				return ts;
+			}
+			
 			if (!(reader instanceof IKeyFrameDataAnalyzer)) {
 				// Seeking not supported
 				return ts;

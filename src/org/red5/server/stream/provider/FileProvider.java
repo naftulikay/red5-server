@@ -30,6 +30,7 @@ import org.red5.io.ITagReader;
 import org.red5.io.StreamableFileFactory;
 import org.red5.io.flv.IKeyFrameDataAnalyzer;
 import org.red5.io.flv.IKeyFrameDataAnalyzer.KeyFrameMeta;
+import org.red5.io.mp4.impl.MP4Reader;
 import org.red5.server.api.IScope;
 import org.red5.server.api.ScopeUtils;
 import org.red5.server.messaging.IMessage;
@@ -251,6 +252,14 @@ public class FileProvider implements IPassive, ISeekableProvider,
     public synchronized int seek(int ts) {
     	log.debug("Seek ts: {}", ts);
 		if (keyFrameMeta == null) {
+			//the mp4 reader expects the seekpoint / sample number from
+			//meta data in the seekpoints array
+			if (reader instanceof MP4Reader) {
+				//its not really a position or timestamp
+				reader.position(ts);
+				return ts;
+			}
+			
 			if (!(reader instanceof IKeyFrameDataAnalyzer)) {
 				// Seeking not supported
 				return ts;

@@ -185,11 +185,7 @@
 		</property>
 	</bean>
 	<!-- Use injection to set the keyframe cache for MP4 files -->
-	<bean id="mp4reader.impl" class="org.red5.io.mp4.impl.MP4Reader">
-		<property name="keyFrameCache">
-			<ref bean="keyframe.cache"/>
-		</property>
-	</bean>
+	<bean id="mp4reader.impl" class="org.red5.io.mp4.impl.MP4Reader" />
 	<!-- Use injection to set the keyframe cache for MP3 files -->
 	<bean id="mp3reader.impl" class="org.red5.io.mp3.impl.MP3Reader">
 		<property name="frameCache">

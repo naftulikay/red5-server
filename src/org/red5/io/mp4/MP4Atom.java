@@ -790,7 +790,7 @@ public class MP4Atom {
 		log.debug("Depth: {}", depth);
 		bitstream.skipBytes(2);		
 		readed += 78;		
-		log.warn("Bytes read: {}", readed);
+		log.debug("Bytes read: {}", readed);
 		MP4Atom child = MP4Atom.createAtom(bitstream);
 		this.children.add(child);
 		readed += child.getSize();

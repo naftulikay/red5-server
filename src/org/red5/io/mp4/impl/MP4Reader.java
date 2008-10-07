@@ -80,25 +80,25 @@ public class MP4Reader implements IoConstants, ITagReader {
     private static Logger log = LoggerFactory.getLogger(MP4Reader.class);
 
     /** Audio packet prefix */
-	private final static byte[] PREFIX_AUDIO_FRAME = new byte[]{(byte) 0xaf, (byte) 0x01};
+	public final static byte[] PREFIX_AUDIO_FRAME = new byte[]{(byte) 0xaf, (byte) 0x01};
 	
 	/** Audio config aac main */
-	private final static byte[] AUDIO_CONFIG_FRAME_AAC_MAIN = new byte[]{(byte) 0x11, (byte) 0x90, (byte) 0x4f, (byte) 0x14};
+	public final static byte[] AUDIO_CONFIG_FRAME_AAC_MAIN = new byte[]{(byte) 0x11, (byte) 0x90, (byte) 0x4f, (byte) 0x14};
 
 	/** Audio config aac lc */
-	private final static byte[] AUDIO_CONFIG_FRAME_AAC_LC = new byte[]{(byte) 0x12, (byte) 0x10};
+	public final static byte[] AUDIO_CONFIG_FRAME_AAC_LC = new byte[]{(byte) 0x12, (byte) 0x10};
     
 	/** Audio config sbr */
-	private final static byte[] AUDIO_CONFIG_FRAME_SBR = new byte[]{(byte) 0x13, (byte) 0x90, (byte) 0x56, (byte) 0xe5, (byte) 0xa5, (byte) 0x48, (byte) 0x00};
+	public final static byte[] AUDIO_CONFIG_FRAME_SBR = new byte[]{(byte) 0x13, (byte) 0x90, (byte) 0x56, (byte) 0xe5, (byte) 0xa5, (byte) 0x48, (byte) 0x00};
 
 	/** Video packet prefix for the decoder frame */
-	private final static byte[] PREFIX_VIDEO_CONFIG_FRAME = new byte[]{(byte) 0x17, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00};
+	public final static byte[] PREFIX_VIDEO_CONFIG_FRAME = new byte[]{(byte) 0x17, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00};
 	
 	/** Video packet prefix for key frames*/
-	private final static byte[] PREFIX_VIDEO_KEYFRAME = new byte[]{(byte) 0x17, (byte) 0x01, (byte) 0, (byte) 0, (byte) 0};
+	public final static byte[] PREFIX_VIDEO_KEYFRAME = new byte[]{(byte) 0x17, (byte) 0x01, (byte) 0, (byte) 0, (byte) 0};
     
 	/** Video packet prefix for standard frames (interframe)*/
-	private final static byte[] PREFIX_VIDEO_FRAME = new byte[]{(byte) 0x27, (byte) 0x01, (byte) 0, (byte) 0, (byte) 0};
+	public final static byte[] PREFIX_VIDEO_FRAME = new byte[]{(byte) 0x27, (byte) 0x01, (byte) 0, (byte) 0, (byte) 0};
     
     /**
      * File
@@ -841,7 +841,7 @@ public class MP4Reader implements IoConstants, ITagReader {
         props.put("audiochannels", audioChannels);
         
         props.put("moovposition", moovOffset);
-        //props.put("chapters", "");
+        //props.put("chapters", ""); //this is for f4b - books
         props.put("seekpoints", syncSamples);
         //tags will only appear if there is an "ilst" atom in the file
         //props.put("tags", "");
@@ -891,6 +891,8 @@ public class MP4Reader implements IoConstants, ITagReader {
 	 * 12 10                = AAC LC     = aottype 1
 	 * 13 90 56 e5 a5 48 00 = HE-AAC SBR = aottype 2
 	 * 06                   = Suffix
+	 * 
+	 * Still not absolutely certain about this order or the bytes - need to verify later
 	 */
     private void createPreStreamingTags() {
     	log.debug("Creating pre-streaming tags");

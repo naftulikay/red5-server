@@ -249,10 +249,10 @@ public class Input extends BaseInput implements org.red5.io.object.Input {
 		log.debug("Limit: {}", limit);
 		final java.nio.ByteBuffer strBuf = buf.buf();
 		int pos = strBuf.position();
-		log.info("Sting buf - position: {} limit: {}", pos, (pos + len));
+		log.info("String buf - position: {} limit: {}", pos, (pos + len));
 		strBuf.limit(pos + len);
 		final String string = AMF.CHARSET.decode(strBuf).toString();
-		log.info("Sting: {}", string);
+		log.info("String: {}", string);
 		buf.limit(limit); // Reset the limit
 		return string;
 	}

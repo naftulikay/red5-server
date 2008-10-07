@@ -488,7 +488,6 @@
 			<link href="http://www.opensymphony.com/quartz/api"/>
 			<link href="http://www.slf4j.org/api"/>
 			<link href="http://logging.apache.org/log4j/1.2/apidocs"/>
-			<link href="http://www.beanshell.org/javadoc"/>
 			<link href="http://groovy.codehaus.org/api"/>
 			<link href="http://tomcat.apache.org/tomcat-6.0-doc/api"/>
 			<link href="http://ehcache.sourceforge.net/javadoc"/>

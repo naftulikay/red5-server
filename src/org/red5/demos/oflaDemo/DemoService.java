@@ -37,17 +37,17 @@ public class DemoService {
 		Map<String, Map> filesMap = new HashMap<String, Map>();
 		try {
 			log.debug("getting the FLV files");
-			Resource[] flvs = scope.getResources("streams/*.flv");
-			addToMap(filesMap, flvs);
+			addToMap(filesMap, scope.getResources("streams/*.flv"));
 
-			Resource[] mp3s = scope.getResources("streams/*.mp3");
-			addToMap(filesMap, mp3s);
+			addToMap(filesMap, scope.getResources("streams/*.mp3"));
 			
-			Resource[] mp4s = scope.getResources("streams/*.mp4");
-			addToMap(filesMap, mp4s);
+			addToMap(filesMap, scope.getResources("streams/*.mp4"));
 
-			Resource[] m4as = scope.getResources("streams/*.m4a");
-			addToMap(filesMap, m4as);
+			addToMap(filesMap, scope.getResources("streams/*.m4a"));
+
+			addToMap(filesMap, scope.getResources("streams/*.3g2"));			
+
+			addToMap(filesMap, scope.getResources("streams/*.3gp"));			
 			
 		} catch (IOException e) {
 			log.error("{}", e);

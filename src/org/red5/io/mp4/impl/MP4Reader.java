@@ -508,20 +508,49 @@ public class MP4Reader implements IoConstants, ITagReader {
     											if (stsd != null) {
     												log.debug("Sample description atom found");
     												MP4Atom avc1 = stsd.getChildren().get(0);
-    												//could set the video codec here
+    												//could set the video codec here - may be avc1 or mp4v
     												setVideoCodecId(MP4Atom.intToType(avc1.getType()));
     												//video decoder config
     												//TODO may need to be generic later
-    												MP4Atom avcC = avc1.lookup(MP4Atom.typeToInt("avcC"), 0);
-    												if (avcC != null) {
-    													avcLevel = avcC.getAvcLevel();
+    												MP4Atom codecChild = avc1.lookup(MP4Atom.typeToInt("avcC"), 0);
+    												if (codecChild != null) {
+    													avcLevel = codecChild.getAvcLevel();
     													log.debug("AVC level: {}", avcLevel);
-    													avcProfile = avcC.getAvcProfile();
+    													avcProfile = codecChild.getAvcProfile();
     													log.debug("AVC Profile: {}", avcProfile);
-    													
-    													log.debug("AVCC size: {}", avcC.getSize());
-    													
-    													videoDecoderBytes = avcC.getVideoConfigBytes();
+    													log.debug("AVCC size: {}", codecChild.getSize());
+    													videoDecoderBytes = codecChild.getVideoConfigBytes();
+													    log.debug("Video config bytes: {}", ToStringBuilder.reflectionToString(videoDecoderBytes));
+    												} else {
+    													//look for esds 
+    													codecChild = avc1.lookup(MP4Atom.typeToInt("esds"), 0);
+    													//look for descriptors
+    													MP4Descriptor descriptor = codecChild.getEsd_descriptor();
+    													log.debug("{}", ToStringBuilder.reflectionToString(descriptor));
+    													if (descriptor != null) {
+    		    											Vector children = descriptor.getChildren();
+    		    											for (int e = 0; e < children.size(); e++) { 
+    		    												MP4Descriptor descr = (MP4Descriptor) children.get(e);
+    		    												log.debug("{}", ToStringBuilder.reflectionToString(descr));
+    		    												if (descr.getChildren().size() > 0) {
+    		    													Vector children2 = descr.getChildren();
+    		    													for (int e2 = 0; e2 < children2.size(); e2++) { 
+    		    														MP4Descriptor descr2 = (MP4Descriptor) children2.get(e2);
+    		    														log.debug("{}", ToStringBuilder.reflectionToString(descr2));
+    		    														if (descr2.getType() == MP4Descriptor.MP4DecSpecificInfoDescriptorTag) {
+    		    															//we only want the MP4DecSpecificInfoDescriptorTag
+    		    														    //videoDecoderBytes = descr2.getDSID();    														    
+    		    														    videoDecoderBytes = new byte[descr2.getDSID().length - 8];
+    		    														    System.arraycopy(descr2.getDSID(), 8, videoDecoderBytes, 0, videoDecoderBytes.length);
+    		    														    log.debug("Video config bytes: {}", ToStringBuilder.reflectionToString(videoDecoderBytes));
+    		    															//we want to break out of top level for loop
+    		    															e = 99;
+    		    															break;
+    		    														}
+    		    													}													
+    		    												}
+    		    											}
+    													}   													
     												}
     												log.debug("{}", ToStringBuilder.reflectionToString(avc1));
     											}
@@ -875,10 +904,9 @@ public class MP4Reader implements IoConstants, ITagReader {
     		body.setAutoExpand(true);
     		body.put(PREFIX_VIDEO_CONFIG_FRAME); //prefix
     		if (videoDecoderBytes != null) {
+        		log.debug("Video decoder bytes: {}", HexDump.byteArrayToHexString(videoDecoderBytes));
     			body.put(videoDecoderBytes);
-    		}
-    	
-    		log.debug("Video decoder bytes: {}", HexDump.byteArrayToHexString(videoDecoderBytes));
+    		}    	
     		
         	tag = new Tag(IoConstants.TYPE_VIDEO, 0, body.position(), null, 0);
     		body.flip();
@@ -916,14 +944,14 @@ public class MP4Reader implements IoConstants, ITagReader {
 	 *
 	 */
     public synchronized ITag readTag() {
-		log.debug("Read tag");
+		//log.debug("Read tag");
 		//empty-out the pre-streaming tags first
 		if (!firstTags.isEmpty()) {
 			log.debug("Returning pre-tag");
 			// Return first tags before media data
 			return firstTags.removeFirst();
 		}		
-		log.debug("Read tag - sample {} prevFrameSize {} audio: {} video: {}", new Object[]{currentSample, prevFrameSize, audioCount, videoCount});
+		//log.debug("Read tag - sample {} prevFrameSize {} audio: {} video: {}", new Object[]{currentSample, prevFrameSize, audioCount, videoCount});
 		
 		//get the current frame
 		MP4Frame frame = frames.get(currentSample - 1);
@@ -934,7 +962,7 @@ public class MP4Reader implements IoConstants, ITagReader {
 		//time routines are based on izumi code
 		double frameTs = (frame.getTime() - baseTs) * 1000.0;
 		int time = (int) Math.round(frame.getTime() * 1000.0);
-		log.debug("Read tag - dst: {} base: {} time: {}", new Object[]{frameTs, baseTs, time});
+		//log.debug("Read tag - dst: {} base: {} time: {}", new Object[]{frameTs, baseTs, time});
 		
 		long samplePos = frame.getOffset();
 		//log.debug("Read tag - samplePos {}", samplePos);
@@ -953,16 +981,16 @@ public class MP4Reader implements IoConstants, ITagReader {
 			//prefix is different for keyframes
 			if (type == TYPE_VIDEO) {
 	    		if (frame.isKeyFrame()) {
-	    			log.debug("Writing keyframe prefix");
+	    			//log.debug("Writing keyframe prefix");
 	    			data.put(PREFIX_VIDEO_KEYFRAME);
 	    		} else {  			
-	    			log.debug("Writing interframe prefix");
+	    			//log.debug("Writing interframe prefix");
 	    			data.put(PREFIX_VIDEO_FRAME);
 	    		}
 	    		
 	    		videoCount++;
 			} else {
-				log.debug("Writing audio prefix");
+				//log.debug("Writing audio prefix");
 				data.put(PREFIX_AUDIO_FRAME);
 				
 				audioCount++;
@@ -979,7 +1007,7 @@ public class MP4Reader implements IoConstants, ITagReader {
 		
 		//create the tag
 		ITag tag = new Tag(type, time, payload.limit(), payload, prevFrameSize);
-		log.debug("Read tag - type: {} body size: {}", (type == TYPE_AUDIO ? "Audio" : "Video"), tag.getBodySize());
+		//log.debug("Read tag - type: {} body size: {}", (type == TYPE_AUDIO ? "Audio" : "Video"), tag.getBodySize());
 		
 		//increment the sample number
 		currentSample++;			

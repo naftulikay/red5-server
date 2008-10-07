@@ -27,7 +27,6 @@ import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -46,10 +45,10 @@ import org.red5.io.flv.IKeyFrameDataAnalyzer;
 import org.red5.io.flv.impl.Tag;
 import org.red5.io.mp4.MP4Atom;
 import org.red5.io.mp4.MP4DataStream;
+import org.red5.io.mp4.MP4Descriptor;
 import org.red5.io.mp4.MP4Frame;
 import org.red5.io.object.Serializer;
-import org.red5.io.utils.ByteBufferUtil;
-import org.red5.server.net.rtmp.message.Constants;
+import org.red5.io.utils.HexDump;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -90,8 +89,6 @@ public class MP4Reader implements IoConstants, ITagReader, IKeyFrameDataAnalyzer
     
 	/** Video packet prefix for standard frames (interframe)*/
 	private final static byte[] PREFIX_VIDEO_FRAME = new byte[]{(byte) 0x27, (byte) 0x01, (byte) 0, (byte) 0, (byte) 0};
-	
-	private final static byte[] CHUNK_MARKER = new byte[]{(byte) 0xc5};
     
     /**
      * File
@@ -132,6 +129,10 @@ public class MP4Reader implements IoConstants, ITagReader, IKeyFrameDataAnalyzer
 	private String videoCodecId = "avc1";
 	private String audioCodecId = "mp4a";
 	
+	//decoder bytes / configs
+	private byte[] audioDecoderBytes;
+	private byte[] videoDecoderBytes;
+	
 	/** Duration in milliseconds. */
 	private long duration;	
 	/** Movies time scale */
@@ -160,6 +161,7 @@ public class MP4Reader implements IoConstants, ITagReader, IKeyFrameDataAnalyzer
 	//chunk offsets
 	private Vector videoChunkOffsets;
 	private Vector audioChunkOffsets;
+	
 	//sample duration
 	private int videoSampleDuration = 125;
 	private int audioSampleDuration = 1024;
@@ -181,8 +183,6 @@ public class MP4Reader implements IoConstants, ITagReader, IKeyFrameDataAnalyzer
 	 * be sent prior to media data.
 	 */
 	private LinkedList<ITag> firstTags = new LinkedList<ITag>();
-	private ITag audioConfTag, videoConfTag;
-	private boolean isAudioConfTagSent = false, isVideoConfTagSent = false;
 	
 	/** Constructs a new MP4Reader. */
 	MP4Reader() {
@@ -213,11 +213,11 @@ public class MP4Reader implements IoConstants, ITagReader, IKeyFrameDataAnalyzer
 		channel = fis.getChannel();
 		//decode all the info that we want from the atoms
 		decodeHeader();
-		//build the keyframe meta data
-		analyzeKeyFrames();
+		//analyze the samples/chunks and build the keyframe meta data
+		analyzeFrames();
 		//add meta data
-		//firstTags.add(createFileMeta());
-		//create / add the pre-streaming tags
+		firstTags.add(createFileMeta());
+		//create / add the pre-streaming (decoder config) tags
 		createPreStreamingTags();
 	}
     
@@ -382,14 +382,13 @@ public class MP4Reader implements IoConstants, ITagReader, IKeyFrameDataAnalyzer
     												audioChannels = mp4a.getChannelCount();
     												log.debug("Sample rate (audio time scale): {}", audioTimeScale);			
     												log.debug("Channels: {}", audioChannels);										
-    												/* no data we care about right now
     												//mp4a: esds
     												if (mp4a.getChildren().size() > 0) {
     													log.debug("Elementary stream descriptor atom found");
     													MP4Atom esds = mp4a.getChildren().get(0);
     													log.debug("{}", ToStringBuilder.reflectionToString(esds));
     													MP4Descriptor descriptor = esds.getEsd_descriptor();
-    													//log.debug("{}", ToStringBuilder.reflectionToString(descriptor));
+    													log.debug("{}", ToStringBuilder.reflectionToString(descriptor));
     													if (descriptor != null) {
     		    											Vector children = descriptor.getChildren();
     		    											for (int e = 0; e < children.size(); e++) { 
@@ -399,13 +398,19 @@ public class MP4Reader implements IoConstants, ITagReader, IKeyFrameDataAnalyzer
     		    													Vector children2 = descr.getChildren();
     		    													for (int e2 = 0; e2 < children2.size(); e2++) { 
     		    														MP4Descriptor descr2 = (MP4Descriptor) children2.get(e2);
-    		    														log.debug("{}", ToStringBuilder.reflectionToString(descr2));														
+    		    														log.debug("{}", ToStringBuilder.reflectionToString(descr2));
+    		    														if (descr2.getType() == MP4Descriptor.MP4DecSpecificInfoDescriptorTag) {
+    		    															//we only want the MP4DecSpecificInfoDescriptorTag
+    		    														    audioDecoderBytes = descr2.getDSID();
+    		    															//we want to break out of top level for loop
+    		    															e = 99;
+    		    															break;
+    		    														}
     		    													}													
     		    												}
     		    											}
     													}
     												}
-    												*/
     											}
     											//stsc - has Records
     											MP4Atom stsc = stbl.lookup(MP4Atom.typeToInt("stsc"), 0);
@@ -432,8 +437,6 @@ public class MP4Reader implements IoConstants, ITagReader, IKeyFrameDataAnalyzer
     												//vector full of integers
     												audioChunkOffsets = stco.getChunks();
     												log.debug("Chunk count: {}", audioChunkOffsets.size());
-    												//set the first audio offset
-    												//firstAudioChunkOffset = (Long) audioChunkOffsets.get(0);
     											}
     											//stts - has TimeSampleRecords
     											MP4Atom stts = stbl.lookup(MP4Atom.typeToInt("stts"), 0);
@@ -485,6 +488,8 @@ public class MP4Reader implements IoConstants, ITagReader, IKeyFrameDataAnalyzer
     											// ctts - (composition) time to sample
     											// stss - sync sample
     											// sdtp - independent and disposable samples
+    											
+    											//TODO: find 0x01, 0x42, 0x00, 0x1e
     
     											//stsd - has codec child
     											MP4Atom stsd = stbl.lookup(MP4Atom.typeToInt("stsd"), 0);
@@ -493,13 +498,18 @@ public class MP4Reader implements IoConstants, ITagReader, IKeyFrameDataAnalyzer
     												MP4Atom avc1 = stsd.getChildren().get(0);
     												//could set the video codec here
     												setVideoCodecId(MP4Atom.intToType(avc1.getType()));
-    												//
+    												//video decoder config
+    												//TODO may need to be generic later
     												MP4Atom avcC = avc1.lookup(MP4Atom.typeToInt("avcC"), 0);
     												if (avcC != null) {
     													avcLevel = avcC.getAvcLevel();
     													log.debug("AVC level: {}", avcLevel);
     													avcProfile = avcC.getAvcProfile();
     													log.debug("AVC Profile: {}", avcProfile);
+    													
+    													log.debug("AVCC size: {}", avcC.getSize());
+    													
+    													videoDecoderBytes = avcC.getVideoConfigBytes();
     												}
     												log.debug("{}", ToStringBuilder.reflectionToString(avc1));
     											}
@@ -618,20 +628,6 @@ public class MP4Reader implements IoConstants, ITagReader, IKeyFrameDataAnalyzer
     public void setKeyFrameCache(IKeyFrameMetaCache keyframeCache) {
     	MP4Reader.keyframeCache = keyframeCache;
     }
-
-    /**
-	 * Get the remaining bytes that could be read from a file or ByteBuffer.
-	 *
-	 * @return          Number of remaining bytes
-	 */
-	private long getRemainingBytes() {
-		try {
-			return channel.size() - channel.position();
-		} catch (Exception e) {
-			log.error("Error getRemainingBytes", e);
-			return 0;
-		}
-	}
 
 	/**
 	 * Get the total readable bytes in a file or ByteBuffer.
@@ -845,23 +841,21 @@ public class MP4Reader implements IoConstants, ITagReader, IKeyFrameDataAnalyzer
 
     /**
 	 * Tag sequence
-	 * Notify - onMetaData
-	 * Video - ts=0 size=2 bytes {52 00}
-	 * Video - ts=0 size=5 bytes {17 02 00 00 00}
-	 * Video - ts=0 size=2 bytes {52 01}
-	 * Audio - ts=0 size=4 bytes {af 00 12 10}
-	 * Audio - ts=0 size=9 bytes {af 01 20 00 00 00 00 00 0e} 
+	 * MetaData, Video config, Audio config, remaining audio and video 
 	 * 
 	 * Packet prefixes:
 	 * 17 00 00 00 00 = Video extra data (first video packet)
 	 * 17 01 00 00 00 = Keyframe
 	 * 27 01 00 00 00 = Interframe
-	 * af 00 = Audio extra data (first audio packet)
-	 * af 01 = Audio
+	 * af 00 ...   06 = Audio extra data (first audio packet)
+	 * af 01          = Audio
 	 * 
-	 * Audio extra data(s):
-	 * af 00 12 10 06 = AAC LC
-	 * af 00 13 90 56 e5 a5 48 00 = HE-AAC
+	 * Audio extra data(s): 
+	 * af 00                = Prefix
+	 * 11 90 4f 14          = ??
+	 * 12 10                = AAC LC
+	 * 13 90 56 e5 a5 48 00 = HE-AAC
+	 * 06                   = Suffix
 	 */
     private void createPreStreamingTags() {
     	log.debug("Creating pre-streaming tags");
@@ -871,54 +865,44 @@ public class MP4Reader implements IoConstants, ITagReader, IKeyFrameDataAnalyzer
     	if (hasVideo) {
         	//video tag #1
     		//TODO: this data is only for backcountry bombshells - make this dynamic
-    		body = ByteBuffer.allocate(1024);
+    		body = ByteBuffer.allocate(41);
     		body.setAutoExpand(true);
-    		body.put(new byte[]{
-    		(byte) 0x17, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x01, (byte) 0x42, (byte) 0x00,
-    		(byte) 0x1e, (byte) 0xff, (byte) 0xe1, (byte) 0x00, (byte) 0x24, (byte) 0x67, (byte) 0x42, (byte) 0x80,
-    		(byte) 0x1e, (byte) 0x96, (byte) 0x56, (byte) 0x05, (byte) 0x01, (byte) 0x7f, (byte) 0xcb, (byte) 0x80,
-    		(byte) 0xa8, (byte) 0x40, (byte) 0x00, (byte) 0x00, (byte) 0xfa, (byte) 0x40, (byte) 0x00, (byte) 0x2e,
-    		(byte) 0xe0, (byte) 0x38, (byte) 0x18, (byte) 0x00, (byte) 0x19, (byte) 0xf0, (byte) 0x80, (byte) 0x00,
-    		(byte) 0x49, (byte) 0x3e, (byte) 0x3f, (byte) 0x18, (byte) 0xe0, (byte) 0xed, (byte) 0x0a, (byte) 0x15,
-    		(byte) 0x70, (byte) 0x01, (byte) 0x00, (byte) 0x04, (byte) 0x68, (byte) 0xca, (byte) 0x43, (byte) 0x52,
-    		(byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x1c, (byte) 0x75, (byte) 0x75, (byte) 0x69, (byte) 0x64,
-    		(byte) 0x6b, (byte) 0x68, (byte) 0x40, (byte) 0xf2, (byte) 0x5f, (byte) 0x24, (byte) 0x4f, (byte) 0xc5,
-    		(byte) 0xba, (byte) 0x39, (byte) 0xa5, (byte) 0x1b, (byte) 0xcf, (byte) 0x03, (byte) 0x23, (byte) 0xf3,
-    		(byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x01});
+    		body.put(new byte[]{(byte) 0x17, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00}); //prefix
+    		if (videoDecoderBytes != null) {
+    			body.put(videoDecoderBytes);
+    		}
+    	
+    		log.debug("Video decoder bytes: {}", HexDump.byteArrayToHexString(videoDecoderBytes));
     		
-    		//fake avcc
-    		/*
-    		byte[] fakeAvcc = new byte[]{
-    		(byte) 0x01, (byte) 0x4D, (byte) 0x40, (byte) 0x1F, (byte) 0xFF, (byte) 0xE1, (byte) 0x00,
-    		(byte) 0x14, (byte) 0x27, (byte) 0x4D, (byte) 0x40, (byte) 0x1F, (byte) 0xA9, (byte) 0x18,
-    		(byte) 0x0A, (byte) 0x00, (byte) 0x8B, (byte) 0x60, (byte) 0x0D, (byte) 0x41, (byte) 0x80,
-    		(byte) 0x41, (byte) 0x8C, (byte) 0x2B, (byte) 0x5E, (byte) 0xF7, (byte) 0xC0, (byte) 0x40,
-    		(byte) 0x01, (byte) 0x00, (byte) 0x04, (byte) 0x28, (byte) 0xCE, (byte) 0x09, (byte) 0xC8
-    		};
-    		log.debug("Fake: {}", new String(fakeAvcc));
-			*/
         	tag = new Tag(IoConstants.TYPE_VIDEO, 0, body.position(), null, 0);
     		body.flip();
     		tag.setBody(body);
-    
+    		
     		//add tag
     		firstTags.add(tag);
-    		videoConfTag = tag;
     	}
     	
     	if (hasAudio) {
     		//audio tag #1
     		//TODO: this data is only for backcountry bombshells - make this dynamic
-    		body = ByteBuffer.allocate(1024);
+    		body = ByteBuffer.allocate(7);
     		body.setAutoExpand(true);
-    		body.put(new byte[]{(byte) 0xaf, (byte) 0, (byte) 0x11, (byte) 0x90, (byte) 0x4f, (byte) 0x14, (byte) 0x06});
+    		body.put(new byte[]{(byte) 0xaf, (byte) 0}); //prefix
+    		if (audioDecoderBytes != null) {
+    			log.debug("Audio decoder bytes: {}", HexDump.byteArrayToHexString(audioDecoderBytes));
+    			body.put(audioDecoderBytes);
+    		} else {
+    			//not sure which config this is but it works most of the time
+    			//when the esds didnt contain descripter bytes
+    			body.put(new byte[]{(byte) 0x11, (byte) 0x90, (byte) 0x4f, (byte) 0x14});
+    		}
+    		body.put((byte) 0x06); //suffix
     		tag = new Tag(IoConstants.TYPE_AUDIO, 0, body.position(), null, tag.getBodySize());
     		body.flip();
     		tag.setBody(body);
-    
+    		
     		//add tag
     		firstTags.add(tag);
-    		audioConfTag = tag;
     	}
     }
     
@@ -929,11 +913,11 @@ public class MP4Reader implements IoConstants, ITagReader, IKeyFrameDataAnalyzer
     public synchronized ITag readTag() {
 		log.debug("Read tag");
 		//empty-out the pre-streaming tags first
-//		if (!firstTags.isEmpty()) {
-//			log.debug("Returning pre-tag");
-//			// Return first tags before media data
-//			return firstTags.removeFirst();
-//		}		
+		if (!firstTags.isEmpty()) {
+			log.debug("Returning pre-tag");
+			// Return first tags before media data
+			return firstTags.removeFirst();
+		}		
 		log.debug("Read tag - sample {} prevFrameSize {} audio: {} video: {}", new Object[]{currentSample, prevFrameSize, audioCount, videoCount});
 		
 		//get the current frame
@@ -946,8 +930,6 @@ public class MP4Reader implements IoConstants, ITagReader, IKeyFrameDataAnalyzer
 		double frameTs = (frame.getTime() - baseTs) * 1000.0;
 		int time = (int) Math.round(frame.getTime() * 1000.0);
 		log.debug("Read tag - dst: {} base: {} time: {}", new Object[]{frameTs, baseTs, time});
-		//log.debug("Read tag - sampleSize {} ts {}", new Object[]{sampleSize, ts});
-		//log.debug("Read tag - sample dur / scale {}", new Object[]{((currentSample * timeScale) / videoSampleDuration)});		
 		
 		long samplePos = frame.getOffset();
 		//log.debug("Read tag - samplePos {}", samplePos);
@@ -959,14 +941,7 @@ public class MP4Reader implements IoConstants, ITagReader, IKeyFrameDataAnalyzer
 		if (type == TYPE_AUDIO) {
 			pad = 2;
 		}
-		if (type == TYPE_AUDIO && !isAudioConfTagSent) {
-			isAudioConfTagSent = true;
-			return audioConfTag;
-		} else if (type == TYPE_VIDEO && !isVideoConfTagSent) {
-			isVideoConfTagSent = true;
-			return videoConfTag;
-		}
-
+		
 		//create a byte buffer of the size of the sample
 		java.nio.ByteBuffer data = java.nio.ByteBuffer.allocate(sampleSize + pad);
 		try {
@@ -1012,25 +987,50 @@ public class MP4Reader implements IoConstants, ITagReader, IKeyFrameDataAnalyzer
 	}
 
     /**
-     * Performs frame analysis and generates metadata for use in seeking. The
-     * method name is a little misleading since it analyzes all the frames. Additionally
-     * the frames are sorted together based on time and offset.
+     * Returns key frame metadata.
 	 *
      * @return             Keyframe metadata
      */
     public KeyFrameMeta analyzeKeyFrames() {
-		if (keyframeMeta != null) {
-			log.debug("Key frame meta already generated");
-			return keyframeMeta;
+		if (keyframeMeta == null) {
+			keyframeMeta = new KeyFrameMeta();
+			keyframeMeta.duration = duration;
+			
+			/*
+			 * TODO: keyframes are handled differently with h.264 media so we will need
+			 * some tweaking here. For one thing our timestamps are doubles instead of longs.
+			 * 
+			 * To get the key frame positions and timestamps we can simply look at the frame collection
+			 * 
+
+			//key frame sample numbers are stored in the syncSamples collection
+			int keyframeCount = syncSamples.size();
+			
+			posTimeMap = new HashMap<Long, Long>();
+
+			keyframeMeta.positions = new long[positionList.size()];
+			keyframeMeta.timestamps = new float[timestampList.size()];
+			for (int i = 0; i < keyframeMeta.positions.length; i++) {
+				keyframeMeta.positions[i] = positionList.get(i);
+				keyframeMeta.timestamps[i] = timestampList.get(i);
+				posTimeMap.put((long) positionList.get(i), (float) timestampList
+						.get(i));
+			}
+			if (keyframeCache != null) {
+				keyframeCache.saveKeyFrameMeta(file, keyframeMeta);
+			}
+			*/
 		}
-		log.debug("Analyzing key frames");
-					
-		//key frame sample numbers are stored in the syncSamples collection
-		int keyframeCount = syncSamples.size();
-		
-        // Lists of video positions and timestamps
-        List<Long> positionList = new ArrayList<Long>(keyframeCount);
-        List<Float> timestampList = new ArrayList<Float>(keyframeCount);     
+		return keyframeMeta;
+    }
+    
+    /**
+     * Performs frame analysis and generates metadata for use in seeking. All the frames
+     * are analyzed and sorted together based on time and offset.
+     */    
+    public void analyzeFrames() {
+		log.debug("Analyzing frames");
+						
         // Maps positions to tags
         posTagMap = new HashMap<Long, Integer>();
         samplePosMap = new HashMap<Integer, Long>();
@@ -1056,12 +1056,7 @@ public class MP4Reader implements IoConstants, ITagReader, IKeyFrameDataAnalyzer
         			double ts = (videoSampleDuration * (sample - 1)) / videoTimeScale;
         			//check to see if the sample is a keyframe
         			boolean keyframe = syncSamples.contains(sample);
-        			if (keyframe) {
-        				log.debug("Keyframe - sample: {}", sample);
-        				positionList.add(pos);
-        				//log.debug("Keyframe - timestamp: {}", ts);
-        				//timestampList.add(ts);
-        			}
+        			//size of the sample
         			int size = ((Integer) videoSamples.get(sample - 1)).intValue();
     
         			//create a frame
@@ -1083,7 +1078,7 @@ public class MP4Reader implements IoConstants, ITagReader, IKeyFrameDataAnalyzer
     		}
 		}
 		
-		log.debug("Position map size: {} keyframe list size: {}", posTagMap.size(), positionList.size());
+		log.debug("Position map size: {}", posTagMap.size());
 		log.debug("Sample position map (video): {}", samplePosMap);
 			
 		//add the audio frames / samples / chunks		
@@ -1125,66 +1120,10 @@ public class MP4Reader implements IoConstants, ITagReader, IKeyFrameDataAnalyzer
 		//sort the frames
 		Collections.sort(frames);
 		
-		log.debug("Frames count (expect 16042 for backcountry): {}", frames.size());
+		log.debug("Frames count: {}", frames.size());
 		//log.debug("Frames: {}", frames);
-		
-		keyframeMeta = new KeyFrameMeta();
-		keyframeMeta.duration = duration;
-		/*
-		 * TODO: keyframes are handled differently with h.264 media so we will need
-		 * some tweaking here. For one thing our timestamps are doubles instead of longs.
-		 * 
-		posTimeMap = new HashMap<Long, Long>();
-
-		keyframeMeta.positions = new long[positionList.size()];
-		keyframeMeta.timestamps = new float[timestampList.size()];
-		for (int i = 0; i < keyframeMeta.positions.length; i++) {
-			keyframeMeta.positions[i] = positionList.get(i);
-			keyframeMeta.timestamps[i] = timestampList.get(i);
-			posTimeMap.put((long) positionList.get(i), (float) timestampList
-					.get(i));
-		}
-		if (keyframeCache != null) {
-			keyframeCache.saveKeyFrameMeta(file, keyframeMeta);
-		}
-		*/
-		return keyframeMeta;
 	}
-
-    /**
-     * Handler for data chunks.
-     * 
-     * @param payload
-     * @return
-     */
-    private ByteBuffer getChunkedPayload(byte[] payload) {
-    	//log.debug("Get chunked payload");
-    	int len = payload.length;
-    	//log.debug("Payload length: {}", len);
-    	int chunkLen = 0;
-    	int offset = 0;
-    	//extra bytes needed for chunk markers and such
-    	int extra = Math.max(0, Math.round(len / 4096));
-    	//size the return array as good as possible to prevent resize
-    	ByteBuffer ret = ByteBuffer.allocate(len + extra);
-    	//allow resize
-    	ret.setAutoExpand(true);
-    	while (len > 0) {
-        	chunkLen = Math.min(len, 4096);
-        	//log.debug("Chunk len: {}", chunkLen);
-        	ret.put(payload, offset, chunkLen);
-        	//log.debug("read: {}", ret.position());
-        	offset += chunkLen;
-        	len -= chunkLen;
-        	//log.debug("len: {}", len);
-        	if (len > 0) {
-        		ret.put(CHUNK_MARKER);
-        	}
-    	}
-    	ret.flip();
-    	return ret;
-    }
-    
+   
 	/**
 	 * Put the current position to pos.
 	 * The caller must ensure the pos is a valid one

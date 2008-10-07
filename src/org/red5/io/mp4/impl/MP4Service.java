@@ -51,17 +51,37 @@ public class MP4Service extends BaseStreamableFileService implements IMP4Service
      * Generate MP4 metadata?
      */
     private boolean generateMetadata;
-
+    
+    /**
+     * File extensions handled by this service. If there are more than one, they
+     * are comma separated.
+     */
+    private static String extension = ".f4v,.mp4,.mov";
+    
+    private static String prefix = "f4v";
+    
+	/** {@inheritDoc} */
+    @Override
+    public void setPrefix(String prefix) {
+		MP4Service.prefix = prefix;
+	}    
+    
 	/** {@inheritDoc} */
     @Override
 	public String getPrefix() {
-		return "mp4";
+		return prefix;
 	}
 
 	/** {@inheritDoc} */
     @Override
+    public void setExtension(String extension) {
+		MP4Service.extension = extension;
+	}
+	
+	/** {@inheritDoc} */
+    @Override
 	public String getExtension() {
-		return ".mp4";
+		return extension;
 	}
 
 	/** 
@@ -69,7 +89,6 @@ public class MP4Service extends BaseStreamableFileService implements IMP4Service
 	 */
 	public void setSerializer(Serializer serializer) {
 		this.serializer = serializer;
-
 	}
 
 	/** {@inheritDoc}

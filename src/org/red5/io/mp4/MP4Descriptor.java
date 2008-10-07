@@ -45,16 +45,11 @@ package org.red5.io.mp4;
 import java.io.IOException;
 import java.util.Vector;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 /**
  * MP4Descriptor
  * 
  */
 public class MP4Descriptor {
-
-	private static Logger log = LoggerFactory.getLogger(MP4Descriptor.class);
 
 	public final static int MP4ES_DescriptorTag = 3;
 
@@ -171,6 +166,12 @@ public class MP4Descriptor {
 
 	protected long decSpecificDataOffset;
 
+	private byte[] dsid;
+
+	public byte[] getDSID() {
+		return dsid;
+	}
+	
 	/**
 	 * Loads the MP4DecSpecificInfoDescriptor from the input bitstream.
 	 * 
@@ -180,6 +181,11 @@ public class MP4Descriptor {
 	public void createDecSpecificInfoDescriptor(MP4DataStream bitstream)
 			throws IOException {
 		decSpecificDataOffset = bitstream.getOffset();
+		dsid = new byte[size];
+		for (int b = 0; b < size; b++) {
+			dsid[b] = (byte) bitstream.readBytes(1);
+			readed++;
+		}
 		decSpecificDataSize = size - readed;
 	}
 

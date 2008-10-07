@@ -19,7 +19,6 @@ package org.red5.server.stream.consumer;
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA 
  */
 
-import org.apache.mina.common.ByteBuffer;
 import org.red5.server.api.IBWControllable;
 import org.red5.server.api.IBandwidthConfigure;
 import org.red5.server.api.IConnectionBWConfig;

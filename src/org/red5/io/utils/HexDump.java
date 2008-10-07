@@ -287,7 +287,7 @@ public class HexDump {
 	 */
 	public static String byteArrayToHexString(byte[] block) {
 
-		StringBuffer buf = new StringBuffer();
+		StringBuilder buf = new StringBuilder();
 		int len = block.length;
 
 		for (int i = 0; i < len; i++) {
@@ -329,7 +329,7 @@ public class HexDump {
 	public static String byteArrayToHexString(byte[] block, int offset,
 			int length) {
 
-		StringBuffer buf = new StringBuffer();
+		StringBuilder buf = new StringBuilder();
 		int len = block.length;
 
 		length = length + offset;
@@ -685,7 +685,7 @@ public class HexDump {
 	 * @param buf
 	 *            Description of Parameter
 	 */
-	private static void byte2hex(byte b, StringBuffer buf) {
+	private static void byte2hex(byte b, StringBuilder buf) {
 		int high = ((b & 0xf0) >> 4);
 		int low = (b & 0x0f);
 		buf.append(HEX_DIGITS[high]);

@@ -139,17 +139,17 @@ public class MP4Atom {
 	public static MP4Atom createAtom(MP4DataStream bitstream) throws IOException {
 		String uuid = null;
 		long size = bitstream.readBytes(4);
-		if(size == 0) {
+		if (size == 0) {
 			throw new IOException("Invalid size");
 		}
 		int type = (int)bitstream.readBytes(4);
 		long readed = 8;
-		if(type == MP4ExtendedAtomType) {
+		if (type == MP4ExtendedAtomType) {
 			uuid = bitstream.readString(16);
 			readed += 16;
 		}
 		// large size
-		if(size == 1) {
+		if (size == 1) {
 			size = bitstream.readBytes(8);
 			readed += 8;
 		}
@@ -790,6 +790,7 @@ public class MP4Atom {
 		log.debug("Depth: {}", depth);
 		bitstream.skipBytes(2);		
 		readed += 78;		
+		log.warn("Bytes read: {}", readed);
 		MP4Atom child = MP4Atom.createAtom(bitstream);
 		this.children.add(child);
 		readed += child.getSize();
@@ -815,6 +816,12 @@ public class MP4Atom {
 		return avcProfile;
 	}
 
+	private byte[] videoConfigBytes;
+	
+	public byte[] getVideoConfigBytes() {
+		return videoConfigBytes;
+	}
+	
 	/**
 	 * Loads AVC config atom from the input bitstream.
 	 * 
@@ -841,22 +848,38 @@ public class MP4Atom {
 	 */
 	public long create_avc_config_atom(MP4DataStream bitstream) throws IOException {
 		log.debug("AVC config");
-		bitstream.skipBytes(1); //version
-		//profile
-		avcProfile = (int) bitstream.readBytes(1);
-		log.debug("AVC profile: {}", avcProfile);
-		int avcCompatProfile = (int) bitstream.readBytes(1);
-		log.debug("AVC compatible profile: {}", avcCompatProfile);
-		avcLevel = (int) bitstream.readBytes(1);
-		log.debug("AVC level: {}", avcLevel);
-		bitstream.skipBytes(1); //reserved and NAL length
-		int numberSPS = (int) bitstream.readBytes(1);
-		log.debug("Number of SPS: {}", numberSPS);
-		bitstream.skipBytes(5); 
-		readed += 11;
-		MP4Atom child = MP4Atom.createAtom(bitstream);
-		this.children.add(child);
-		readed += child.getSize();
+		log.debug("Offset: {}", bitstream.getOffset());
+		//store the decoder config bytes
+		videoConfigBytes = new byte[(int) size];
+		for (int b = 0; b < videoConfigBytes.length; b++) {
+			videoConfigBytes[b] = (byte) bitstream.readBytes(1);
+			
+			switch (b) {
+				//0 / version
+				case 1: //profile
+					avcProfile = videoConfigBytes[b];
+					log.debug("AVC profile: {}", avcProfile);
+					break;
+				case 2: //compatible profile
+					int avcCompatProfile = videoConfigBytes[b];
+					log.debug("AVC compatible profile: {}", avcCompatProfile);
+					break;
+				case 3: //avc level
+					avcLevel = videoConfigBytes[b];
+					log.debug("AVC level: {}", avcLevel);
+					break;
+				case 4: //NAL length
+					break;
+				case 5: //SPS number
+					int numberSPS = videoConfigBytes[b];
+					log.debug("Number of SPS: {}", numberSPS);
+					break;
+				default:
+				
+			}
+			
+			readed++;
+		}
 		return readed;		
 	}	
 	

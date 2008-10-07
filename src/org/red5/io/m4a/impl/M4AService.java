@@ -25,6 +25,7 @@ import java.io.IOException;
 import org.red5.io.BaseStreamableFileService;
 import org.red5.io.IStreamableFile;
 import org.red5.io.m4a.IM4AService;
+import org.red5.io.mp4.impl.MP4Service;
 import org.red5.io.object.Deserializer;
 import org.red5.io.object.Serializer;
 
@@ -47,16 +48,36 @@ public class M4AService extends BaseStreamableFileService implements IM4AService
      */
     private Deserializer deserializer;
 
+    /**
+     * File extensions handled by this service. If there are more than one, they
+     * are comma separated.
+     */
+    private static String extension = ".f4a,.m4a,.aac";
+    
+    private static String prefix = "f4a";
+    
+	/** {@inheritDoc} */
+    @Override
+    public void setPrefix(String prefix) {
+    	M4AService.prefix = prefix;
+	}    
+    
 	/** {@inheritDoc} */
     @Override
 	public String getPrefix() {
-		return "m4a";
+		return prefix;
 	}
 
 	/** {@inheritDoc} */
     @Override
+    public void setExtension(String extension) {
+    	M4AService.extension = extension;
+	}
+	
+	/** {@inheritDoc} */
+    @Override
 	public String getExtension() {
-		return ".m4a";
+		return extension;
 	}
 
 	/** 

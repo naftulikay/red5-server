@@ -509,12 +509,12 @@
       	</sequential>
 	</macrodef>
 
-	<target name="jar" description="Make Archive" depends="compile">
-
+	<target name="jar-determine-classpath" description="Determine classpath for jar file" depends="compile" unless="jar.classpath">
 		<manifestclasspath property="jar.classpath" jarfile="${red5.filename}.jar">
 			<classpath refid="runtime.classpath"/>
 		</manifestclasspath>
-
+        </target>
+	<target name="jar" description="Make Archive" depends="jar-determine-classpath">
 		<jar destfile="${red5.filename}.jar">
 			<fileset dir="${classes.dir}">
 				<include name="**"/>

@@ -249,10 +249,10 @@ public class Input extends BaseInput implements org.red5.io.object.Input {
 		log.debug("Limit: {}", limit);
 		final java.nio.ByteBuffer strBuf = buf.buf();
 		int pos = strBuf.position();
-		log.info("String buf - position: {} limit: {}", pos, (pos + len));
+		log.debug("String buf - position: {} limit: {}", pos, (pos + len));
 		strBuf.limit(pos + len);
 		final String string = AMF.CHARSET.decode(strBuf).toString();
-		log.info("String: {}", string);
+		log.debug("String: {}", string);
 		buf.limit(limit); // Reset the limit
 		return string;
 	}
@@ -383,7 +383,7 @@ public class Input extends BaseInput implements org.red5.io.object.Input {
 	 * @return Object          New object instance (for given class)
 	 */
 	protected Object newInstance(String className) {
-		log.info("Loading class: {}", className);
+		log.debug("Loading class: {}", className);
 		Object instance = null;
 		try {
 			Class<?> clazz = Thread.currentThread().getContextClassLoader()

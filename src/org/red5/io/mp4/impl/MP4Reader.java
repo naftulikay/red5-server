@@ -116,10 +116,7 @@ public class MP4Reader implements IoConstants, ITagReader {
     private FileChannel channel;
 
 	/** Mapping between file position and timestamp in ms. */
-	private HashMap<Long, Long> posTimeMap;
-
-	/** Mapping between file position and tag number. */
-	private HashMap<Long, Integer> posTagMap;
+	private HashMap<Integer, Long> timePosMap;
 	
 	private HashMap<Integer, Long> samplePosMap;
 	
@@ -188,6 +185,12 @@ public class MP4Reader implements IoConstants, ITagReader {
 	 * be sent prior to media data.
 	 */
 	private LinkedList<ITag> firstTags = new LinkedList<ITag>();
+	
+	/**
+	 * Container for seek points in the video. These are the time stamps
+	 * for the key frames.
+	 */
+	private LinkedList<Integer> seekPoints;
 	
 	/** Constructs a new MP4Reader. */
 	MP4Reader() {
@@ -842,25 +845,52 @@ public class MP4Reader implements IoConstants, ITagReader {
         
         props.put("moovposition", moovOffset);
         //props.put("chapters", ""); //this is for f4b - books
-        props.put("seekpoints", syncSamples);
+        if (seekPoints != null) {
+        	props.put("seekpoints", seekPoints);
+        }
         //tags will only appear if there is an "ilst" atom in the file
         //props.put("tags", "");
    
-//        Object[] arr = new Object[2];
-//        Map<String, Object> audioMap = new HashMap<String, Object>(4);
-//        audioMap.put("timescale", audioSampleRate);
-//        audioMap.put("language", "eng");
-//        audioMap.put("length", Integer.valueOf(10552320));
-//        Map<String, String> sampleMap = new HashMap<String, String>(1);
-//        sampleMap.put("sampletype", audioCodecId);
-//        audioMap.put("sampledescription", sampleMap);
-//        arr[0] = audioMap;
-//        Map<String, Object> videoMap = new HashMap<String, Object>(3);
-//        videoMap.put("timescale", Integer.valueOf(2997));
-//        videoMap.put("language", "eng");
-//        videoMap.put("length", Integer.valueOf(717125));
-//        arr[1] = videoMap;
-//        props.put("trackinfo", arr);
+        List<Map<String, Object>> arr = new ArrayList<Map<String, Object>>(2);
+        if (hasAudio) {
+            Map<String, Object> audioMap = new HashMap<String, Object>(4);
+            audioMap.put("timescale", audioTimeScale);
+            audioMap.put("language", "und");
+            audioMap.put("length_property", audioSampleDuration * audioSamples.size());
+
+            List<Map> desc = new ArrayList<Map>(1);            
+            audioMap.put("sampledescription", desc);   
+            
+            Map<String, String> sampleMap = new HashMap<String, String>(1);
+            sampleMap.put("sampletype", audioCodecId);
+            desc.add(sampleMap);
+            
+            arr.add(audioMap);
+            
+    		//release some memory, since we're done with the vectors
+    		audioSamples.clear();
+    		audioSamples = null;
+    	}
+        if (hasVideo) {
+            Map<String, Object> videoMap = new HashMap<String, Object>(3);
+            videoMap.put("timescale", videoTimeScale);
+            videoMap.put("language", "und");
+            videoMap.put("length_property", videoSampleDuration * videoSamples.size());
+            
+            List<Map> desc = new ArrayList<Map>(1);            
+            videoMap.put("sampledescription", desc);            
+            
+            Map<String, String> sampleMap = new HashMap<String, String>(1);
+            sampleMap.put("sampletype", videoCodecId);
+            desc.add(sampleMap);
+            
+            arr.add(videoMap);
+
+    		//release some memory, since we're done with the vectors
+    		videoSamples.clear();
+    		videoSamples = null;        
+        }
+        props.put("trackinfo", arr.toArray());
         
 		props.put("canSeekToEnd", false);
 		out.writeMap(props, new Serializer());
@@ -1028,8 +1058,8 @@ public class MP4Reader implements IoConstants, ITagReader {
     public void analyzeFrames() {
 		log.debug("Analyzing frames");
 						
-        // Maps positions to tags
-        posTagMap = new HashMap<Long, Integer>();
+        // Maps positions, samples, timestamps to one another
+		timePosMap = new HashMap<Integer, Long>();
         samplePosMap = new HashMap<Integer, Long>();
         // tag == sample
 		int sample = 1;
@@ -1047,7 +1077,6 @@ public class MP4Reader implements IoConstants, ITagReader {
 				pos = (Long) videoChunkOffsets.elementAt(chunk - 1);			
     			while (sampleCount > 0) {
     				//log.debug("Position: {}", pos);
-        			posTagMap.put(pos, sample);
         			samplePosMap.put(sample, pos);
     				//calculate ts
         			double ts = (videoSampleDuration * (sample - 1)) / videoTimeScale;
@@ -1056,6 +1085,12 @@ public class MP4Reader implements IoConstants, ITagReader {
         			//some files appear not to have sync samples
         			if (syncSamples != null) {
         				keyframe = syncSamples.contains(sample);
+        				if (seekPoints == null) {
+        					seekPoints = new LinkedList<Integer>();
+        				}
+        				int keyframeTs = (int) Math.round(ts * 1000.0);
+        				seekPoints.add(keyframeTs);
+        				timePosMap.put(keyframeTs, pos);
         			}
         			//size of the sample
         			int size = ((Integer) videoSamples.get(sample - 1)).intValue();
@@ -1069,7 +1104,7 @@ public class MP4Reader implements IoConstants, ITagReader {
         			frame.setType(TYPE_VIDEO);
         			frames.add(frame);
         			
-        			log.debug("Sample #{} {}", sample, frame);
+        			//log.debug("Sample #{} {}", sample, frame);
         			
         			//inc and dec stuff
         			pos += size;
@@ -1079,7 +1114,6 @@ public class MP4Reader implements IoConstants, ITagReader {
     		}
 		}
 		
-		log.debug("Position map size: {}", posTagMap.size());
 		log.debug("Sample position map (video): {}", samplePosMap);
 			
 		//add the audio frames / samples / chunks		
@@ -1108,7 +1142,7 @@ public class MP4Reader implements IoConstants, ITagReader {
             		frame.setType(TYPE_AUDIO);
             		frames.add(frame);
             		
-        			log.debug("Sample #{} {}", sample, frame);
+        			//log.debug("Sample #{} {}", sample, frame);
         			
         			//inc and dec stuff
         			pos += size;
@@ -1123,22 +1157,74 @@ public class MP4Reader implements IoConstants, ITagReader {
 		
 		log.debug("Frames count: {}", frames.size());
 		//log.debug("Frames: {}", frames);
+		
+		//release some memory, since we're done with the vectors
+		audioChunkOffsets.clear();
+		audioChunkOffsets = null;
+		audioSamplesToChunks.clear();
+		audioSamplesToChunks = null;
+		
+		videoChunkOffsets.clear();
+		videoChunkOffsets = null;
+		videoSamplesToChunks.clear();
+		videoSamplesToChunks = null;
+		
+		syncSamples.clear();
+		syncSamples = null;
+		
 	}
    
+    /**
+     * Returns the position of a frame given the timestamp.
+     * 
+     * @param timestamp
+     * @return
+     */
+    public long getFramePosition(int timestamp) {
+		log.debug("Get frame position for timestamp: {}", timestamp);
+    	long pos = 0;
+    	if (timePosMap.containsKey(timestamp)) {
+    		pos = timePosMap.get(timestamp);
+    		log.debug("Found position: {}", pos);
+    	} else {
+    		log.info("Frame position was not found for timestamp: {}", timestamp);
+    	}
+    	return pos;
+    }
+    
 	/**
-	 * Put the current position to pos.
-	 * The caller must ensure the pos is a valid one
-	 * (eg. not sit in the middle of a frame).
+	 * Put the current position to pos. The caller must ensure the pos is a valid one.
 	 *
-	 * @param pos         New position in file. Pass <code>Long.MAX_VALUE</code> to seek to end of file.
+	 * @param pos position to move to in file / channel
 	 */
 	public void position(long pos) {
-		log.debug("position (seek point): {}", pos);
+		log.debug("position: {}", pos);
 		//TODO: fix seek, which should be a ez as setting the current sample #
 		//seekpoints in meta data need to be +1 to hit the correct sample
-		currentSample = ((int) pos) + 1;
+		currentSample = getSample(pos); 
+		log.debug("setting current sample: {}", currentSample);
 	}
 
+	/**
+	 * Search through the frames by offset / position to find the sample.
+	 * 
+	 * @param pos
+	 * @return
+	 */
+	private int getSample(long pos) {
+		int sample = 1;
+		int len = frames.size();
+		MP4Frame frame = null;
+		for (int f = 0; f < len; f++) {
+			frame = frames.get(f);
+			if (pos == frame.getOffset()) {
+				sample = f + 1;
+				break;
+			}
+		}
+		return sample;
+	}
+	
 	/** {@inheritDoc}
 	 */
 	public void close() {

@@ -707,7 +707,7 @@ public final class PlayEngine implements IFilter, IPushableConsumer,
 	}
 
 	/**
-	 * Recieve then send if message is data (not audio or video)
+	 * Receive then send if message is data (not audio or video)
 	 */
 	protected synchronized void pullAndPush() throws IOException {
 		if (playlistSubscriberStream.state == State.PLAYING && pullMode && !waitingForToken) {

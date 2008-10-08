@@ -140,10 +140,12 @@ public class Output extends BaseOutput implements org.red5.io.object.Output {
 		storeReference(map);
 		buf.put(AMF.TYPE_MIXED_ARRAY);
 		int maxInt=-1;
+		boolean writeLength = true;
 		for (int i=0; i<map.size(); i++) {
 			try {
-				if (!map.containsKey(i))
+				if (!map.containsKey(i)) {
 					break;
+				}
 			} catch (ClassCastException err) {
 				// Map has non-number keys.
 				break;
@@ -158,10 +160,18 @@ public class Output extends BaseOutput implements org.red5.io.object.Output {
 			if ("length".equals(key)) {
 				continue;
 			}
-			putString(key);
+			//added to support a map key of length for h264 trackinfo
+			//metadata
+			if ("length_property".equals(key)) {
+				//prevent the "special" length entry from being overwritten
+				writeLength = false;
+				putString("length");
+			} else {
+				putString(key);
+			}
 			serializer.serialize(this, entry.getValue());
 		}
-		if (maxInt >= 0) {
+		if (maxInt >= 0 && writeLength) {
 			putString("length");
 			serializer.serialize(this, maxInt+1);
 		}

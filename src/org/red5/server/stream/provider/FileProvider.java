@@ -119,43 +119,42 @@ public class FileProvider implements IPassive, ISeekableProvider,
 	/** {@inheritDoc} */
     public synchronized IMessage pullMessage(IPipe pipe) throws IOException {
     	log.debug("pullMessage");
-		if (this.pipe != pipe) {
-			return null;
+    	RTMPMessage rtmpMsg = null;
+		if (this.pipe == pipe) {
+    		if (this.reader == null) {
+    			init();
+    		}
+    		if (reader.hasMoreTags()) {
+        		ITag tag = reader.readTag();
+        		IRTMPEvent msg = null;
+        		int timestamp = tag.getTimestamp();
+        		log.debug("Got tag - timestamp: {} data type: {}", timestamp, tag.getDataType());
+        		switch (tag.getDataType()) {
+        			case Constants.TYPE_AUDIO_DATA:
+        				msg = new AudioData(tag.getBody());
+        				break;
+        			case Constants.TYPE_VIDEO_DATA:
+        				msg = new VideoData(tag.getBody());
+        				break;
+        			case Constants.TYPE_INVOKE:
+        				msg = new Invoke(tag.getBody());
+        				break;
+        			case Constants.TYPE_NOTIFY:
+        				msg = new Notify(tag.getBody());
+        				break;		
+        			default:
+        				log.warn("Unexpected type? {}", tag.getDataType());
+        				msg = new Unknown(tag.getDataType(), tag.getBody());
+        				break;
+        		}
+        		msg.setTimestamp(timestamp);
+        		rtmpMsg = new RTMPMessage();
+        		rtmpMsg.setBody(msg);    		
+    		}
 		}
-		if (this.reader == null) {
-			init();
-		}
-		if (!reader.hasMoreTags()) {
-			// TODO send OOBCM to notify EOF
-			// Do not unsubscribe as this kills VOD seek while in buffer
-			// this.pipe.unsubscribe(this);
-			return null;
-		}
-		ITag tag = reader.readTag();
-		IRTMPEvent msg = null;
-		int timestamp = tag.getTimestamp();
-		log.debug("Got tag - timestamp: {} data type: {}", timestamp, tag.getDataType());
-		switch (tag.getDataType()) {
-			case Constants.TYPE_AUDIO_DATA:
-				msg = new AudioData(tag.getBody());
-				break;
-			case Constants.TYPE_VIDEO_DATA:
-				msg = new VideoData(tag.getBody());
-				break;
-			case Constants.TYPE_INVOKE:
-				msg = new Invoke(tag.getBody());
-				break;
-			case Constants.TYPE_NOTIFY:
-				msg = new Notify(tag.getBody());
-				break;		
-			default:
-				log.warn("Unexpected type? {}", tag.getDataType());
-				msg = new Unknown(tag.getDataType(), tag.getBody());
-				break;
-		}
-		msg.setTimestamp(timestamp);
-		RTMPMessage rtmpMsg = new RTMPMessage();
-		rtmpMsg.setBody(msg);
+		// TODO send OOBCM to notify EOF
+		// Do not unsubscribe as this kills VOD seek while in buffer
+		// this.pipe.unsubscribe(this);
 		return rtmpMsg;
 	}
 
@@ -225,16 +224,18 @@ public class FileProvider implements IPassive, ISeekableProvider,
 				.getScopeService(scope, IStreamableFileFactory.class,
 						StreamableFileFactory.class);
 		IStreamableFileService service = factory.getService(file);
-		if (service == null) {
+		if (service != null) {
+    		IStreamableFile streamFile = service.getStreamableFile(file);
+    		reader = streamFile.getReader();
+        	log.debug("Reader: {}", reader.getClass().getName());
+        	//TODO: may want to do init of readers here
+    		if (start > 0) {
+    			seek(start);
+    		}
+		} else {
 			log.error("No service found for {}", file.getAbsolutePath());
-			return;
-		}
-		IStreamableFile streamFile = service.getStreamableFile(file);
-		reader = streamFile.getReader();
-    	log.debug("Reader: {}", reader.getClass().getName());
-    	//TODO: may want to do init of readers here
-		if (start > 0) {
-			seek(start);
+			//need to let the player know that the file cannot be served
+			
 		}
 	}
 
@@ -256,7 +257,7 @@ public class FileProvider implements IPassive, ISeekableProvider,
 			//meta data in the seekpoints array
 			if (reader instanceof MP4Reader) {
 				//its not really a position or timestamp
-				reader.position(ts);
+				reader.position(((MP4Reader) reader).getFramePosition(ts));
 				return ts;
 			}
 			

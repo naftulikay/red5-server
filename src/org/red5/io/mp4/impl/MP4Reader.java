@@ -510,50 +510,82 @@ public class MP4Reader implements IoConstants, ITagReader {
     											MP4Atom stsd = stbl.lookup(MP4Atom.typeToInt("stsd"), 0);
     											if (stsd != null) {
     												log.debug("Sample description atom found");
-    												MP4Atom avc1 = stsd.getChildren().get(0);
-    												//could set the video codec here - may be avc1 or mp4v
-    												setVideoCodecId(MP4Atom.intToType(avc1.getType()));
-    												//video decoder config
-    												//TODO may need to be generic later
-    												MP4Atom codecChild = avc1.lookup(MP4Atom.typeToInt("avcC"), 0);
-    												if (codecChild != null) {
-    													avcLevel = codecChild.getAvcLevel();
-    													log.debug("AVC level: {}", avcLevel);
-    													avcProfile = codecChild.getAvcProfile();
-    													log.debug("AVC Profile: {}", avcProfile);
-    													log.debug("AVCC size: {}", codecChild.getSize());
-    													videoDecoderBytes = codecChild.getVideoConfigBytes();
-													    log.debug("Video config bytes: {}", ToStringBuilder.reflectionToString(videoDecoderBytes));
+    												log.debug("Sample description (video) stsd children: {}", stsd.getChildren());
+    												MP4Atom avc1 = stsd.lookup(MP4Atom.typeToInt("avc1"), 0);
+    												if (avc1 != null) {
+        												log.debug("AVC1 children: {}", avc1.getChildren());
+        												//set the video codec here - may be avc1 or mp4v
+        												setVideoCodecId(MP4Atom.intToType(avc1.getType()));
+        												//video decoder config
+        												//TODO may need to be generic later
+        												MP4Atom codecChild = avc1.lookup(MP4Atom.typeToInt("avcC"), 0);
+        												if (codecChild != null) {
+        													avcLevel = codecChild.getAvcLevel();
+        													log.debug("AVC level: {}", avcLevel);
+        													avcProfile = codecChild.getAvcProfile();
+        													log.debug("AVC Profile: {}", avcProfile);
+        													log.debug("AVCC size: {}", codecChild.getSize());
+        													videoDecoderBytes = codecChild.getVideoConfigBytes();
+    													    log.debug("Video config bytes: {}", ToStringBuilder.reflectionToString(videoDecoderBytes));
+        												} else {
+        													//quicktime and ipods use a pixel aspect atom
+        													//since we have no avcC check for this and avcC may
+        													//be a child
+        													MP4Atom pasp = avc1.lookup(MP4Atom.typeToInt("pasp"), 0);
+        													if (pasp != null) {
+        														log.debug("PASP children: {}", pasp.getChildren());
+        														codecChild = pasp.lookup(MP4Atom.typeToInt("avcC"), 0);
+                												if (codecChild != null) {
+                													avcLevel = codecChild.getAvcLevel();
+                													log.debug("AVC level: {}", avcLevel);
+                													avcProfile = codecChild.getAvcProfile();
+                													log.debug("AVC Profile: {}", avcProfile);
+                													log.debug("AVCC size: {}", codecChild.getSize());
+                													videoDecoderBytes = codecChild.getVideoConfigBytes();
+            													    log.debug("Video config bytes: {}", ToStringBuilder.reflectionToString(videoDecoderBytes));
+                												}        														
+        													}
+        												}
     												} else {
-    													//look for esds 
-    													codecChild = avc1.lookup(MP4Atom.typeToInt("esds"), 0);
-    													//look for descriptors
-    													MP4Descriptor descriptor = codecChild.getEsd_descriptor();
-    													log.debug("{}", ToStringBuilder.reflectionToString(descriptor));
-    													if (descriptor != null) {
-    		    											Vector children = descriptor.getChildren();
-    		    											for (int e = 0; e < children.size(); e++) { 
-    		    												MP4Descriptor descr = (MP4Descriptor) children.get(e);
-    		    												log.debug("{}", ToStringBuilder.reflectionToString(descr));
-    		    												if (descr.getChildren().size() > 0) {
-    		    													Vector children2 = descr.getChildren();
-    		    													for (int e2 = 0; e2 < children2.size(); e2++) { 
-    		    														MP4Descriptor descr2 = (MP4Descriptor) children2.get(e2);
-    		    														log.debug("{}", ToStringBuilder.reflectionToString(descr2));
-    		    														if (descr2.getType() == MP4Descriptor.MP4DecSpecificInfoDescriptorTag) {
-    		    															//we only want the MP4DecSpecificInfoDescriptorTag
-    		    														    //videoDecoderBytes = descr2.getDSID();    														    
-    		    														    videoDecoderBytes = new byte[descr2.getDSID().length - 8];
-    		    														    System.arraycopy(descr2.getDSID(), 8, videoDecoderBytes, 0, videoDecoderBytes.length);
-    		    														    log.debug("Video config bytes: {}", ToStringBuilder.reflectionToString(videoDecoderBytes));
-    		    															//we want to break out of top level for loop
-    		    															e = 99;
-    		    															break;
-    		    														}
-    		    													}													
-    		    												}
-    		    											}
-    													}   													
+    													//look for mp4v
+    													MP4Atom mp4v = stsd.lookup(MP4Atom.typeToInt("mp4v"), 0);
+        												if (mp4v != null) {
+            												log.debug("MP4V children: {}", mp4v.getChildren());
+            												//set the video codec here - may be avc1 or mp4v
+            												setVideoCodecId(MP4Atom.intToType(mp4v.getType()));
+        													//look for esds 
+        													MP4Atom codecChild = mp4v.lookup(MP4Atom.typeToInt("esds"), 0);
+        													if (codecChild != null) {
+            													//look for descriptors
+            													MP4Descriptor descriptor = codecChild.getEsd_descriptor();
+            													log.debug("{}", ToStringBuilder.reflectionToString(descriptor));
+            													if (descriptor != null) {
+            		    											Vector children = descriptor.getChildren();
+            		    											for (int e = 0; e < children.size(); e++) { 
+            		    												MP4Descriptor descr = (MP4Descriptor) children.get(e);
+            		    												log.debug("{}", ToStringBuilder.reflectionToString(descr));
+            		    												if (descr.getChildren().size() > 0) {
+            		    													Vector children2 = descr.getChildren();
+            		    													for (int e2 = 0; e2 < children2.size(); e2++) { 
+            		    														MP4Descriptor descr2 = (MP4Descriptor) children2.get(e2);
+            		    														log.debug("{}", ToStringBuilder.reflectionToString(descr2));
+            		    														if (descr2.getType() == MP4Descriptor.MP4DecSpecificInfoDescriptorTag) {
+            		    															//we only want the MP4DecSpecificInfoDescriptorTag
+            		    														    //videoDecoderBytes = descr2.getDSID();    														    
+            		    														    videoDecoderBytes = new byte[descr2.getDSID().length - 8];
+            		    														    System.arraycopy(descr2.getDSID(), 8, videoDecoderBytes, 0, videoDecoderBytes.length);
+            		    														    log.debug("Video config bytes: {}", ToStringBuilder.reflectionToString(videoDecoderBytes));
+            		    															//we want to break out of top level for loop
+            		    															e = 99;
+            		    															break;
+            		    														}
+            		    													}													
+            		    												}
+            		    											}
+            													}  
+        													} 	    													
+        												}
+    													
     												}
     												log.debug("{}", ToStringBuilder.reflectionToString(avc1));
     											}
@@ -856,43 +888,50 @@ public class MP4Reader implements IoConstants, ITagReader {
             Map<String, Object> audioMap = new HashMap<String, Object>(4);
             audioMap.put("timescale", audioTimeScale);
             audioMap.put("language", "und");
-            audioMap.put("length_property", audioSampleDuration * audioSamples.size());
 
-            List<Map> desc = new ArrayList<Map>(1);            
+            List<Map<String, String>> desc = new ArrayList<Map<String, String>>(1);            
             audioMap.put("sampledescription", desc);   
             
             Map<String, String> sampleMap = new HashMap<String, String>(1);
             sampleMap.put("sampletype", audioCodecId);
             desc.add(sampleMap);
-            
+                        
+            if (audioSamples != null) {
+                audioMap.put("length_property", audioSampleDuration * audioSamples.size());
+                //release some memory, since we're done with the vectors
+        		audioSamples.clear();
+        		audioSamples = null;
+            }
+
             arr.add(audioMap);
-            
-    		//release some memory, since we're done with the vectors
-    		audioSamples.clear();
-    		audioSamples = null;
-    	}
+
+        }
         if (hasVideo) {
             Map<String, Object> videoMap = new HashMap<String, Object>(3);
             videoMap.put("timescale", videoTimeScale);
             videoMap.put("language", "und");
-            videoMap.put("length_property", videoSampleDuration * videoSamples.size());
             
-            List<Map> desc = new ArrayList<Map>(1);            
+            List<Map<String, String>> desc = new ArrayList<Map<String, String>>(1);            
             videoMap.put("sampledescription", desc);            
             
             Map<String, String> sampleMap = new HashMap<String, String>(1);
             sampleMap.put("sampletype", videoCodecId);
             desc.add(sampleMap);
             
+            if (videoSamples != null) {
+                videoMap.put("length_property", videoSampleDuration * videoSamples.size());
+                //release some memory, since we're done with the vectors
+        		videoSamples.clear();
+        		videoSamples = null;        
+            }
+            
             arr.add(videoMap);
 
-    		//release some memory, since we're done with the vectors
-    		videoSamples.clear();
-    		videoSamples = null;        
         }
         props.put("trackinfo", arr.toArray());
-        
-		props.put("canSeekToEnd", false);
+        //set this based on existence of seekpoints
+		props.put("canSeekToEnd", (seekPoints != null));
+		
 		out.writeMap(props, new Serializer());
 		buf.flip();
 
@@ -979,7 +1018,7 @@ public class MP4Reader implements IoConstants, ITagReader {
 		//log.debug("Read tag");
 		//empty-out the pre-streaming tags first
 		if (!firstTags.isEmpty()) {
-			log.debug("Returning pre-tag");
+			//log.debug("Returning pre-tag");
 			// Return first tags before media data
 			return firstTags.removeFirst();
 		}		
@@ -987,7 +1026,7 @@ public class MP4Reader implements IoConstants, ITagReader {
 		
 		//get the current frame
 		MP4Frame frame = frames.get(currentSample - 1);
-		log.debug("Playback {}", frame);
+		//log.debug("Playback {}", frame);
 		
 		int sampleSize = frame.getSize();
 		

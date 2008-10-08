@@ -111,8 +111,9 @@ public class FileStreamSource implements ISeekableStreamSource, Constants {
 			//meta data in the seekpoints array
 			if (reader instanceof MP4Reader) {
 				//its not really a position or timestamp
-				reader.position(((MP4Reader) reader).getFramePosition(ts));
-				return ts;
+				int newTs = (ts / 1000);
+				reader.position(((MP4Reader) reader).getFramePosition(newTs));
+				return newTs;
 			}
 			
 			if (!(reader instanceof IKeyFrameDataAnalyzer)) {

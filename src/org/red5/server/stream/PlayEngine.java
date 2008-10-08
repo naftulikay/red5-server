@@ -170,6 +170,8 @@ public final class PlayEngine implements IFilter, IPushableConsumer,
 	 */
 	private volatile ScheduledFuture<?> pullAndPushFuture = null;
 
+	private Runnable pullAndPushTask;
+
 	/**
 	 * Offset in ms the stream started.
 	 */
@@ -627,6 +629,9 @@ public final class PlayEngine implements IFilter, IPushableConsumer,
 	 * @throws IllegalStateException    If stream is in stopped state
 	 */
 	public synchronized void stop() throws IllegalStateException {
+		//stop the push/pull executor
+		playlistSubscriberStream.getExecutor().remove(pullAndPushTask);
+		//check current state
 		if (playlistSubscriberStream.state != State.PLAYING 
 				&& playlistSubscriberStream.state != State.PAUSED) {
 			throw new IllegalStateException();
@@ -698,9 +703,9 @@ public final class PlayEngine implements IFilter, IPushableConsumer,
 			synchronized (this) {
 				if (pullAndPushFuture == null) {
 					// client buffer is at least 100ms
+					pullAndPushTask = new PullAndPushRunnable();
 					pullAndPushFuture = playlistSubscriberStream.getExecutor().scheduleWithFixedDelay(
-							new PullAndPushRunnable(), 0, 10,
-							TimeUnit.MILLISECONDS);
+							pullAndPushTask, 0, 10,	TimeUnit.MILLISECONDS);
 				}
 			}
 		}

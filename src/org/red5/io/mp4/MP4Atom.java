@@ -111,6 +111,8 @@ public class MP4Atom {
 	public final static int MP4AVCAtomType							= MP4Atom.typeToInt("avcC");
 	// movie data, this ones is not actually parsed
 	public final static int MP4MovieDataType                     	= MP4Atom.typeToInt("mdat");
+	// pixel aspect ratio
+	public final static int MP4PixelAspectAtomType					= MP4Atom.typeToInt("pasp");
 	
 	/** The size of the atom. */
 	protected long size;
@@ -195,6 +197,8 @@ public class MP4Atom {
 			readed = atom.create_esd_atom(bitstream);
 		} else if(type == MP4AVCAtomType) {
 			readed = atom.create_avc_config_atom(bitstream);
+		} else if(type == MP4PixelAspectAtomType) {
+			readed = atom.create_pasp_atom(bitstream);
 		}
         log.debug("Atom: type = {} size = {}", intToType(type), size);
 		bitstream.skipBytes(size - readed);
@@ -882,6 +886,19 @@ public class MP4Atom {
 		}
 		return readed;		
 	}	
+	
+	public long create_pasp_atom(MP4DataStream bitstream) throws IOException {
+		log.debug("Pixel aspect ratio");
+		int hSpacing = (int) bitstream.readBytes(4);		
+		int vSpacing = (int) bitstream.readBytes(4);
+		log.warn("hSpacing: {} vSpacing: {}", hSpacing, vSpacing);
+		readed += 8;
+		MP4Atom child = MP4Atom.createAtom(bitstream);
+		this.children.add(child);
+		readed += child.getSize();
+
+		return readed;
+	}
 	
 	protected MP4Descriptor esd_descriptor;
 	

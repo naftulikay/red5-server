@@ -154,9 +154,10 @@ public class Output extends BaseOutput implements org.red5.io.object.Output {
 			maxInt = i;
 		}
 		buf.putInt(maxInt+1);
-		// TODO: Need to support an incomming key named length
+		// TODO: Need to support an incoming key named length
 		for (Map.Entry<Object, Object> entry : map.entrySet()) {
 			final String key = entry.getKey().toString();
+			log.warn("Key: {}", key);
 			if ("length".equals(key)) {
 				continue;
 			}
@@ -164,6 +165,7 @@ public class Output extends BaseOutput implements org.red5.io.object.Output {
 			//metadata
 			if ("length_property".equals(key)) {
 				//prevent the "special" length entry from being overwritten
+				log.warn("Length property found");
 				writeLength = false;
 				putString("length");
 			} else {

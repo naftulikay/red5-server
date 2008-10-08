@@ -53,8 +53,8 @@
 	
 	<!-- JUNIT TESTING -->
 	<property name="test.dir" value="test"/>
-	<property name="testclass.dir" value="bin/testcases"/>
-	<property name="testreports.dir" value="${testclass.dir}/testreports"/>
+        <property name="testclass.dir" value="bin/testcases/classes"/>
+        <property name="testreports.dir" value="bin/testcases/testreports"/>
 	<property name="testdoc.dir" value="doc/test"/>
 	
 	<path id="project.classpath">
@@ -833,6 +833,10 @@
 			</classpath>
 			<include name="**/*.java"/>
 		</javac>
+                <mkdir dir="${testreports.dir}/dist/webapps/selftest/WEB-INF/classes" />
+                <copy todir="${testreports.dir}/dist/webapps/selftest/WEB-INF/classes" overwrite="true">
+                  <fileset dir="${testclass.dir}" includes="**/*.class"/>
+                </copy>
 	</target>
 
 	<target name="webwar" description="Make Web Archive" depends="compile_war">

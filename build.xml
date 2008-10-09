@@ -796,6 +796,26 @@
 			<report format="frames" todir="${testdoc.dir}"/>
 		</junitreport>
 	</target>
+	<target name="run-tests-server" depends="compile_tests" description="Run the selftest server">
+		<property name="testdist.dir" location="${testreports.dir}/dist"/>
+		<echo message="Using ${testdist.dir} for Red5 root"/>
+		<mkdir dir="${testdist.dir}/${log.dir}"/>		
+		<java classname="org.red5.server.Standalone" fork="true" dir="${testdist.dir}">
+			<classpath>
+				<pathelement location="${testdist.dir}/conf"/>
+				<path id="dist.classpath">
+					<fileset dir="${testdist.dir}/lib"/>
+					<fileset dir="${testdist.dir}">
+						<filename name="red5.jar"/>
+					</fileset>
+				</path>
+			</classpath>
+			<jvmarg value="-Dpython.home=${testdist.dir}/lib"/>
+			<jvmarg value="-Djava.security.manager"/>
+			<jvmarg value="-Djava.security.policy=${testdist.dir}/conf/red5.policy"/>
+			<jvmarg value="-Dred5.root=${testdist.dir}"/>
+		</java>
+	</target>
 
 	<target name="compile_tests" depends="dist" description="Compiles junit test classes">
 		<echo>Making dist for testing</echo>

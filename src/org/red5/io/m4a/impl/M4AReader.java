@@ -101,19 +101,21 @@ public class M4AReader implements IoConstants, ITagReader {
 	/** Duration in milliseconds. */
 	private long duration;	
 	private int timeScale;
-	private double audioTimeScale; //aka sample rate kHz
+	//audio sample rate kHz
+	private double audioTimeScale;
 	private int audioChannels;
-	private int audioCodecType = 1; //default to aac lc
+	//default to aac lc
+	private int audioCodecType = 1; 
 	private String formattedDuration;
 	private long moovOffset;
 	private long mdatOffset;
 	
 	//samples to chunk mappings
-	private Vector audioSamplesToChunks;
+	private Vector<MP4Atom.Record> audioSamplesToChunks;
 	//samples 
-	private Vector audioSamples;
+	private Vector<Integer> audioSamples;
 	//chunk offsets
-	private Vector audioChunkOffsets;
+	private Vector<Long> audioChunkOffsets;
 	//sample duration
 	private int audioSampleDuration = 1024;
 	
@@ -237,7 +239,6 @@ public class M4AReader implements IoConstants, ITagReader {
 							if (edts != null) {
 								log.debug("Edit atom found");
 								log.debug("edts children: {}", edts.getChildren());	
-								//log.debug("Width {} x Height {}", edts.getWidth(), edts.getHeight());
 							}					
 							
 							MP4Atom mdia = trak.lookup(MP4Atom.typeToInt("mdia"), 0);
@@ -320,7 +321,11 @@ public class M4AReader implements IoConstants, ITagReader {
 												setAudioCodecId(MP4Atom.intToType(mp4a.getType()));
 												//log.debug("{}", ToStringBuilder.reflectionToString(mp4a));
 												log.debug("Sample size: {}", mp4a.getSampleSize());										
-												audioTimeScale = mp4a.getTimeScale() * 1.0;
+												int ats = mp4a.getTimeScale();
+												//skip invalid audio time scale
+												if (ats > 0) {
+													audioTimeScale = ats * 1.0;
+												}
 												audioChannels = mp4a.getChannelCount();
 												log.debug("Sample rate (audio time scale): {}", audioTimeScale);			
 												log.debug("Channels: {}", audioChannels);										
@@ -332,12 +337,12 @@ public class M4AReader implements IoConstants, ITagReader {
 													MP4Descriptor descriptor = esds.getEsd_descriptor();
 													log.debug("{}", ToStringBuilder.reflectionToString(descriptor));
 													if (descriptor != null) {
-		    											Vector children = descriptor.getChildren();
+		    											Vector<MP4Descriptor> children = descriptor.getChildren();
 		    											for (int e = 0; e < children.size(); e++) { 
 		    												MP4Descriptor descr = (MP4Descriptor) children.get(e);
 		    												log.debug("{}", ToStringBuilder.reflectionToString(descr));
 		    												if (descr.getChildren().size() > 0) {
-		    													Vector children2 = descr.getChildren();
+		    													Vector<MP4Descriptor> children2 = descr.getChildren();
 		    													for (int e2 = 0; e2 < children2.size(); e2++) { 
 		    														MP4Descriptor descr2 = (MP4Descriptor) children2.get(e2);
 		    														log.debug("{}", ToStringBuilder.reflectionToString(descr2));
@@ -346,13 +351,22 @@ public class M4AReader implements IoConstants, ITagReader {
 		    														    audioDecoderBytes = descr2.getDSID();
 		    														    //compare the bytes to get the aacaot/aottype 
 		    														    //match first byte
-		    														    if (MP4Reader.AUDIO_CONFIG_FRAME_AAC_MAIN[0] == audioDecoderBytes[0]) {
-		    														    	audioCodecType = 0;
-		    														    } else if (MP4Reader.AUDIO_CONFIG_FRAME_AAC_LC[0] == audioDecoderBytes[0]) {
-		    														    	audioCodecType = 1;
-		    														    } else if (MP4Reader.AUDIO_CONFIG_FRAME_SBR[0] == audioDecoderBytes[0]) {
-		    														    	audioCodecType = 2;
-		    														    }    		    														    
+		    														    switch(audioDecoderBytes[0]) {
+		    														    	case 0x12:
+		    														    	default:
+		    														    		//AAC LC - 12 10
+		    														    		audioCodecType = 1;
+		    														    		break;
+		    														    	case 0x0a:
+		    														    		//AAC Main - 0A 10
+		    														    		audioCodecType = 0;
+		    														    		break;
+		    														    	case 0x11:
+		    														    	case 0x13:
+		    														    		//AAC LC SBR - 11 90 & 13 xx
+		    														    		audioCodecType = 2;
+		    														    		break;
+		    														    }    	 		    														    
 		    															//we want to break out of top level for loop
 		    															e = 99;
 		    															break;
@@ -393,7 +407,7 @@ public class M4AReader implements IoConstants, ITagReader {
 											MP4Atom stts = stbl.lookup(MP4Atom.typeToInt("stts"), 0);
 											if (stts != null) {
 												log.debug("Time to sample atom found");
-												Vector records = stts.getTimeToSamplesRecords();
+												Vector<MP4Atom.TimeSampleRecord> records = stts.getTimeToSamplesRecords();
 												log.debug("Record count: {}", records.size());
 												MP4Atom.TimeSampleRecord rec = (MP4Atom.TimeSampleRecord) records.firstElement();
 												log.debug("Record data: Consecutive samples={} Duration={}", rec.getConsecutiveSamples(), rec.getSampleDuration());
@@ -412,9 +426,9 @@ public class M4AReader implements IoConstants, ITagReader {
     				   						
     					//real duration
     					StringBuilder sb = new StringBuilder();
-    					double videoTime = ((double) duration / (double) timeScale);
-    					log.debug("Video time: {}", videoTime);
-    					int minutes = (int) (videoTime / 60);
+    					double clipTime = ((double) duration / (double) timeScale);
+    					log.debug("Clip time: {}", clipTime);
+    					int minutes = (int) (clipTime / 60);
     					if (minutes > 0) {
     		    			sb.append(minutes);
     		    			sb.append('.');
@@ -422,7 +436,7 @@ public class M4AReader implements IoConstants, ITagReader {
     					//formatter for seconds / millis
     					NumberFormat df = DecimalFormat.getInstance();
     					df.setMaximumFractionDigits(2);
-    					sb.append(df.format((videoTime % 60)));
+    					sb.append(df.format((clipTime % 60)));
     					formattedDuration = sb.toString();
     					log.debug("Time: {}", formattedDuration);				
     
@@ -704,17 +718,36 @@ public class M4AReader implements IoConstants, ITagReader {
 	}
    
 	/**
-	 * Put the current position to pos.
-	 * The caller must ensure the pos is a valid one
-	 * (eg. not sit in the middle of a frame).
+	 * Put the current position to pos. The caller must ensure the pos is a valid one.
 	 *
-	 * @param pos         New position in file. Pass <code>Long.MAX_VALUE</code> to seek to end of file.
+	 * @param pos position to move to in file / channel
 	 */
 	public void position(long pos) {
-		log.debug("position (seek point): {}", pos);
+		log.debug("position: {}", pos);
 		//TODO: fix seek, which should be a ez as setting the current sample #
 		//seekpoints in meta data need to be +1 to hit the correct sample
-		currentSample = ((int) pos) + 1;
+		currentSample = getSample(pos); 
+		log.debug("setting current sample: {}", currentSample);
+	}
+
+	/**
+	 * Search through the frames by offset / position to find the sample.
+	 * 
+	 * @param pos
+	 * @return
+	 */
+	private int getSample(long pos) {
+		int sample = 1;
+		int len = frames.size();
+		MP4Frame frame = null;
+		for (int f = 0; f < len; f++) {
+			frame = frames.get(f);
+			if (pos == frame.getOffset()) {
+				sample = f + 1;
+				break;
+			}
+		}
+		return sample;
 	}
 
 	/** {@inheritDoc}

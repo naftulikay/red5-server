@@ -22,6 +22,7 @@ package org.red5.io.mp4.impl;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.nio.channels.FileChannel;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
@@ -83,7 +84,7 @@ public class MP4Reader implements IoConstants, ITagReader {
 	public final static byte[] PREFIX_AUDIO_FRAME = new byte[]{(byte) 0xaf, (byte) 0x01};
 	
 	/** Audio config aac main */
-	public final static byte[] AUDIO_CONFIG_FRAME_AAC_MAIN = new byte[]{(byte) 0x11, (byte) 0x90, (byte) 0x4f, (byte) 0x14};
+	public final static byte[] AUDIO_CONFIG_FRAME_AAC_MAIN = new byte[]{(byte) 0x0a, (byte) 0x10};
 
 	/** Audio config aac lc */
 	public final static byte[] AUDIO_CONFIG_FRAME_AAC_LC = new byte[]{(byte) 0x12, (byte) 0x10};
@@ -125,23 +126,26 @@ public class MP4Reader implements IoConstants, ITagReader {
 	/** Whether or not the clip contains an audio track */
 	private boolean hasAudio = false;
 	
-	//
+	//default video codec 
 	private String videoCodecId = "avc1";
+	//default audio codec 
 	private String audioCodecId = "mp4a";
 	
 	//decoder bytes / configs
 	private byte[] audioDecoderBytes;
 	private byte[] videoDecoderBytes;
 	
-	/** Duration in milliseconds. */
+	// duration in milliseconds
 	private long duration;	
-	/** Movies time scale */
+	// movie time scale
 	private int timeScale;
 	private int width;
 	private int height;
-	private double audioTimeScale; //aka sample rate kHz
+	//audio sample rate kHz
+	private double audioTimeScale;
 	private int audioChannels;
-	private int audioCodecType = 1; //default to aac lc
+	//default to aac lc
+	private int audioCodecType = 1; 
 	
 	private int videoSampleCount;
 	private double fps;
@@ -153,16 +157,16 @@ public class MP4Reader implements IoConstants, ITagReader {
 	private long mdatOffset;
 	
 	//samples to chunk mappings
-	private Vector videoSamplesToChunks;
-	private Vector audioSamplesToChunks;
+	private Vector<MP4Atom.Record> videoSamplesToChunks;
+	private Vector<MP4Atom.Record> audioSamplesToChunks;
 	//keyframe - sample numbers
-	private Vector syncSamples;
+	private Vector<Integer> syncSamples;
 	//samples 
-	private Vector videoSamples;
-	private Vector audioSamples;
+	private Vector<Integer> videoSamples;
+	private Vector<Integer> audioSamples;
 	//chunk offsets
-	private Vector videoChunkOffsets;
-	private Vector audioChunkOffsets;
+	private Vector<Long> videoChunkOffsets;
+	private Vector<Long> audioChunkOffsets;
 	
 	//sample duration
 	private int videoSampleDuration = 125;
@@ -313,8 +317,7 @@ public class MP4Reader implements IoConstants, ITagReader {
     									log.debug("Time scale {}", scale);
     								}
     								
-    								MP4Atom hdlr = mdia
-    										.lookup(MP4Atom.typeToInt("hdlr"), 0);
+    								MP4Atom hdlr = mdia.lookup(MP4Atom.typeToInt("hdlr"), 0);
     								if (hdlr != null) {
     									log.debug("Handler ref atom found");
     									// soun or vide
@@ -386,7 +389,11 @@ public class MP4Reader implements IoConstants, ITagReader {
     												setAudioCodecId(MP4Atom.intToType(mp4a.getType()));
     												//log.debug("{}", ToStringBuilder.reflectionToString(mp4a));
     												log.debug("Sample size: {}", mp4a.getSampleSize());										
-    												audioTimeScale = mp4a.getTimeScale() * 1.0;
+    												int ats = mp4a.getTimeScale();
+    												//skip invalid audio time scale
+    												if (ats > 0) {
+    													audioTimeScale = ats * 1.0;
+    												}
     												audioChannels = mp4a.getChannelCount();
     												log.debug("Sample rate (audio time scale): {}", audioTimeScale);			
     												log.debug("Channels: {}", audioChannels);										
@@ -398,12 +405,12 @@ public class MP4Reader implements IoConstants, ITagReader {
     													MP4Descriptor descriptor = esds.getEsd_descriptor();
     													log.debug("{}", ToStringBuilder.reflectionToString(descriptor));
     													if (descriptor != null) {
-    		    											Vector children = descriptor.getChildren();
+    		    											Vector<MP4Descriptor> children = descriptor.getChildren();
     		    											for (int e = 0; e < children.size(); e++) { 
     		    												MP4Descriptor descr = (MP4Descriptor) children.get(e);
     		    												log.debug("{}", ToStringBuilder.reflectionToString(descr));
     		    												if (descr.getChildren().size() > 0) {
-    		    													Vector children2 = descr.getChildren();
+    		    													Vector<MP4Descriptor> children2 = descr.getChildren();
     		    													for (int e2 = 0; e2 < children2.size(); e2++) { 
     		    														MP4Descriptor descr2 = (MP4Descriptor) children2.get(e2);
     		    														log.debug("{}", ToStringBuilder.reflectionToString(descr2));
@@ -412,12 +419,21 @@ public class MP4Reader implements IoConstants, ITagReader {
     		    														    audioDecoderBytes = descr2.getDSID();
     		    														    //compare the bytes to get the aacaot/aottype 
     		    														    //match first byte
-    		    														    if (AUDIO_CONFIG_FRAME_AAC_MAIN[0] == audioDecoderBytes[0]) {
-    		    														    	audioCodecType = 0;
-    		    														    } else if (AUDIO_CONFIG_FRAME_AAC_LC[0] == audioDecoderBytes[0]) {
-    		    														    	audioCodecType = 1;
-    		    														    } else if (AUDIO_CONFIG_FRAME_SBR[0] == audioDecoderBytes[0]) {
-    		    														    	audioCodecType = 2;
+    		    														    switch(audioDecoderBytes[0]) {
+    		    														    	case 0x12:
+    		    														    	default:
+    		    														    		//AAC LC - 12 10
+    		    														    		audioCodecType = 1;
+    		    														    		break;
+    		    														    	case 0x0a:
+    		    														    		//AAC Main - 0A 10
+    		    														    		audioCodecType = 0;
+    		    														    		break;
+    		    														    	case 0x11:
+    		    														    	case 0x13:
+    		    														    		//AAC LC SBR - 11 90 & 13 xx
+    		    														    		audioCodecType = 2;
+    		    														    		break;
     		    														    }    		    														    
     		    															//we want to break out of top level for loop
     		    															e = 99;
@@ -459,7 +475,7 @@ public class MP4Reader implements IoConstants, ITagReader {
     											MP4Atom stts = stbl.lookup(MP4Atom.typeToInt("stts"), 0);
     											if (stts != null) {
     												log.debug("Time to sample atom found");
-    												Vector records = stts.getTimeToSamplesRecords();
+    												Vector<MP4Atom.TimeSampleRecord> records = stts.getTimeToSamplesRecords();
     												log.debug("Record count: {}", records.size());
     												MP4Atom.TimeSampleRecord rec = (MP4Atom.TimeSampleRecord) records.firstElement();
     												log.debug("Record data: Consecutive samples={} Duration={}", rec.getConsecutiveSamples(), rec.getSampleDuration());
@@ -560,18 +576,17 @@ public class MP4Reader implements IoConstants, ITagReader {
             													MP4Descriptor descriptor = codecChild.getEsd_descriptor();
             													log.debug("{}", ToStringBuilder.reflectionToString(descriptor));
             													if (descriptor != null) {
-            		    											Vector children = descriptor.getChildren();
+            		    											Vector<MP4Descriptor> children = descriptor.getChildren();
             		    											for (int e = 0; e < children.size(); e++) { 
             		    												MP4Descriptor descr = (MP4Descriptor) children.get(e);
             		    												log.debug("{}", ToStringBuilder.reflectionToString(descr));
             		    												if (descr.getChildren().size() > 0) {
-            		    													Vector children2 = descr.getChildren();
+            		    													Vector<MP4Descriptor> children2 = descr.getChildren();
             		    													for (int e2 = 0; e2 < children2.size(); e2++) { 
             		    														MP4Descriptor descr2 = (MP4Descriptor) children2.get(e2);
             		    														log.debug("{}", ToStringBuilder.reflectionToString(descr2));
             		    														if (descr2.getType() == MP4Descriptor.MP4DecSpecificInfoDescriptorTag) {
-            		    															//we only want the MP4DecSpecificInfoDescriptorTag
-            		    														    //videoDecoderBytes = descr2.getDSID();    														    
+            		    															//we only want the MP4DecSpecificInfoDescriptorTag												    
             		    														    videoDecoderBytes = new byte[descr2.getDSID().length - 8];
             		    														    System.arraycopy(descr2.getDSID(), 8, videoDecoderBytes, 0, videoDecoderBytes.length);
             		    														    log.debug("Video config bytes: {}", ToStringBuilder.reflectionToString(videoDecoderBytes));
@@ -630,7 +645,7 @@ public class MP4Reader implements IoConstants, ITagReader {
     											MP4Atom stts = stbl.lookup(MP4Atom.typeToInt("stts"), 0);
     											if (stts != null) {
     												log.debug("Time to sample atom found");
-    												Vector records = stts.getTimeToSamplesRecords();
+    												Vector<MP4Atom.TimeSampleRecord> records = stts.getTimeToSamplesRecords();
     												log.debug("Record count: {}", records.size());
     												MP4Atom.TimeSampleRecord rec = (MP4Atom.TimeSampleRecord) records.firstElement();
     												log.debug("Record data: Consecutive samples={} Duration={}", rec.getConsecutiveSamples(), rec.getSampleDuration());
@@ -975,7 +990,15 @@ public class MP4Reader implements IoConstants, ITagReader {
     		body.setAutoExpand(true);
     		body.put(PREFIX_VIDEO_CONFIG_FRAME); //prefix
     		if (videoDecoderBytes != null) {
-        		log.debug("Video decoder bytes: {}", HexDump.byteArrayToHexString(videoDecoderBytes));
+    			//because of other processing we do this check
+    			if (log.isDebugEnabled()) {
+            		log.debug("Video decoder bytes: {}", HexDump.byteArrayToHexString(videoDecoderBytes));
+            		try {
+    					log.debug("Video bytes data: {}", new String(videoDecoderBytes, "UTF-8"));
+    				} catch (UnsupportedEncodingException e) {
+    					log.error("", e);
+    				}
+    			}
     			body.put(videoDecoderBytes);
     		}    	
     		
@@ -994,7 +1017,15 @@ public class MP4Reader implements IoConstants, ITagReader {
     		body.setAutoExpand(true);
     		body.put(new byte[]{(byte) 0xaf, (byte) 0}); //prefix
     		if (audioDecoderBytes != null) {
-    			log.debug("Audio decoder bytes: {}", HexDump.byteArrayToHexString(audioDecoderBytes));
+    			//because of other processing we do this check
+    			if (log.isDebugEnabled()) {
+    				log.debug("Audio decoder bytes: {}", HexDump.byteArrayToHexString(audioDecoderBytes));
+    				try {
+    					log.debug("Audio bytes data: {}", new String(audioDecoderBytes, "UTF-8"));
+    				} catch (UnsupportedEncodingException e) {
+    					log.error("", e);
+    				}
+    			}    			
     			body.put(audioDecoderBytes);
     		} else {
     			//default to aac-lc when the esds doesnt contain descripter bytes

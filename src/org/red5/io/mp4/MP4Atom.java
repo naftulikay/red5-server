@@ -51,6 +51,7 @@ import org.slf4j.LoggerFactory;
  * 
  * 01/29/2008 - Added support for avc1 atom (video sample)
  * 02/05/2008 - Added stss - sync sample atom and stts - time to sample atom
+ * 10/2008    - Added pasp - pixel aspect ratio atom
  * 
  * @author Paul Gregoire (mondain@gmail.com)
  */
@@ -291,7 +292,7 @@ public class MP4Atom {
 	protected int entryCount;
 	
 	/** The decoding time to sample table. */
-	protected Vector chunks = new Vector();
+	protected Vector<Long> chunks = new Vector<Long>();
 
 	/**
 	 * Loads ChunkLargeOffset atom from the input bitstream.
@@ -310,7 +311,7 @@ public class MP4Atom {
 		return readed;		
 	}
 
-	public Vector getChunks() {
+	public Vector<Long> getChunks() {
 		return chunks;
 	}
 
@@ -348,6 +349,7 @@ public class MP4Atom {
 		readed += 20;
 		int length = (int) (size - readed - 1);
 		String trackName = bitstream.readString(length);
+		log.debug("Track name: {}", trackName);
 		readed += length;		
 		return readed;		
 	}
@@ -464,7 +466,7 @@ public class MP4Atom {
 	protected int sampleCount;
 	
 	/** The decoding time to sample table. */
-	protected Vector samples = new Vector();
+	protected Vector<Integer> samples = new Vector<Integer>();
 
 	/**
 	 * Loads MP4SampleSizeAtom atom from the input bitstream.
@@ -486,7 +488,7 @@ public class MP4Atom {
 		return readed;
 	}
 
-	public Vector getSamples() {
+	public Vector<Integer> getSamples() {
 		return samples;
 	}
 
@@ -560,7 +562,7 @@ public class MP4Atom {
 	/** The decoding time to sample table. */
 	protected Vector<Record> records = new Vector<Record>();
 
-	public Vector getRecords() {
+	public Vector<Record> getRecords() {
 		return records;
 	}
 
@@ -583,9 +585,9 @@ public class MP4Atom {
 		return readed;		
 	}	
 	
-	protected Vector syncSamples = new Vector();
+	protected Vector<Integer> syncSamples = new Vector<Integer>();
 	
-	public Vector getSyncSamples() {
+	public Vector<Integer> getSyncSamples() {
 		return syncSamples;
 	}
 	
@@ -628,7 +630,7 @@ public class MP4Atom {
 	
 	protected Vector<TimeSampleRecord> timeToSamplesRecords = new Vector<TimeSampleRecord>();
 	
-	public Vector getTimeToSamplesRecords() {
+	public Vector<TimeSampleRecord> getTimeToSamplesRecords() {
 		return timeToSamplesRecords;
 	}	
 	
@@ -827,7 +829,7 @@ public class MP4Atom {
 	}
 	
 	/**
-	 * Loads AVC config atom from the input bitstream.
+	 * Loads AVCC atom from the input bitstream.
 	 * 
 	 * <pre>
                   * 8+ bytes ISO/IEC 14496-10 or 3GPP AVC decode config box
@@ -887,6 +889,14 @@ public class MP4Atom {
 		return readed;		
 	}	
 	
+	/**
+	 * Creates the PASP atom or Pixel Aspect Ratio. It is created by Quicktime
+	 * when exporting an MP4 file. The atom is required for ipod's and acts as
+	 * a container for the avcC atom in these cases.
+	 * 
+	 * @param bitstream the input bitstream
+	 * @return the number of bytes which was being loaded.	
+	 */
 	public long create_pasp_atom(MP4DataStream bitstream) throws IOException {
 		log.debug("Pixel aspect ratio");
 		int hSpacing = (int) bitstream.readBytes(4);		

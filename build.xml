@@ -797,6 +797,20 @@
 		</junitreport>
 	</target>
         <target name="run-tests-serversmoketest" depends="compile_tests" description="Runs some self-contained flash tests against a test server">
+          <!-- Copy over all self-run scripts -->
+          <!-- Note we use cp, and not <copy> to preserve permission
+            semantics.  This means this target will NOT run directly
+            on Windows without Cygwin... which is fine because
+            all the shell scripts are .sh scripts.  It is left
+            as an exercise for the reader to develop a .bat version
+            that can actually run processes in the background.  -->
+          <!-- Lastly, don't use fully qualified paths here; that
+            can screw up Cygwin -->
+          <exec executable="cp">
+            <arg line="-rf" />
+            <arg line="${test.dir}/scripts" />
+            <arg line="${testdist.dir}/" />
+          </exec>
           <exec executable="sh"
             dir="${testreports.dir}/fixtures"
             >
@@ -806,6 +820,7 @@
             <env key="RED5_HOME" path="${testdist.dir}"/>
           </exec>
 	</target>
+
 	<target name="run-tests-server" depends="compile_tests" description="Run the selftest server">
 		<echo message="Using ${testdist.dir} for Red5 root"/>
 		<mkdir dir="${testdist.dir}/${log.dir}"/>		
@@ -841,10 +856,6 @@
                   directory to the classpath -->
                 <copy todir="${testdist.dir}/conf" overwrite="true">
                   <fileset dir="${test.dir}" includes="**/*.xml" excludes="www/**/*"/>
-                </copy>
-                <!-- Copy over all self-run scripts -->
-                <copy todir="${testdist.dir}/scripts" overwrite="true">
-                  <fileset dir="${test.dir}/scripts" includes="**/*" />
                 </copy>
                 <!-- Install the silly self-test application that tests depend on -->
                 <copy todir="${testdist.dir}/webapps/selftest" overwrite="true">

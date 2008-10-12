@@ -813,6 +813,7 @@
           </exec>
           <exec executable="sh"
             dir="${testreports.dir}/fixtures"
+            failonerror="true"
             >
             <arg line="${testdist.dir}/scripts/red5-flash-player-headless"/>
             <arg line="red5-selftest.swf"/>

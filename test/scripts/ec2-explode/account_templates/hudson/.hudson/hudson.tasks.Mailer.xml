@@ -1,0 +1,8 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<hudson.tasks.Mailer_-DescriptorImpl>
+  <defaultSuffix>hudson</defaultSuffix>
+  <hudsonUrl>http://build.theyard.net/</hudsonUrl>
+  <adminAddress>red5-opensource-builder@build.theyard.net</adminAddress>
+  <smtpHost>localhost</smtpHost>
+  <useSsl>false</useSsl>
+</hudson.tasks.Mailer_-DescriptorImpl>

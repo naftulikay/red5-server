@@ -1,0 +1,22 @@
+#!/bin/sh
+# Tomcat auto-start
+#
+# description: Auto-starts tomcat
+# processname: tomcat
+# pidfile: /var/run/tomcat.pid
+
+export CATALINA_HOME=/home/hudson/tomcat
+export JRE_HOME=$JAVA_HOME
+case $1 in
+start)
+        su -l hudson -c $CATALINA_HOME/bin/startup.sh
+        ;; 
+stop)   
+        su -l hudson -c $CATALINA_HOME/bin/shutdown.sh
+        ;; 
+restart)
+        su -l hudson -c $CATALINA_HOME/bin/shutdown.sh
+        su -l hudson -c $CATALINA_HOME/bin/startup.sh
+        ;; 
+esac    
+exit 0

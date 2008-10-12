@@ -1,0 +1,14 @@
+Manifest-Version: 1.0
+Archiver-Version: Plexus Archiver
+Created-By: Apache Maven
+Built-By: edelsonj
+Build-Jdk: 1.5.0_14
+Extension-Name: xvnc
+Implementation-Title: xvnc
+Implementation-Version: 1.5
+Plugin-Class: hudson.plugins.xvnc.PluginImpl
+Short-Name: xvnc
+Long-Name: Hudson Xvnc plugin
+Plugin-Version: 1.5
+Hudson-Version: 1.245
+

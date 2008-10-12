@@ -1,0 +1,14 @@
+Manifest-Version: 1.0
+Archiver-Version: Plexus Archiver
+Created-By: Apache Maven
+Built-By: kenjin
+Build-Jdk: 1.5.0_13
+Extension-Name: port-allocator
+Implementation-Title: port-allocator
+Implementation-Version: 1.3
+Plugin-Class: org.jvnet.hudson.plugins.port_allocator.PluginImpl
+Short-Name: port-allocator
+Long-Name: Hudson Port Allocator Plug-in
+Plugin-Version: 1.3
+Hudson-Version: 1.233
+

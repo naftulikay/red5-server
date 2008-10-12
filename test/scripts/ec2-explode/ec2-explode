@@ -1,0 +1,118 @@
+#!/bin/bash
+# Copyright (C) 2008 Vlideshow Inc., All Rights Reservered
+# http://www.theyard.net/ or http://www.vlideshow.com/
+#
+# This library is free software; you can redistribute it and/or modify it under the 
+# terms of the GNU Lesser General Public License as published by the Free Software 
+# Foundation; either version 2.1 of the License, or (at your option) any later 
+# version. 
+# 
+# This library is distributed in the hope that it will be useful, but WITHOUT ANY 
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A 
+# PARTICULAR PURPOSE. See the GNU Lesser General Public License for more details.
+# 
+# You should have received a copy of the GNU Lesser General Public License along 
+# with this library; if not, write to the Free Software Foundation, Inc., 
+# 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA 
+
+#
+# This scripts takes a brand new "Ubuntu 8.0.4 LTS Hardy" release on
+# Amazon.ec2 and preps it to be a build server hosted at
+# http://build.theyard.net
+#
+# To use:
+#  Learn how to start up an instance on EC2
+#  Start up the following instance: http://developer.amazonwebservices.com/connect/entry.jspa?externalID=1427&categoryID=101
+#  Copy the contents of the explode directory to your new instance
+#    A "somewhat" convient way to do that from this directory is:
+#     ex2-implode /tmp/ec2-explode.tgz
+#     scp -i YOUR_AWS_IDRSA_FILE /tmp/ec2-explode.tgz root@YOUR-EC2-PUBLIC-DNS:/tmp
+#     Log into your EC2 instance
+#     If necessary, un tar the file you just copied
+#       cd /tmp && tar -xzvf /tmp/ec2-explode.tgz
+#  Run: /tmp/ec2-explode
+#   It's not completely unattended; you'll need to accept Sun's JDK
+#   license, and generate a VNC password towards the end
+#
+#  Edit the following file to correctly identify YOUR site
+#   /etc/apache2/sites-enabled/build.theyard.net
+#
+#  Restart apache2
+#   service apache2 restart
+#
+#  Go to your hudson build; it should have some sensible defaults, but
+#  security will be turned off.  Turn it on as you like and voila,
+#  you should have a headless Red5 build server.
+INSTALL_DIR=`pwd`
+
+apt-get update 
+#create yardkeeper account
+apt-get install -y unzip
+apt-get install -y screen
+
+# java apps (sun SDK)
+apt-get install -y sun-java5-bin
+apt-get install -y sun-java6-bin 
+java -version 
+
+# # For doing builds:
+# ? create developer accounts (aclarke, trebor) with ssh keys
+ apt-get install -y emacs22
+ apt-get install -y sun-java5-jdk 
+ apt-get install -y sun-java6-jdk 
+ apt-get install -y ant
+ apt-get install -y ant-optional
+ apt-get install -y subversion
+ apt-get install -y subversion-tools
+
+# ? install adobe flex
+ export FLEX_HOME=/usr/local/adobe/flex3sdk
+ mkdir -p $FLEX_HOME
+ cd $FLEX_HOME
+# # need script to install
+wget http://download.macromedia.com/pub/flex/sdk/flex_sdk_3.zip
+unzip flex_sdk_3.zip
+cd $FLEX_HOME/runtimes/player/lnx
+tar -xzvf flashplayer.tar.gz
+
+# # need script to install -- and it unzips in that directory, plus comes with lnx player
+# # for web servers
+apt-get install -y debian-helper-scripts # For service tools
+apt-get install -y apache2
+
+# ? create "builder" account
+#
+# # For running flash smoke tests
+
+# X-Server for running flash headless smoke tests
+apt-get install -y xserver-xorg 'xfonts-*'
+# VNC server for above Xserver
+apt-get install -y tightvncserver
+# And imagemagick's "import" program lets us take a picture of what
+# the headless server is doing
+apt-get install -y imagemagick
+
+# For sending e-mail
+apt-get install -y exim4
+
+# Create the user accoutns specified
+
+# Now set up hudson
+for user in $INSTALL_DIR/account_templates/*; do
+  NEWUSER=`basename $user`
+  echo "Setting up: $NEWUSER";
+  useradd --shell /bin/bash $NEWUSER
+  rm -rf /home/$NEWUSER
+  cp -rf $INSTALL_DIR/account_templates/$NEWUSER /home/$NEWUSER
+  chown -R $NEWUSER.$NEWUSER /home/$NEWUSER
+  su -l $NEWUSER -c /home/$NEWUSER/bin/EXPLODE_USER_SETUP
+done
+
+# Set up apache sites
+cp -r $INSTALL_DIR/etc_templates/* /etc/
+
+# Set off any squibs that are ready to be set off
+cd $INSTALL_DIR/squibs
+for squib in *; do
+  /bin/bash $squib
+done

@@ -798,10 +798,10 @@
 	</target>
         <target name="run-tests-serversmoketest" depends="compile_tests" description="Runs some self-contained flash tests against a test server">
           <exec executable="sh"
-            dir="${build.dir}"
+            dir="${testreports.dir}/fixtures"
             >
             <arg line="${testdist.dir}/scripts/red5-flash-player-headless"/>
-            <arg line="red5-selftest-0.1.0.swf"/>
+            <arg line="red5-selftest.swf"/>
             <env key="PATH" path="${env.PATH}:${testdist.dir}/scripts"/>
             <env key="RED5_HOME" path="${testdist.dir}"/>
           </exec>

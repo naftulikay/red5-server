@@ -2,7 +2,7 @@
 <hudson.tasks.Mailer_-DescriptorImpl>
   <defaultSuffix>hudson</defaultSuffix>
   <hudsonUrl>http://build.theyard.net/</hudsonUrl>
-  <adminAddress>red5-opensource-builder@build.theyard.net</adminAddress>
+  <adminAddress>builds@red5.org</adminAddress>
   <smtpHost>localhost</smtpHost>
   <useSsl>false</useSsl>
 </hudson.tasks.Mailer_-DescriptorImpl>

@@ -4,9 +4,9 @@
   <description>Application: Red5&#xd;
 Component: Java Server&#xd;
 Branch: Trunk&#xd;
-JVM: JDK 1.6&#xd;
+JVM: JDK 1.5&#xd;
 Platform: i386&#xd;
-OS: Linux (Ubuntu)</description>
+OS: Linux</description>
   <keepDependencies>false</keepDependencies>
   <properties/>
   <scm class="hudson.scm.SubversionSCM">
@@ -20,7 +20,7 @@ OS: Linux (Ubuntu)</description>
   </scm>
   <canRoam>true</canRoam>
   <disabled>false</disabled>
-  <jdk>JDK6</jdk>
+  <jdk>JDK5</jdk>
   <triggers class="vector">
     <hudson.triggers.SCMTrigger>
       <spec>0,15,30,45 * * * *</spec>
@@ -46,19 +46,19 @@ javadoc</targets>
     <hudson.tasks.junit.JUnitResultArchiver>
       <testResults>workingcopy/bin/testcases/testreports/*.xml</testResults>
     </hudson.tasks.junit.JUnitResultArchiver>
-    <hudson.tasks.BuildTrigger>
-      <childProjects>red5_java_server_trunk_jdk6_i386_ubuntu_smoketest</childProjects>
-      <threshold>
-        <name>UNSTABLE</name>
-        <ordinal>1</ordinal>
-        <color>YELLOW</color>
-      </threshold>
-    </hudson.tasks.BuildTrigger>
     <hudson.tasks.Mailer>
       <recipients>red5-builds@googlegroups.com</recipients>
       <dontNotifyEveryUnstableBuild>false</dontNotifyEveryUnstableBuild>
       <sendToIndividuals>true</sendToIndividuals>
     </hudson.tasks.Mailer>
+    <hudson.tasks.BuildTrigger>
+      <childProjects>red5_java_server_trunk_jdk5_i386_ubuntu_smoketest</childProjects>
+      <threshold>
+        <name>SUCCESS</name>
+        <ordinal>0</ordinal>
+        <color>BLUE</color>
+      </threshold>
+    </hudson.tasks.BuildTrigger>
   </publishers>
   <buildWrappers/>
 </project>

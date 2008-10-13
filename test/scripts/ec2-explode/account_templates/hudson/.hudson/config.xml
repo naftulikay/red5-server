@@ -2,8 +2,11 @@
 <hudson>
   <numExecutors>2</numExecutors>
   <mode>NORMAL</mode>
-  <authorizationStrategy class="hudson.security.AuthorizationStrategy$Unsecured"/>
-  <securityRealm class="hudson.security.SecurityRealm$None"/>
+  <useSecurity>true</useSecurity>
+  <authorizationStrategy class="hudson.security.FullControlOnceLoggedInAuthorizationStrategy"/>
+  <securityRealm class="hudson.security.HudsonPrivateSecurityRealm">
+    <disableSignup>true</disableSignup>
+  </securityRealm>
   <jdks>
     <jdk>
       <name>JDK6</name>
@@ -11,7 +14,7 @@
     </jdk>
     <jdk>
       <name>JDK5</name>
-      <javaHome>/usr/lib/jvm/java-5-sun</javaHome>
+      <javaHome>/usr/lib/jvm/java-1.5.0-sun</javaHome>
     </jdk>
   </jdks>
   <slaves/>

@@ -1,0 +1,12 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<user>
+  <fullName>Red5 Autobuild</fullName>
+  <properties>
+    <hudson.security.HudsonPrivateSecurityRealm_-Details>
+      <password>Zm1za2lsbGVy</password>
+    </hudson.security.HudsonPrivateSecurityRealm_-Details>
+    <hudson.tasks.Mailer_-UserProperty>
+      <emailAddress>builds@red5.org</emailAddress>
+    </hudson.tasks.Mailer_-UserProperty>
+  </properties>
+</user>

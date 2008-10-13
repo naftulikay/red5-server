@@ -29,7 +29,7 @@ OS: Linux</description>
   <builders>
     <hudson.tasks.Ant>
       <targets>clean
-run-tests-serversmoketest</targets>
+run-tests-systemtest</targets>
       <antName>Ant7</antName>
     </hudson.tasks.Ant>
   </builders>
@@ -39,7 +39,7 @@ run-tests-serversmoketest</targets>
       <latestOnly>false</latestOnly>
     </hudson.tasks.ArtifactArchiver>
     <hudson.tasks.Mailer>
-      <recipients>aclarke@vlideshow.com</recipients>
+      <recipients>red5-builds@googlegroups.com</recipients>
       <dontNotifyEveryUnstableBuild>false</dontNotifyEveryUnstableBuild>
       <sendToIndividuals>true</sendToIndividuals>
     </hudson.tasks.Mailer>

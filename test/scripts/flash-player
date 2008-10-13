@@ -21,4 +21,4 @@
 #
 # calls an os specific flash player script
 
-call-os-specific flash-player $*
+exec call-os-specific flash-player $*

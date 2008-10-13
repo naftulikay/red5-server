@@ -66,8 +66,6 @@ while ((($NOW_TIME-$START_TIME)<=$HEADLESS_MAX_RUN_SECONDS)); do
     if [ $? -eq 0 ]; then
       # Flash has actually finished; we should exit
       break;
-    else
-      # We should keep going
     fi
   else
     # Flash has exited; leave the loop and check for doneness

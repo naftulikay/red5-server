@@ -1,8 +1,0 @@
-#!/bin/bash
-
-# For sending e-mail
-apt-get install -y exim4
-
-# We need to manually configure mail
-echo "Configuring Exim4 Mail Agent"
-dpkg-reconfigure exim4-config

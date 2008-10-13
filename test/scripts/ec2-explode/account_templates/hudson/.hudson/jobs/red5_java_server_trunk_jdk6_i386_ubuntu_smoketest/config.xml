@@ -29,24 +29,31 @@ OS: Linux</description>
   <builders>
     <hudson.tasks.Ant>
       <targets>clean
-run-tests
-javadoc</targets>
+run-tests-serversmoketest</targets>
       <antName>Ant7</antName>
     </hudson.tasks.Ant>
   </builders>
   <publishers>
-    <hudson.tasks.JavadocArchiver>
-      <javadocDir>workingcopy/doc/api</javadocDir>
-      <keepAll>true</keepAll>
-    </hudson.tasks.JavadocArchiver>
-    <hudson.tasks.junit.JUnitResultArchiver>
-      <testResults>workingcopy/bin/testcases/testreports/*.xml</testResults>
-    </hudson.tasks.junit.JUnitResultArchiver>
+    <hudson.tasks.ArtifactArchiver>
+      <artifacts>workingcopy/bin/testcases/testreports/fixtures/output/**/*</artifacts>
+      <latestOnly>false</latestOnly>
+    </hudson.tasks.ArtifactArchiver>
     <hudson.tasks.Mailer>
-      <recipients>red5-builds@googlegroups.com</recipients>
+      <recipients>aclarke@vlideshow.com</recipients>
       <dontNotifyEveryUnstableBuild>false</dontNotifyEveryUnstableBuild>
-      <sendToIndividuals>false</sendToIndividuals>
+      <sendToIndividuals>true</sendToIndividuals>
     </hudson.tasks.Mailer>
   </publishers>
-  <buildWrappers/>
+  <buildWrappers>
+    <org.jvnet.hudson.plugins.port__allocator.PortAllocator>
+      <ports>
+        <org.jvnet.hudson.plugins.port__allocator.DefaultPortType>
+          <name>1935</name>
+        </org.jvnet.hudson.plugins.port__allocator.DefaultPortType>
+      </ports>
+    </org.jvnet.hudson.plugins.port__allocator.PortAllocator>
+    <hudson.plugins.xvnc.Xvnc>
+      <takeScreenshot>false</takeScreenshot>
+    </hudson.plugins.xvnc.Xvnc>
+  </buildWrappers>
 </project>

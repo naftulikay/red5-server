@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <hudson.plugins.xvnc.Xvnc_-DescriptorImpl>
-  <xvnc>/usr/bin/tightvncserver</xvnc>
+  <xvnc>/usr/bin/tightvncserver :$DISPLAY_NUMBER</xvnc>
   <baseDisplayNumber>10</baseDisplayNumber>
 </hudson.plugins.xvnc.Xvnc_-DescriptorImpl>

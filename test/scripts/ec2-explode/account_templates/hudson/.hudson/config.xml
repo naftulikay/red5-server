@@ -2,11 +2,8 @@
 <hudson>
   <numExecutors>2</numExecutors>
   <mode>NORMAL</mode>
-  <useSecurity>false</useSecurity>
-  <authorizationStrategy class="hudson.security.FullControlOnceLoggedInAuthorizationStrategy"/>
-  <securityRealm class="hudson.security.HudsonPrivateSecurityRealm">
-    <disableSignup>true</disableSignup>
-  </securityRealm>
+  <authorizationStrategy class="hudson.security.AuthorizationStrategy$Unsecured"/>
+  <securityRealm class="hudson.security.SecurityRealm$None"/>
   <jdks>
     <jdk>
       <name>JDK6</name>

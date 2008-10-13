@@ -29,5 +29,5 @@ detect_os
 
 # construct full path to os specific script and call it
 
-`dirname $0`/$OS/$*
+exec `dirname $0`/$OS/$*
 

@@ -796,7 +796,7 @@
 			<report format="frames" todir="${testdoc.dir}"/>
 		</junitreport>
 	</target>
-        <target name="run-tests-serversmoketest" depends="compile_tests" description="Runs some self-contained flash tests against a test server">
+        <target name="run-tests-systemtest" depends="compile_tests" description="Runs some end-to-end system tests against a test server using a flash client">
           <!-- Copy over all self-run scripts -->
           <!-- Note we use cp, and not <copy> to preserve permission
             semantics.  This means this target will NOT run directly

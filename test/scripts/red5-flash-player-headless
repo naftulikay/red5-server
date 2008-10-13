@@ -80,6 +80,8 @@ echo "done (end:$NOW_TIME)"
 ps -ef | grep -v grep | grep -q $FLASH_PID
 if [ $? -eq 0 ]; then
   echo "Killing Zombie Flash Process: $FLASH_PID";
+  # Take one last screenshot before we kill it
+  take-screenshot output/screenshot-$NOW_TIME.png
   kill -9 $FLASH_PID
 fi
 wait $FLASH_PID

@@ -98,9 +98,6 @@ apt-get install -y tightvncserver
 # the headless server is doing
 apt-get install -y imagemagick
 
-# For sending e-mail
-apt-get install -y exim4
-
 # Create the user accoutns specified
 
 # Now set up hudson

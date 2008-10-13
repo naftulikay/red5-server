@@ -82,6 +82,7 @@ if [ $? -eq 0 ]; then
   echo "Killing Zombie Flash Process: $FLASH_PID";
   kill -9 $FLASH_PID
 fi
+wait $FLASH_PID
 
 # Final harvest
 harvest-flashlog output flashlog-$$.txt >/dev/null 2>&1

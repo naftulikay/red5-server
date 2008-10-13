@@ -41,8 +41,9 @@ process_status $? "red5 failed to start"
 # Run the flash-player
 flash-player $* &
 FLASH_PID=$!
-echo `date` "Started flashplayer with PID: $FLASH_PID"
+echo -n `date` "Checking if flashplayer started with PID: $FLASH_PID ..."
 ensure_background_process_running $! 5 "Flash player did not start"
+echo "done"
 
 if [ -z "$HEADLESS_MAX_RUN_SECONDS" ]; then
   # set a 10 min default
@@ -62,6 +63,12 @@ while ((($NOW_TIME-$START_TIME)<=$HEADLESS_MAX_RUN_SECONDS)); do
   if [ $? -eq 0 ]; then
     # Flash is still running
     tail output/flashlog-$$.txt | grep -q "setting exitVal to: [0-9]* and exiting the player"
+    if [ $? -eq 0 ]; then
+      # Flash has actually finished; we should exit
+      break;
+    else
+      # We should keep going
+    fi
   else
     # Flash has exited; leave the loop and check for doneness
     break;

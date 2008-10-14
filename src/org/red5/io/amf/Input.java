@@ -342,6 +342,9 @@ public class Input extends BaseInput implements org.red5.io.object.Input {
 		log.debug("Read start mixed array: {}", maxNumber);
 		Object result;
 		final Map<Object, Object> mixedResult = new LinkedHashMap<Object, Object>(maxNumber);
+		// we must store the reference before we deserialize any items in it to ensure
+		// that reference IDs are correct
+		int reference = storeReference(mixedResult);
 		while (hasMoreProperties()) {
 			String key = getString(buf);
 			log.debug("key: {}", key);
@@ -368,7 +371,8 @@ public class Input extends BaseInput implements org.red5.io.object.Input {
 			}
 			result = mixedResult;
 		}
-		storeReference(result);
+		// Replace the original reference with the final result
+		storeReference(reference, result);
 		skipEndObject();
 		return result;
 	}
@@ -577,11 +581,7 @@ public class Input extends BaseInput implements org.red5.io.object.Input {
 	 * @return Object       Read reference to object
 	 */
 	public Object readReference(Type target) {
-		if (referenceMode == ReferenceMode.MODE_RTMP) {
-			return getReference(buf.getUnsignedShort() - 1);
-		} else {
-			return getReference(buf.getUnsignedShort());
-		}
+		return getReference(buf.getUnsignedShort());
 	}
 
 	/**

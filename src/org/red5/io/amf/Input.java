@@ -585,20 +585,11 @@ public class Input extends BaseInput implements org.red5.io.object.Input {
 	}
 
 	/**
-	 * Resets map and set mode to handle references
-	 *
-	 * @param mode mode to handle references
-	 */
-	public void reset(ReferenceMode mode) {
-		this.clearReferences();
-		referenceMode = mode;
-	}
-
-	/**
 	 * Resets map
+	 *
 	 */
 	public void reset() {
-		reset(ReferenceMode.MODE_RTMP);
+		this.clearReferences();
 	}
 
     protected Type getPropertyType(Object instance, String propertyName) {

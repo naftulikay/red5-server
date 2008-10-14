@@ -31,7 +31,6 @@ import org.apache.mina.common.IoSession;
 import org.red5.io.amf.AMF;
 import org.red5.io.object.Deserializer;
 import org.red5.io.object.Input;
-import org.red5.io.object.BaseInput.ReferenceMode;
 import org.red5.server.net.protocol.ProtocolState;
 import org.red5.server.net.protocol.SimpleProtocolDecoder;
 import org.red5.server.net.remoting.FlexMessagingService;
@@ -188,7 +187,7 @@ public class RemotingProtocolDecoder implements SimpleProtocolDecoder {
 					input = new org.red5.io.amf.Input(in);
 				}
 				// Prepare remoting mode
-				input.reset(ReferenceMode.MODE_REMOTING);
+				input.reset();
 				
 				values.add(deserializer.deserialize(input, Object.class));
 			}

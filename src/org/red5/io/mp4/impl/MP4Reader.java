@@ -1272,6 +1272,8 @@ public class MP4Reader implements IoConstants, ITagReader {
 		//TODO: fix seek, which should be a ez as setting the current sample #
 		//seekpoints in meta data need to be +1 to hit the correct sample
 		currentSample = getSample(pos); 
+		//put the config tags back in
+		createPreStreamingTags();
 		log.debug("setting current sample: {}", currentSample);
 	}
 
@@ -1288,6 +1290,7 @@ public class MP4Reader implements IoConstants, ITagReader {
 		for (int f = 0; f < len; f++) {
 			frame = frames.get(f);
 			if (pos == frame.getOffset()) {
+				log.debug("Frame found for seek: {}", frame);
 				sample = f + 1;
 				break;
 			}

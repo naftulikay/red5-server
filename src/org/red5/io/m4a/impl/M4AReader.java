@@ -120,13 +120,11 @@ public class M4AReader implements IoConstants, ITagReader {
 	private int audioSampleDuration = 1024;
 	
 	//keep track of current sample
-	private int currentSample = 1;
+	private int currentFrame = 1;
 	
     private int prevFrameSize = 0;
 		
     private List<MP4Frame> frames = new ArrayList<MP4Frame>();
-	
-	private double baseTs = 0f;
 	
 	/**
 	 * Container for metadata and any other tags that should
@@ -525,7 +523,7 @@ public class M4AReader implements IoConstants, ITagReader {
 	/** {@inheritDoc}
 	 */
 	public boolean hasMoreTags() {
-		return currentSample < frames.size();
+		return currentFrame < frames.size();
 	}
 
     /**
@@ -619,13 +617,11 @@ public class M4AReader implements IoConstants, ITagReader {
 		//log.debug("Read tag - sample {} prevFrameSize {} audio: {} video: {}", new Object[]{currentSample, prevFrameSize, audioCount, videoCount});
 		
 		//get the current frame
-		MP4Frame frame = frames.get(currentSample - 1);
+		MP4Frame frame = frames.get(currentFrame);
 		log.debug("Playback {}", frame);
 		
 		int sampleSize = frame.getSize();
 		
-		//time routines are based on izumi code
-		double frameTs = (frame.getTime() - baseTs) * 1000.0;
 		int time = (int) Math.round(frame.getTime() * 1000.0);
 		//log.debug("Read tag - dst: {} base: {} time: {}", new Object[]{frameTs, baseTs, time});
 		
@@ -655,11 +651,10 @@ public class M4AReader implements IoConstants, ITagReader {
 		//log.debug("Read tag - type: {} body size: {}", (type == TYPE_AUDIO ? "Audio" : "Video"), tag.getBodySize());
 		
 		//increment the sample number
-		currentSample++;			
+		currentFrame++;			
 		//set the frame / tag size
 		prevFrameSize = tag.getBodySize();
 	
-		baseTs += frameTs / 1000.0;
 		//log.debug("Tag: {}", tag);
 		return tag;
 	}
@@ -724,10 +719,8 @@ public class M4AReader implements IoConstants, ITagReader {
 	 */
 	public void position(long pos) {
 		log.debug("position: {}", pos);
-		//TODO: fix seek, which should be a ez as setting the current sample #
-		//seekpoints in meta data need to be +1 to hit the correct sample
-		currentSample = getSample(pos); 
-		log.debug("setting current sample: {}", currentSample);
+		currentFrame = getFrame(pos); 
+		log.debug("Setting current sample: {}", currentFrame);
 	}
 
 	/**
@@ -736,14 +729,14 @@ public class M4AReader implements IoConstants, ITagReader {
 	 * @param pos
 	 * @return
 	 */
-	private int getSample(long pos) {
+	private int getFrame(long pos) {
 		int sample = 1;
 		int len = frames.size();
 		MP4Frame frame = null;
 		for (int f = 0; f < len; f++) {
 			frame = frames.get(f);
 			if (pos == frame.getOffset()) {
-				sample = f + 1;
+				sample = f;
 				break;
 			}
 		}

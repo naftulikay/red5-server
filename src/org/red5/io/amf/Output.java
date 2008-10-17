@@ -157,7 +157,7 @@ public class Output extends BaseOutput implements org.red5.io.object.Output {
 		// TODO: Need to support an incoming key named length
 		for (Map.Entry<Object, Object> entry : map.entrySet()) {
 			final String key = entry.getKey().toString();
-			log.warn("Key: {}", key);
+			log.debug("Key: {}", key);
 			if ("length".equals(key)) {
 				continue;
 			}

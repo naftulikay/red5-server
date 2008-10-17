@@ -172,8 +172,8 @@ public class MP4Reader implements IoConstants, ITagReader {
 	private int videoSampleDuration = 125;
 	private int audioSampleDuration = 1024;
 	
-	//keep track of current sample
-	private int currentSample = 1;
+	//keep track of current frame / sample
+	private int currentFrame = 0;
 	
     private int prevFrameSize = 0;
 	
@@ -181,9 +181,7 @@ public class MP4Reader implements IoConstants, ITagReader {
     
 	private long audioCount;
 	private long videoCount;
-	
-	private double baseTs = 0f;
-	
+		
 	/**
 	 * Container for metadata and any other tags that should
 	 * be sent prior to media data.
@@ -808,7 +806,7 @@ public class MP4Reader implements IoConstants, ITagReader {
 	/** {@inheritDoc}
 	 */
 	public boolean hasMoreTags() {
-		return currentSample < frames.size();
+		return currentFrame < frames.size();
 	}
 
     /**
@@ -1056,13 +1054,11 @@ public class MP4Reader implements IoConstants, ITagReader {
 		//log.debug("Read tag - sample {} prevFrameSize {} audio: {} video: {}", new Object[]{currentSample, prevFrameSize, audioCount, videoCount});
 		
 		//get the current frame
-		MP4Frame frame = frames.get(currentSample - 1);
-		//log.debug("Playback {}", frame);
+		MP4Frame frame = frames.get(currentFrame);
+		log.debug("Playback #{} {}", currentFrame, frame);
 		
 		int sampleSize = frame.getSize();
 		
-		//time routines are based on izumi code
-		double frameTs = (frame.getTime() - baseTs) * 1000.0;
 		int time = (int) Math.round(frame.getTime() * 1000.0);
 		//log.debug("Read tag - dst: {} base: {} time: {}", new Object[]{frameTs, baseTs, time});
 		
@@ -1111,12 +1107,11 @@ public class MP4Reader implements IoConstants, ITagReader {
 		ITag tag = new Tag(type, time, payload.limit(), payload, prevFrameSize);
 		//log.debug("Read tag - type: {} body size: {}", (type == TYPE_AUDIO ? "Audio" : "Video"), tag.getBodySize());
 		
-		//increment the sample number
-		currentSample++;			
+		//increment the frame number
+		currentFrame++;			
 		//set the frame / tag size
 		prevFrameSize = tag.getBodySize();
 	
-		baseTs += frameTs / 1000.0;
 		//log.debug("Tag: {}", tag);
 		return tag;
 	}
@@ -1268,30 +1263,37 @@ public class MP4Reader implements IoConstants, ITagReader {
 	 * @param pos position to move to in file / channel
 	 */
 	public void position(long pos) {
-		log.debug("position: {}", pos);
-		//TODO: fix seek, which should be a ez as setting the current sample #
-		//seekpoints in meta data need to be +1 to hit the correct sample
-		currentSample = getSample(pos); 
-		//put the config tags back in
+		log.debug("Position: {}", pos);
+		log.debug("Current frame: {}", currentFrame);
+		currentFrame = getFrame(pos); 
+		//
 		createPreStreamingTags();
-		log.debug("setting current sample: {}", currentSample);
+		log.debug("Setting current frame: {}", currentFrame);
 	}
 
 	/**
-	 * Search through the frames by offset / position to find the sample.
+	 * Search through the frames by offset / position to find the one we want to seek to.
 	 * 
 	 * @param pos
 	 * @return
 	 */
-	private int getSample(long pos) {
+	private int getFrame(long pos) {
 		int sample = 1;
 		int len = frames.size();
 		MP4Frame frame = null;
 		for (int f = 0; f < len; f++) {
 			frame = frames.get(f);
-			if (pos == frame.getOffset()) {
-				log.debug("Frame found for seek: {}", frame);
-				sample = f + 1;
+			long offset = frame.getOffset();
+			//look for pos to match frame offset or grab the first keyframe 
+			//beyond the offset
+			if (pos == offset || (offset > pos && frame.isKeyFrame())) {
+				log.debug("Frame #{} found for seek: {}", f, frame);
+				//ensure that it is a keyframe
+				if (!frame.isKeyFrame()) {
+					log.debug("Frame #{} was not a key frame, so trying again..", f);
+					continue;
+				}
+				sample = f;
 				break;
 			}
 		}

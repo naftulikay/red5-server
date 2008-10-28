@@ -58,8 +58,6 @@ public class JMXAgent implements NotificationListener {
 
 	private static JMXConnectorServer cs;
 
-	private static boolean enableHtmlAdapter;
-
 	private static boolean enableRmiAdapter;
 
 	private static boolean startRegistry;
@@ -67,10 +65,6 @@ public class JMXAgent implements NotificationListener {
 	private static boolean enableSsl;
 
 	private static boolean enableMinaMonitor;
-
-	private static HtmlAdaptorServer html;
-
-	private static String htmlAdapterPort = "8082";
 
 	private static Logger log = LoggerFactory.getLogger(JMXAgent.class);
 
@@ -194,9 +188,6 @@ public class JMXAgent implements NotificationListener {
 				log.error("Exception stopping JMXConnector server {}", e);
 			}
 		}
-		if (null != html) {
-			html.stop();
-		}
 		try {
 			//unregister all the currently registered red5 mbeans
 			String domain = JMXFactory.getDefaultDomain();
@@ -290,10 +281,6 @@ public class JMXAgent implements NotificationListener {
 		return updated;
 	}
 
-	public String getHtmlAdapterPort() {
-		return htmlAdapterPort;
-	}
-
 	public void handleNotification(Notification notification, Object handback) {
 		log.debug("handleNotification {}", notification.getMessage());
 	}
@@ -301,30 +288,7 @@ public class JMXAgent implements NotificationListener {
 	public void init() {
 		//environmental var holder
 		HashMap env = null;
-		 
-		if (enableHtmlAdapter) {
-			// setup the adapter
-			try {
-				//instance an html adaptor
-				int port = htmlAdapterPort == null ? 8082 : Integer
-						.valueOf(htmlAdapterPort);
-				html = new HtmlAdaptorServer(port);
-				ObjectName htmlName = new ObjectName(JMXFactory
-						.getDefaultDomain()
-						+ ":type=HtmlAdaptorServer,port=" + port);
-				log.debug("Created HTML adaptor on port: " + port);
-				//add the adaptor to the server
-				mbs.registerMBean(html, htmlName);
-				//start the adaptor
-				html.start();
-				log.info("JMX HTML connector server successfully started");
 
-			} catch (Exception e) {
-				log.error("Error in setup of JMX subsystem (HTML adapter)", e);
-			}
-		} else {
-			log.info("JMX HTML adapter was not enabled");
-		}
 		if (enableRmiAdapter) {
 			// Create an RMI connector server
 			log.debug("Create an RMI connector server");
@@ -451,15 +415,6 @@ public class JMXAgent implements NotificationListener {
 		}
 	}
 
-	public void setEnableHtmlAdapter(boolean enableHtmlAdapter) {
-		JMXAgent.enableHtmlAdapter = enableHtmlAdapter;
-	}
-
-	public void setEnableHtmlAdapter(String enableHtmlAdapterString) {
-		JMXAgent.enableHtmlAdapter = enableHtmlAdapterString
-				.matches("true|on|yes");
-	}
-
 	public void setEnableRmiAdapter(boolean enableRmiAdapter) {
 		JMXAgent.enableRmiAdapter = enableRmiAdapter;
 	}
@@ -475,10 +430,6 @@ public class JMXAgent implements NotificationListener {
 
 	public void setEnableSsl(String enableSslString) {
 		JMXAgent.enableSsl = enableSslString.matches("true|on|yes");
-	}
-
-	public void setHtmlAdapterPort(String htmlAdapterPort) {
-		JMXAgent.htmlAdapterPort = htmlAdapterPort;
 	}
 
 	public void setRemoteAccessProperties(String remoteAccessProperties) {

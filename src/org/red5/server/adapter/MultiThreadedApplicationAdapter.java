@@ -442,8 +442,11 @@ public class MultiThreadedApplicationAdapter extends StatefulScopeWrappingAdapte
 	public boolean appStart(IScope app) {
 		log.debug("appStart: {}", app);
 		for (IApplication listener : listeners) {
-			listener.appStart(app);
+			if(!listener.appStart(app)) {
+				return false;
+			}
 		}
+				
 		return true;
 	}
 
@@ -469,10 +472,13 @@ public class MultiThreadedApplicationAdapter extends StatefulScopeWrappingAdapte
 	 */
 	public boolean roomStart(IScope room) {
 		log.debug("roomStart: {}", room);
-		// TODO : Get to know what does roomStart return mean
+		// TODO : Get to know what does roomStart return mean		
 		for (IApplication listener : listeners) {
-			listener.roomStart(room);
+			if(!listener.roomStart(room)) {
+				return false;
+			}
 		}
+				
 		return true;
 	}
 
@@ -517,7 +523,9 @@ public class MultiThreadedApplicationAdapter extends StatefulScopeWrappingAdapte
 	public boolean appConnect(IConnection conn, Object[] params) {
 		log.debug("appConnect: {}", conn);
 		for (IApplication listener : listeners) {
-			listener.appConnect(conn, params);
+			if(!listener.appConnect(conn, params)) {
+				return false;
+			}
 		}
 		return true;
 	}
@@ -540,9 +548,11 @@ public class MultiThreadedApplicationAdapter extends StatefulScopeWrappingAdapte
 	 * @return			Boolean value
 	 */
 	public boolean roomConnect(IConnection conn, Object[] params) {
-		log.debug("roomConnect: {}", conn);
+		log.debug("roomConnect: {}", conn);		
 		for (IApplication listener : listeners) {
-			listener.roomConnect(conn, params);
+			if(!listener.roomConnect(conn, params)) {
+				return false;
+			}
 		}
 		return true;
 	}
@@ -577,7 +587,9 @@ public class MultiThreadedApplicationAdapter extends StatefulScopeWrappingAdapte
 	public boolean appJoin(IClient client, IScope app) {
 		log.debug("appJoin: {} >> {}", client, app);
 		for (IApplication listener : listeners) {
-			listener.appJoin(client, app);
+			if(!listener.appJoin(client, app)) {
+				return false;
+			}
 		}
 		return true;
 	}
@@ -600,7 +612,9 @@ public class MultiThreadedApplicationAdapter extends StatefulScopeWrappingAdapte
 	public boolean roomJoin(IClient client, IScope room) {
 		log.debug("roomJoin: {} >> {}", client, room);
 		for (IApplication listener : listeners) {
-			listener.roomJoin(client, room);
+			if(!listener.roomJoin(client, room)) {
+				return false;
+			}
 		}
 		return true;
 	}

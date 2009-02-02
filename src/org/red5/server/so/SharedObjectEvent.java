@@ -24,9 +24,6 @@ import java.io.ObjectOutput;
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA 
  */
 
-/**
- * {@inheritDoc}
- */
 public class SharedObjectEvent implements ISharedObjectEvent, Externalizable {
 	private static final long serialVersionUID = -4129018814289863535L;
 
@@ -49,7 +46,10 @@ public class SharedObjectEvent implements ISharedObjectEvent, Externalizable {
 	}
 
 	/**
-	 * {@inheritDoc}
+	 * 
+	 * @param type type
+	 * @param key key
+	 * @param value value
 	 */
 	public SharedObjectEvent(Type type, String key, Object value) {
 		this.type = type;

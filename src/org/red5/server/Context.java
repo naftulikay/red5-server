@@ -42,8 +42,6 @@ import org.springframework.context.access.ContextSingletonBeanFactoryLocator;
 import org.springframework.core.io.Resource;
 
 /**
- * {@inheritDoc}
- * 
  * <p>
  * This is basic context implementation used by Red5.
  * </p>
@@ -103,10 +101,8 @@ public class Context implements IContext, ApplicationContextAware, ContextMBean 
 	/**
 	 * Initializes app context and context path from given parameters
 	 * 
-	 * @param context
-	 *            Application context
-	 * @param contextPath
-	 *            Context path
+	 * @param context Application context
+	 * @param contextPath Context path
 	 */
 	public Context(ApplicationContext context, String contextPath) {
 		setApplicationContext(context);
@@ -134,8 +130,7 @@ public class Context implements IContext, ApplicationContextAware, ContextMBean 
 	/**
 	 * Resolves scope using scope resolver collaborator
 	 * 
-	 * @param path
-	 *            Path to resolve
+	 * @param path Path to resolve
 	 * @return Scope resolution result
 	 */
 	public IScope resolveScope(String path) {
@@ -145,10 +140,8 @@ public class Context implements IContext, ApplicationContextAware, ContextMBean 
 	/**
 	 * Resolves scope from given root using scope resolver.
 	 * 
-	 * @param root
-	 * 			Scope to start from.
-	 * @param path
-	 * 			Path to resolve.
+	 * @param root Scope to start from.
+	 * @param path Path to resolve.
 	 * @return Scope resolution result.
 	 */
 	public IScope resolveScope(IScope root, String path) {
@@ -158,18 +151,16 @@ public class Context implements IContext, ApplicationContextAware, ContextMBean 
 	/**
 	 * Setter for client registry
 	 * 
-	 * @param clientRegistry
-	 *            Client registry
+	 * @param clientRegistry Client registry
 	 */
 	public void setClientRegistry(IClientRegistry clientRegistry) {
 		this.clientRegistry = clientRegistry;
 	}
 
 	/**
-	 * Setter for mapping stategy
+	 * Setter for mapping strategy
 	 * 
-	 * @param mappingStrategy
-	 *            Mapping strategy
+	 * @param mappingStrategy Mapping strategy
 	 */
 	public void setMappingStrategy(IMappingStrategy mappingStrategy) {
 		this.mappingStrategy = mappingStrategy;
@@ -178,8 +169,7 @@ public class Context implements IContext, ApplicationContextAware, ContextMBean 
 	/**
 	 * Setter for scope resolver
 	 * 
-	 * @param scopeResolver
-	 *            Scope resolver used to resolve scopes
+	 * @param scopeResolver Scope resolver used to resolve scopes
 	 */
 	public void setScopeResolver(IScopeResolver scopeResolver) {
 		this.scopeResolver = scopeResolver;
@@ -188,8 +178,7 @@ public class Context implements IContext, ApplicationContextAware, ContextMBean 
 	/**
 	 * Setter for service invoker
 	 * 
-	 * @param serviceInvoker
-	 *            Service invoker object
+	 * @param serviceInvoker Service invoker object
 	 */
 	public void setServiceInvoker(IServiceInvoker serviceInvoker) {
 		this.serviceInvoker = serviceInvoker;
@@ -207,8 +196,7 @@ public class Context implements IContext, ApplicationContextAware, ContextMBean 
 	/**
 	 * Setter for persistence store
 	 * 
-	 * @param persistanceStore
-	 *            Persistence store
+	 * @param persistanceStore Persistence store
 	 */
 	public void setPersistanceStore(IPersistenceStore persistanceStore) {
 		this.persistanceStore = persistanceStore;
@@ -217,8 +205,7 @@ public class Context implements IContext, ApplicationContextAware, ContextMBean 
 	/**
 	 * Setter for application context
 	 * 
-	 * @param context
-	 *            App context
+	 * @param context App context
 	 */
 	public void setApplicationContext(ApplicationContext context) {
 		this.applicationContext = context;
@@ -250,8 +237,7 @@ public class Context implements IContext, ApplicationContextAware, ContextMBean 
 	/**
 	 * Setter for context path. Adds slash at the end of path if there's no one
 	 * 
-	 * @param contextPath
-	 *            Context path
+	 * @param contextPath Context path
 	 */
 	public void setContextPath(String contextPath) {
 		if (!contextPath.endsWith("/")) {
@@ -290,13 +276,10 @@ public class Context implements IContext, ApplicationContextAware, ContextMBean 
 	/**
 	 * Look up service by name
 	 * 
-	 * @param serviceName
-	 *            Service name
+	 * @param serviceName Service name
 	 * @return Service object
-	 * @throws ServiceNotFoundException
-	 *             When service found but null
-	 * @throws NoSuchBeanDefinitionException
-	 *             When bean with given name doesn't exist
+	 * @throws ServiceNotFoundException When service found but null
+	 * @throws NoSuchBeanDefinitionException  When bean with given name doesn't exist
 	 */
 	public Object lookupService(String serviceName) {
 		serviceName = getMappingStrategy().mapServiceName(serviceName);
@@ -315,11 +298,9 @@ public class Context implements IContext, ApplicationContextAware, ContextMBean 
 	/**
 	 * Look up scope handler for context path
 	 * 
-	 * @param contextPath
-	 *            Context path
+	 * @param contextPath Context path
 	 * @return Scope handler
-	 * @throws ScopeHandlerNotFoundException
-	 *             If there's no handler for given context path
+	 * @throws ScopeHandlerNotFoundException If there's no handler for given context path
 	 */
 	public IScopeHandler lookupScopeHandler(String contextPath) {
 		// Get target scope handler name
@@ -348,11 +329,9 @@ public class Context implements IContext, ApplicationContextAware, ContextMBean 
 	/**
 	 * Return array or resournce that match given pattern
 	 * 
-	 * @param pattern
-	 *            Pattern to check against
+	 * @param pattern Pattern to check against
 	 * @return Array of Resource objects
-	 * @throws IOException
-	 *             On I/O exception
+	 * @throws IOException On I/O exception
 	 * 
 	 * @see org.springframework.core.io.Resource
 	 */
@@ -363,8 +342,7 @@ public class Context implements IContext, ApplicationContextAware, ContextMBean 
 	/**
 	 * Return resouce by path
 	 * 
-	 * @param path
-	 *            Resource path
+	 * @param path Resource path
 	 * @return Resource
 	 * 
 	 * @see org.springframework.core.io.Resource
@@ -376,10 +354,8 @@ public class Context implements IContext, ApplicationContextAware, ContextMBean 
 	/**
 	 * Resolve scope from host and path
 	 * 
-	 * @param host
-	 *            Host
-	 * @param path
-	 *            Path
+	 * @param host Host
+	 * @param path Path
 	 * @return Scope
 	 * 
 	 * @see org.red5.server.api.IScope
@@ -392,8 +368,7 @@ public class Context implements IContext, ApplicationContextAware, ContextMBean 
 	/**
 	 * Return bean instantiated by bean factory
 	 * 
-	 * @param beanId
-	 *            Bean name
+	 * @param beanId Bean name
 	 * @return Instantiated bean
 	 * 
 	 * @see org.springframework.beans.factory.BeanFactory
@@ -417,8 +392,7 @@ public class Context implements IContext, ApplicationContextAware, ContextMBean 
 	/**
 	 * Return core Red5 service instantiated by core context bean factory
 	 * 
-	 * @param beanId
-	 *            Bean name
+	 * @param beanId Bean name
 	 * @return Core Red5 service instantiated
 	 * 
 	 * @see org.springframework.beans.factory.BeanFactory

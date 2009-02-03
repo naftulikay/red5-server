@@ -526,7 +526,29 @@
 	<target name="jar" description="Make Archive" depends="jar-determine-classpath">
 		<jar destfile="${red5.filename}.jar">
 			<fileset dir="${classes.dir}">
+				<exclude name="**/org/red5/server/Bootstrap.class"/>
+				<exclude name="**/org/red5/server/Shutdown.class"/>
+                <exclude name="**/org/red5/server/LoaderMBean"/>
+				<exclude name="**/org/red5/classloading/**"/>
 				<include name="**/org/**"/>
+				<include name="**/META-INF**"/>
+			</fileset>
+			<manifest>
+				<attribute name="Red5-Version" value="${red5.version}"/>
+				<attribute name="Built-By" value="${red5.fullname}"/>
+				<attribute name="Built-On" value="${build.TODAY}"/>
+			</manifest>
+			<metainf dir="${src.dir}/META-INF">
+				<include name="**"/>
+			</metainf>
+		</jar>
+		<!-- Bootstrap, Shutdown, and classloaders -->
+		<jar destfile="boot.jar">
+			<fileset dir="${classes.dir}">
+				<include name="**/org/red5/server/Bootstrap.class"/>
+				<include name="**/org/red5/server/Shutdown.class"/>
+                <include name="**/org/red5/server/LoaderMBean"/>
+				<include name="**/org/red5/classloading/**"/>
 				<include name="**/META-INF**"/>
 			</fileset>
 			<manifest>
@@ -539,7 +561,7 @@
 			<metainf dir="${src.dir}/META-INF">
 				<include name="**"/>
 			</metainf>
-		</jar>
+		</jar>		
 	</target>
 
 	<target name="dist" description="Create binary distribution" depends="jar">
@@ -561,6 +583,7 @@
 		<copy todir="${dist.dir}">
 			<fileset dir="./">
 				<include name="${red5.filename}.jar"/>
+				<include name="boot.jar"/>
 				<include name="red5.bat"/>
 				<include name="red5-shutdown.bat"/>
 				<include name="red5.sh"/>

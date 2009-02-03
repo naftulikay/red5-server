@@ -528,7 +528,7 @@
 			<fileset dir="${classes.dir}">
 				<exclude name="**/org/red5/server/Bootstrap.class"/>
 				<exclude name="**/org/red5/server/Shutdown.class"/>
-                <exclude name="**/org/red5/server/LoaderMBean"/>
+                <exclude name="**/org/red5/server/LoaderMBean.class"/>
 				<exclude name="**/org/red5/classloading/**"/>
 				<include name="**/org/**"/>
 				<include name="**/META-INF**"/>
@@ -547,7 +547,7 @@
 			<fileset dir="${classes.dir}">
 				<include name="**/org/red5/server/Bootstrap.class"/>
 				<include name="**/org/red5/server/Shutdown.class"/>
-                <include name="**/org/red5/server/LoaderMBean"/>
+                <include name="**/org/red5/server/LoaderMBean.class"/>
 				<include name="**/org/red5/classloading/**"/>
 				<include name="**/META-INF**"/>
 			</fileset>

@@ -13,15 +13,14 @@ REM You can set JAVA_OPTS to add additional options if you want
 REM Set up logging options
 set LOGGING_OPTS=-Dlogback.ContextSelector=org.red5.logging.LoggingContextSelector -Dcatalina.useNaming=true
 REM Set up security options
-REM set SECURITY_OPTS= -Djava.security.debug=failure -Djava.security.manager -Djava.security.policy=%RED5_HOME%/conf/red5.policy
+REM set SECURITY_OPTS=-Djava.security.debug=failure -Djava.security.manager -Djava.security.policy=%RED5_HOME%/conf/red5.policy
 set SECURITY_OPTS=-Djava.security.debug=failure
 set JAVA_OPTS=%LOGGING_OPTS% %SECURITY_OPTS% %JAVA_OPTS%
 
 set JYTHON_OPTS=-Dpython.home=lib
 
 REM set RED5_CLASSPATH=%RED5_HOME%\red5.jar;%RED5_HOME%\conf;%RED5_HOME%\lib\ejb3-persistence.jar
-set RED5_CLASSPATH=%RED5_HOME%\boot.jar
-REM ;%CLASSPATH%
+set RED5_CLASSPATH=%RED5_HOME%\boot.jar;%RED5_HOME%\conf;%CLASSPATH%
 if NOT DEFINED RED5_OPTS set RED5_OPTS= 
 
 goto launchRed5

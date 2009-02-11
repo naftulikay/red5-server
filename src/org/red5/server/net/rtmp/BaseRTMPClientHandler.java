@@ -3,7 +3,7 @@ package org.red5.server.net.rtmp;
 /*
  * RED5 Open Source Flash Server - http://www.osflash.org/red5
  * 
- * Copyright (c) 2006-2008 by respective authors (see below). All rights reserved.
+ * Copyright (c) 2006-2009 by respective authors (see below). All rights reserved.
  * 
  * This library is free software; you can redistribute it and/or modify it under the 
  * terms of the GNU Lesser General Public License as published by the Free Software 
@@ -22,6 +22,7 @@ package org.red5.server.net.rtmp;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 import org.red5.io.object.Deserializer;
 import org.red5.io.object.Serializer;
@@ -66,36 +67,36 @@ public abstract class BaseRTMPClientHandler extends BaseRTMPHandler {
 	/**
 	 * Connection parameters
 	 */
-	protected Map<String, Object> connectionParams;
+	private Map<String, Object> connectionParams;
 
 	/**
 	 * Connect call arguments
 	 */
-	protected Object[] connectArguments = null;
+	private Object[] connectArguments = null;
 
 	/**
 	 * Connection callback
 	 */
-	protected IPendingServiceCallback connectCallback;
+	private IPendingServiceCallback connectCallback;
 
 	/**
 	 * Service provider
 	 */
-	protected Object serviceProvider;
+	private Object serviceProvider;
 
 	/**
 	 * Service invoker
 	 */
-	protected IServiceInvoker serviceInvoker = new ServiceInvoker();
+	private IServiceInvoker serviceInvoker = new ServiceInvoker();
 
 	/**
 	 * Shared objects map
 	 */
-	protected Map<String, ClientSharedObject> sharedObjects = new ConcurrentHashMap<String, ClientSharedObject>();
+	private ConcurrentMap<String, ClientSharedObject> sharedObjects = new ConcurrentHashMap<String, ClientSharedObject>();
 
-	protected RTMPClientConnManager connManager;
+	private final RTMPClientConnManager connManager = new RTMPClientConnManager();
 
-	private Map<Integer, NetStreamPrivateData> streamDataMap = new ConcurrentHashMap<Integer, NetStreamPrivateData>();
+	private ConcurrentMap<Object, NetStreamPrivateData> streamDataMap = new ConcurrentHashMap<Object, NetStreamPrivateData>();
 
 	/**
 	 * Task to start on connection close
@@ -107,18 +108,17 @@ public abstract class BaseRTMPClientHandler extends BaseRTMPHandler {
 	 */
 	private ClientExceptionHandler exceptionHandler;
 
-	protected RTMPCodecFactory codecFactory;
+	private RTMPCodecFactory codecFactory;
 
-	protected IEventDispatcher streamEventDispatcher = null;
+	private IEventDispatcher streamEventDispatcher = null;
 
 	protected BaseRTMPClientHandler() {
 		codecFactory = new RTMPCodecFactory();
 		codecFactory.setDeserializer(new Deserializer());
 		codecFactory.setSerializer(new Serializer());
 		codecFactory.init();
-
 	}
-
+	
 	public RTMPClientConnManager getConnManager() {
 		return connManager;
 	}
@@ -144,12 +144,9 @@ public abstract class BaseRTMPClientHandler extends BaseRTMPHandler {
 	/**
 	 * Connect RTMP client to server's application via given port
 	 * 
-	 * @param server
-	 *            Server
-	 * @param port
-	 *            Connection port
-	 * @param application
-	 *            Application at that server
+	 * @param server Server
+	 * @param port Connection port
+	 * @param application Application at that server
 	 */
 	public void connect(String server, int port, String application) {
 		log.debug("connect server: {} port {} application {}", new Object[] {
@@ -161,14 +158,10 @@ public abstract class BaseRTMPClientHandler extends BaseRTMPHandler {
 	 * Connect RTMP client to server's application via given port with given
 	 * connection callback
 	 * 
-	 * @param server
-	 *            Server
-	 * @param port
-	 *            Connection port
-	 * @param application
-	 *            Application at that server
-	 * @param connectCallback
-	 *            Connection callback
+	 * @param server Server
+	 * @param port Connection port
+	 * @param application Application at that server
+	 * @param connectCallback Connection callback
 	 */
 	public void connect(String server, int port, String application,
 			IPendingServiceCallback connectCallback) {
@@ -181,12 +174,9 @@ public abstract class BaseRTMPClientHandler extends BaseRTMPHandler {
 	}
 
 	/**
-	 * @param server
-	 *            Server
-	 * @param port
-	 *            Connection port
-	 * @param application
-	 *            Application at that server
+	 * @param server Server
+	 * @param port Connection port
+	 * @param application Application at that server
 	 * @return default connection parameters
 	 */
 	public Map<String, Object> makeDefaultConnectionParams(String server,
@@ -210,12 +200,9 @@ public abstract class BaseRTMPClientHandler extends BaseRTMPHandler {
 	 * Connect RTMP client to server via given port and with given connection
 	 * parameters
 	 * 
-	 * @param server
-	 *            Server
-	 * @param port
-	 *            Connection port
-	 * @param connectionParams
-	 *            Connection parameters
+	 * @param server Server
+	 * @param port Connection port
+	 * @param connectionParams Connection parameters
 	 */
 	public void connect(String server, int port,
 			Map<String, Object> connectionParams) {
@@ -227,14 +214,10 @@ public abstract class BaseRTMPClientHandler extends BaseRTMPHandler {
 	/**
 	 * Connect RTMP client to server's application via given port
 	 * 
-	 * @param server
-	 *            Server
-	 * @param port
-	 *            Connection port
-	 * @param connectionParams
-	 *            Connection parameters
-	 * @param connectCallback
-	 *            Connection callback
+	 * @param server Server
+	 * @param port Connection port
+	 * @param connectionParams Connection parameters
+	 * @param connectCallback Connection callback
 	 */
 	public void connect(String server, int port,
 			Map<String, Object> connectionParams,
@@ -245,16 +228,11 @@ public abstract class BaseRTMPClientHandler extends BaseRTMPHandler {
 	/**
 	 * Connect RTMP client to server's application via given port
 	 * 
-	 * @param server
-	 *            Server
-	 * @param port
-	 *            Connection port
-	 * @param connectionParams
-	 *            Connection parameters
-	 * @param connectCallback
-	 *            Connection callback
-	 * @param connectCallArguments
-	 *            Arguments for 'connect' call
+	 * @param server Server
+	 * @param port Connection port
+	 * @param connectionParams Connection parameters
+	 * @param connectCallback Connection callback
+	 * @param connectCallArguments Arguments for 'connect' call
 	 */
 	public void connect(String server, int port,
 			Map<String, Object> connectionParams,
@@ -271,7 +249,7 @@ public abstract class BaseRTMPClientHandler extends BaseRTMPHandler {
 		this.connectArguments = connectCallArguments;
 
 		if (!connectionParams.containsKey("objectEncoding")) {
-			connectionParams.put("objectEncoding", (double) 0);
+			connectionParams.put("objectEncoding", (int) 0);
 		}
 
 		this.connectCallback = connectCallback;
@@ -282,8 +260,7 @@ public abstract class BaseRTMPClientHandler extends BaseRTMPHandler {
 	/**
 	 * Register object that provides methods that can be called by the server.
 	 * 
-	 * @param serviceProvider
-	 *            Service provider
+	 * @param serviceProvider Service provider
 	 */
 	public void setServiceProvider(Object serviceProvider) {
 		this.serviceProvider = serviceProvider;
@@ -292,10 +269,8 @@ public abstract class BaseRTMPClientHandler extends BaseRTMPHandler {
 	/**
 	 * Connect to client shared object.
 	 * 
-	 * @param name
-	 *            Client shared object name
-	 * @param persistent
-	 *            SO persistence flag
+	 * @param name Client shared object name
+	 * @param persistent SO persistence flag
 	 * @return Client shared object instance
 	 */
 	public synchronized IClientSharedObject getSharedObject(String name,
@@ -370,10 +345,8 @@ public abstract class BaseRTMPClientHandler extends BaseRTMPHandler {
 	/**
 	 * Invoke a method on the server.
 	 * 
-	 * @param method
-	 *            Method name
-	 * @param callback
-	 *            Callback handler
+	 * @param method Method name
+	 * @param callback Callback handler
 	 */
 	public void invoke(String method, IPendingServiceCallback callback) {
 		log.debug("invoke method: {} params {} callback {}", new Object[] {
@@ -391,12 +364,9 @@ public abstract class BaseRTMPClientHandler extends BaseRTMPHandler {
 	/**
 	 * Invoke a method on the server and pass parameters.
 	 * 
-	 * @param method
-	 *            Method
-	 * @param params
-	 *            Method call parameters
-	 * @param callback
-	 *            Callback object
+	 * @param method Method
+	 * @param params Method call parameters
+	 * @param callback Callback object
 	 */
 	public void invoke(String method, Object[] params,
 			IPendingServiceCallback callback) {
@@ -466,7 +436,7 @@ public abstract class BaseRTMPClientHandler extends BaseRTMPHandler {
 	public void play(int streamId, String name, int start, int length) {
 		log.debug("play stream {}, name: {}, start {}, length {}",
 				new Object[] { streamId, name, start, length });
-		RTMPConnection conn = (RTMPConnection) connManager.getConnection();
+		RTMPConnection conn = connManager.getConnection();
 		if (conn == null) {
 			log.info("Connection was null ?");
 		}
@@ -541,14 +511,18 @@ public abstract class BaseRTMPClientHandler extends BaseRTMPHandler {
 
 		if (onStatus) {
 			// XXX better to serialize ObjectMap to Status object
-			ObjectMap objMap = (ObjectMap) call.getArguments()[0];
-			Integer clientId = (Integer) objMap.get("clientid");
+			ObjectMap<?, ?> objMap = (ObjectMap<?, ?>) call.getArguments()[0];
+			// should keep this as an Object to stay compatible with FMS3 etc
+			Object clientId = (Object) objMap.get("clientid");
 			if (clientId == null) {
 				clientId = source.getStreamId();
 			}
-			NetStreamPrivateData streamData = streamDataMap.get(clientId);
-			if (streamData != null && streamData.handler != null) {
-				streamData.handler.onStreamEvent(invoke);
+			log.debug("Client id: {}", clientId);
+			if (clientId != null) {
+				NetStreamPrivateData streamData = streamDataMap.get(clientId);
+				if (streamData != null && streamData.handler != null) {
+					streamData.handler.onStreamEvent(invoke);
+				}
 			}
 		}
 
@@ -584,8 +558,7 @@ public abstract class BaseRTMPClientHandler extends BaseRTMPHandler {
 	/**
 	 * Setter for codec factory
 	 * 
-	 * @param factory
-	 *            Codec factory to use
+	 * @param factory Codec factory to use
 	 */
 	public void setCodecFactory(RTMPCodecFactory factory) {
 		this.codecFactory = factory;
@@ -613,7 +586,7 @@ public abstract class BaseRTMPClientHandler extends BaseRTMPHandler {
 	 * Setter for stream event dispatcher (useful for saving playing stream to
 	 * file)
 	 * 
-	 * @param streamEventDispatcher
+	 * @param streamEventDispatcher event dispatcher
 	 */
 	public void setStreamEventDispatcher(IEventDispatcher streamEventDispatcher) {
 		this.streamEventDispatcher = streamEventDispatcher;
@@ -654,6 +627,7 @@ public abstract class BaseRTMPClientHandler extends BaseRTMPHandler {
 
 		public void resultReceived(IPendingServiceCall call) {
 			Integer streamIdInt = (Integer) call.getResult();
+			log.debug("Stream id: {}", streamIdInt);
 			RTMPConnection conn = connManager.getConnection();
 			if (conn != null && streamIdInt != null) {
 				NetStream stream = new NetStream(streamEventDispatcher);
@@ -673,10 +647,10 @@ public abstract class BaseRTMPClientHandler extends BaseRTMPHandler {
 	}
 
 	private class NetStreamPrivateData {
-		public INetStreamEventHandler handler;
+		public volatile INetStreamEventHandler handler;
 
-		public OutputStream outputStream;
+		public volatile OutputStream outputStream;
 
-		public ConnectionConsumer connConsumer;
+		public volatile ConnectionConsumer connConsumer;
 	}
 }

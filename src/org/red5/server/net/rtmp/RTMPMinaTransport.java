@@ -3,7 +3,7 @@ package org.red5.server.net.rtmp;
 /*
  * RED5 Open Source Flash Server - http://www.osflash.org/red5
  * 
- * Copyright (c) 2006-2008 by respective authors (see below). All rights reserved.
+ * Copyright (c) 2006-2009 by respective authors (see below). All rights reserved.
  * 
  * This library is free software; you can redistribute it and/or modify it under the 
  * terms of the GNU Lesser General Public License as published by the Free Software 
@@ -95,6 +95,8 @@ public class RTMPMinaTransport implements RTMPMinaTransportMBean {
 	protected IoServiceManager serviceManager;
 	
 	protected int ioThreads = DEFAULT_IO_THREADS;
+	
+	protected ExecutorService acceptorExecutor;
 
 	/**
 	 * MBean object name used for de/registration purposes.
@@ -180,6 +182,7 @@ public class RTMPMinaTransport implements RTMPMinaTransportMBean {
 	public void start() throws Exception {
 		initIOHandler();
 
+		// FIXME: already set in Standalone
 		ByteBuffer.setUseDirectBuffers(!useHeapBuffers); // this is global, oh well.
 		if (useHeapBuffers) {
 			ByteBuffer.setAllocator(new SimpleByteBufferAllocator()); // dont pool for heap buffers.
@@ -198,7 +201,8 @@ public class RTMPMinaTransport implements RTMPMinaTransportMBean {
 		
 		// Executors.newCachedThreadPool() is always preferred by IoService
 		// See http://mina.apache.org/configuring-thread-model.html for details
-		acceptor = new SocketAcceptor(ioThreads, Executors.newCachedThreadPool());
+		acceptorExecutor = Executors.newCachedThreadPool();
+		acceptor = new SocketAcceptor(ioThreads, acceptorExecutor);
 
 		acceptor.getFilterChain().addLast("threadPool", new ExecutorFilter(eventExecutor));
 
@@ -254,6 +258,7 @@ public class RTMPMinaTransport implements RTMPMinaTransportMBean {
 	public void stop() {
 		log.info("RTMP Mina Transport unbind");
 		acceptor.unbindAll();
+		acceptorExecutor.shutdown();
 		eventExecutor.shutdown();
 		// deregister with jmx
 		JMXAgent.unregisterMBean(oName);

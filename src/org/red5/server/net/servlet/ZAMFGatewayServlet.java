@@ -3,7 +3,7 @@ package org.red5.server.net.servlet;
 /*
  * RED5 Open Source Flash Server - http://www.osflash.org/red5
  *
- * Copyright (c) 2006-2008 by respective authors (see below). All rights reserved.
+ * Copyright (c) 2006-2009 by respective authors (see below). All rights reserved.
  *
  * This library is free software; you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free Software
@@ -90,9 +90,7 @@ public class ZAMFGatewayServlet extends HttpServlet {
 			ContinuationSupport.getContinuation(req, handler).suspend(1000);
 
 		} catch (IOException e) {
-
 			log.error("{}", e);
-
 		}
 		log.info("End");
 	}

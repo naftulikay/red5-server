@@ -3,7 +3,7 @@ package org.red5.server.net.rtmp;
 /*
  * RED5 Open Source Flash Server - http://www.osflash.org/red5
  *
- * Copyright (c) 2006-2008 by respective authors (see below). All rights reserved.
+ * Copyright (c) 2006-2009 by respective authors (see below). All rights reserved.
  *
  * This library is free software; you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free Software
@@ -24,6 +24,8 @@ import java.net.SocketAddress;
 import java.util.ArrayList;
 import java.util.Collections;
 
+import javax.management.ObjectName;
+
 import org.apache.mina.common.ByteBuffer;
 import org.apache.mina.common.IoSession;
 import org.red5.server.api.IScope;
@@ -43,7 +45,12 @@ public class RTMPMinaConnection extends RTMPConnection implements
 	/**
 	 * MINA I/O session, connection between two endpoints
 	 */
-	protected IoSession ioSession;
+	private volatile IoSession ioSession;
+	
+	/**
+	 * MBean object name used for de/registration purposes.
+	 */
+	private volatile ObjectName oName;
 
 	{
 		log.info("RTMPMinaConnection created");
@@ -128,7 +135,10 @@ public class RTMPMinaConnection extends RTMPConnection implements
 		if (ioSession == null) {
 			return 0;
 		}
-		return ioSession.getReadBytes();
+		// TODO: half-measure, writing to readBytes isn't synchronised in mina 
+		synchronized (ioSession) {
+			return ioSession.getReadBytes();
+		}
 	}
 
 	/** {@inheritDoc} */
@@ -137,7 +147,10 @@ public class RTMPMinaConnection extends RTMPConnection implements
 		if (ioSession == null) {
 			return 0;
 		}
-		return ioSession.getWrittenBytes();
+		// TODO: half-measure, writing to writtenBytes isn't synchronised in mina 
+		synchronized (ioSession) {
+			return ioSession.getWrittenBytes();
+		}
 	}
 
 	public void invokeMethod(String method) {

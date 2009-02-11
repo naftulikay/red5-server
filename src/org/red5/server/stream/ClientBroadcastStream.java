@@ -3,7 +3,7 @@ package org.red5.server.stream;
 /*
  * RED5 Open Source Flash Server - http://www.osflash.org/red5
  *
- * Copyright (c) 2006-2008 by respective authors (see below). All rights reserved.
+ * Copyright (c) 2006-2009 by respective authors (see below). All rights reserved.
  *
  * This library is free software; you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free Software
@@ -304,7 +304,7 @@ public class ClientBroadcastStream extends AbstractClientStream implements
 			} else {
 				videoTime = rtmpEvent.getTimestamp();
 			}
-			eventTime = videoTime;
+			eventTime = videoTime;		
 		} else if (rtmpEvent instanceof Invoke) {
 			if (rtmpEvent.getHeader().isTimerRelative()) {
 				dataTime += rtmpEvent.getTimestamp();
@@ -451,7 +451,7 @@ public class ClientBroadcastStream extends AbstractClientStream implements
 			setChunkSize.setTarget("ConnectionConsumer");
 			setChunkSize.setServiceName("chunkSize");
 			if (setChunkSize.getServiceParamMap() == null) {
-				setChunkSize.setServiceParamMap(new HashMap());
+				setChunkSize.setServiceParamMap(new HashMap<String, Object>());
 			}
 			setChunkSize.getServiceParamMap().put("chunkSize", chunkSize);
 			livePipe.sendOOBControlMessage(getProvider(), setChunkSize);
@@ -748,6 +748,7 @@ public class ClientBroadcastStream extends AbstractClientStream implements
 	 * connects
 	 */
 	public void start() {
+		log.info("Stream start");
 		IConsumerService consumerManager = (IConsumerService) getScope()
 				.getContext().getBean(IConsumerService.KEY);
 		try {

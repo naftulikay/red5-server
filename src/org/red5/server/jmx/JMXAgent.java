@@ -3,7 +3,7 @@ package org.red5.server.jmx;
 /*
  * RED5 Open Source Flash Server - http://www.osflash.org/red5
  *
- * Copyright (c) 2006-2008 by respective authors (see below). All rights reserved.
+ * Copyright (c) 2006-2009 by respective authors (see below). All rights reserved.
  *
  * This library is free software; you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free Software
@@ -45,8 +45,6 @@ import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sun.jdmk.comm.HtmlAdaptorServer;
-
 /**
  * Provides the connection adapters as well as registration and
  * unregistration of MBeans.
@@ -58,8 +56,6 @@ public class JMXAgent implements NotificationListener {
 
 	private static JMXConnectorServer cs;
 
-	private static boolean enableHtmlAdapter;
-
 	private static boolean enableRmiAdapter;
 
 	private static boolean startRegistry;
@@ -67,10 +63,6 @@ public class JMXAgent implements NotificationListener {
 	private static boolean enableSsl;
 
 	private static boolean enableMinaMonitor;
-
-	private static HtmlAdaptorServer html;
-
-	private static String htmlAdapterPort = "8082";
 
 	private static Logger log = LoggerFactory.getLogger(JMXAgent.class);
 
@@ -91,7 +83,7 @@ public class JMXAgent implements NotificationListener {
 	private static String remoteSSLKeystorePass;
 
 	static {
-		//in the war version the jmxfactory is not created before
+		//in the war version the jmx factory is not created before
 		//registration starts ?? so we check for it here and init
 		//if needed
 		if (null == mbs) {
@@ -100,10 +92,10 @@ public class JMXAgent implements NotificationListener {
 	}
 
 	/**
-	 * Convienence to remove packages etc from a class name.
+	 * Convenience to remove packages etc from a class name.
 	 * 
-	 * @param className
-	 * @return
+	 * @param className class name to trim
+	 * @return trimmed class name
 	 */
 	public static String trimClassName(String className) {
 		if (StringUtils.isNotBlank(className)) {		
@@ -115,6 +107,7 @@ public class JMXAgent implements NotificationListener {
 		return className;
 	}
 	
+	@SuppressWarnings("unchecked")
 	public static boolean registerMBean(Object instance, String className,
 			Class interfaceClass) {
 		boolean status = false;
@@ -137,6 +130,7 @@ public class JMXAgent implements NotificationListener {
 		return status;
 	}
 
+	@SuppressWarnings("unchecked")
 	public static boolean registerMBean(Object instance, String className,
 			Class interfaceClass, ObjectName name) {
 		boolean status = false;
@@ -147,9 +141,7 @@ public class JMXAgent implements NotificationListener {
 						"[\\.]", "");
 			}
 			log.debug("Register name: {}", cName);
-			mbs
-					.registerMBean(new StandardMBean(instance, interfaceClass),
-							name);
+			mbs.registerMBean(new StandardMBean(instance, interfaceClass), name);
 			status = true;
 		} catch (InstanceAlreadyExistsException iaee) {
 			log.debug("Already registered: {}", className);
@@ -159,6 +151,7 @@ public class JMXAgent implements NotificationListener {
 		return status;
 	}
 
+	@SuppressWarnings("unchecked")
 	public static boolean registerMBean(Object instance, String className,
 			Class interfaceClass, String name) {
 		boolean status = false;
@@ -194,9 +187,6 @@ public class JMXAgent implements NotificationListener {
 				log.error("Exception stopping JMXConnector server {}", e);
 			}
 		}
-		if (null != html) {
-			html.stop();
-		}
 		try {
 			//unregister all the currently registered red5 mbeans
 			String domain = JMXFactory.getDefaultDomain();
@@ -215,8 +205,8 @@ public class JMXAgent implements NotificationListener {
 
 	/**
 	 * Unregisters an mbean instance. If the instance is not found or if a failure occurs, false will be returned.
-	 * @param oName
-	 * @return
+	 * @param oName bean instance
+	 * @return true if success; false if instance not found or failure
 	 */
 	public static boolean unregisterMBean(ObjectName oName) {
 		boolean unregistered = false;
@@ -241,10 +231,10 @@ public class JMXAgent implements NotificationListener {
 	/**
 	 * Updates a named attribute of a registered mbean.
 	 *
-	 * @param oName
-	 * @param key
-	 * @param value
-	 * @return
+	 * @param oName object name
+	 * @param key key
+	 * @param value new value
+	 * @return true if success; false othwerwise
 	 */
 	public static boolean updateMBeanAttribute(ObjectName oName, String key,
 			int value) {
@@ -267,10 +257,10 @@ public class JMXAgent implements NotificationListener {
 	/**
 	 * Updates a named attribute of a registered mbean.
 	 *
-	 * @param oName
-	 * @param key
-	 * @param value
-	 * @return
+	 * @param oName object name
+	 * @param key key
+	 * @param value new value
+	 * @return true if success; false otherwise
 	 */
 	public static boolean updateMBeanAttribute(ObjectName oName, String key,
 			String value) {
@@ -290,41 +280,14 @@ public class JMXAgent implements NotificationListener {
 		return updated;
 	}
 
-	public String getHtmlAdapterPort() {
-		return htmlAdapterPort;
-	}
-
 	public void handleNotification(Notification notification, Object handback) {
 		log.debug("handleNotification {}", notification.getMessage());
 	}
 
 	public void init() {
 		//environmental var holder
-		HashMap env = null;
+		HashMap<String, Object> env = null;
 		 
-		if (enableHtmlAdapter) {
-			// setup the adapter
-			try {
-				//instance an html adaptor
-				int port = htmlAdapterPort == null ? 8082 : Integer
-						.valueOf(htmlAdapterPort);
-				html = new HtmlAdaptorServer(port);
-				ObjectName htmlName = new ObjectName(JMXFactory
-						.getDefaultDomain()
-						+ ":type=HtmlAdaptorServer,port=" + port);
-				log.debug("Created HTML adaptor on port: " + port);
-				//add the adaptor to the server
-				mbs.registerMBean(html, htmlName);
-				//start the adaptor
-				html.start();
-				log.info("JMX HTML connector server successfully started");
-
-			} catch (Exception e) {
-				log.error("Error in setup of JMX subsystem (HTML adapter)", e);
-			}
-		} else {
-			log.info("JMX HTML adapter was not enabled");
-		}
 		if (enableRmiAdapter) {
 			// Create an RMI connector server
 			log.debug("Create an RMI connector server");
@@ -352,7 +315,6 @@ public class JMXAgent implements NotificationListener {
 					//if we didnt find the registry and the user wants it created
 					if (startRegistry) {
 						log.info("Starting an internal RMI registry");
-						// create registry for rmi port 9999
 						r = LocateRegistry.createRegistry(Integer
 								.valueOf(rmiAdapterPort));
 					}
@@ -370,6 +332,8 @@ public class JMXAgent implements NotificationListener {
 								+ "/red5");
 				}
 				
+				log.info("JMXServiceUrl is: {}", url);
+				
 				//if SSL is requested to secure rmi connections
 				if (enableSsl) {
 					
@@ -380,7 +344,7 @@ public class JMXAgent implements NotificationListener {
 					
 					// Environment map
 					log.debug("Initialize the environment map");
-					env = new HashMap();
+					env = new HashMap<String, Object>();
 					// Provide SSL-based RMI socket factories
 					SslRMIClientSocketFactory csf = new SslRMIClientSocketFactory();
 					SslRMIServerSocketFactory ssf = new SslRMIServerSocketFactory();
@@ -398,14 +362,13 @@ public class JMXAgent implements NotificationListener {
 				if (StringUtils.isNotBlank(remoteAccessProperties)) {
 					//if ssl is not used this will be null
 					if (null == env) {
-						env = new HashMap();
+						env = new HashMap<String, Object>();
 					}
 					//check the existance of the files
 					//in the war version the full path is needed
 					File file = new File(remoteAccessProperties);
-					if (!file.exists()) {
-						log
-								.debug("Access file was not found on path, will prepend config_root");
+					if (!file.exists() && remoteAccessProperties.indexOf(System.getProperty("red5.config_root")) != 0) {
+						log.debug("Access file was not found on path, will prepend config_root");
 						//pre-pend the system property set in war startup
 						remoteAccessProperties = System
 								.getProperty("red5.config_root")
@@ -422,8 +385,7 @@ public class JMXAgent implements NotificationListener {
 				
 				
 				// create the connector server
-				cs = JMXConnectorServerFactory.newJMXConnectorServer(url, env,
-						mbs);
+				cs = JMXConnectorServerFactory.newJMXConnectorServer(url, env, mbs);
 				// add a listener for shutdown
 				cs.addNotificationListener(this, null, null);
 				// Start the RMI connector server
@@ -451,15 +413,6 @@ public class JMXAgent implements NotificationListener {
 		}
 	}
 
-	public void setEnableHtmlAdapter(boolean enableHtmlAdapter) {
-		JMXAgent.enableHtmlAdapter = enableHtmlAdapter;
-	}
-
-	public void setEnableHtmlAdapter(String enableHtmlAdapterString) {
-		JMXAgent.enableHtmlAdapter = enableHtmlAdapterString
-				.matches("true|on|yes");
-	}
-
 	public void setEnableRmiAdapter(boolean enableRmiAdapter) {
 		JMXAgent.enableRmiAdapter = enableRmiAdapter;
 	}
@@ -475,10 +428,6 @@ public class JMXAgent implements NotificationListener {
 
 	public void setEnableSsl(String enableSslString) {
 		JMXAgent.enableSsl = enableSslString.matches("true|on|yes");
-	}
-
-	public void setHtmlAdapterPort(String htmlAdapterPort) {
-		JMXAgent.htmlAdapterPort = htmlAdapterPort;
 	}
 
 	public void setRemoteAccessProperties(String remoteAccessProperties) {

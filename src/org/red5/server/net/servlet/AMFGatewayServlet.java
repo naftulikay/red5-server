@@ -3,7 +3,7 @@ package org.red5.server.net.servlet;
 /*
  * RED5 Open Source Flash Server - http://www.osflash.org/red5
  * 
- * Copyright (c) 2006-2008 by respective authors (see below). All rights reserved.
+ * Copyright (c) 2006-2009 by respective authors (see below). All rights reserved.
  * 
  * This library is free software; you can redistribute it and/or modify it under the 
  * terms of the GNU Lesser General Public License as published by the Free Software 
@@ -29,6 +29,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.mina.common.ByteBuffer;
+import org.red5.logging.Red5LoggerFactory;
 import org.red5.server.api.IContext;
 import org.red5.server.api.IGlobalScope;
 import org.red5.server.api.IScope;
@@ -41,8 +42,6 @@ import org.red5.server.net.remoting.codec.RemotingCodecFactory;
 import org.red5.server.net.remoting.message.RemotingCall;
 import org.red5.server.net.remoting.message.RemotingPacket;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.BeanFactory;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.context.support.WebApplicationContextUtils;
 
@@ -51,6 +50,7 @@ import org.springframework.web.context.support.WebApplicationContextUtils;
  * 
  * @author The Red5 Project (red5@osflash.org)
  * @author Luke Hubbard (luke@codegent.com)
+ * @author Paul Gregoire (mondain@gmail.com)
  */
 public class AMFGatewayServlet extends HttpServlet {
 
@@ -59,7 +59,7 @@ public class AMFGatewayServlet extends HttpServlet {
 	/**
 	 * Logger
 	 */
-	protected static Logger log = LoggerFactory.getLogger(AMFGatewayServlet.class);
+	protected Logger log = Red5LoggerFactory.getLogger(AMFGatewayServlet.class);
 
 	/**
 	 * AMF MIME type
@@ -127,7 +127,7 @@ public class AMFGatewayServlet extends HttpServlet {
 	 * Return the global scope to use for the given request.
 	 * 
 	 * @param req
-	 * @return
+	 * @return scope
 	 */
 	protected IGlobalScope getGlobalScope(HttpServletRequest req) {
 		String path = req.getContextPath() + req.getServletPath();
@@ -163,6 +163,7 @@ public class AMFGatewayServlet extends HttpServlet {
 	protected void serviceAMF(HttpServletRequest req, HttpServletResponse resp)
 			throws ServletException, IOException {
 		log.debug("Servicing AMF");
+		IRemotingConnection conn = null;
 		try {
 			RemotingPacket packet = decodeRequest(req);
 			if (packet == null) {
@@ -173,10 +174,10 @@ public class AMFGatewayServlet extends HttpServlet {
 			final IGlobalScope global = getGlobalScope(req);
 			final IContext context = global.getContext();
 			final IScope scope = context.resolveScope(global, packet.getScopePath());
-			IRemotingConnection conn = new RemotingConnection(req, scope, packet);
+			conn = new RemotingConnection(req, scope, packet);
 			// Make sure the connection object isn't garbage collected
 			req.setAttribute(CONNECTION, conn);
-			
+			// set thread local reference
 			Red5.setConnectionLocal(conn);
 			handleRemotingPacket(req, context, scope, packet);
 			resp.setStatus(HttpServletResponse.SC_OK);
@@ -188,6 +189,10 @@ public class AMFGatewayServlet extends HttpServlet {
 		} finally {
 			//ensure the conn attr gets removed
 			req.removeAttribute(CONNECTION);
+			//unregister the remote connection client
+			if (conn != null) {
+				((RemotingConnection) conn).cleanup();
+			}
 		}
 	}
 

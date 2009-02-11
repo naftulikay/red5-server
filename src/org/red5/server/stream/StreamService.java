@@ -3,7 +3,7 @@ package org.red5.server.stream;
 /*
  * RED5 Open Source Flash Server - http://www.osflash.org/red5
  *
- * Copyright (c) 2006-2008 by respective authors (see below). All rights reserved.
+ * Copyright (c) 2006-2009 by respective authors (see below). All rights reserved.
  *
  * This library is free software; you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free Software
@@ -187,6 +187,11 @@ public class StreamService implements IStreamService {
 		pause(Boolean.valueOf(pausePlayback), position);
 	}
 
+	/** {@inheritDoc} */
+	public void pauseRaw(boolean pausePlayback, int position) {
+		pause(pausePlayback, position);
+	}
+	
     /**
      * Pause at given position. Required as "pausePlayback" can be "null" if no flag is passed by the
 	 * client
@@ -216,9 +221,6 @@ public class StreamService implements IStreamService {
 		}
 	}
 
-    /**
-     * {@inheritDoc}
-     */
     public void play(String name, int start, int length, Object flushPlaylist) {
 		if (flushPlaylist instanceof Boolean) {
 			play(name, start, length, ((Boolean) flushPlaylist).booleanValue());
@@ -431,13 +433,14 @@ public class StreamService implements IStreamService {
 					((BaseConnection) conn).registerBasicScope(bsScope);
 				}
 			}
+			logger.debug("Mode: {}", mode);
 			if (IClientStream.MODE_RECORD.equals(mode)) {
 				bs.start();
 				bs.saveAs(name, false);
 			} else if (IClientStream.MODE_APPEND.equals(mode)) {
 				bs.start();
 				bs.saveAs(name, true);
-			} else if (IClientStream.MODE_LIVE.equals(mode)) {
+			} else if (IClientStream.MODE_PUBLISH.equals(mode) || IClientStream.MODE_LIVE.equals(mode)) {
 				bs.start();
 			}
 			bs.startPublishing();
@@ -571,19 +574,20 @@ public class StreamService implements IStreamService {
 	 * @param name
 	 * @param streamId
 	 */    
-    private void sendNSStatus(IConnection conn, String statusCode, String description, String name, int streamId) {
+    @SuppressWarnings("unused")
+	private void sendNSStatus(IConnection conn, String statusCode, String description, String name, int streamId) {
     	StreamService.sendNetStreamStatus(conn, statusCode, description, name, Status.STATUS, streamId);
 	}
     
 	/**
 	 * Send <code>NetStream.Status</code> to client (Flash Player)
 	 *  
-	 * @param conn
+	 * @param conn connection
 	 * @param statusCode NetStream status code
-	 * @param description
-	 * @param name
+	 * @param description description
+	 * @param name name
 	 * @param status The status - error, warning, or status
-	 * @param streamId
+	 * @param streamId stream id
 	 */
 	public static void sendNetStreamStatus(IConnection conn, String statusCode, String description, String name, String status, int streamId) {
 		if (!(conn instanceof RTMPConnection)) {

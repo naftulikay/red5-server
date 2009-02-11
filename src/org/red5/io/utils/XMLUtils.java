@@ -3,7 +3,7 @@ package org.red5.io.utils;
 /*
  * RED5 Open Source Flash Server - http://www.osflash.org/red5
  * 
- * Copyright (c) 2006-2008 by respective authors (see below). All rights reserved.
+ * Copyright (c) 2006-2009 by respective authors (see below). All rights reserved.
  * 
  * This library is free software; you can redistribute it and/or modify it under the 
  * terms of the GNU Lesser General Public License as published by the Free Software 
@@ -40,17 +40,18 @@ import org.w3c.dom.Document;
 import org.xml.sax.InputSource;
 
 /**
- *Misc XML utils
+ * Misc XML utils
  *
  * @author The Red5 Project (red5@osflash.org)
  * @author Luke Hubbard, Codegent Ltd (luke@codegent.com)
+ * @author Paul Gregoire (mondain@gmail.com)
  */
 public class XMLUtils {
     /**
      * Logger
      */
 	protected static Logger log = LoggerFactory.getLogger(XMLUtils.class);
-
+	
     /**
      * Converts string representation of XML into Document
      * @param str              String representation of XML

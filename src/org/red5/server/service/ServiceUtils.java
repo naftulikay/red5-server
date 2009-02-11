@@ -3,7 +3,7 @@ package org.red5.server.service;
 /*
  * RED5 Open Source Flash Server - http://www.osflash.org/red5
  * 
- * Copyright (c) 2006-2008 by respective authors (see below). All rights reserved.
+ * Copyright (c) 2006-2009 by respective authors (see below). All rights reserved.
  * 
  * This library is free software; you can redistribute it and/or modify it under the 
  * terms of the GNU Lesser General Public License as published by the Free Software 
@@ -80,9 +80,10 @@ public class ServiceUtils {
 		log.debug("Found {} methods", methods.size());
 		if (methods.isEmpty()) {
 			return new Object[] { null, null };
+		} else if (methods.size() == 1 && args == null) {
+			return new Object[] {methods.get(0), args};			
 		} else if (methods.size() > 1) {
-			log
-					.debug("Multiple methods found with same name and parameter count.");
+			log.debug("Multiple methods found with same name and parameter count.");
 			log.debug("Parameter conversion will be attempted in order.");
 		}
 
@@ -129,7 +130,7 @@ public class ServiceUtils {
 	}
 
 	/**
-	 * Returns (method, params) for the given service or (null, null) if not
+	 * Returns (method, params) for the given service or (null, null) if no
 	 * method was found.
 	 * 
      * @param service           Service

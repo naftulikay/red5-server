@@ -30,15 +30,10 @@ import org.apache.mina.common.ByteBuffer;
 import org.red5.io.ITag;
 import org.red5.io.ITagReader;
 import org.red5.io.ITagWriter;
-import org.red5.io.IoConstants;
-import org.red5.io.flv.impl.FLVReader;
 import org.red5.io.flv.meta.IMetaData;
 import org.red5.io.flv.meta.IMetaService;
 import org.red5.io.flv.meta.MetaService;
 import org.red5.io.mp4.IMP4;
-import org.red5.server.api.cache.ICacheStore;
-import org.red5.server.api.cache.ICacheable;
-import org.red5.server.cache.NoCacheImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -58,7 +53,7 @@ public class MP4 implements IMP4 {
 
 	private IMetaService metaService;
 
-	private IMetaData metaData;
+	private IMetaData<?, ?> metaData;
 
 	/**
 	 * Default constructor, used by Spring so that parameters may be injected.
@@ -113,7 +108,7 @@ public class MP4 implements IMP4 {
 	/**
 	 * {@inheritDoc}
 	 */
-	public IMetaData getMetaData() throws FileNotFoundException {
+	public IMetaData<?, ?> getMetaData() throws FileNotFoundException {
 		metaService.setInStream(new FileInputStream(file));
 		return null;
 	}
@@ -128,13 +123,13 @@ public class MP4 implements IMP4 {
 	/**
 	 * {@inheritDoc}
 	 */
-	public void setKeyFrameData(Map keyframedata) {
+	public void setKeyFrameData(Map<?, ?> keyframedata) {
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
-	public Map getKeyFrameData() {
+	public Map<?, ?> getKeyFrameData() {
 		return null;
 	}
 
@@ -173,7 +168,6 @@ public class MP4 implements IMP4 {
 	 * {@inheritDoc}
 	 */
 	public ITagReader readerFromNearestKeyFrame(int seekPoint) {
-		// TODO Auto-generated method stub
 		return null;
 	}
 
@@ -192,7 +186,7 @@ public class MP4 implements IMP4 {
 	}
 
 	/** {@inheritDoc} */
-	public void setMetaData(IMetaData meta) throws IOException {
+	public void setMetaData(IMetaData<?, ?> meta) throws IOException {
 		File tmpFile = File.createTempFile("setMeta_", ".mp4");
 		if (metaService == null) {
 			metaService = new MetaService(file);

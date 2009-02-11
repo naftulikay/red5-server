@@ -3,7 +3,7 @@ package org.red5.server.net.rtmpt;
 /*
  * RED5 Open Source Flash Server - http://www.osflash.org/red5
  * 
- * Copyright (c) 2006-2008 by respective authors (see below). All rights reserved.
+ * Copyright (c) 2006-2009 by respective authors (see below). All rights reserved.
  * 
  * This library is free software; you can redistribute it and/or modify it under the 
  * terms of the GNU Lesser General Public License as published by the Free Software 
@@ -25,17 +25,15 @@ import java.util.Map;
 
 import org.apache.catalina.Context;
 import org.apache.catalina.Engine;
-import org.apache.catalina.Loader;
-import org.apache.catalina.Server;
 import org.apache.catalina.Valve;
 import org.apache.catalina.core.StandardHost;
 import org.apache.catalina.core.StandardWrapper;
 import org.apache.catalina.loader.WebappLoader;
+import org.red5.logging.Red5LoggerFactory;
 import org.red5.server.api.IServer;
 import org.red5.server.tomcat.TomcatLoader;
 import org.red5.server.util.FileUtil;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Loader for the RTMPT server which uses Tomcat.
@@ -46,7 +44,7 @@ import org.slf4j.LoggerFactory;
 public class TomcatRTMPTLoader extends TomcatLoader {
 
 	// Initialize Logging
-	private static Logger log = LoggerFactory.getLogger(TomcatRTMPTLoader.class);
+	private static Logger log = Red5LoggerFactory.getLogger(TomcatRTMPTLoader.class);
 
 	/**
 	 * RTMPT Tomcat engine.
@@ -73,8 +71,7 @@ public class TomcatRTMPTLoader extends TomcatLoader {
 	/**
 	 * Setter for server
 	 * 
-	 * @param server
-	 *            Value to set for property 'server'.
+	 * @param server Value to set for property 'server'.
 	 */
 	public void setServer(IServer server) {
 		log.debug("RTMPT setServer");
@@ -86,14 +83,9 @@ public class TomcatRTMPTLoader extends TomcatLoader {
 	public void init() {
 		log.info("Loading RTMPT context");
 
-		ClassLoader classloader = Thread.currentThread().getContextClassLoader();
-
 		rtmptEngine = embedded.createEngine();
 		rtmptEngine.setDefaultHost(host.getName());
 		rtmptEngine.setName("red5RTMPTEngine");
-		rtmptEngine.setParentClassLoader(classloader);
-		
-		host.setParentClassLoader(classloader);		
 		
 		// add the valves to the host
 		for (Valve valve : valves) {
@@ -105,22 +97,20 @@ public class TomcatRTMPTLoader extends TomcatLoader {
 		File appDirBase = new File(webappFolder);
 		String webappContextDir = FileUtil.formatPath(appDirBase.getAbsolutePath(), "/root");
 		Context ctx = embedded.createContext("/", webappContextDir);
+		//no reload for now
 		ctx.setReloadable(false);
 		log.debug("Context name: {}", ctx.getName());
 		Object ldr = ctx.getLoader();
-		if (ldr != null) {
-			if (ldr instanceof WebappLoader) {
-				log.debug("Replacing context loader");				
-				((WebappLoader) ldr).setLoaderClass("org.red5.server.tomcat.WebappClassLoader");
-			} else {
-				log.debug("Context loader was instance of {}", ldr.getClass().getName());
-			}
-		} else {
-			log.debug("Context loader was null");
-			WebappLoader wldr = new WebappLoader(classloader);
-			wldr.setLoaderClass("org.red5.server.tomcat.WebappClassLoader");
+		log.trace("Context loader (null if the context has not been started): {}", ldr);
+		if (ldr == null) {
+			ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+			//log.debug("Classloaders - Parent {}\nTCL {}\n\n", new Object[] {classLoader.getParent(), classLoader});
+			ctx.setParentClassLoader(classLoader);
+
+			WebappLoader wldr = new WebappLoader(classLoader);
+			//add the Loader to the context
 			ctx.setLoader(wldr);
-		}
+		}  		
 		appDirBase = null;
 		webappContextDir = null;
 		
@@ -151,7 +141,7 @@ public class TomcatRTMPTLoader extends TomcatLoader {
 		// set connection properties
 		for (String key : connectionProperties.keySet()) {
 			log.debug("Setting connection property: {} = {}", key, connectionProperties.get(key));
-			connector.setProperty(connectionProperties.get(key), key);
+			connector.setProperty(key, connectionProperties.get(key));
 		}		
 		
 		// start server
@@ -161,7 +151,6 @@ public class TomcatRTMPTLoader extends TomcatLoader {
     		embedded.addConnector(connector);
 
 			log.info("Starting RTMPT engine");
-			//embedded.start();
 			connector.start();
 		} catch (Exception e) {
 			log.error("Error loading tomcat", e);
@@ -174,7 +163,7 @@ public class TomcatRTMPTLoader extends TomcatLoader {
 	/**
 	 * Set servlet mappings
 	 * 
-	 * @param mappings
+	 * @param mappings mappings
 	 */
 	public void setMappings(Map<String, String> mappings) {
 		log.debug("Servlet mappings: {}", mappings.size());

@@ -3,7 +3,7 @@ package org.red5.server.persistence;
 /*
  * RED5 Open Source Flash Server - http://www.osflash.org/red5
  *
- * Copyright (c) 2006-2008 by respective authors (see below). All rights reserved.
+ * Copyright (c) 2006-2009 by respective authors (see below). All rights reserved.
  *
  * This library is free software; you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free Software
@@ -70,7 +70,7 @@ public class FilePersistenceThread implements Runnable {
 	/**
 	 * Return singleton instance of the thread.
 	 * 
-	 * @return
+	 * @return singleton instance of thread.
 	 */
 	public static FilePersistenceThread getInstance() {
 		return instance;
@@ -84,6 +84,7 @@ public class FilePersistenceThread implements Runnable {
 			log.error("Instance was not null, this is not a good sign");
 		}
 		instance = this;
+		@SuppressWarnings("unused")
 		final ScheduledFuture<?> instanceHandle = scheduler
 				.scheduleAtFixedRate(this, storeInterval, storeInterval,
 						java.util.concurrent.TimeUnit.MILLISECONDS);

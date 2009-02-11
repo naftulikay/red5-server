@@ -3,7 +3,7 @@ package org.red5.io.amf;
 /*
  * RED5 Open Source Flash Server - http://www.osflash.org/red5
  *
- * Copyright (c) 2006-2008 by respective authors (see below). All rights reserved.
+ * Copyright (c) 2006-2009 by respective authors (see below). All rights reserved.
  *
  * This library is free software; you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free Software
@@ -94,7 +94,7 @@ public class Input extends BaseInput implements org.red5.io.object.Input {
 	 *
      * @param dataType       Data type as byte
      * @return               One of AMF class constants with type
-     * @see                  {@link org.red5.io.amf.AMF}
+     * @see                  org.red5.io.amf.AMF
      */
     protected byte readDataType(byte dataType) {
 		byte coreType;
@@ -249,10 +249,10 @@ public class Input extends BaseInput implements org.red5.io.object.Input {
 		log.debug("Limit: {}", limit);
 		final java.nio.ByteBuffer strBuf = buf.buf();
 		int pos = strBuf.position();
-		log.info("Sting buf - position: {} limit: {}", pos, (pos + len));
+		log.debug("String buf - position: {} limit: {}", pos, (pos + len));
 		strBuf.limit(pos + len);
 		final String string = AMF.CHARSET.decode(strBuf).toString();
-		log.info("Sting: {}", string);
+		log.debug("String: {}", string);
 		buf.limit(limit); // Reset the limit
 		return string;
 	}
@@ -342,16 +342,25 @@ public class Input extends BaseInput implements org.red5.io.object.Input {
 		log.debug("Read start mixed array: {}", maxNumber);
 		Object result;
 		final Map<Object, Object> mixedResult = new LinkedHashMap<Object, Object>(maxNumber);
+		// we must store the reference before we deserialize any items in it to ensure
+		// that reference IDs are correct
+		int reference = storeReference(mixedResult);
+		Boolean normal_array = true;
 		while (hasMoreProperties()) {
 			String key = getString(buf);
 			log.debug("key: {}", key);
+			try {
+				Integer.parseInt(key);
+			} catch(NumberFormatException e) {
+				log.debug("key {} is causing non normal array", key);
+				normal_array = false;
+			}
 			Object item = deserializer.deserialize(this, Object.class);
 			log.debug("item: {}", item);
 			mixedResult.put(key, item);
 		}
-
-		Object length = mixedResult.get("length");
-		if (mixedResult.size() <= maxNumber+1 && length instanceof Integer && maxNumber == (Integer) length) {
+		
+		if (mixedResult.size() <= maxNumber+1 && normal_array) {
 			// MixedArray actually is a regular array
 			log.debug("mixed array is a regular array");
 			final List<Object> listResult = new ArrayList<Object>(maxNumber);
@@ -368,7 +377,8 @@ public class Input extends BaseInput implements org.red5.io.object.Input {
 			}
 			result = mixedResult;
 		}
-		storeReference(result);
+		// Replace the original reference with the final result
+		storeReference(reference, result);
 		skipEndObject();
 		return result;
 	}
@@ -383,14 +393,15 @@ public class Input extends BaseInput implements org.red5.io.object.Input {
 	 * @return Object          New object instance (for given class)
 	 */
 	protected Object newInstance(String className) {
-		log.info("Loading class: {}", className);
+		log.debug("Loading class: {}", className);
 		Object instance = null;
 		try {
 			Class<?> clazz = Thread.currentThread().getContextClassLoader()
 					.loadClass(className);
 			instance = clazz.newInstance();
 		} catch (Exception ex) {
-			log.error("Error loading class: {}", className, ex);
+			log.error("Error loading class: {}", className);
+			log.debug("Exception was: {}", ex);
 		}
 		return instance;
 	}
@@ -577,28 +588,15 @@ public class Input extends BaseInput implements org.red5.io.object.Input {
 	 * @return Object       Read reference to object
 	 */
 	public Object readReference(Type target) {
-		if (referenceMode == ReferenceMode.MODE_RTMP) {
-			return getReference(buf.getUnsignedShort() - 1);
-		} else {
-			return getReference(buf.getUnsignedShort());
-		}
-	}
-
-	/**
-	 * Resets map and set mode to handle references
-	 *
-	 * @param mode mode to handle references
-	 */
-	public void reset(ReferenceMode mode) {
-		this.clearReferences();
-		referenceMode = mode;
+		return getReference(buf.getUnsignedShort());
 	}
 
 	/**
 	 * Resets map
+	 *
 	 */
 	public void reset() {
-		reset(ReferenceMode.MODE_RTMP);
+		this.clearReferences();
 	}
 
     protected Type getPropertyType(Object instance, String propertyName) {

@@ -3,7 +3,7 @@ package org.red5.server.messaging;
 /*
  * RED5 Open Source Flash Server - http://www.osflash.org/red5
  * 
- * Copyright (c) 2006-2008 by respective authors (see below). All rights reserved.
+ * Copyright (c) 2006-2009 by respective authors (see below). All rights reserved.
  * 
  * This library is free software; you can redistribute it and/or modify it under the 
  * terms of the GNU Lesser General Public License as published by the Free Software 
@@ -38,7 +38,7 @@ public class InMemoryPullPullPipe extends AbstractPipe {
 
     /** {@inheritDoc} */
     @Override
-	public boolean subscribe(IConsumer consumer, Map paramMap) {
+	public boolean subscribe(IConsumer consumer, Map<?, ?> paramMap) {
 		boolean success = super.subscribe(consumer, paramMap);
 		if (success) {
 			fireConsumerConnectionEvent(consumer,
@@ -49,7 +49,7 @@ public class InMemoryPullPullPipe extends AbstractPipe {
 
 	/** {@inheritDoc} */
     @Override
-	public boolean subscribe(IProvider provider, Map paramMap) {
+	public boolean subscribe(IProvider provider, Map<?, ?> paramMap) {
 		if (!(provider instanceof IPullableProvider)) {
 			throw new IllegalArgumentException(
 					"Non-pullable provider not supported by PullPullPipe");

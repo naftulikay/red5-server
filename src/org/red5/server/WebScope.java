@@ -3,7 +3,7 @@ package org.red5.server;
 /*
  * RED5 Open Source Flash Server - http://www.osflash.org/red5
  * 
- * Copyright (c) 2006-2008 by respective authors (see below). All rights reserved.
+ * Copyright (c) 2006-2009 by respective authors (see below). All rights reserved.
  * 
  * This library is free software; you can redistribute it and/or modify it under the 
  * terms of the GNU Lesser General Public License as published by the Free Software 
@@ -19,7 +19,8 @@ package org.red5.server;
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA 
  */
 
-import java.util.Iterator;
+import java.util.Collection;
+import java.util.Set;
 
 import javax.servlet.ServletContext;
 
@@ -101,8 +102,7 @@ public class WebScope extends Scope implements ServletContextAware {
 	/**
 	 * Setter for global scope. Sets persistence class.
 	 * 
-	 * @param globalScope
-	 *            Red5 global scope
+	 * @param globalScope Red5 global scope
 	 */
 	public void setGlobalScope(IGlobalScope globalScope) {
 		// XXX: this is called from nowhere, remove?
@@ -125,15 +125,13 @@ public class WebScope extends Scope implements ServletContextAware {
 	 * Can't set parent to Web scope. Web scope is top level.
 	 */
 	public void setParent() {
-		throw new RuntimeException(
-				"Cannot set parent, you must set global scope");
+		throw new RuntimeException("Cannot set parent, you must set global scope");
 	}
 
 	/**
 	 * Setter for server
 	 * 
-	 * @param server
-	 *            Server instance
+	 * @param server Server instance
 	 */
 	public void setServer(IServer server) {
 		log.info("Set server {}", server);
@@ -143,8 +141,7 @@ public class WebScope extends Scope implements ServletContextAware {
 	/**
 	 * Servlet context
 	 * 
-	 * @param servletContext
-	 *            Servlet context
+	 * @param servletContext Servlet context
 	 */
 	public void setServletContext(ServletContext servletContext) {
 		this.servletContext = servletContext;
@@ -153,8 +150,7 @@ public class WebScope extends Scope implements ServletContextAware {
 	/**
 	 * Setter for context path
 	 * 
-	 * @param contextPath
-	 *            Context path
+	 * @param contextPath Context path
 	 */
 	public void setContextPath(String contextPath) {
 		this.contextPath = contextPath;
@@ -164,8 +160,7 @@ public class WebScope extends Scope implements ServletContextAware {
 	/**
 	 * Setter for virtual hosts. Creates array of hostnames.
 	 * 
-	 * @param virtualHosts
-	 *            Virtual hosts list as string
+	 * @param virtualHosts Virtual hosts list as string
 	 */
 	public void setVirtualHosts(String virtualHosts) {
 		this.virtualHosts = virtualHosts;
@@ -217,11 +212,17 @@ public class WebScope extends Scope implements ServletContextAware {
 		keepOnDisconnect = false;
 		uninit();
 		// We need to disconnect all clients before unregistering
-		Iterator<IConnection> iter = getConnections();
-		while (iter.hasNext()) {
-			IConnection conn = iter.next();
-			conn.close();
+		Collection<Set<IConnection>> conns = getConnections();
+		for (Set<IConnection> set : conns) {
+			for (IConnection conn : set) {
+				conn.close();
+			}
+			//should we clear the set?
+			set.clear();
 		}
+		//
+		conns.clear();
+		//
 		if (hostnames != null && hostnames.length > 0) {
 			for (String element : hostnames) {
 				server.removeMapping(element, getName());
@@ -269,7 +270,7 @@ public class WebScope extends Scope implements ServletContextAware {
 	/**
 	 * Is the scope currently shutting down?
 	 * 
-	 * @return
+	 * @return is shutting down
 	 */
 	public boolean isShuttingDown() {
 		return shuttingDown;

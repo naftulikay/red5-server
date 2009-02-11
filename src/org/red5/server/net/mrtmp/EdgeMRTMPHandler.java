@@ -3,7 +3,7 @@ package org.red5.server.net.mrtmp;
 /*
  * RED5 Open Source Flash Server - http://www.osflash.org/red5
  * 
- * Copyright (c) 2006-2008 by respective authors (see below). All rights reserved.
+ * Copyright (c) 2006-2009 by respective authors (see below). All rights reserved.
  * 
  * This library is free software; you can redistribute it and/or modify it under the 
  * terms of the GNU Lesser General Public License as published by the Free Software 
@@ -70,16 +70,15 @@ implements Constants {
 		RTMP rtmpState = conn.getState();
 		switch (mrtmpPacket.getHeader().getType()) {
 			case MRTMPPacket.CLOSE:
-				synchronized (rtmpState) {
-					rtmpState.setState(RTMP.STATE_EDGE_DISCONNECTING);
-				}
+				conn.setStateCode(RTMP.STATE_EDGE_DISCONNECTING);
 				conn.close();
 				break;
 			case MRTMPPacket.RTMP:
 				RTMPHeader rtmpHeader = (RTMPHeader) mrtmpPacket.getHeader();
 				RTMPBody rtmpBody = (RTMPBody) mrtmpPacket.getBody();
 				boolean toDisconnect = false;
-				synchronized (rtmpState) {
+				conn.getWriteLock().lock();
+				try {
 					if (rtmpState.getState() == RTMP.STATE_ORIGIN_CONNECT_FORWARDED &&
 							rtmpHeader.getRtmpType() == TYPE_INVOKE) {
 						// we got the connect invocation result from Origin
@@ -94,6 +93,8 @@ implements Constants {
 							}
 						}
 					}
+				} finally {
+					conn.getWriteLock().unlock();
 				}
 				log.debug("Forward packet to client: {}", rtmpBody.getRtmpPacket().getMessage());
 				// send the packet back to client
@@ -101,10 +102,13 @@ implements Constants {
 				if (toDisconnect) {
 					conn.close();
 				}
-				synchronized (rtmpState) {
+				conn.getWriteLock().lock();
+				try {
 					if (rtmpState.getState() == RTMP.STATE_CONNECTED) {
 						conn.startRoundTripMeasurement();
 					}
+				} finally {
+					conn.getWriteLock().unlock();
 				}
 				break;
 			default:

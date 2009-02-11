@@ -3,7 +3,7 @@ package org.red5.server.net.rtmpt;
 /*
  * RED5 Open Source Flash Server - http://www.osflash.org/red5
  *
- * Copyright (c) 2006-2008 by respective authors (see below). All rights reserved.
+ * Copyright (c) 2006-2009 by respective authors (see below). All rights reserved.
  *
  * This library is free software; you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free Software
@@ -22,10 +22,10 @@ package org.red5.server.net.rtmpt;
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.mina.common.ByteBuffer;
+import org.red5.logging.Red5LoggerFactory;
 import org.red5.server.net.rtmp.codec.RTMP;
 import org.red5.server.net.servlet.ServletUtils;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * A RTMPT client / session.
@@ -36,60 +36,44 @@ import org.slf4j.LoggerFactory;
 
 public class RTMPTConnection extends BaseRTMPTConnection {
 
-	private static final Logger log = LoggerFactory
+	private static final Logger log = Red5LoggerFactory
 			.getLogger(RTMPTConnection.class);
 
 	/**
 	 * Start to increase the polling delay after this many empty results
 	 */
-	protected static final long INCREASE_POLLING_DELAY_COUNT = 10;
+	private static final long INCREASE_POLLING_DELAY_COUNT = 10;
 
 	/**
 	 * Polling delay to start with.
 	 */
-	protected static final byte INITIAL_POLLING_DELAY = 0;
+	private static final byte INITIAL_POLLING_DELAY = 0;
 
 	/**
 	 * Maximum polling delay.
 	 */
-	protected static final byte MAX_POLLING_DELAY = 32;
+	private static final byte MAX_POLLING_DELAY = 32;
 
 	/**
 	 * Polling delay value
 	 */
-	protected volatile byte pollingDelay = INITIAL_POLLING_DELAY;
+	private byte pollingDelay = INITIAL_POLLING_DELAY;
 
 	/**
 	 * Empty result counter, after reaching INCREASE_POLLING_DELAY_COUNT polling
 	 * delay will increase
 	 */
-	protected volatile long noPendingMessages;
+	private long noPendingMessages;
 
 	/**
 	 * Servlet that created this connection.
 	 */
-	protected RTMPTServlet servlet;
+	private volatile RTMPTServlet servlet;
 
 	/** Constructs a new RTMPTConnection. */
 	RTMPTConnection() {
 		super(POLLING);
-	}
-
-	/**
-	 * Setter for RTMP events handler
-	 * 
-	 * @param handler
-	 *            Handler
-	 */
-	void setRTMPTHandler(RTMPTHandler handler) {
 		this.state = new RTMP(RTMP.MODE_SERVER);
-		this.buffer = ByteBuffer.allocate(2048);
-		this.buffer.setAutoExpand(true);
-		this.handler = handler;
-		this.decoder = handler.getCodecFactory().getSimpleDecoder();
-		this.encoder = handler.getCodecFactory().getSimpleEncoder();
-		// Use internal (Java) id of object to make guessing of client ids
-		// more difficult.
 		clientId = hashCode();
 	}
 
@@ -122,8 +106,7 @@ public class RTMPTConnection extends BaseRTMPTConnection {
 	/**
 	 * Setter for servlet request.
 	 * 
-	 * @param request
-	 *            Servlet request
+	 * @param request Servlet request
 	 */
 	public void setServletRequest(HttpServletRequest request) {
 		host = request.getLocalName();
@@ -138,36 +121,46 @@ public class RTMPTConnection extends BaseRTMPTConnection {
 	 * @return the polling delay
 	 */
 	public byte getPollingDelay() {
-		if (state.getState() == RTMP.STATE_DISCONNECTED) {
-			// Special value to notify client about a closed connection.
-			return (byte) 0;
-		}
+		getReadLock().lock();
+		try {
+			if (state.getState() == RTMP.STATE_DISCONNECTED) {
+				// Special value to notify client about a closed connection.
+				return (byte) 0;
+			}
 
-		return (byte) (this.pollingDelay + 1);
+			return (byte) (this.pollingDelay + 1);
+		} finally {
+			getReadLock().unlock();
+		}
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
 	public ByteBuffer getPendingMessages(int targetSize) {
-		long currentPendingMessages = getPendingMessages();
-		if (currentPendingMessages == 0) {
-			this.noPendingMessages += 1;
-			if (this.noPendingMessages > INCREASE_POLLING_DELAY_COUNT) {
-				if (this.pollingDelay == 0) {
-					this.pollingDelay = 1;
+		getWriteLock().lock();
+		try {
+			long currentPendingMessages = getPendingMessages();
+			if (currentPendingMessages == 0) {
+				this.noPendingMessages += 1;
+				if (this.noPendingMessages > INCREASE_POLLING_DELAY_COUNT) {
+					if (this.pollingDelay == 0) {
+						this.pollingDelay = 1;
+					}
+					this.pollingDelay = (byte) (this.pollingDelay * 2);
+					if (this.pollingDelay > MAX_POLLING_DELAY) {
+						this.pollingDelay = MAX_POLLING_DELAY;
+					}
 				}
-				this.pollingDelay = (byte) (this.pollingDelay * 2);
-				if (this.pollingDelay > MAX_POLLING_DELAY) {
-					this.pollingDelay = MAX_POLLING_DELAY;
-				}
+				return null;
 			}
-			return null;
-		}
 
-		log.debug("Returning {} messages to client.", currentPendingMessages);
-		this.noPendingMessages = 0;
-		this.pollingDelay = INITIAL_POLLING_DELAY;
+			log.debug("Going to return {} messages to client.", currentPendingMessages);
+			this.noPendingMessages = 0;
+			this.pollingDelay = INITIAL_POLLING_DELAY;
+		} finally {
+			getWriteLock().unlock();
+		}
 
 		return foldPendingMessages(targetSize);
 	}

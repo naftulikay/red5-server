@@ -3,7 +3,7 @@ package org.red5.server.adapter;
 /*
  * RED5 Open Source Flash Server - http://www.osflash.org/red5
  * 
- * Copyright (c) 2006-2008 by respective authors (see below). All rights reserved.
+ * Copyright (c) 2006-2009 by respective authors (see below). All rights reserved.
  * 
  * This library is free software; you can redistribute it and/or modify it under the 
  * terms of the GNU Lesser General Public License as published by the Free Software 
@@ -19,11 +19,11 @@ package org.red5.server.adapter;
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA 
  */
 
+import org.red5.logging.Red5LoggerFactory;
 import org.red5.server.api.IClient;
 import org.red5.server.api.IConnection;
 import org.red5.server.api.IScope;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Base class for applications, takes care that callbacks are executed single-threaded.
@@ -40,7 +40,7 @@ import org.slf4j.LoggerFactory;
 public class ApplicationAdapter extends MultiThreadedApplicationAdapter {
 
 	/** Logger object. */
-	protected static Logger log = LoggerFactory.getLogger(ApplicationAdapter.class);
+	protected static Logger log = Red5LoggerFactory.getLogger(ApplicationAdapter.class);
 
 	/** {@inheritDoc} */
 	@Override

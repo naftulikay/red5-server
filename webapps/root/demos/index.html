@@ -69,31 +69,53 @@ h1 {
 
 <div id="content">
 
-<p id="informations">
+<div id="informations">
+<p>
 On this page you can find some sample applications that show the various
-features provided by Red5. The source code is available in the
-<span class="code">swf/DEV_Source</span> directory. Other examples are
-available in the <span class="code">swf/DEV_Deploy</span> directory.
+features provided by Red5.
 </p>
+<p>
+ The source code for the Flash parts of these demos is available at 
+<span class="code"><a href="http://red5.googlecode.com/svn/flash/trunk/">http://red5.googlecode.com/svn/flash/trunk/</a></span>.
+The source code for the Java parts of these demos is available at
+<span class="code"><a href="http://red5.googlecode.com/svn/java/example/trunk/">http://red5.googlecode.com/svn/java/example/trunk/</a></span>.
+
+</p>
+</div>
 
 <div id="demos">
 
 <div class="demo">
-<h2>Ball control</h2>
+<h2>Shared Ball</h2>
 <p>A simple shared ball demo that makes use of Shared Objects.</p>
-<p><a href="BallControl.swf">View demo</a></p>
+<p><a href="BallControl.html">View demo</a></p>
+</div>
+
+<div class="demo">
+<h2>Admin Panel</h2>
+<p>The Red5 administration panel.</p>
+<p><strong>note: this is currently broken in 0.8.RC2 and will not be fixed until 0.8.RC3 at earliest</strong></p>
+<p><a href="adminPanel.html">View demo</a></p>
+<p><a href="adminPanel.air">Download AIR version of demo</a></p>
+</div>
+
+<div class="demo">
+<h2>Echo Test</h2>
+<p>A test application that runs RTMP/AMF datatype tests.</p>
+<p><strong>note: as of 0.8.RC2 several of the AMF tests fail.  these are high priority to fix before 0.8 is final</strong></p>
+<p><a href="echo_test.html">View demo</a></p>
 </div>
 
 <div class="demo">
 <h2>OFLA Demo</h2>
 <p>Simple video player as shown on the Online Open Source Flash conference.</p>
-<p><a href="ofla_demo.swf">View demo</a></p>
+<p><a href="ofla_demo.html">View demo</a></p>
 </div>
 
 <div class="demo">
 <h2>Port Tester</h2>   
 <p>Simple port tester tool that determines which ports the Flash Player is able to connect through to the Red5 server.</p>
-<p><a href="port_tester.swf">View demo</a></p>
+<p><a href="port_tester.html">View demo</a></p>
 </div>
 
 <div class="demo">
@@ -103,33 +125,39 @@ available in the <span class="code">swf/DEV_Deploy</span> directory.
 </div>
 
 <div class="demo">
-<h2>Simple chat</h2>
+<h2>Bandwidth Detection</h2>
+<p>Demo application that detects the client bandwidth.</p>
+<p><a href="bwcheck.html">View demo</a></p>
+</div> 
+
+<div class="demo">
+<h2>Simple Chat</h2>
 <p>Basic chat demo that uses Shared Objects to send chat messages.</p>
-<p><a href="SimpleChat.swf">View demo</a></p>
+<p><a href="SimpleChat.html">View demo</a></p>
 </div>
 
 <div class="demo">
-<h2>Simple broadcaster</h2>
-<p>A basic live video broadcaster.</p>
-<p><a href="simpleBroadcaster.swf">View demo</a></p>
+<h2>Simple Broadcaster</h2>
+<p>Basic live video broadcaster.</p>
+<p><a href="simpleBroadcaster.html">View demo</a></p>
 </div>
 
 <div class="demo">
-<h2>Simple subscriber</h2>
-<p>A basic live video subscriber to be used with the simple subscriber.</p>
-<p><a href="simpleSubscriber.swf">View demo</a></p>
+<h2>Simple Subscriber</h2>
+<p>Basic live video subscriber to be used with the simple subscriber.</p>
+<p><a href="simpleSubscriber.html">View demo</a></p>
 </div>
 
 <div class="demo">
-<h2>Simple recorder</h2>
-<p>A basic live video recorder.</p>
-<p><a href="simpleRecorder.swf">View demo</a></p>
+<h2>Simple Recorder</h2>
+<p>Basic live video recorder.  Once you've stopped a recording, check out <code>$RED5_HOME/webapps/oflaDemo/streams</code> for your recorded FLV file.</p>
+<p><a href="simpleRecorder.html">View demo</a></p>
 </div>
 
 </div>
 </div>
 <div id="footer">
-Copyright &copy; 2006-2007 <a href="http://osflash.org/red5">The Red5 Project</a>.
+Copyright &copy; 2006-2009 <a href="http://osflash.org/red5">The Red5 Project</a>.
 </div>
 </body>
 </html>

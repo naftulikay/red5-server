@@ -3,7 +3,7 @@ package org.red5.server.war;
 /*
  * RED5 Open Source Flash Server - http://www.osflash.org/red5
  *
- * Copyright (c) 2006-2008 by respective authors (see below). All rights reserved.
+ * Copyright (c) 2006-2009 by respective authors (see below). All rights reserved.
  *
  * This library is free software; you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free Software
@@ -106,7 +106,7 @@ public class WarLoaderServlet extends ContextLoaderListener {
 		long time = System.currentTimeMillis();
 
 		logger.info("{} WAR loader", Red5.VERSION);
-		logger.debug("Path: " + prefix);
+		logger.debug("Path: {}", prefix);
 
 		try {
 			// instance the context loader
@@ -155,7 +155,7 @@ public class WarLoaderServlet extends ContextLoaderListener {
 
 		ConfigurableBeanFactory appFactory = appCtx.getBeanFactory();
 
-		logger.debug("About to grab Webcontext bean for " + webAppKey);
+		logger.debug("About to grab Webcontext bean for {}", webAppKey);
 		Context webContext = (Context) appCtx.getBean("web.context");
 		webContext.setCoreBeanFactory(parentFactory);
 		webContext.setClientRegistry(clientRegistry);
@@ -196,7 +196,7 @@ public class WarLoaderServlet extends ContextLoaderListener {
 				// prepare spring for shutdown
 				Introspector.flushCaches();
 				// dereg any drivers
-				for (Enumeration e = DriverManager.getDrivers(); e
+				for (Enumeration<?> e = DriverManager.getDrivers(); e
 						.hasMoreElements();) {
 					Driver driver = (Driver) e.nextElement();
 					if (driver.getClass().getClassLoader() == getClass()

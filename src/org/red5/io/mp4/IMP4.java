@@ -28,7 +28,6 @@ import org.red5.io.ITagReader;
 import org.red5.io.ITagWriter;
 import org.red5.io.flv.meta.IMetaData;
 import org.red5.io.flv.meta.IMetaService;
-import org.red5.server.api.cache.ICacheStore;
 
 /**
  * Represents MP4 file
@@ -51,7 +50,7 @@ public interface IMP4 extends IStreamableFile {
 	 * @throws FileNotFoundException     File not found
 	 * @throws IOException               Any other I/O exception
 	 */
-	public void setMetaData(IMetaData metadata) throws FileNotFoundException,
+	public void setMetaData(IMetaData<?, ?> metadata) throws FileNotFoundException,
 			IOException;
 
 	/**
@@ -67,7 +66,7 @@ public interface IMP4 extends IStreamableFile {
 	 * @return metadata                  File metadata
 	 * @throws FileNotFoundException     File not found
 	 */
-	public IMetaData getMetaData() throws FileNotFoundException;
+	public IMetaData<?, ?> getMetaData() throws FileNotFoundException;
 
 	/**
 	 * Returns a boolean stating whether a mp4 has keyframedata
@@ -81,14 +80,14 @@ public interface IMP4 extends IStreamableFile {
 	 * 
 	 * @param keyframedata              Keyframe metadata
 	 */
-	public void setKeyFrameData(Map keyframedata);
+	public void setKeyFrameData(Map<?, ?> keyframedata);
 
 	/**
 	 * Gets the keyframe data
 	 * 
 	 * @return keyframedata             Keyframe metadata
 	 */
-	public Map getKeyFrameData();
+	public Map<?, ?> getKeyFrameData();
 
 	/**
 	 * Refreshes the headers. Usually used after data is added to the mp4 file

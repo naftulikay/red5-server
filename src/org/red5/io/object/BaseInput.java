@@ -3,7 +3,7 @@ package org.red5.io.object;
 /*
  * RED5 Open Source Flash Server - http://www.osflash.org/red5
  * 
- * Copyright (c) 2006-2008 by respective authors (see below). All rights reserved.
+ * Copyright (c) 2006-2009 by respective authors (see below). All rights reserved.
  * 
  * This library is free software; you can redistribute it and/or modify it under the 
  * terms of the GNU Lesser General Public License as published by the Free Software 
@@ -32,14 +32,6 @@ import java.util.Map;
 public class BaseInput {
 	
 	/**
-	 * Mode how references should be handled.
-	 */
-	public enum ReferenceMode {
-		MODE_RTMP,
-		MODE_REMOTING,
-	};
-	
-    /**
      * References map
      */
 	protected Map<Integer, Object> refMap = new HashMap<Integer, Object>();
@@ -49,11 +41,6 @@ public class BaseInput {
      */
     protected int refId;
     
-    /**
-     * Mode how to handle references.
-     */
-    protected ReferenceMode referenceMode = ReferenceMode.MODE_RTMP;
-
 	/**
 	 * Store an object into a map
 	 * @param obj  Object to store

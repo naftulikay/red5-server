@@ -3,7 +3,7 @@ package org.red5.server.net.rtmpt;
 /*
  * RED5 Open Source Flash Server - http://www.osflash.org/red5
  * 
- * Copyright (c) 2006-2008 by respective authors (see below). All rights reserved.
+ * Copyright (c) 2006-2009 by respective authors (see below). All rights reserved.
  * 
  * This library is free software; you can redistribute it and/or modify it under the 
  * terms of the GNU Lesser General Public License as published by the Free Software 
@@ -20,9 +20,9 @@ package org.red5.server.net.rtmpt;
  */
 
 import org.mortbay.jetty.Server;
+import org.red5.logging.Red5LoggerFactory;
 import org.red5.server.api.IServer;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
@@ -39,7 +39,7 @@ public class RTMPTLoader implements ApplicationContextAware {
     /**
      * Logger
      */
-	protected static Logger log = LoggerFactory.getLogger(RTMPTLoader.class);
+	protected static Logger log = Red5LoggerFactory.getLogger(RTMPTLoader.class);
     /**
      * Application context
      */

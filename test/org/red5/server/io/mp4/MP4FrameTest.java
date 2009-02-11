@@ -18,6 +18,7 @@ public class MP4FrameTest extends TestCase {
 
 	@Test
 	public void testSort() {
+		log.debug("Test sort");
 		
 		List<MP4Frame> frames = new ArrayList<MP4Frame>(6);
 		

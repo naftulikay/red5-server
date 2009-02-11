@@ -1,25 +1,16 @@
 package org.red5.server.service;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.FilenameFilter;
-import java.io.IOException;
-import java.io.InputStream;
 
 import javax.management.MBeanServer;
 import javax.management.MBeanServerInvocationHandler;
 import javax.management.ObjectName;
 
-import org.apache.commons.httpclient.HttpClient;
-import org.apache.commons.httpclient.HttpException;
-import org.apache.commons.httpclient.HttpMethod;
-import org.apache.commons.httpclient.methods.GetMethod;
 import org.red5.server.LoaderMBean;
 import org.red5.server.api.scheduling.IScheduledJob;
 import org.red5.server.api.scheduling.ISchedulingService;
 import org.red5.server.jmx.JMXFactory;
-import org.red5.server.scheduling.QuartzSchedulingService;
-import org.red5.server.stream.ClientBroadcastStream;
 import org.red5.server.util.FileUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,7 +18,7 @@ import org.slf4j.LoggerFactory;
 /*
  * RED5 Open Source Flash Server - http://www.osflash.org/red5
  * 
- * Copyright (c) 2006-2008 by respective authors (see below). All rights reserved.
+ * Copyright (c) 2006-2009 by respective authors (see below). All rights reserved.
  * 
  * This library is free software; you can redistribute it and/or modify it under the 
  * terms of the GNU Lesser General Public License as published by the Free Software 
@@ -48,7 +39,7 @@ import org.slf4j.LoggerFactory;
  * 
  * @author Paul Gregoire (mondain@gmail.com)
  */
-public class WarDeployer {
+public final class WarDeployer {
 	
 	private Logger log = LoggerFactory.getLogger(WarDeployer.class);
 
@@ -116,7 +107,7 @@ public class WarDeployer {
 	
 	/**
 	 * Returns the LoaderMBean.
-	 * @return
+	 * @return LoadeerMBean
 	 */
 	public LoaderMBean getLoader() {
 		MBeanServer mbs = JMXFactory.getMBeanServer();
@@ -146,7 +137,7 @@ public class WarDeployer {
 		 */
 		public boolean accept(File dir, String name) {
 			File f = new File(dir, name);
-			log.debug("Filtering: {} name: {}", dir.getName(), name);
+			log.trace("Filtering: {} name: {}", dir.getName(), name);
 			// filter out all but war files
 			boolean result = f.getName().endsWith("war");
 			//nullify
@@ -158,7 +149,7 @@ public class WarDeployer {
 	private class DeployJob implements IScheduledJob {
 
 		public void execute(ISchedulingService service) {
-		    log.debug("Executing job");
+		    log.trace("Executing job");
 			if (deploying) {
 				return;
 			}
@@ -206,7 +197,7 @@ public class WarDeployer {
 					} else {
 						log.warn("Application destination is not a directory");
 					}
-					log.warn("Application {} already installed, please un-install before attempting another install", application);			
+					log.info("Application {} already installed, please un-install before attempting another install", application);			
 				} else {			
 					log.debug("Unwaring and starting...");
 	    			//un-archive it to app dir

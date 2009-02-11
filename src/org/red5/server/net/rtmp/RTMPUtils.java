@@ -3,7 +3,7 @@ package org.red5.server.net.rtmp;
 /*
  * RED5 Open Source Flash Server - http://www.osflash.org/red5
  * 
- * Copyright (c) 2006-2008 by respective authors. All rights reserved.
+ * Copyright (c) 2006-2009 by respective authors. All rights reserved.
  * 
  * This library is free software; you can redistribute it and/or modify it under the 
  * terms of the GNU Lesser General Public License as published by the Free Software 
@@ -21,23 +21,14 @@ package org.red5.server.net.rtmp;
 
 import org.apache.mina.common.ByteBuffer;
 import org.red5.server.net.rtmp.message.Constants;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * RTMP utilities class.
  *
  * @author The Red5 Project (red5@osflash.org)
  * @author Luke Hubbard, Codegent Ltd (luke@codegent.com)
- * @author Paul Gregoire (mondain@gmail.com)
  */
 public class RTMPUtils implements Constants {
-	
-    /**
-     * Logger.
-     */
-    protected static Logger log = LoggerFactory.getLogger(RTMPUtils.class);	
-	
     /**
      * Writes reversed integer to buffer.
 	 *
@@ -73,8 +64,8 @@ public class RTMPUtils implements Constants {
 
     /**
      *
-     * @param out
-     * @param value
+     * @param out output buffer
+     * @param value value to write
      */
 	public static void writeMediumInt(ByteBuffer out, int value) {
 		out.put((byte) (0xFF & (value >> 16)));
@@ -84,8 +75,8 @@ public class RTMPUtils implements Constants {
 
     /**
      *
-     * @param in
-     * @return
+     * @param in input 
+     * @return unsigned int
      */
 	public static int readUnsignedMediumInt(ByteBuffer in) {
 		final byte a = in.get();
@@ -100,8 +91,8 @@ public class RTMPUtils implements Constants {
 
     /**
      *
-     * @param in
-     * @return
+     * @param in input
+     * @return unsigned medium (3 byte) int.
      */
 	public static int readUnsignedMediumIntOld(ByteBuffer in) {
 		byte[] bytes = new byte[3];
@@ -115,8 +106,8 @@ public class RTMPUtils implements Constants {
 
     /**
      *
-     * @param in
-     * @return
+     * @param in input
+     * @return signed 3-byte int
      */
 	public static int readMediumIntOld(ByteBuffer in) {
 		ByteBuffer buf = ByteBuffer.allocate(4);
@@ -133,8 +124,8 @@ public class RTMPUtils implements Constants {
 
     /**
      *
-     * @param in
-     * @return
+     * @param in input
+     * @return signed 3 byte int
      */
 	public static int readMediumInt(ByteBuffer in) {
 		final byte a = in.get();
@@ -168,43 +159,23 @@ public class RTMPUtils implements Constants {
 	}
 
     /**
-     * Read integer in reversed order.
-	 *
-     * @param in         Input buffer
-     * @return           Integer
-     */
-	public static int readReverseIntOld(ByteBuffer in) {
-		byte[] bytes = new byte[4];
-		in.get(bytes);
-		int val = 0;
-		val += bytes[3] * 256 * 256 * 256;
-		val += bytes[2] * 256 * 256;
-		val += bytes[1] * 256;
-		val += bytes[0];
-		return val;
-	}
-
-    /**
      * Encodes header size marker and channel id into header marker.
+     * @param out output buffer
 	 *
      * @param headerSize         Header size marker
      * @param channelId          Channel used
-     * @return                   Header id
      */
 	public static void encodeHeaderByte(ByteBuffer out, byte headerSize, int channelId) {
 		if (channelId <= 63) {
 			out.put((byte) ((headerSize << 6) + channelId));
-			log.debug("Header byte: {}", ((headerSize << 6) + channelId));
 		} else if (channelId <= 320) {
 			out.put((byte) (headerSize << 6));
 			out.put((byte) (channelId - 64));
-			log.debug("Header byte(s): {} {}", (headerSize << 6), (channelId - 64));
 		} else {
 			out.put((byte) ((headerSize << 6) | 1));
 			channelId -= 64;
 			out.put((byte) (channelId & 0xff));
 			out.put((byte) (channelId >> 8));
-			log.debug("Header byte(s): {} {} {}", new Object[]{((headerSize << 6) | 1), (channelId & 0xff), (channelId >> 8)});
 		}
 	}
 
@@ -212,6 +183,7 @@ public class RTMPUtils implements Constants {
      * Decode channel id.
 	 *
      * @param header        Header
+     * @param byteCount byte count
      * @return              Channel id
      */
 	public static int decodeChannelId(int header, int byteCount) {
@@ -228,6 +200,7 @@ public class RTMPUtils implements Constants {
      * Decode header size.
 	 *
      * @param header      Header byte
+     * @param byteCount byte count
      * @return            Header size byte
      */
     public static byte decodeHeaderSize(int header, int byteCount) {

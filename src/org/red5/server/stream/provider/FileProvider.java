@@ -42,6 +42,7 @@ import org.red5.server.messaging.IPullableProvider;
 import org.red5.server.messaging.OOBControlMessage;
 import org.red5.server.messaging.PipeConnectionEvent;
 import org.red5.server.net.rtmp.event.AudioData;
+import org.red5.server.net.rtmp.event.FlexStreamSend;
 import org.red5.server.net.rtmp.event.IRTMPEvent;
 import org.red5.server.net.rtmp.event.Invoke;
 import org.red5.server.net.rtmp.event.Notify;
@@ -142,6 +143,9 @@ public class FileProvider implements IPassive, ISeekableProvider,
         			case Constants.TYPE_NOTIFY:
         				msg = new Notify(tag.getBody());
         				break;		
+			case Constants.TYPE_FLEX_STREAM_SEND:
+				msg = new FlexStreamSend(tag.getBody());
+				break;
         			default:
         				log.warn("Unexpected type? {}", tag.getDataType());
         				msg = new Unknown(tag.getDataType(), tag.getBody());
@@ -152,9 +156,6 @@ public class FileProvider implements IPassive, ISeekableProvider,
         		rtmpMsg.setBody(msg);    		
     		}
 		}
-		// TODO send OOBCM to notify EOF
-		// Do not unsubscribe as this kills VOD seek while in buffer
-		// this.pipe.unsubscribe(this);
 		return rtmpMsg;
 	}
 

@@ -3,7 +3,7 @@ package org.red5.server.net.rtmp.event;
 /*
  * RED5 Open Source Flash Server - http://www.osflash.org/red5
  * 
- * Copyright (c) 2006-2008 by respective authors (see below). All rights reserved.
+ * Copyright (c) 2006-2009 by respective authors (see below). All rights reserved.
  * 
  * This library is free software; you can redistribute it and/or modify it under the 
  * terms of the GNU Lesser General Public License as published by the Free Software 
@@ -37,7 +37,7 @@ public class FLVData {
 	 * soundSize (byte & 0x02) == 1 0: 8-bit, 2: 16-bit 
 	 * soundRate (byte & 0x0C) == 2 0: 5.5kHz, 1: 11kHz, 2: 22kHz, 3: 44kHz 
 	 * soundFormat (byte & 0xf0) == 4 0: Uncompressed, 1: ADPCM, 2: MP3, 
-	 *     5: Nellymoser 8kHz mono, 6: Nellymoser, 11: Speex
+	 *     5: Nellymoser 8kHz mono, 6: Nellymoser
 	 */
 
 	/*
@@ -53,7 +53,7 @@ public class FLVData {
 	/**
      * Getter for disposable state
      *
-     * @return  <code>true</code> if FLV data is disposable, <code>false</code> otherwise
+     * @return  <code>true</code> if FVL data is disposable, <code>false</code> otherwise
      */
     public boolean isDisposable() {
 		return false;
@@ -74,7 +74,7 @@ public class FLVData {
     /**
      * Sorensen H263 codec marker
      */
-	public static final int VIDEO_SORENSEN_H263 = 2;
+	public static final int VIDEO_SORENSON_H263 = 2;
     /**
      * Screen video
      */
@@ -110,11 +110,11 @@ public class FLVData {
     /**
      * Nellymoser 8khz rate data
      */
-	public static final int AUDIO_NELLYMOOSER_8KHZ = 5;
+	public static final int AUDIO_NELLYMOSER_8KHZ = 5;
     /**
      * Nellymoser encoded data
      */
-	public static final int AUDIO_NELLYMOOSER = 6;
+	public static final int AUDIO_NELLYMOSER = 6;
     /**
      * Speex encoded data
      */

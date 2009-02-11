@@ -3,7 +3,7 @@ package org.red5.server;
 /*
  * RED5 Open Source Flash Server - http://www.osflash.org/red5
  *
- * Copyright (c) 2006-2008 by respective authors (see below). All rights reserved.
+ * Copyright (c) 2006-2009 by respective authors (see below). All rights reserved.
  *
  * This library is free software; you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free Software
@@ -20,6 +20,7 @@ package org.red5.server;
  */
 
 import java.io.IOException;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.Set;
 
@@ -210,7 +211,7 @@ public interface ScopeMBean {
 	 * Return connection iterator
 	 * @return                Connections iterator
 	 */
-	public Iterator<IConnection> getConnections();
+	public Collection<Set<IConnection>> getConnections();
 
 	/**
 	 * Create child scope with given name

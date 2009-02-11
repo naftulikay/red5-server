@@ -3,7 +3,7 @@ package org.red5.server.io;
 /*
  * RED5 Open Source Flash Server - http://www.osflash.org/red5
  *
- * Copyright © 2006 by respective authors. All rights reserved.
+ * Copyright (c) 2006-2009 by respective authors. All rights reserved.
  *
  * This library is free software; you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free Software
@@ -17,13 +17,14 @@ package org.red5.server.io;
  * You should have received a copy of the GNU Lesser General Public License along
  * with this library; if not, write to the Free Software Foundation, Inc.,
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
- *
- * @author The Red5 Project (red5@osflash.org)
- * @author Luke Hubbard, Codegent Ltd (luke@codegent.com)
- */
+*/
 
 import java.util.Date;
 
+/**
+ * @author The Red5 Project (red5@osflash.org)
+ * @author Luke Hubbard, Codegent Ltd (luke@codegent.com)
+ */
 public class TestJavaBean {
 
 	private byte testByte = 65;
@@ -52,8 +53,7 @@ public class TestJavaBean {
 	/**
 	 * Setter for property 'testByte'.
 	 * 
-	 * @param testByte
-	 *            Value to set for property 'testByte'.
+	 * @param testByte Value to set for property 'testByte'.
 	 */
 	public void setTestByte(byte testByte) {
 		this.testByte = testByte;
@@ -71,8 +71,7 @@ public class TestJavaBean {
 	/**
 	 * Setter for property 'testBoolean'.
 	 * 
-	 * @param testBoolean
-	 *            Value to set for property 'testBoolean'.
+	 * @param testBoolean Value to set for property 'testBoolean'.
 	 */
 	public void setTestBoolean(boolean testBoolean) {
 		this.testBoolean = testBoolean;
@@ -90,8 +89,7 @@ public class TestJavaBean {
 	/**
 	 * Setter for property 'testBooleanObject'.
 	 * 
-	 * @param testBooleanObject
-	 *            Value to set for property 'testBooleanObject'.
+	 * @param testBooleanObject Value to set for property 'testBooleanObject'.
 	 */
 	public void setTestBooleanObject(Boolean testBooleanObject) {
 		this.testBooleanObject = testBooleanObject;
@@ -109,8 +107,7 @@ public class TestJavaBean {
 	/**
 	 * Setter for property 'testDate'.
 	 * 
-	 * @param testDate
-	 *            Value to set for property 'testDate'.
+	 * @param testDate Value to set for property 'testDate'.
 	 */
 	public void setTestDate(Date testDate) {
 		this.testDate = testDate;
@@ -128,8 +125,7 @@ public class TestJavaBean {
 	/**
 	 * Setter for property 'testNumberObject'.
 	 * 
-	 * @param testNumberObject
-	 *            Value to set for property 'testNumberObject'.
+	 * @param testNumberObject Value to set for property 'testNumberObject'.
 	 */
 	public void setTestNumberObject(Integer testNumberObject) {
 		this.testNumberObject = testNumberObject;
@@ -147,8 +143,7 @@ public class TestJavaBean {
 	/**
 	 * Setter for property 'testPrimitiveNumber'.
 	 * 
-	 * @param testPrimitiveNumber
-	 *            Value to set for property 'testPrimitiveNumber'.
+	 * @param testPrimitiveNumber Value to set for property 'testPrimitiveNumber'.
 	 */
 	public void setTestPrimitiveNumber(int testPrimitiveNumber) {
 		this.testPrimitiveNumber = testPrimitiveNumber;
@@ -166,8 +161,7 @@ public class TestJavaBean {
 	/**
 	 * Setter for property 'testString'.
 	 * 
-	 * @param testString
-	 *            Value to set for property 'testString'.
+	 * @param testString Value to set for property 'testString'.
 	 */
 	public void setTestString(String testString) {
 		this.testString = testString;

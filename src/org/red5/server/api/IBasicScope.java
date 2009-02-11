@@ -3,7 +3,7 @@ package org.red5.server.api;
 /*
  * RED5 Open Source Flash Server - http://www.osflash.org/red5
  * 
- * Copyright (c) 2006-2008 by respective authors (see below). All rights reserved.
+ * Copyright (c) 2006-2009 by respective authors (see below). All rights reserved.
  * 
  * This library is free software; you can redistribute it and/or modify it under the 
  * terms of the GNU Lesser General Public License as published by the Free Software 
@@ -77,6 +77,14 @@ public interface IBasicScope extends ICoreObject, IEventObservable,
 	 * @return Type of scope
 	 */
 	public String getType();
+	
+	/**
+	 * Sets the amount of time to keep the scope available after the
+	 * last disconnect.
+	 * 
+	 * @param keepDelay delay
+	 */
+	public void setKeepDelay(int keepDelay);
 	
 	/**
 	 * Lock handling - attempts to obtain a lock

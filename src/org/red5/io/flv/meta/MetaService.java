@@ -3,7 +3,7 @@ package org.red5.io.flv.meta;
 /*
  * RED5 Open Source Flash Server - http://www.osflash.org/red5
  *
- * Copyright (c) 2006-2008 by respective authors (see below). All rights reserved.
+ * Copyright (c) 2006-2009 by respective authors (see below). All rights reserved.
  *
  * This library is free software; you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free Software
@@ -27,6 +27,7 @@ import java.util.Arrays;
 import java.util.Map;
 
 import org.apache.mina.common.ByteBuffer;
+import org.mortbay.log.Log;
 import org.red5.io.ITag;
 import org.red5.io.IoConstants;
 import org.red5.io.amf.Input;
@@ -54,6 +55,7 @@ public class MetaService implements IMetaService {
 	/**
 	 * File input stream
 	 */
+	@SuppressWarnings("unused")
 	private FileInputStream fis;
 
 	/**
@@ -84,8 +86,7 @@ public class MetaService implements IMetaService {
 	}
 
 	/**
-	 * @param resolver
-	 *            The resolver to set.
+	 * @param resolver The resolver to set.
 	 */
 	public void setResolver(Resolver resolver) {
 		this.resolver = resolver;
@@ -99,8 +100,7 @@ public class MetaService implements IMetaService {
 	}
 
 	/**
-	 * @param deserializer
-	 *            The deserializer to set.
+	 * @param deserializer The deserializer to set.
 	 */
 	public void setDeserializer(Deserializer deserializer) {
 		this.deserializer = deserializer;
@@ -114,8 +114,7 @@ public class MetaService implements IMetaService {
 	}
 
 	/**
-	 * @param serializer
-	 *            The serializer to set.
+	 * @param serializer The serializer to set.
 	 */
 	public void setSerializer(Serializer serializer) {
 		this.serializer = serializer;
@@ -136,7 +135,7 @@ public class MetaService implements IMetaService {
 	/**
 	 * {@inheritDoc}
 	 */
-	public void write(IMetaData meta) throws IOException {
+	public void write(IMetaData<?, ?> meta) throws IOException {
 		// Get cue points, FLV reader and writer
 		IMetaCue[] metaArr = meta.getMetaCue();
 		FLVReader reader = new FLVReader(file, false);
@@ -218,7 +217,8 @@ public class MetaService implements IMetaService {
 	 *            Second metadata object
 	 * @return Merged metadata
 	 */
-	private IMeta mergeMeta(IMetaData metaData, IMetaData md) {
+	@SuppressWarnings("unused")
+	private IMeta mergeMeta(IMetaData<?, ?> metaData, IMetaData<?, ?> md) {
 		return new Resolver().resolve(metaData, md);
 	}
 
@@ -231,7 +231,7 @@ public class MetaService implements IMetaService {
 	 *            Tag
 	 * @return New tag with injected metadata
 	 */
-	private ITag injectMetaData(IMetaData meta, ITag tag) {
+	private ITag injectMetaData(IMetaData<?, ?> meta, ITag tag) {
 
 		ByteBuffer bb = ByteBuffer.allocate(1000);
 		bb.setAutoExpand(true);
@@ -294,8 +294,8 @@ public class MetaService implements IMetaService {
 	/**
 	 * {@inheritDoc}
 	 */
-	public void writeMetaData(IMetaData metaData) {
-		IMetaCue meta = (MetaCue) metaData;
+	public void writeMetaData(IMetaData<?, ?> metaData) {
+		IMetaCue meta = (MetaCue<?, ?>) metaData;
 		Output out = new Output(ByteBuffer.allocate(1000));
 		serializer.serialize(out, "onCuePoint");
 		serializer.serialize(out, meta);
@@ -317,8 +317,7 @@ public class MetaService implements IMetaService {
 	}
 
 	/**
-	 * @param file
-	 *            The file to set.
+	 * @param file The file to set.
 	 */
 	public void setFile(File file) {
 		this.file = file;
@@ -336,15 +335,15 @@ public class MetaService implements IMetaService {
 
 	/** {@inheritDoc} */
 	// TODO need to fix
-	public MetaData readMetaData(ByteBuffer buffer) {
-		MetaData retMeta = new MetaData();
+	public MetaData<?, ?> readMetaData(ByteBuffer buffer) {
+		MetaData<?, ?> retMeta = new MetaData<String, Object>();
 		Input input = new Input(buffer);
 		if (deserializer == null) {
 		    deserializer = new Deserializer();
 		}
-		@SuppressWarnings("unused") 
 		String metaType = deserializer.deserialize(input, String.class);
-		Map m = deserializer.deserialize(input, Map.class);
+		Log.debug("Metadata type: {}", metaType);
+		Map<String, ?> m = deserializer.deserialize(input, Map.class);
 		retMeta.putAll(m);
 		return retMeta;
 	}

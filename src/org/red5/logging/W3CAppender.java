@@ -3,7 +3,7 @@ package org.red5.logging;
 /*
  * RED5 Open Source Flash Server - http://www.osflash.org/red5
  * 
- * Copyright (c) 2006-2008 by respective authors (see below). All rights reserved.
+ * Copyright (c) 2006-2009 by respective authors (see below). All rights reserved.
  * 
  * This library is free software; you can redistribute it and/or modify it under the 
  * terms of the GNU Lesser General Public License as published by the Free Software 
@@ -38,7 +38,7 @@ import ch.qos.logback.core.status.ErrorStatus;
 /**
  * Logback appender for the Extended W3C format.
  * 
- * @see http://www.w3.org/TR/WD-logfile.html
+ * @see "http://www.w3.org/TR/WD-logfile.html"
  * @author Paul Gregoire (mondain@gmail.com)
  */
 public class W3CAppender extends FileAppender<LoggingEvent> {
@@ -264,10 +264,7 @@ public class W3CAppender extends FileAppender<LoggingEvent> {
 		//System.out.println(sbuf.toString());
 		
 		try {
-			this.writer.write(sbuf.toString());
-			if (this.immediateFlush) {
-				this.writer.flush();
-			}
+			writerWrite(sbuf.toString(), true);
 		} catch (IOException ioe) {
 			addStatus(new ErrorStatus("IO failure in appender", this, ioe));
 		}

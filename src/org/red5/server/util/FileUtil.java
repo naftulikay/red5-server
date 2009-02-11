@@ -3,7 +3,7 @@ package org.red5.server.util;
 /*
  * RED5 Open Source Flash Server - http://www.osflash.org/red5
  * 
- * Copyright (c) 2006-2008 by respective authors (see below). All rights reserved.
+ * Copyright (c) 2006-2009 by respective authors (see below). All rights reserved.
  * 
  * This library is free software; you can redistribute it and/or modify it under the 
  * terms of the GNU Lesser General Public License as published by the Free Software 
@@ -18,6 +18,7 @@ package org.red5.server.util;
  * with this library; if not, write to the Free Software Foundation, Inc., 
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA 
  */
+
 
 import java.io.BufferedInputStream;
 import java.io.File;
@@ -41,6 +42,7 @@ import org.slf4j.LoggerFactory;
  * manipulation functions.
  * 
  * @author Paul Gregoire (mondain@gmail.com)
+ * @author Dominick Accattato (daccattato@gmail.com)
  */
 public class FileUtil {
 
@@ -114,8 +116,10 @@ public class FileUtil {
 	 * Deletes a directory and its contents. This will fail if there are any
 	 * file locks or if the directory cannot be emptied.
 	 * 
-	 * @param directory
-	 * @throws IOException
+	 * @param directory directory to delete
+	 * @throws IOException if directory cannot be deleted
+	 * @return true if directory was successfully deleted; false if directory
+	 *  did not exist
 	 */
 	public static boolean deleteDirectory(String directory) throws IOException {
 		return deleteDirectory(directory, false);
@@ -125,10 +129,11 @@ public class FileUtil {
 	 * Deletes a directory and its contents. This will fail if there are any
 	 * file locks or if the directory cannot be emptied.
 	 * 
-	 * @param directory
-	 * @param useOSNativeDelete
-	 *            flag to signify use of operating system delete function
-	 * @throws IOException
+	 * @param directory directory to delete
+	 * @param useOSNativeDelete flag to signify use of operating system delete function
+	 * @throws IOException if directory cannot be deleted
+	 * @return true if directory was successfully deleted; false if directory
+	 *  did not exist
 	 */
 	public static boolean deleteDirectory(String directory,
 			boolean useOSNativeDelete) throws IOException {
@@ -197,8 +202,8 @@ public class FileUtil {
 	/**
 	 * Rename a file natively; using REN on Windows and mv on *nix.
 	 * 
-	 * @param from
-	 * @param to
+	 * @param from old name
+	 * @param to new name
 	 */
 	public static void rename(String from, String to) {
 		Process p = null;
@@ -274,9 +279,9 @@ public class FileUtil {
 	/**
 	 * Create a directory.
 	 * 
-	 * @param directory
-	 * @return
-	 * @throws IOException
+	 * @param directory directory to make
+	 * @return whether a new directory was made
+	 * @throws IOException if directory does not already exist or cannot be made
 	 */
 	public static boolean makeDirectory(String directory) throws IOException {
 		return makeDirectory(directory, false);
@@ -286,10 +291,11 @@ public class FileUtil {
 	 * Create a directory. The parent directories will be created if
 	 * <i>createParents</i> is passed as true.
 	 * 
-	 * @param directory
-	 * @param createParents
-	 * @return
-	 * @throws IOException
+	 * @param directory directory
+	 * @param createParents whether to create all parents
+	 * @return true if directory was created; false if it already existed
+	 * @throws IOException if we cannot create directory
+	 * 
 	 */
 	public static boolean makeDirectory(String directory, boolean createParents)
 			throws IOException {
@@ -315,20 +321,32 @@ public class FileUtil {
 		dir = null;
 		return created;
 	}
-
+	
 	/**
-	 * Unzips a given archive to a specified destination directory.
+	 * Unzips a war file to an application located under the webapps directory
 	 * 
-	 * @param compressedFileName
-	 * @param destinationDir
+	 * @param compressedFileName The String name of the war file
+	 * @param destinationDir The destination directory, ie: webapps
 	 */
 	public static void unzip(String compressedFileName, String destinationDir) {
 		
 		//strip everything except the applications name
-		String dirName = compressedFileName.substring(0, compressedFileName.indexOf('-'));
+		String dirName = null;
+		
+		int dashIndex = compressedFileName.indexOf('-');
+		if (dashIndex != -1) {
+			//strip everything except the applications name
+			dirName = compressedFileName.substring(0, dashIndex);
+		} else {
+			//grab every char up to the last '.'
+			dirName = compressedFileName.substring(0, compressedFileName.lastIndexOf('.'));
+		}			
+		
+		log.debug("Directory: {}", dirName);
 		//String tmpDir = System.getProperty("java.io.tmpdir");
 		File zipDir = new File(compressedFileName);
 		File parent = zipDir.getParentFile();
+		log.debug("Parent: {}", (parent != null ? parent.getName() : null));
 		//File tmpDir = new File(System.getProperty("java.io.tmpdir"), dirName);
 		File tmpDir = new File(destinationDir);
 
@@ -337,7 +355,7 @@ public class FileUtil {
 		
 		try {
 			ZipFile zf = new ZipFile(compressedFileName);
-			Enumeration e = zf.entries();
+			Enumeration<?> e = zf.entries();
 			while(e.hasMoreElements()) {
 				ZipEntry ze = (ZipEntry) e.nextElement();
 				log.debug("Unzipping {}", ze.getName());
@@ -353,11 +371,11 @@ public class FileUtil {
 				copy(in, fout);
 				in.close();
 				fout.close();
-			}
+			} 
 			e = null;
 		} catch (IOException e) {
 			log.debug("Error unzipping", e);
-			e.printStackTrace();
+			//e.printStackTrace();
 		}
 	}
 	
@@ -371,8 +389,8 @@ public class FileUtil {
 					out.write(buffer, 0, bytesRead);
 				}
 			}
-			}
 		}
+	}
 
 	/**
 	 * Unzips a given archive to a specified destination directory.
@@ -431,12 +449,15 @@ public class FileUtil {
 	
     /**
      * Quick-n-dirty directory formatting to support launching in windows, specifically from ant.
+     * @param absWebappsPath abs webapps path
+     * @param contextDirName conext directory name
+     * @return full path
      */
     public static String formatPath(String absWebappsPath, String contextDirName) {
         StringBuilder path = new StringBuilder(absWebappsPath.length() + contextDirName.length());
         path.append(absWebappsPath);
-        if (log.isDebugEnabled()) {
-        	log.debug("Path start: {}", path.toString());
+        if (log.isTraceEnabled()) {
+        	log.trace("Path start: {}", path.toString());
         }
         int idx = -1;
         if (File.separatorChar != '/') {
@@ -445,22 +466,22 @@ public class FileUtil {
                 path.insert(idx, '/');
             }
         }
-        if (log.isDebugEnabled()) {
-        	log.debug("Path step 1: {}", path.toString());
+        if (log.isTraceEnabled()) {
+        	log.trace("Path step 1: {}", path.toString());
         }
         //remove any './'
         if ((idx = path.indexOf("./")) != -1) {
         	path.delete(idx, idx + 2);
         }        
-        if (log.isDebugEnabled()) {
-        	log.debug("Path step 2: {}", path.toString());
+        if (log.isTraceEnabled()) {
+        	log.trace("Path step 2: {}", path.toString());
         }
         //add / to base path if one doesnt exist
         if (path.charAt(path.length() - 1) != '/') {
         	path.append('/');
         }
-        if (log.isDebugEnabled()) {
-        	log.debug("Path step 3: {}", path.toString());
+        if (log.isTraceEnabled()) {
+        	log.trace("Path step 3: {}", path.toString());
         }        
         //remove the / from the beginning of the context dir
         if (contextDirName.charAt(0) == '/' && path.charAt(path.length() - 1) == '/') {
@@ -468,8 +489,8 @@ public class FileUtil {
         } else {
             path.append(contextDirName);
         }
-        if (log.isDebugEnabled()) {
-        	log.debug("Path step 4: {}", path.toString());
+        if (log.isTraceEnabled()) {
+        	log.trace("Path step 4: {}", path.toString());
         }
         return path.toString();
     }	
@@ -478,7 +499,7 @@ public class FileUtil {
 	 * Generates a custom name containing numbers and an underscore ex. 282818_00023.
 	 * The name contains current seconds and a random number component.
 	 * 
-	 * @return
+	 * @return custom name
 	 */
 	public static String generateCustomName() {
 		if (random == null) {

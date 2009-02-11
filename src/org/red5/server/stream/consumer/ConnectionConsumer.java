@@ -157,7 +157,7 @@ public class ConnectionConsumer implements IPushableConsumer,
 			//switch is sorted to handle most common to least common
 			switch (msg.getDataType()) {
 				case Constants.TYPE_AUDIO_DATA:
-					log.debug("Audio data");
+					log.trace("Audio data");
 					AudioData audioData = new AudioData(((AudioData) msg)
 							.getData().asReadOnlyBuffer());
 					audioData.setHeader(header);
@@ -165,7 +165,7 @@ public class ConnectionConsumer implements IPushableConsumer,
 					audio.write(audioData);
 					break;
 				case Constants.TYPE_VIDEO_DATA:
-					log.debug("Video data");
+					log.trace("Video data");
 					VideoData videoData = new VideoData(((VideoData) msg)
 							.getData().asReadOnlyBuffer());
 					videoData.setHeader(header);
@@ -173,7 +173,7 @@ public class ConnectionConsumer implements IPushableConsumer,
 					video.write(videoData);
 					break;
 				case Constants.TYPE_PING:
-					log.debug("Ping");					
+					log.trace("Ping");					
 					Ping ping = new Ping(((Ping) msg));
 					header.setTimerRelative(false);
 					header.setTimer(0);
@@ -182,7 +182,7 @@ public class ConnectionConsumer implements IPushableConsumer,
 					conn.ping(ping);
 					break;
 				case Constants.TYPE_STREAM_METADATA:
-					log.debug("Meta data");
+					log.trace("Meta data");
 					Notify notify = new Notify(((Notify) msg).getData()
 							.asReadOnlyBuffer());
 					notify.setHeader(header);
@@ -190,7 +190,7 @@ public class ConnectionConsumer implements IPushableConsumer,
 					data.write(notify);
 					break;
 				case Constants.TYPE_FLEX_STREAM_SEND:
-					log.debug("Flex stream send");
+					log.trace("Flex stream send");
 					// TODO: okay to send this also to AMF0 clients?
 					FlexStreamSend send = new FlexStreamSend(((Notify) msg)
 							.getData().asReadOnlyBuffer());
@@ -199,7 +199,7 @@ public class ConnectionConsumer implements IPushableConsumer,
 					data.write(send);
 					break;
 				case Constants.TYPE_BYTES_READ:
-					log.debug("Bytes read");
+					log.trace("Bytes read");
 					BytesRead bytesRead = new BytesRead(((BytesRead) msg)
 							.getBytesRead());
 					header.setTimerRelative(false);
@@ -209,7 +209,7 @@ public class ConnectionConsumer implements IPushableConsumer,
 					conn.getChannel((byte) 2).write(bytesRead);
 					break;
 				default:
-					log.debug("Default");
+					log.trace("Default");
 					video.write(msg);
 			}
 		}

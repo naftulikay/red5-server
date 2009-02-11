@@ -3,7 +3,7 @@ package org.red5.server.stream;
 /*
  * RED5 Open Source Flash Server - http://www.osflash.org/red5
  *
- * Copyright (c) 2006-2008 by respective authors (see below). All rights reserved.
+ * Copyright (c) 2006-2009 by respective authors (see below). All rights reserved.
  *
  * This library is free software; you can redistribute it and/or modify it under the
  * terms of the GNU Lesser General Public License as published by the Free Software
@@ -41,15 +41,18 @@ import org.red5.server.messaging.PipeConnectionEvent;
  */
 public class BroadcastScope extends BasicScope implements IBroadcastScope,
 		IPipeConnectionListener {
-    /**
+   
+	/**
      *  Simple in memory push pipe, triggered by an active provider to push messages to consumer
      */
 	private InMemoryPushPushPipe pipe;
-    /**
+   
+	/**
      *  Number of components.
      */
 	private int compCounter;
-    /**
+
+	/**
      *  Remove flag
      */
 	private boolean hasRemoved;
@@ -126,7 +129,7 @@ public class BroadcastScope extends BasicScope implements IBroadcastScope,
      * @param paramMap       Parameters passed with connection
      * @return               <code>true</code> on success, <code>false</code> otherwise
      */
-	public boolean subscribe(IConsumer consumer, Map paramMap) {
+	public boolean subscribe(IConsumer consumer, Map<?, ?> paramMap) {
 		lock();
 		try {
             return !hasRemoved && pipe.subscribe(consumer, paramMap);
@@ -179,7 +182,7 @@ public class BroadcastScope extends BasicScope implements IBroadcastScope,
      * @param paramMap         Parameters passed on connection
      * @return                 <code>true</code> on success, <code>false</code> otherwise
      */
-    public boolean subscribe(IProvider provider, Map paramMap) {
+    public boolean subscribe(IProvider provider, Map<?, ?> paramMap) {
 		lock();
 		try {
             return !hasRemoved && pipe.subscribe(provider, paramMap);

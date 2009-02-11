@@ -9,6 +9,7 @@ import org.red5.server.api.stream.IStreamCapableConnection;
 import org.red5.server.api.stream.support.SimpleConnectionBWConfig;
 
 public class Application extends ApplicationAdapter {
+	
 	private IScope appScope;
 
 	private IServerStream serverStream;

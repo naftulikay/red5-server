@@ -3,7 +3,7 @@ package org.red5.server.stream.provider;
 /*
  * RED5 Open Source Flash Server - http://www.osflash.org/red5
  * 
- * Copyright (c) 2006-2008 by respective authors (see below). All rights reserved.
+ * Copyright (c) 2006-2009 by respective authors (see below). All rights reserved.
  * 
  * This library is free software; you can redistribute it and/or modify it under the 
  * terms of the GNU Lesser General Public License as published by the Free Software 
@@ -60,112 +60,124 @@ import org.slf4j.LoggerFactory;
  */
 public class FileProvider implements IPassive, ISeekableProvider,
 		IPullableProvider, IPipeConnectionListener, IStreamTypeAwareProvider {
-    /**
-     * Logger
-     */
-    private static final Logger log = LoggerFactory.getLogger(FileProvider.class);
-    /**
-     * Class name
-     */
+	/**
+	 * Logger
+	 */
+	private static final Logger log = LoggerFactory
+			.getLogger(FileProvider.class);
+
+	/**
+	 * Class name
+	 */
 	public static final String KEY = FileProvider.class.getName();
-    /**
-     * Provider scope
-     */
+
+	/**
+	 * Provider scope
+	 */
 	private IScope scope;
-    /**
-     * Source file
-     */
+
+	/**
+	 * Source file
+	 */
 	private File file;
-    /**
-     * Consumer pipe
-     */
+
+	/**
+	 * Consumer pipe
+	 */
 	private IPipe pipe;
-    /**
-     * Tag reader
-     */
+
+	/**
+	 * Tag reader
+	 */
 	private ITagReader reader;
-    /**
-     * Keyframe metadata
-     */
+
+	/**
+	 * Keyframe metadata
+	 */
 	private KeyFrameMeta keyFrameMeta;
-    /**
-     * Position at start
-     */
+
+	/**
+	 * Position at start
+	 */
 	private int start;
 
-    /**
-     * Create file provider for given file and scope
-     * @param scope            Scope
-     * @param file             File
-     */
-    public FileProvider(IScope scope, File file) {
+	/**
+	 * Create file provider for given file and scope
+	 * 
+	 * @param scope
+	 *            Scope
+	 * @param file
+	 *            File
+	 */
+	public FileProvider(IScope scope, File file) {
 		this.scope = scope;
 		this.file = file;
 	}
 
 	/**
-     * Setter for start position
-     *
-     * @param start Start position
-     */
-    public void setStart(int start) {
+	 * Setter for start position
+	 * 
+	 * @param start
+	 *            Start position
+	 */
+	public void setStart(int start) {
 		this.start = start;
 	}
 
-    /** {@inheritDoc} */
-    public boolean hasVideo() {
-    	return (reader != null && reader.hasVideo());
-    }
-    
 	/** {@inheritDoc} */
-    public synchronized IMessage pullMessage(IPipe pipe) throws IOException {
-    	log.debug("pullMessage");
-    	RTMPMessage rtmpMsg = null;
+	public boolean hasVideo() {
+		return (reader != null && reader.hasVideo());
+	}
+
+	/** {@inheritDoc} */
+	public synchronized IMessage pullMessage(IPipe pipe) throws IOException {
+		log.debug("pullMessage");
+		RTMPMessage rtmpMsg = null;
 		if (this.pipe == pipe) {
-    		if (this.reader == null) {
-    			init();
-    		}
-    		if (reader.hasMoreTags()) {
-        		ITag tag = reader.readTag();
-        		IRTMPEvent msg = null;
-        		int timestamp = tag.getTimestamp();
-        		log.debug("Got tag - timestamp: {} data type: {}", timestamp, tag.getDataType());
-        		switch (tag.getDataType()) {
-        			case Constants.TYPE_AUDIO_DATA:
-        				msg = new AudioData(tag.getBody());
-        				break;
-        			case Constants.TYPE_VIDEO_DATA:
-        				msg = new VideoData(tag.getBody());
-        				break;
-        			case Constants.TYPE_INVOKE:
-        				msg = new Invoke(tag.getBody());
-        				break;
-        			case Constants.TYPE_NOTIFY:
-        				msg = new Notify(tag.getBody());
-        				break;		
-			case Constants.TYPE_FLEX_STREAM_SEND:
-				msg = new FlexStreamSend(tag.getBody());
-				break;
-        			default:
-        				log.warn("Unexpected type? {}", tag.getDataType());
-        				msg = new Unknown(tag.getDataType(), tag.getBody());
-        				break;
-        		}
-        		msg.setTimestamp(timestamp);
-        		rtmpMsg = new RTMPMessage();
-        		rtmpMsg.setBody(msg);    		
-    		}
+			if (this.reader == null) {
+				init();
+			}
+			if (reader.hasMoreTags()) {
+				ITag tag = reader.readTag();
+				IRTMPEvent msg = null;
+				int timestamp = tag.getTimestamp();
+				log.debug("Got tag - timestamp: {} data type: {}", timestamp,
+						tag.getDataType());
+				switch (tag.getDataType()) {
+					case Constants.TYPE_AUDIO_DATA:
+						msg = new AudioData(tag.getBody());
+						break;
+					case Constants.TYPE_VIDEO_DATA:
+						msg = new VideoData(tag.getBody());
+						break;
+					case Constants.TYPE_INVOKE:
+						msg = new Invoke(tag.getBody());
+						break;
+					case Constants.TYPE_NOTIFY:
+						msg = new Notify(tag.getBody());
+						break;
+					case Constants.TYPE_FLEX_STREAM_SEND:
+						msg = new FlexStreamSend(tag.getBody());
+						break;
+					default:
+						log.warn("Unexpected type? {}", tag.getDataType());
+						msg = new Unknown(tag.getDataType(), tag.getBody());
+				}
+				msg.setTimestamp(timestamp);
+				rtmpMsg = new RTMPMessage();
+				rtmpMsg.setBody(msg);
+			}
 		}
 		return rtmpMsg;
 	}
 
 	/** {@inheritDoc} */
-    public IMessage pullMessage(IPipe pipe, long wait) throws IOException {
+	public IMessage pullMessage(IPipe pipe, long wait) throws IOException {
 		return pullMessage(pipe);
 	}
 
 	/** {@inheritDoc} */
-    public void onPipeConnectionEvent(PipeConnectionEvent event) {
+	public void onPipeConnectionEvent(PipeConnectionEvent event) {
 		switch (event.getType()) {
 			case PipeConnectionEvent.PROVIDER_CONNECT_PULL:
 				if (pipe == null) {
@@ -183,67 +195,68 @@ public class FileProvider implements IPassive, ISeekableProvider,
 					uninit();
 				}
 			default:
-				break;
 		}
 	}
 
 	/** {@inheritDoc} */
-    public void onOOBControlMessage(IMessageComponent source, IPipe pipe,
+	public void onOOBControlMessage(IMessageComponent source, IPipe pipe,
 			OOBControlMessage oobCtrlMsg) {
-    	String serviceName = oobCtrlMsg.getServiceName();
-    	String target = oobCtrlMsg.getTarget();
-    	log.debug("onOOBControlMessage - service name: {} target: {}", serviceName, target);
-    	if (serviceName != null) {
-    		if (IPassive.KEY.equals(target)) {
-    			if ("init".equals(serviceName)) {
-    				Integer startTS = (Integer) oobCtrlMsg.getServiceParamMap()
-    						.get("startTS");
-    				setStart(startTS);
-    			}
-    		} else if (ISeekableProvider.KEY.equals(target)) {
-    			if ("seek".equals(serviceName)) {
-    				Integer position = (Integer) oobCtrlMsg.getServiceParamMap()
-    						.get("position");
-    				int seekPos = seek(position.intValue());
-    				// Return position we seeked to
-    				oobCtrlMsg.setResult(seekPos);
-    			}
-    		} else if (IStreamTypeAwareProvider.KEY.equals(target)) {
-    			if ("hasVideo".equals(serviceName)) {
-    				oobCtrlMsg.setResult(hasVideo());
-    			}
-    		}
-    	}
+		String serviceName = oobCtrlMsg.getServiceName();
+		String target = oobCtrlMsg.getTarget();
+		log.debug("onOOBControlMessage - service name: {} target: {}",
+				serviceName, target);
+		if (serviceName != null) {
+			if (IPassive.KEY.equals(target)) {
+				if ("init".equals(serviceName)) {
+					Integer startTS = (Integer) oobCtrlMsg.getServiceParamMap()
+							.get("startTS");
+					setStart(startTS);
+				}
+			} else if (ISeekableProvider.KEY.equals(target)) {
+				if ("seek".equals(serviceName)) {
+					Integer position = (Integer) oobCtrlMsg
+							.getServiceParamMap().get("position");
+					int seekPos = seek(position.intValue());
+					// Return position we seeked to
+					oobCtrlMsg.setResult(seekPos);
+				}
+			} else if (IStreamTypeAwareProvider.KEY.equals(target)) {
+				if ("hasVideo".equals(serviceName)) {
+					oobCtrlMsg.setResult(hasVideo());
+				}
+			}
+		}
 	}
 
-    /**
-     * Initializes file provider. Creates streamable file factory and service, seeks to start position
-     */
-    private void init() throws IOException {
-    	log.debug("Initialize");    	
+	/**
+	 * Initializes file provider. Creates streamable file factory and service,
+	 * seeks to start position
+	 */
+	private void init() throws IOException {
+		log.debug("Initialize");
 		IStreamableFileFactory factory = (IStreamableFileFactory) ScopeUtils
 				.getScopeService(scope, IStreamableFileFactory.class,
 						StreamableFileFactory.class);
 		IStreamableFileService service = factory.getService(file);
 		if (service != null) {
-    		IStreamableFile streamFile = service.getStreamableFile(file);
-    		reader = streamFile.getReader();
-        	log.debug("Reader: {}", reader.getClass().getName());
-        	//TODO: may want to do init of readers here
-    		if (start > 0) {
-    			seek(start);
-    		}
+			IStreamableFile streamFile = service.getStreamableFile(file);
+			reader = streamFile.getReader();
+			log.debug("Reader: {}", reader.getClass().getName());
+			// TODO: may want to do init of readers here
+			if (start > 0) {
+				seek(start);
+			}
 		} else {
 			log.error("No service found for {}", file.getAbsolutePath());
-			//need to let the player know that the file cannot be served
-			
+			// need to let the player know that the file cannot be served
+
 		}
 	}
 
-    /**
-     * Reset
-     */
-    private synchronized void uninit() {
+	/**
+	 * Reset
+	 */
+	private synchronized void uninit() {
 		if (this.reader != null) {
 			this.reader.close();
 			this.reader = null;
@@ -251,18 +264,18 @@ public class FileProvider implements IPassive, ISeekableProvider,
 	}
 
 	/** {@inheritDoc} */
-    public synchronized int seek(int ts) {
-    	log.debug("Seek ts: {}", ts);
+	public synchronized int seek(int ts) {
+		log.debug("Seek ts: {}", ts);
 		if (keyFrameMeta == null) {
-			//the mp4 reader expects the seekpoint / sample number from
-			//meta data in the seekpoints array
+			// the mp4 reader expects the seekpoint / sample number from
+			// meta data in the seekpoints array
 			if (reader instanceof MP4Reader) {
-				//its not really a position or timestamp
+				// its not really a position or timestamp
 				int newTs = (ts / 1000);
 				reader.position(((MP4Reader) reader).getFramePosition(newTs));
 				return newTs;
 			}
-			
+
 			if (!(reader instanceof IKeyFrameDataAnalyzer)) {
 				// Seeking not supported
 				return ts;

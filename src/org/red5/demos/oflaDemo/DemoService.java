@@ -8,16 +8,15 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
+import org.red5.logging.Red5LoggerFactory;
 import org.red5.server.api.IScope;
 import org.red5.server.api.Red5;
+import org.slf4j.Logger;
 import org.springframework.core.io.Resource;
 
 public class DemoService {
 
-	protected static Logger log = LoggerFactory.getLogger(DemoService.class);
+	protected static Logger log = Red5LoggerFactory.getLogger(DemoService.class, "oflaDemo");
 
 	private String formatDate(Date date) {
 		SimpleDateFormat formatter;
@@ -38,6 +37,8 @@ public class DemoService {
 		try {
 			log.debug("getting the FLV files");
 			addToMap(filesMap, scope.getResources("streams/*.flv"));
+
+			addToMap(filesMap, scope.getResources("streams/*.f4v"));
 
 			addToMap(filesMap, scope.getResources("streams/*.mp3"));
 			

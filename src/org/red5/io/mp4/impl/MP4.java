@@ -27,7 +27,6 @@ import java.io.IOException;
 import java.util.Map;
 
 import org.apache.mina.common.ByteBuffer;
-import org.red5.io.ITag;
 import org.red5.io.ITagReader;
 import org.red5.io.ITagWriter;
 import org.red5.io.flv.meta.IMetaData;
@@ -49,8 +48,6 @@ public class MP4 implements IMP4 {
 
 	private File file;
 
-	private boolean generateMetadata;
-
 	private IMetaService metaService;
 
 	private IMetaData<?, ?> metaData;
@@ -62,40 +59,25 @@ public class MP4 implements IMP4 {
 	}
 
 	/**
-	 * Create MP4 from given file source
+	 * Create MP4 from given file source.
 	 * 
-	 * @param file
-	 *            File source
+	 * @param file File source
 	 */
 	public MP4(File file) {
-		this(file, false);
-	}
-
-	/**
-	 * Create MP4 from given file source and with specified metadata generation
-	 * option
-	 * 
-	 * @param file
-	 *            File source
-	 * @param generateMetadata
-	 *            Metadata generation option
-	 */
-	public MP4(File file, boolean generateMetadata) {
 		this.file = file;
-		this.generateMetadata = generateMetadata;
-		if (!generateMetadata) {
-			try {
-				MP4Reader reader = new MP4Reader(this.file);
-				ITag tag = reader.createFileMeta();
-				if (metaService == null) {
-					metaService = new MetaService(this.file);
-				}
-				metaData = metaService.readMetaData(tag.getBody());
-				reader.close();
-			} catch (Exception e) {
-				log.error("An error occured looking for metadata:", e);
+		/*
+		try {
+			MP4Reader reader = new MP4Reader(this.file);
+			ITag tag = reader.createFileMeta();
+			if (metaService == null) {
+				metaService = new MetaService(this.file);
 			}
-		}		
+			metaData = metaService.readMetaData(tag.getBody());
+			reader.close();
+		} catch (Exception e) {
+			log.error("An error occurred looking for metadata:", e);
+		}
+		*/		
 	}
 
 	/**
@@ -150,13 +132,14 @@ public class MP4 implements IMP4 {
 	 */
 	public ITagReader getReader() throws IOException {
 		MP4Reader reader = null;
-		ByteBuffer fileData;
+		ByteBuffer fileData = null;
 		String fileName = file.getName();
 		if (file.exists()) {
-			log.debug("File size: {}", file.length());
-			reader = new MP4Reader(file, generateMetadata);
+			log.debug("File name: {} size: {}", fileName, file.length());
+			reader = new MP4Reader(file);
 			// get a ref to the mapped byte buffer
 			fileData = reader.getFileData();
+			log.trace("File data size: {}", fileData);
 		} else {
 			log.info("Creating new file: {}", file);
 			file.createNewFile();

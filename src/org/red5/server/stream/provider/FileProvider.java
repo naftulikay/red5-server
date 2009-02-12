@@ -217,7 +217,8 @@ public class FileProvider implements IPassive, ISeekableProvider,
 					Integer position = (Integer) oobCtrlMsg
 							.getServiceParamMap().get("position");
 					int seekPos = seek(position.intValue());
-					// Return position we seeked to
+					log.debug("Returning position: {}", seekPos);
+					//return position we seeked to
 					oobCtrlMsg.setResult(seekPos);
 				}
 			} else if (IStreamTypeAwareProvider.KEY.equals(target)) {
@@ -270,10 +271,8 @@ public class FileProvider implements IPassive, ISeekableProvider,
 			// the mp4 reader expects the seekpoint / sample number from
 			// meta data in the seekpoints array
 			if (reader instanceof MP4Reader) {
-				// its not really a position or timestamp
-				int newTs = (ts / 1000);
-				reader.position(((MP4Reader) reader).getFramePosition(newTs));
-				return newTs;
+				reader.position(((MP4Reader) reader).getFramePosition(ts));
+				return ts;
 			}
 
 			if (!(reader instanceof IKeyFrameDataAnalyzer)) {

@@ -46,11 +46,6 @@ public class MP4Service extends BaseStreamableFileService implements IMP4Service
      * Deserializer
      */
     private Deserializer deserializer;
-
-    /**
-     * Generate MP4 metadata?
-     */
-    private boolean generateMetadata;
     
     /**
      * File extensions handled by this service. If there are more than one, they
@@ -102,16 +97,7 @@ public class MP4Service extends BaseStreamableFileService implements IMP4Service
 	 */
 	@Override
 	public IStreamableFile getStreamableFile(File file) throws IOException {
-		return new MP4(file, generateMetadata);
-	}
-
-	/**
-     * Generate metadata or not
-     *
-     * @param generate  <code>true</code> if there's need to generate metadata, <code>false</code> otherwise
-     */
-    public void setGenerateMetadata(boolean generate) {
-		generateMetadata = generate;
+		return new MP4(file);
 	}
 
 	/**

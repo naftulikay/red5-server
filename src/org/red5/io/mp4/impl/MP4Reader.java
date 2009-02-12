@@ -199,21 +199,11 @@ public class MP4Reader implements IoConstants, ITagReader {
 	}
 
     /**
-     * Creates MP4 reader from file input stream.
-	 *
-     * @param f         File
-     */
-    public MP4Reader(File f) throws IOException {
-		this(f, false);
-	}
-
-    /**
      * Creates MP4 reader from file input stream, sets up metadata generation flag.
 	 *
      * @param f                    File input stream
-     * @param generateMetadata     <code>true</code> if metadata generation required, <code>false</code> otherwise
      */
-    public MP4Reader(File f, boolean generateMetadata) throws IOException {
+    public MP4Reader(File f) throws IOException {
     	if (null == f) {
     		log.warn("Reader was passed a null file");
         	log.debug("{}", ToStringBuilder.reflectionToString(this));
@@ -480,7 +470,7 @@ public class MP4Reader implements IoConstants, ITagReader {
     												//if we have 1 record then all samples have the same duration
     												if (records.size() > 1) {
     													//TODO: handle audio samples with varying durations
-    													log.warn("Audio samples have differing durations, audio playback may fail");
+    													log.info("Audio samples have differing durations, audio playback may fail");
     												}
     												audioSampleDuration = rec.getSampleDuration();
     											}		
@@ -650,7 +640,7 @@ public class MP4Reader implements IoConstants, ITagReader {
     												//if we have 1 record then all samples have the same duration
     												if (records.size() > 1) {
     													//TODO: handle video samples with varying durations
-    													log.warn("Video samples have differing durations, video playback may fail");
+    													log.info("Video samples have differing durations, video playback may fail");
     												}
     												videoSampleDuration = rec.getSampleDuration();
     											}										

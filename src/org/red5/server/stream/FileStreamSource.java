@@ -106,14 +106,14 @@ public class FileStreamSource implements ISeekableStreamSource, Constants {
 
 	/** {@inheritDoc} */
     public synchronized int seek(int ts) {
+		log.debug("Seek ts: {}", ts);    	
 		if (keyFrameMeta == null) {
 			//the mp4 reader expects the seekpoint / sample number from
 			//meta data in the seekpoints array
 			if (reader instanceof MP4Reader) {
 				//its not really a position or timestamp
-				int newTs = (ts / 1000);
-				reader.position(((MP4Reader) reader).getFramePosition(newTs));
-				return newTs;
+				reader.position(((MP4Reader) reader).getFramePosition(ts));
+				return ts;
 			}
 			
 			if (!(reader instanceof IKeyFrameDataAnalyzer)) {

@@ -55,7 +55,6 @@ import org.red5.server.net.rtmp.event.Notify;
 import org.red5.server.net.rtmp.event.Ping;
 import org.red5.server.net.rtmp.event.VideoData;
 import org.red5.server.net.rtmp.event.VideoData.FrameType;
-import org.red5.server.net.rtmp.message.Header;
 import org.red5.server.net.rtmp.status.Status;
 import org.red5.server.net.rtmp.status.StatusCodes;
 import org.red5.server.stream.AbstractStream.State;
@@ -536,8 +535,8 @@ public final class PlayEngine implements IFilter, IPushableConsumer,
 	 * @throws IllegalStateException    If stream is in stopped state
 	 * @throws OperationNotSupportedException If this object doesn't support the operation.
 	 */
-	public synchronized void seek(int position) throws IllegalStateException,
-			OperationNotSupportedException {
+	public synchronized void seek(int position) throws IllegalStateException, OperationNotSupportedException {
+		log.debug("Seek: {}", position);
 		if (playlistSubscriberStream.state != State.PLAYING 
 				&& playlistSubscriberStream.state != State.PAUSED
 				&& playlistSubscriberStream.state != State.STOPPED) {
@@ -562,7 +561,7 @@ public final class PlayEngine implements IFilter, IPushableConsumer,
 		}
 		playbackStart = System.currentTimeMillis() - seekPos;
 		playlistSubscriberStream.notifyItemSeek(currentItem, seekPos);
-		boolean messageSent = false;
+		//boolean messageSent = false;
 		boolean startPullPushThread = false;
 		if ((playlistSubscriberStream.state == State.PAUSED 
 				|| playlistSubscriberStream.state == State.STOPPED)
@@ -586,7 +585,7 @@ public final class PlayEngine implements IFilter, IPushableConsumer,
 						body.setTimestamp(seekPos);
 						doPushMessage(rtmpMessage);
 						rtmpMessage.getBody().release();
-						messageSent = true;
+						//messageSent = true;
 						lastMessage = body;
 						break;
 					}
@@ -603,6 +602,8 @@ public final class PlayEngine implements IFilter, IPushableConsumer,
 			startPullPushThread = true;
 		}
 
+		//dont send the blank audio if doing h.264
+		/*
 		if (!messageSent) {
 			// Send blank audio packet to notify client about new position
 			AudioData audio = new AudioData();
@@ -615,6 +616,7 @@ public final class PlayEngine implements IFilter, IPushableConsumer,
 			lastMessage = audio;
 			doPushMessage(audioMessage);
 		}
+		*/
 
 		if (startPullPushThread) {
 			ensurePullAndPushRunning();
@@ -624,7 +626,6 @@ public final class PlayEngine implements IFilter, IPushableConsumer,
 				&& (position - streamOffset) >= currentItem.getLength()) {
 			// Seeked after end of stream
 			stop();
-			return;
 		}
 	}
 
@@ -696,20 +697,20 @@ public final class PlayEngine implements IFilter, IPushableConsumer,
 			Object[] errorItems = new Object[]{message.getClass(), message.getDataType(), itemName};
 			throw new RuntimeException(String.format("Expected IStreamData but got %s (type %s) for %s", errorItems));
 		}
-		final long now = System.currentTimeMillis();
+		long now = System.currentTimeMillis();
 		// check client buffer length when we've already sent some messages
 		if (lastMessage != null) {
+			long lastMessageTs = lastMessage.getTimestamp();
 			// Duration the stream is playing
-			final long delta = now - playbackStart;
+			long delta = now - playbackStart;
 			// Buffer size as requested by the client
-			final long buffer = playlistSubscriberStream.getClientBufferDuration();
-
+			long buffer = playlistSubscriberStream.getClientBufferDuration();
 			// Expected amount of data present in client buffer
-			final long buffered = lastMessage.getTimestamp() - delta;
+			long buffered = lastMessageTs - delta;
 			log
 					.debug(
 							"okayToSendMessage: timestamp {} delta {} buffered {} buffer {}",
-							new Object[] { lastMessage.getTimestamp(), delta,
+							new Object[] { lastMessageTs, delta,
 									buffered, buffer });
 			if (buffer > 0 && buffered > buffer) {
 				// Client is likely to have enough data in the buffer
@@ -731,24 +732,25 @@ public final class PlayEngine implements IFilter, IPushableConsumer,
 			return false;
 		}
 
-		if (((IStreamData) message).getData() == null) {
+		ByteBuffer streamData = ((IStreamData) message).getData();
+		if (streamData != null) {
+    		int size = streamData.limit();
+    		if (message instanceof VideoData) {
+    			if (checkBandwidth
+    					&& !videoBucket.acquireTokenNonblocking(size, this)) {
+    				waitingForToken = true;
+    				return false;
+    			}
+    		} else if (message instanceof AudioData) {
+    			if (checkBandwidth
+    					&& !audioBucket.acquireTokenNonblocking(size, this)) {
+    				waitingForToken = true;
+    				return false;
+    			}
+    		}
+		} else {
 			// TODO: when can this happen?
-			return true;
-		}
-
-		final int size = ((IStreamData) message).getData().limit();
-		if (message instanceof VideoData) {
-			if (checkBandwidth
-					&& !videoBucket.acquireTokenNonblocking(size, this)) {
-				waitingForToken = true;
-				return false;
-			}
-		} else if (message instanceof AudioData) {
-			if (checkBandwidth
-					&& !audioBucket.acquireTokenNonblocking(size, this)) {
-				waitingForToken = true;
-				return false;
-			}
+			log.warn("Stream data was null");			
 		}
 
 		return true;

@@ -53,7 +53,7 @@ public class MP4Service extends BaseStreamableFileService implements IMP4Service
      */
     private static String extension = ".f4v,.mp4,.mov,.3gp,.3g2";
     
-    private static String prefix = "f4v";
+    private static String prefix = "mp4";
     
 	/** {@inheritDoc} */
     @Override

@@ -310,12 +310,14 @@ public class RTMPProtocolEncoder extends BaseProtocolEncoder
      */
     private ByteBuffer encodeServerBW(ServerBW serverBW) {
 		final ByteBuffer out = ByteBuffer.allocate(4);
+		/*
 		//copy what fms3 and izumi send
 		out.put((byte) 0);
 		out.put((byte) 0x26);
 		out.put((byte) 0x25);
 		out.put((byte) 0xa0);
-		//out.putInt(serverBW.getBandwidth());
+		*/
+		out.putInt(serverBW.getBandwidth());
 		return out;
 	}
 

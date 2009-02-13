@@ -201,7 +201,7 @@ public class MP4Atom {
 		} else if(type == MP4PixelAspectAtomType) {
 			readed = atom.create_pasp_atom(bitstream);
 		}
-        log.debug("Atom: type = {} size = {}", intToType(type), size);
+        log.trace("Atom: type = {} size = {}", intToType(type), size);
 		bitstream.skipBytes(size - readed);
 		return atom;
 	}	
@@ -270,17 +270,17 @@ public class MP4Atom {
 	 */
 	public long create_audio_sample_entry_atom(MP4DataStream bitstream) throws IOException {
 		//qtff page 117
-		log.debug("Audio sample entry");
+		log.trace("Audio sample entry");
 		bitstream.skipBytes(6);
 		int dataReferenceIndex = (int) bitstream.readBytes(2);
 		bitstream.skipBytes(8);
 		channelCount = (int) bitstream.readBytes(2);
-		log.debug("Channels: {}", channelCount);
+		log.trace("Channels: {}", channelCount);
 		sampleSize = (int) bitstream.readBytes(2);
-		log.debug("Sample size (bits): {}", sampleSize);
+		log.trace("Sample size (bits): {}", sampleSize);
 		bitstream.skipBytes(4);
 		timeScale = (int) bitstream.readBytes(2);
-		log.debug("Time scale: {}", timeScale);
+		log.trace("Time scale: {}", timeScale);
 		bitstream.skipBytes(2);
 		readed += 28;
 		MP4Atom child = MP4Atom.createAtom(bitstream);
@@ -349,7 +349,7 @@ public class MP4Atom {
 		readed += 20;
 		int length = (int) (size - readed - 1);
 		String trackName = bitstream.readString(length);
-		log.debug("Track name: {}", trackName);
+		log.trace("Track name: {}", trackName);
 		readed += length;		
 		return readed;		
 	}
@@ -452,7 +452,7 @@ public class MP4Atom {
 	public long create_sample_description_atom(MP4DataStream bitstream) throws IOException {
 		create_full_atom(bitstream);
 		entryCount = (int)bitstream.readBytes(4);
-		log.debug("stsd entry count: {}", entryCount);
+		log.trace("stsd entry count: {}", entryCount);
 		readed += 4;
 		for(int i = 0; i < entryCount; i++) {
 			MP4Atom child = MP4Atom.createAtom(bitstream);
@@ -597,14 +597,14 @@ public class MP4Atom {
 	 * @return the number of bytes which was being loaded.
 	 */
 	public long create_sync_sample_atom(MP4DataStream bitstream) throws IOException {
-		log.debug("Sync sample atom contains keyframe info");
+		log.trace("Sync sample atom contains keyframe info");
 		create_full_atom(bitstream);
 		entryCount = (int) bitstream.readBytes(4);
-		log.debug("Sync entries: {}", entryCount);
+		log.trace("Sync entries: {}", entryCount);
 		readed += 4;
 		for (int i = 0; i < entryCount; i++) {
 			int sample = (int) bitstream.readBytes(4);
-			//log.debug("Sync entry: {}", sample);
+			//log.trace("Sync entry: {}", sample);
 			syncSamples.addElement(new Integer(sample));
 			readed += 4;
 		}
@@ -640,15 +640,15 @@ public class MP4Atom {
 	 * @return the number of bytes which was being loaded.
 	 */
 	public long create_time_to_sample_atom(MP4DataStream bitstream) throws IOException {
-		log.debug("Time to sample atom");
+		log.trace("Time to sample atom");
 		create_full_atom(bitstream);
 		entryCount = (int) bitstream.readBytes(4);
-		log.debug("Time to sample entries: {}", entryCount);
+		log.trace("Time to sample entries: {}", entryCount);
 		readed += 4;
 		for (int i = 0; i < entryCount; i++) {
 			int sampleCount = (int) bitstream.readBytes(4);
 			int sampleDuration = (int) bitstream.readBytes(4);
-			//log.debug("Sync entry: {}", sample);
+			//log.trace("Sync entry: {}", sample);
 			timeToSamplesRecords.addElement(new TimeSampleRecord(sampleCount, sampleDuration));
 			readed += 8;
 		}
@@ -681,7 +681,7 @@ public class MP4Atom {
 	 */
 	public long create_track_header_atom(MP4DataStream bitstream) throws IOException {
 		create_full_atom(bitstream);
-		log.debug("Version: {}", version);
+		log.trace("Version: {}", version);
 		if (version == 1) {
 			creationTime = createDate(bitstream.readBytes(8));
 			modificationTime = createDate(bitstream.readBytes(8));
@@ -701,7 +701,7 @@ public class MP4Atom {
 		int qt_layer = (int)bitstream.readBytes(2);
 		int qt_alternateGroup = (int)bitstream.readBytes(2);
 		int qt_volume = (int)bitstream.readBytes(2);
-		log.debug("Volume: {}", qt_volume);
+		log.trace("Volume: {}", qt_volume);
 		bitstream.skipBytes(2); //reserved by apple
 		long qt_matrixA = bitstream.readBytes(4);
 		long qt_matrixB = bitstream.readBytes(4);
@@ -751,12 +751,12 @@ public class MP4Atom {
 	 * @return the number of bytes which was being loaded.
 	 */
 	public long create_visual_sample_entry_atom(MP4DataStream bitstream) throws IOException {
-		log.debug("Visual entry atom contains wxh");
+		log.trace("Visual entry atom contains wxh");
 		bitstream.skipBytes(24);
 		width = (int)bitstream.readBytes(2);
-		log.debug("Width: {}", width);
+		log.trace("Width: {}", width);
 		height = (int)bitstream.readBytes(2);
-		log.debug("Height: {}", height);
+		log.trace("Height: {}", height);
 		bitstream.skipBytes(50);
 		readed += 78;		
 		MP4Atom child = MP4Atom.createAtom(bitstream);
@@ -771,32 +771,32 @@ public class MP4Atom {
 	 * @return the number of bytes which was being loaded.
 	 */
 	public long create_video_sample_entry_atom(MP4DataStream bitstream) throws IOException {
-		log.debug("Video entry atom contains wxh");
+		log.trace("Video entry atom contains wxh");
 		bitstream.skipBytes(6);
 		int dataReferenceIndex = (int) bitstream.readBytes(2);		
 		bitstream.skipBytes(2);
 		bitstream.skipBytes(2);
 		bitstream.skipBytes(12);
 		width = (int) bitstream.readBytes(2);
-		log.debug("Width: {}", width);
+		log.trace("Width: {}", width);
 		height = (int) bitstream.readBytes(2);
-		log.debug("Height: {}", height);
+		log.trace("Height: {}", height);
 		int horizontalRez = (int) bitstream.readBytes(4) >> 16;
-		log.debug("H Resolution: {}", horizontalRez);
+		log.trace("H Resolution: {}", horizontalRez);
 		int verticalRez = (int) bitstream.readBytes(4) >> 16;
-		log.debug("V Resolution: {}", verticalRez);
+		log.trace("V Resolution: {}", verticalRez);
 		bitstream.skipBytes(4);
 		int frameCount = (int) bitstream.readBytes(2);
-		log.debug("Frame to sample count: {}", frameCount);
+		log.trace("Frame to sample count: {}", frameCount);
 		int stringLen = (int) bitstream.readBytes(1);
-		log.debug("String length (cpname): {}", stringLen);
+		log.trace("String length (cpname): {}", stringLen);
 		String compressorName = bitstream.readString(31);
-		log.debug("Compressor name: {}", compressorName.trim());
+		log.trace("Compressor name: {}", compressorName.trim());
 		int depth = (int) bitstream.readBytes(2);
-		log.debug("Depth: {}", depth);
+		log.trace("Depth: {}", depth);
 		bitstream.skipBytes(2);		
 		readed += 78;		
-		log.debug("Bytes read: {}", readed);
+		log.trace("Bytes read: {}", readed);
 		MP4Atom child = MP4Atom.createAtom(bitstream);
 		this.children.add(child);
 		readed += child.getSize();
@@ -853,8 +853,8 @@ public class MP4Atom {
 	 * @return the number of bytes which was being loaded.
 	 */
 	public long create_avc_config_atom(MP4DataStream bitstream) throws IOException {
-		log.debug("AVC config");
-		log.debug("Offset: {}", bitstream.getOffset());
+		log.trace("AVC config");
+		log.trace("Offset: {}", bitstream.getOffset());
 		//store the decoder config bytes
 		videoConfigBytes = new byte[(int) size];
 		for (int b = 0; b < videoConfigBytes.length; b++) {
@@ -864,21 +864,21 @@ public class MP4Atom {
 				//0 / version
 				case 1: //profile
 					avcProfile = videoConfigBytes[b];
-					log.debug("AVC profile: {}", avcProfile);
+					log.trace("AVC profile: {}", avcProfile);
 					break;
 				case 2: //compatible profile
 					int avcCompatProfile = videoConfigBytes[b];
-					log.debug("AVC compatible profile: {}", avcCompatProfile);
+					log.trace("AVC compatible profile: {}", avcCompatProfile);
 					break;
 				case 3: //avc level
 					avcLevel = videoConfigBytes[b];
-					log.debug("AVC level: {}", avcLevel);
+					log.trace("AVC level: {}", avcLevel);
 					break;
 				case 4: //NAL length
 					break;
 				case 5: //SPS number
 					int numberSPS = videoConfigBytes[b];
-					log.debug("Number of SPS: {}", numberSPS);
+					log.trace("Number of SPS: {}", numberSPS);
 					break;
 				default:
 				
@@ -898,10 +898,10 @@ public class MP4Atom {
 	 * @return the number of bytes which was being loaded.	
 	 */
 	public long create_pasp_atom(MP4DataStream bitstream) throws IOException {
-		log.debug("Pixel aspect ratio");
+		log.trace("Pixel aspect ratio");
 		int hSpacing = (int) bitstream.readBytes(4);		
 		int vSpacing = (int) bitstream.readBytes(4);
-		log.warn("hSpacing: {} vSpacing: {}", hSpacing, vSpacing);
+		log.trace("hSpacing: {} vSpacing: {}", hSpacing, vSpacing);
 		readed += 8;
 		MP4Atom child = MP4Atom.createAtom(bitstream);
 		this.children.add(child);

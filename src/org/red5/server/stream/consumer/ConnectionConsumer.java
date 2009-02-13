@@ -131,7 +131,7 @@ public class ConnectionConsumer implements IPushableConsumer,
 			streamTracker.reset();
 		} else if (message instanceof StatusMessage) {
 			StatusMessage statusMsg = (StatusMessage) message;
-			video.sendStatus(statusMsg.getBody());
+			data.sendStatus(statusMsg.getBody());
 		} else if (message instanceof RTMPMessage) {
 			//make sure chunk size has been sent
 			if (!chunkSizeSent) {
@@ -210,7 +210,7 @@ public class ConnectionConsumer implements IPushableConsumer,
 					break;
 				default:
 					log.trace("Default");
-					video.write(msg);
+					data.write(msg);
 			}
 		}
 	}

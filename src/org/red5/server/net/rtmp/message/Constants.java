@@ -69,7 +69,7 @@ public interface Constants {
     public static final byte TYPE_VIDEO_DATA = 0x09;
 
 	// Unknown: 0x0A ...  0x0E
-    
+
     /**
      * AMF3 stream send
      */
@@ -104,7 +104,7 @@ public interface Constants {
      * Invoke operation (remoting call but also used for streaming) marker
      */
     public static final byte TYPE_INVOKE = 0x14;
-    
+
     /**
      * New header marker
      */

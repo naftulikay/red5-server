@@ -109,6 +109,7 @@ public class MP4Descriptor {
 	 * @param bitstream
 	 *            the input bitstream
 	 */
+	@SuppressWarnings("unused")	
 	public void createES_Descriptor(MP4DataStream bitstream) throws IOException {
 		int ES_ID = (int) bitstream.readBytes(2);
 		int flags = (int) bitstream.readBytes(1);
@@ -142,6 +143,7 @@ public class MP4Descriptor {
 	 * @param bitstream
 	 *            the input bitstream
 	 */
+	@SuppressWarnings("unused")
 	public void createDecoderConfigDescriptor(MP4DataStream bitstream)
 			throws IOException {
 		int objectTypeIndication = (int) bitstream.readBytes(1);

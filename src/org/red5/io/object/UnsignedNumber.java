@@ -1,4 +1,5 @@
 package org.red5.io.object;
+
 /*
  * RED5 Open Source Flash Server - http://www.osflash.org/red5
  *
@@ -18,21 +19,13 @@ package org.red5.io.object;
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  */
 
-/***************************************************************************
- *                                                                         *
- *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 2 of the License, or     *
- *   (at your option) any later version.                                   *
- *                                                                         *
- *   Copyright (C) 2005 - Matteo Merli - matteo.merli@gmail.com            *
- *                                                                         *
- ***************************************************************************/
-
 /**
  * @author Matteo Merli
  */
 public abstract class UnsignedNumber extends Number {
+
+	private static final long serialVersionUID = -6404256963187584919L;
+
 	/**
 	 * Get a byte array representation of the number. The order will be MSB
 	 * first (Big Endian).

@@ -53,7 +53,7 @@ public class RequestDumpServlet extends HttpServlet {
 	protected void service(HttpServletRequest req, HttpServletResponse resp)
 			throws ServletException, IOException {
 
-		Enumeration en = req.getHeaderNames();
+		Enumeration<?> en = req.getHeaderNames();
 		while (en.hasMoreElements()) {
 			String name = (String) en.nextElement();
 			log.info(name + " => " + req.getHeader(name));

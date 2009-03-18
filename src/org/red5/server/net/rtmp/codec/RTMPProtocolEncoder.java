@@ -231,8 +231,8 @@ public class RTMPProtocolEncoder extends BaseProtocolEncoder
      */
     public void encodeHeader(Header header, Header lastHeader, ByteBuffer buf) {
 		final byte headerType = getHeaderType(header, lastHeader);
-		log.trace("Header byte (type): {}", headerType);
-		RTMPUtils.encodeHeaderByte(buf, headerType, header.getChannelId());
+		RTMPUtils.encodeHeaderByte(buf, headerType, header
+				.getChannelId());
 
 		switch (headerType) {
 			case HEADER_NEW:

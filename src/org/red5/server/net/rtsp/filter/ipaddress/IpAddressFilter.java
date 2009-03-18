@@ -51,7 +51,7 @@ public class IpAddressFilter extends IoFilterAdapter {
 
 	public void init() {
 
-		Class providerClass;
+		Class<?> providerClass;
 		try {
 			providerClass = Class.forName(filterClassName);
 		} catch (ClassNotFoundException e) {
@@ -61,7 +61,7 @@ public class IpAddressFilter extends IoFilterAdapter {
 
 		// Check if the class implements the IpAddressProvider interfaces
 		boolean found = false;
-		for (Class interFace : providerClass.getInterfaces()) {
+		for (Class<?> interFace : providerClass.getInterfaces()) {
 			if (IpAddressProvider.class.equals(interFace)) {
 				found = true;
 				break;

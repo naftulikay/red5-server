@@ -27,7 +27,7 @@ public class Application extends ApplicationAdapter {
 		// Trigger calling of "onBWDone", required for some FLV players
 		measureBandwidth(conn);
 		if (conn instanceof IStreamCapableConnection) {
-			IStreamCapableConnection streamConn = (IStreamCapableConnection) conn;
+			//IStreamCapableConnection streamConn = (IStreamCapableConnection) conn;
 			SimpleConnectionBWConfig bwConfig = new SimpleConnectionBWConfig();
 			bwConfig.getChannelBandwidth()[IBandwidthConfigure.OVERALL_CHANNEL] =
 				1024 * 1024;

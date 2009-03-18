@@ -268,6 +268,7 @@ public class MP4Atom {
 	 * @param bitstream the input bitstream
 	 * @return the number of bytes which was being loaded.
 	 */
+	@SuppressWarnings("unused")
 	public long create_audio_sample_entry_atom(MP4DataStream bitstream) throws IOException {
 		//qtff page 117
 		log.trace("Audio sample entry");
@@ -339,6 +340,7 @@ public class MP4Atom {
 	 * @param bitstream the input bitstream
 	 * @return the number of bytes which was being loaded.
 	 */
+	@SuppressWarnings("unused")
 	public long create_handler_atom(MP4DataStream bitstream) throws IOException {
 		create_full_atom(bitstream);
 		int qt_componentType = (int)bitstream.readBytes(4);
@@ -372,6 +374,7 @@ public class MP4Atom {
 	 * @param bitstream the input bitstream
 	 * @return the number of bytes which was being loaded.
 	 */
+	@SuppressWarnings("unused")
 	public long create_media_header_atom(MP4DataStream bitstream) throws IOException {
 		create_full_atom(bitstream);
 		if(version == 1) {
@@ -406,6 +409,7 @@ public class MP4Atom {
 	 * @param bitstream the input bitstream
 	 * @return the number of bytes which was being loaded.
 	 */
+	@SuppressWarnings("unused")
 	public long create_movie_header_atom(MP4DataStream bitstream) throws IOException {
 		create_full_atom(bitstream);
 		if(version == 1) {
@@ -679,6 +683,7 @@ public class MP4Atom {
 	 * @param bitstream the input bitstream
 	 * @return the number of bytes which was being loaded.
 	 */
+	@SuppressWarnings("unused")
 	public long create_track_header_atom(MP4DataStream bitstream) throws IOException {
 		create_full_atom(bitstream);
 		log.trace("Version: {}", version);
@@ -770,6 +775,7 @@ public class MP4Atom {
 	 * @param bitstream the input bitstream
 	 * @return the number of bytes which was being loaded.
 	 */
+	@SuppressWarnings("unused")
 	public long create_video_sample_entry_atom(MP4DataStream bitstream) throws IOException {
 		log.trace("Video entry atom contains wxh");
 		bitstream.skipBytes(6);

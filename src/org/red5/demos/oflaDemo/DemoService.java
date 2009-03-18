@@ -31,9 +31,9 @@ public class DemoService {
 	 *
 	 * @return Value for property 'listOfAvailableFLVs'.
 	 */
-	public Map getListOfAvailableFLVs() {
+	public Map<String, Map<String, Object>> getListOfAvailableFLVs() {
 		IScope scope = Red5.getConnectionLocal().getScope();
-		Map<String, Map> filesMap = new HashMap<String, Map>();
+		Map<String, Map<String, Object>> filesMap = new HashMap<String, Map<String, Object>>();
 		try {
 			log.debug("getting the FLV files");
 			addToMap(filesMap, scope.getResources("streams/*.flv"));
@@ -56,7 +56,7 @@ public class DemoService {
 		return filesMap;
 	}
 
-	private void addToMap(Map<String, Map> filesMap, Resource[] files)
+	private void addToMap(Map<String, Map<String, Object>> filesMap, Resource[] files)
 			throws IOException {
 		if (files != null) {
 			for (Resource flv : files) {

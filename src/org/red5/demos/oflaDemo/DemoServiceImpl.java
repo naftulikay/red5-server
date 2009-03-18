@@ -4,20 +4,20 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class DemoServiceImpl implements IDemoService {
+
 	/**
-     * Getter for property 'listOfAvailableFLVs'.
-     *
-     * @return Value for property 'listOfAvailableFLVs'.
-     */
-    public Map getListOfAvailableFLVs() {
-    	System.out.println("getListOfAvailableFLVs empty");
-		return new HashMap(1);
+	 * Getter for property 'listOfAvailableFLVs'.
+	 * 
+	 * @return Value for property 'listOfAvailableFLVs'.
+	 */
+	public Map<String, Map<String, Object>> getListOfAvailableFLVs() {
+		System.out.println("getListOfAvailableFLVs empty");
+		return new HashMap<String, Map<String, Object>>();
 	}
 
-    public Map getListOfAvailableFLVs(String string) {
-    	System.out.println("getListOfAvailableFLVs, Got a string: " + string);
-    	return getListOfAvailableFLVs();
-    }
+	public Map<String, Map<String, Object>> getListOfAvailableFLVs(String string) {
+		System.out.println("getListOfAvailableFLVs, Got a string: " + string);
+		return getListOfAvailableFLVs();
+	}
 
 }
-

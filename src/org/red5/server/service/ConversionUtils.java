@@ -25,6 +25,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -94,6 +95,7 @@ public class ConversionUtils {
      * @throws ConversionException           If object can't be converted
      *
      */
+    @SuppressWarnings("unchecked")
     public static Object convert(Object source, Class<?> target)
 			throws ConversionException {
 		if (target == null) {
@@ -145,6 +147,9 @@ public class ConversionUtils {
 		if (target.equals(Set.class) && source.getClass().isArray()) {
 			return convertArrayToSet((Object[]) source);
 		}
+		if (target.equals(Set.class) && source instanceof List) {
+			return new HashSet((List) source);
+		}
 		throw new ConversionException(String.format("Unable to preform conversion from %s to %s", source, target));
 	}
 
@@ -158,22 +163,25 @@ public class ConversionUtils {
     public static Object convertToArray(Object source, Class<?> target)
 			throws ConversionException {
 		try {
-			Object[] targetInstance = (Object[]) Array.newInstance(target
-					.getComponentType(), 0);
+			Class<?> targetType = target.getComponentType();
 			if (source.getClass().isArray()) {
-				Object[] sourceArray = (Object[]) source;
-				Class<?> targetType = target.getComponentType();
-				List<Object> list = new ArrayList<Object>(sourceArray.length);
-				for (Object element : sourceArray) {
-					list.add(convert(element, targetType));
+				Object targetInstance = Array.newInstance(targetType, Array.getLength(source));
+				for (int i=0;i<Array.getLength(source);i++) {
+					Array.set(targetInstance, i, convert(Array.get(source, i), targetType));
 				}
-				source = list;
+				return targetInstance;
 			}
 			if (source instanceof Collection) {
-				return ((Collection<?>) source).toArray(targetInstance);
-			} else {
-				throw new ConversionException("Unable to convert to array");
+				Collection<?> sourceCollection=(Collection<?>)source;
+				Object targetInstance = Array.newInstance(target.getComponentType(), sourceCollection.size());
+				Iterator<?> it=sourceCollection.iterator();
+				int i=0;
+				while (it.hasNext()) {
+					Array.set(targetInstance, i++, convert(it.next(), targetType));
+				}
+				return targetInstance;
 			}
+				throw new ConversionException("Unable to convert to array");
 		} catch (Exception ex) {
 			throw new ConversionException("Error converting to array", ex);
 		}

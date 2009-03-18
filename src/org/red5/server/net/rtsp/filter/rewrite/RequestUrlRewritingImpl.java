@@ -65,7 +65,7 @@ public class RequestUrlRewritingImpl extends IoFilterAdapter {
 	public RequestUrlRewritingImpl(String clazzName) throws Exception {
 
 		try {
-			Class filterClazz = Class.forName(clazzName);
+			Class<?> filterClazz = Class.forName(clazzName);
 
 			this.filter = (RequestUrlRewritingFilter) filterClazz.newInstance();
 			logger.info("using request URL rewriter " + clazzName);

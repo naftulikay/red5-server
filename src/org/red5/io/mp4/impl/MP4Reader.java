@@ -23,6 +23,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
@@ -35,7 +36,7 @@ import java.util.Map;
 import java.util.Vector;
 
 import org.apache.commons.lang.builder.ToStringBuilder;
-import org.apache.mina.common.ByteBuffer;
+import org.apache.mina.core.buffer.IoBuffer;
 import org.red5.io.IStreamableFile;
 import org.red5.io.ITag;
 import org.red5.io.ITagReader;
@@ -703,7 +704,7 @@ public class MP4Reader implements IoConstants, ITagReader {
 	}
 
 	/**
-	 * Get the total readable bytes in a file or ByteBuffer.
+	 * Get the total readable bytes in a file or IoBuffer.
 	 *
 	 * @return          Total readable bytes
 	 */
@@ -722,7 +723,7 @@ public class MP4Reader implements IoConstants, ITagReader {
 	}
 
 	/**
-	 * Get the current position in a file or ByteBuffer.
+	 * Get the current position in a file or IoBuffer.
 	 *
 	 * @return           Current position in a file
 	 */
@@ -750,7 +751,7 @@ public class MP4Reader implements IoConstants, ITagReader {
 	 * 
 	 * @return  File contents as byte buffer
 	 */
-	public ByteBuffer getFileData() {
+	public IoBuffer getFileData() {
 		// TODO as of now, return null will disable cache
 		// we need to redesign the cache architecture so that
 		// the cache is layered underneath FLVReader not above it,
@@ -857,7 +858,7 @@ public class MP4Reader implements IoConstants, ITagReader {
     ITag createFileMeta() {
     	log.debug("Creating onMetaData");
 		// Create tag for onMetaData event
-		ByteBuffer buf = ByteBuffer.allocate(1024);
+		IoBuffer buf = IoBuffer.allocate(1024);
 		buf.setAutoExpand(true);
 		Output out = new Output(buf);
 		out.writeString("onMetaData");
@@ -969,12 +970,12 @@ public class MP4Reader implements IoConstants, ITagReader {
     private void createPreStreamingTags() {
     	log.debug("Creating pre-streaming tags");
     	ITag tag = null;
-    	ByteBuffer body = null;
+    	IoBuffer body = null;
     	
     	if (hasVideo) {
         	//video tag #1
     		//TODO: this data is only for backcountry bombshells - make this dynamic
-    		body = ByteBuffer.allocate(41);
+    		body = IoBuffer.allocate(41);
     		body.setAutoExpand(true);
     		body.put(PREFIX_VIDEO_CONFIG_FRAME); //prefix
     		if (videoDecoderBytes != null) {
@@ -1001,7 +1002,7 @@ public class MP4Reader implements IoConstants, ITagReader {
     	if (hasAudio) {
     		//audio tag #1
     		//TODO: this data is only for backcountry bombshells - make this dynamic
-    		body = ByteBuffer.allocate(7);
+    		body = IoBuffer.allocate(7);
     		body.setAutoExpand(true);
     		body.put(new byte[]{(byte) 0xaf, (byte) 0}); //prefix
     		if (audioDecoderBytes != null) {
@@ -1064,7 +1065,7 @@ public class MP4Reader implements IoConstants, ITagReader {
 		}
 		
 		//create a byte buffer of the size of the sample
-		java.nio.ByteBuffer data = java.nio.ByteBuffer.allocate(sampleSize + pad);
+		ByteBuffer data = ByteBuffer.allocate(sampleSize + pad);
 		try {
 			//prefix is different for keyframes
 			if (type == TYPE_VIDEO) {
@@ -1091,7 +1092,7 @@ public class MP4Reader implements IoConstants, ITagReader {
 		}
 		
 		//chunk the data
-		ByteBuffer payload = ByteBuffer.wrap(data.array());		
+		IoBuffer payload = IoBuffer.wrap(data.array());		
 		
 		//create the tag
 		ITag tag = new Tag(type, time, payload.limit(), payload, prevFrameSize);

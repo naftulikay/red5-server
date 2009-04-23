@@ -27,7 +27,7 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.mina.common.ByteBuffer;
+import org.apache.mina.core.buffer.IoBuffer;
 import org.red5.io.utils.HexDump;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -59,13 +59,13 @@ public class RequestDumpServlet extends HttpServlet {
 			log.info(name + " => " + req.getHeader(name));
 		}
 
-		ByteBuffer reqBuffer = null;
+		IoBuffer reqBuffer = null;
 
 		try {
 
 			//req.getSession().getAttribute(REMOTING_CONNECTOR);
 
-			reqBuffer = ByteBuffer.allocate(req.getContentLength());
+			reqBuffer = IoBuffer.allocate(req.getContentLength());
 			ServletUtils.copy(req.getInputStream(), reqBuffer.asOutputStream());
 			//reqBuffer.flip();
 

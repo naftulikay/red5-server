@@ -30,7 +30,7 @@ package org.red5.server.net.rtp;
  *                                                                         *
  ***************************************************************************/
 
-import org.apache.mina.common.ByteBuffer;
+import org.apache.mina.core.buffer.IoBuffer;
 import org.red5.io.object.UnsignedByte;
 import org.red5.io.object.UnsignedInt;
 import org.red5.io.object.UnsignedShort;
@@ -39,7 +39,7 @@ import org.slf4j.LoggerFactory;
 
 /**
  * This class wraps a RTP packet providing method to convert from and to a
- * {@link ByteBuffer}.
+ * {@link IoBuffer}.
  * <p>
  * A RTP packet is composed of an header and the subsequent payload.
  * <p>
@@ -166,12 +166,12 @@ public class RTPPacket implements Packet {
 	private byte[] payload = {};
 
 	/**
-	 * Construct a new RTPPacket reading the fields from a ByteBuffer
+	 * Construct a new RTPPacket reading the fields from a IoBuffer
 	 * 
 	 * @param buffer
 	 *            the buffer containing the packet
 	 */
-	public RTPPacket(ByteBuffer buffer) {
+	public RTPPacket(IoBuffer buffer) {
 		// Read the packet header
 		byte c = buffer.get();
 		// |V=2|P=1|X=1| CC=4 |
@@ -218,16 +218,16 @@ public class RTPPacket implements Packet {
 	}
 
 	/**
-	 * Convert the packet instance into a {@link ByteBuffer} ready to be sent.
+	 * Convert the packet instance into a {@link IoBuffer} ready to be sent.
 	 * 
-	 * @return a new ByteBuffer
+	 * @return a new IoBuffer
 	 */
-	public ByteBuffer toByteBuffer() {
+	public IoBuffer toByteBuffer() {
 		int packetSize = 12 + csrc.length * 4 + payload.length;
 		if (extension)
 			packetSize += headerExtension.length;
 
-		ByteBuffer buffer = ByteBuffer.allocate(packetSize);
+		IoBuffer buffer = IoBuffer.allocate(packetSize);
 		buffer.limit(packetSize);
 
 		byte c = 0x00;

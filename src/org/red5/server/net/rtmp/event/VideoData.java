@@ -23,12 +23,10 @@ import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
 
-import org.apache.mina.common.ByteBuffer;
+import org.apache.mina.core.buffer.IoBuffer;
 import org.red5.io.IoConstants;
 import org.red5.server.api.stream.IStreamPacket;
 import org.red5.server.stream.IStreamData;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Video data event
@@ -36,9 +34,7 @@ import org.slf4j.LoggerFactory;
 public class VideoData extends BaseEvent implements IoConstants, IStreamData, IStreamPacket {
 
 	private static final long serialVersionUID = 5538859593815804830L;
-
-    private static Logger log = LoggerFactory.getLogger(VideoData.class);
-    
+	
 	/**
      * Videoframe type
      */
@@ -49,7 +45,7 @@ public class VideoData extends BaseEvent implements IoConstants, IStreamData, IS
     /**
      * Video data
      */
-    protected ByteBuffer data;
+    protected IoBuffer data;
     
     /**
      * Data type
@@ -63,33 +59,28 @@ public class VideoData extends BaseEvent implements IoConstants, IStreamData, IS
 
 	/** Constructs a new VideoData. */
     public VideoData() {
-		this(ByteBuffer.allocate(0).flip());
+		this(IoBuffer.allocate(0).flip());
 	}
 
     /**
      * Create video data event with given data buffer
      * @param data            Video data
      */
-    public VideoData(ByteBuffer data) {
+    public VideoData(IoBuffer data) {
 		super(Type.STREAM_DATA);
 		this.data = data;
 		if (data != null && data.limit() > 0) {
 			int oldPos = data.position();
 			int firstByte = (data.get()) & 0xff;
-			log.debug("old pos: {} first byte: {}", oldPos, firstByte);
 			data.position(oldPos);
 			int frameType = (firstByte & MASK_VIDEO_FRAMETYPE) >> 4;
 			if (frameType == FLAG_FRAMETYPE_KEYFRAME) {
-				log.debug("Frame type = Keyframe");
 				this.frameType = FrameType.KEYFRAME;
 			} else if (frameType == FLAG_FRAMETYPE_INTERFRAME) {
-				log.debug("Frame type = Interframe");
 				this.frameType = FrameType.INTERFRAME;
 			} else if (frameType == FLAG_FRAMETYPE_DISPOSABLE) {
-				log.debug("Frame type = Disposable interframe");
 				this.frameType = FrameType.DISPOSABLE_INTERFRAME;
 			} else {
-				log.debug("Frame type = Unknown");
 				this.frameType = FrameType.UNKNOWN;
 			}
 		}
@@ -106,7 +97,7 @@ public class VideoData extends BaseEvent implements IoConstants, IStreamData, IS
 	}
 
 	/** {@inheritDoc} */
-    public ByteBuffer getData() {
+    public IoBuffer getData() {
 		return data;
 	}
 
@@ -129,7 +120,7 @@ public class VideoData extends BaseEvent implements IoConstants, IStreamData, IS
     @Override
 	protected void releaseInternal() {
 		if (data != null) {
-			data.release();
+			data.free();
 			data = null;
 		}
 	}
@@ -140,7 +131,7 @@ public class VideoData extends BaseEvent implements IoConstants, IStreamData, IS
 		frameType = (FrameType) in.readObject();
 		byte[] byteBuf = (byte[]) in.readObject();
 		if (byteBuf != null) {
-			data = ByteBuffer.allocate(byteBuf.length);
+			data = IoBuffer.allocate(byteBuf.length);
 			data.setAutoExpand(true);
 			SerializeUtils.ByteArrayToByteBuffer(byteBuf, data);
 		}

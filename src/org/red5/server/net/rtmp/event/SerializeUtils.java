@@ -1,5 +1,9 @@
 package org.red5.server.net.rtmp.event;
 
+import java.nio.ByteBuffer;
+
+import org.apache.mina.core.buffer.IoBuffer;
+
 /*
  * RED5 Open Source Flash Server - http://www.osflash.org/red5
  * 
@@ -27,7 +31,7 @@ package org.red5.server.net.rtmp.event;
  */
 public class SerializeUtils {
 
-	public static byte[] ByteBufferToByteArray(org.apache.mina.common.ByteBuffer buf) {
+	public static byte[] ByteBufferToByteArray(IoBuffer buf) {
 		byte[] byteBuf = new byte[buf.limit()];
 		int pos = buf.position();
 		buf.rewind();
@@ -36,7 +40,7 @@ public class SerializeUtils {
 		return byteBuf;
 	}
 	
-	public static byte[] NioByteBufferToByteArray(java.nio.ByteBuffer buf) {
+	public static byte[] NioByteBufferToByteArray(ByteBuffer buf) {
 		byte[] byteBuf = new byte[buf.limit()];
 		int pos = buf.position();
 		buf.position(0);
@@ -45,12 +49,12 @@ public class SerializeUtils {
 		return byteBuf;
 	}	
 	
-	public static void ByteArrayToByteBuffer(byte[] byteBuf, org.apache.mina.common.ByteBuffer buf) {
+	public static void ByteArrayToByteBuffer(byte[] byteBuf, IoBuffer buf) {
 		buf.put(byteBuf);
 		buf.flip();
 	}
 	
-	public static void ByteArrayToNioByteBuffer(byte[] byteBuf, java.nio.ByteBuffer buf) {
+	public static void ByteArrayToNioByteBuffer(byte[] byteBuf, ByteBuffer buf) {
 		buf.put(byteBuf);
 		buf.flip();
 	}

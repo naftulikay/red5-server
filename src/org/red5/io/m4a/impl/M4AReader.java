@@ -22,6 +22,7 @@ package org.red5.io.m4a.impl;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.text.DecimalFormat;
@@ -35,7 +36,7 @@ import java.util.Map;
 import java.util.Vector;
 
 import org.apache.commons.lang.builder.ToStringBuilder;
-import org.apache.mina.common.ByteBuffer;
+import org.apache.mina.core.buffer.IoBuffer;
 import org.red5.io.IStreamableFile;
 import org.red5.io.ITag;
 import org.red5.io.ITagReader;
@@ -91,7 +92,7 @@ public class M4AReader implements IoConstants, ITagReader {
 	/**
      * Input byte buffer
      */
-    private ByteBuffer in;
+    private IoBuffer in;
 		
 	private String audioCodecId = "mp4a";
 	
@@ -156,7 +157,7 @@ public class M4AReader implements IoConstants, ITagReader {
 			log.error("M4AReader {}", e);
 		}
         // Wrap mapped byte buffer to MINA buffer
-        in = ByteBuffer.wrap(mappedFile);		
+        in = IoBuffer.wrap(mappedFile);		
 		//decode all the info that we want from the atoms
 		decodeHeader();
 		//analyze the samples/chunks and build the keyframe meta data
@@ -173,7 +174,7 @@ public class M4AReader implements IoConstants, ITagReader {
 	 * @param generateMetadata         <code>true</code> if metadata generation required, <code>false</code> otherwise
      * @param buffer                   Byte buffer
 	 */
-	public M4AReader(ByteBuffer buffer) throws IOException {
+	public M4AReader(IoBuffer buffer) throws IOException {
 		in = buffer;
 		//decode all the info that we want from the atoms
 		decodeHeader();
@@ -486,7 +487,7 @@ public class M4AReader implements IoConstants, ITagReader {
 	 * 
 	 * @return  File contents as byte buffer
 	 */
-	public ByteBuffer getFileData() {
+	public IoBuffer getFileData() {
 		return null;
 	}
 
@@ -534,7 +535,7 @@ public class M4AReader implements IoConstants, ITagReader {
     ITag createFileMeta() {
     	log.debug("Creating onMetaData");
 		// Create tag for onMetaData event
-		ByteBuffer buf = ByteBuffer.allocate(1024);
+		IoBuffer buf = IoBuffer.allocate(1024);
 		buf.setAutoExpand(true);
 		Output out = new Output(buf);
 		out.writeString("onMetaData");
@@ -583,7 +584,7 @@ public class M4AReader implements IoConstants, ITagReader {
 	 */
     private void createPreStreamingTags() {
     	log.debug("Creating pre-streaming tags");
-    	ByteBuffer body = ByteBuffer.allocate(7);
+    	IoBuffer body = IoBuffer.allocate(7);
 		body.setAutoExpand(true);
 		body.put(new byte[]{(byte) 0xaf, (byte) 0}); //prefix
 		if (audioDecoderBytes != null) {
@@ -632,7 +633,7 @@ public class M4AReader implements IoConstants, ITagReader {
 		byte type = frame.getType();
 		
 		//create a byte buffer of the size of the sample
-		java.nio.ByteBuffer data = java.nio.ByteBuffer.allocate(sampleSize + 2);
+		ByteBuffer data = ByteBuffer.allocate(sampleSize + 2);
 		try {
 			//log.debug("Writing audio prefix");
 			data.put(MP4Reader.PREFIX_AUDIO_FRAME);
@@ -644,7 +645,7 @@ public class M4AReader implements IoConstants, ITagReader {
 		}
 		
 		//chunk the data
-		ByteBuffer payload = ByteBuffer.wrap(data.array());		
+		IoBuffer payload = IoBuffer.wrap(data.array());		
 		
 		//create the tag
 		ITag tag = new Tag(type, time, payload.limit(), payload, prevFrameSize);
@@ -748,7 +749,7 @@ public class M4AReader implements IoConstants, ITagReader {
 	public void close() {
 		log.debug("Close");
 		if (in != null) {
-			in.release();
+			in.free();
 			in = null;
 		}
 		if (channel != null) {

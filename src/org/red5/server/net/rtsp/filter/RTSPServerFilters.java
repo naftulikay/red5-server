@@ -30,7 +30,7 @@ package org.red5.server.net.rtsp.filter;
  *                                                                         *
  ***************************************************************************/
 
-import org.apache.mina.common.IoFilterChain;
+import org.apache.mina.core.filterchain.IoFilterChain;
 
 /**
  * Builds the filter chain used when connecting to a RTSP server.

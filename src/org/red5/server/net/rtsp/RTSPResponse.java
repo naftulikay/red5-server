@@ -30,7 +30,7 @@ package org.red5.server.net.rtsp;
  *                                                                         *
  ***************************************************************************/
 
-import org.apache.mina.common.ByteBuffer;
+import org.apache.mina.core.buffer.IoBuffer;
 import org.red5.server.net.rtsp.messages.RTSPMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -102,10 +102,10 @@ public class RTSPResponse extends RTSPMessage {
 	/**
 	 * serialize the RTSP response message into a byte buffer.
 	 */
-	public ByteBuffer toByteBuffer() throws Exception {
+	public IoBuffer toByteBuffer() throws Exception {
 		try {
 			String msg = this.toString();
-			ByteBuffer buffer = ByteBuffer.wrap(msg.getBytes("UTF-8"));
+			IoBuffer buffer = IoBuffer.wrap(msg.getBytes("UTF-8"));
 
 			return buffer;
 		} catch (Exception e) {

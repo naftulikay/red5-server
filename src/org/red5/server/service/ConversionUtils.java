@@ -96,7 +96,7 @@ public class ConversionUtils {
      *
      */
     @SuppressWarnings("unchecked")
-    public static Object convert(Object source, Class<?> target)
+	public static Object convert(Object source, Class<?> target)
 			throws ConversionException {
 		if (target == null) {
 			throw new ConversionException("Unable to perform conversion, target was null");
@@ -181,7 +181,7 @@ public class ConversionUtils {
 				}
 				return targetInstance;
 			}
-				throw new ConversionException("Unable to convert to array");
+			throw new ConversionException("Unable to convert to array");
 		} catch (Exception ex) {
 			throw new ConversionException("Error converting to array", ex);
 		}

@@ -25,7 +25,7 @@ import java.util.Map;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.mina.common.ByteBuffer;
+import org.apache.mina.core.buffer.IoBuffer;
 import org.red5.io.amf.Output;
 import org.red5.io.object.Serializer;
 import org.red5.logging.Red5LoggerFactory;
@@ -74,7 +74,8 @@ import org.slf4j.Logger;
 public final class PlayEngine implements IFilter, IPushableConsumer,
 		IPipeConnectionListener, ITokenBucketCallback {
 
-	private static final Logger log = Red5LoggerFactory.getLogger(PlayEngine.class);
+	private static final Logger log = Red5LoggerFactory
+			.getLogger(PlayEngine.class);
 
 	private IMessageInput msgIn;
 
@@ -99,7 +100,7 @@ public final class PlayEngine implements IFilter, IPushableConsumer,
 	private IBWControlContext bwContext;
 
 	private int streamId;
-	
+
 	/**
 	 * Receive video?
 	 */
@@ -108,10 +109,10 @@ public final class PlayEngine implements IFilter, IPushableConsumer,
 	/**
 	 * Receive audio?
 	 */
-	private boolean receiveAudio = true;	
+	private boolean receiveAudio = true;
 
 	private boolean pullMode;
-		
+
 	private String waitLiveJob;
 
 	private boolean waiting;
@@ -136,14 +137,15 @@ public final class PlayEngine implements IFilter, IPushableConsumer,
 	/**
 	 * Interval in ms to check for buffer underruns in VOD streams.
 	 */
-	private int bufferCheckInterval = 0;	
-	
+	private int bufferCheckInterval = 0;
+
 	/**
-	 * Number of pending messages at which a <code>NetStream.Play.InsufficientBW</code>
-	 * message is generated for VOD streams.
+	 * Number of pending messages at which a
+	 * <code>NetStream.Play.InsufficientBW</code> message is generated for VOD
+	 * streams.
 	 */
-	private int underrunTrigger = 10;	
-	
+	private int underrunTrigger = 10;
+
 	/**
 	 * State machine for video frame dropping in live streams
 	 */
@@ -162,12 +164,10 @@ public final class PlayEngine implements IFilter, IPushableConsumer,
 	private long bytesSent = 0;
 
 	/**
-	 * Start time of stream playback.
-	 * It's not a time when the stream is being played but
-	 * the time when the stream should be played if it's played
-	 * from the very beginning.
-	 * Eg. A stream is played at timestamp 5s on 1:00:05. The
-	 * playbackStart is 1:00:00.
+	 * Start time of stream playback. It's not a time when the stream is being
+	 * played but the time when the stream should be played if it's played from
+	 * the very beginning. Eg. A stream is played at timestamp 5s on 1:00:05.
+	 * The playbackStart is 1:00:00.
 	 */
 	private long playbackStart;
 
@@ -182,10 +182,10 @@ public final class PlayEngine implements IFilter, IPushableConsumer,
 	private int streamOffset;
 
 	/**
-	 * Timestamp when buffer should be checked for underruns next. 
+	 * Timestamp when buffer should be checked for underruns next.
 	 */
-	private long nextCheckBufferUnderrun;	
-	
+	private long nextCheckBufferUnderrun;
+
 	/**
 	 * Send blank audio packet next?
 	 */
@@ -207,23 +207,23 @@ public final class PlayEngine implements IFilter, IPushableConsumer,
 	 * Builder pattern
 	 */
 	public static class Builder {
-		//Required for play engine
+		// Required for play engine
 		private PlaylistSubscriberStream playlistSubscriberStream;
 
-		//Required for play engine
+		// Required for play engine
 		private ISchedulingService schedulingService;
 
-		//Required for play engine
+		// Required for play engine
 		private IConsumerService consumerService;
 
-		//Required for play engine
+		// Required for play engine
 		private IProviderService providerService;
 
 		public Builder(PlaylistSubscriberStream playlistSubscriberStream,
 				ISchedulingService schedulingService,
 				IConsumerService consumerService,
 				IProviderService providerService) {
-			
+
 			this.playlistSubscriberStream = playlistSubscriberStream;
 			this.schedulingService = schedulingService;
 			this.consumerService = consumerService;
@@ -241,15 +241,15 @@ public final class PlayEngine implements IFilter, IPushableConsumer,
 		this.bwController = bwController;
 		this.bwContext = bwContext;
 	}
-	
+
 	public void setBufferCheckInterval(int bufferCheckInterval) {
 		this.bufferCheckInterval = bufferCheckInterval;
 	}
-	
+
 	public void setUnderrunTrigger(int underrunTrigger) {
 		this.underrunTrigger = underrunTrigger;
 	}
-	
+
 	void setMessageOut(IMessageOutput msgOut) {
 		this.msgOut = msgOut;
 	}
@@ -263,7 +263,8 @@ public final class PlayEngine implements IFilter, IPushableConsumer,
 		}
 		playlistSubscriberStream.state = State.STOPPED;
 		if (msgOut == null) {
-			msgOut = consumerService.getConsumerOutput(playlistSubscriberStream);
+			msgOut = consumerService
+					.getConsumerOutput(playlistSubscriberStream);
 			msgOut.subscribe(this, null);
 		}
 		audioBucket = bwController.getAudioBucket(bwContext);
@@ -272,10 +273,15 @@ public final class PlayEngine implements IFilter, IPushableConsumer,
 
 	/**
 	 * Play stream
-	 * @param item                  Playlist item
-	 * @throws StreamNotFoundException       Stream not found
-	 * @throws IllegalStateException         Stream is in stopped state
-	 * @throws IOException Stream had io exception
+	 * 
+	 * @param item
+	 *            Playlist item
+	 * @throws StreamNotFoundException
+	 *             Stream not found
+	 * @throws IllegalStateException
+	 *             Stream is in stopped state
+	 * @throws IOException
+	 *             Stream had io exception
 	 */
 	public void play(IPlayItem item) throws StreamNotFoundException,
 			IllegalStateException, IOException {
@@ -284,11 +290,17 @@ public final class PlayEngine implements IFilter, IPushableConsumer,
 
 	/**
 	 * Play stream
-	 * @param item                  Playlist item
-	 * @param withReset				Send reset status before playing.
-	 * @throws StreamNotFoundException       Stream not found
-	 * @throws IllegalStateException         Stream is in stopped state
-	 * @throws IOException Stream had IO exception
+	 * 
+	 * @param item
+	 *            Playlist item
+	 * @param withReset
+	 *            Send reset status before playing.
+	 * @throws StreamNotFoundException
+	 *             Stream not found
+	 * @throws IllegalStateException
+	 *             Stream is in stopped state
+	 * @throws IOException
+	 *             Stream had IO exception
 	 */
 	public synchronized void play(IPlayItem item, boolean withReset)
 			throws StreamNotFoundException, IllegalStateException, IOException {
@@ -300,17 +312,29 @@ public final class PlayEngine implements IFilter, IPushableConsumer,
 			msgIn.unsubscribe(this);
 			msgIn = null;
 		}
-		// -2: live than recorded, -1: live, >=0: recorded
+		// Play type determination
+		// http://livedocs.adobe.com/flex/3/langref/flash/net/NetStream.html#play%28%29
+		// The start time, in seconds. Allowed values are -2, -1, 0, or a
+		// positive number.
+		// The default value is -2, which looks for a live stream, then a
+		// recorded stream,
+		// and if it finds neither, opens a live stream.
+		// If -1, plays only a live stream.
+		// If 0 or a positive number, plays a recorded stream, beginning start
+		// seconds in.
+		//
+		// -2: live then recorded, -1: live, >=0: recorded
 		int type = (int) (item.getStart() / 1000);
 		// see if it's a published stream
 		IScope thisScope = playlistSubscriberStream.getScope();
 		String itemName = item.getName();
-		//check for input and type
-		IProviderService.INPUT_TYPE sourceType = providerService.lookupProviderInput(thisScope, itemName);
-		
+		// check for input and type
+		IProviderService.INPUT_TYPE sourceType = providerService
+				.lookupProviderInput(thisScope, itemName);
+
 		boolean isPublishedStream = sourceType == IProviderService.INPUT_TYPE.LIVE;
 		boolean isFileStream = sourceType == IProviderService.INPUT_TYPE.VOD;
-		
+
 		boolean sendNotifications = true;
 
 		// decision: 0 for Live, 1 for File, 2 for Wait, 3 for N/A
@@ -344,11 +368,11 @@ public final class PlayEngine implements IFilter, IPushableConsumer,
 		log.debug("play decision is {}", decision);
 		currentItem = item;
 		long itemLength = item.getLength();
-		log.debug("Item length: {}", itemLength);
 		switch (decision) {
 			case 0:
-				//get source input without create
-				msgIn = providerService.getLiveProviderInput(thisScope, itemName, false);
+				// get source input without create
+				msgIn = providerService.getLiveProviderInput(thisScope,
+						itemName, false);
 				// Drop all frames up to the next keyframe
 				videoFrameDropper.reset(IFrameDropper.SEND_KEYFRAMES_CHECK);
 				if (msgIn instanceof IBroadcastScope) {
@@ -359,7 +383,7 @@ public final class PlayEngine implements IFilter, IPushableConsumer,
 						IVideoStreamCodec videoCodec = stream.getCodecInfo()
 								.getVideoCodec();
 						if (videoCodec != null) {
-							ByteBuffer keyFrame = videoCodec.getKeyframe();
+							IoBuffer keyFrame = videoCodec.getKeyframe();
 							if (keyFrame != null) {
 								VideoData video = new VideoData(keyFrame);
 								try {
@@ -387,8 +411,9 @@ public final class PlayEngine implements IFilter, IPushableConsumer,
 				msgIn.subscribe(this, null);
 				break;
 			case 2:
-				//get source input with create
-				msgIn = providerService.getLiveProviderInput(thisScope,	itemName, true);
+				// get source input with create
+				msgIn = providerService.getLiveProviderInput(thisScope,
+						itemName, true);
 				msgIn.subscribe(this, null);
 				waiting = true;
 				if (type == -1 && itemLength >= 0) {
@@ -404,7 +429,8 @@ public final class PlayEngine implements IFilter, IPushableConsumer,
 				}
 				break;
 			case 1:
-				msgIn = providerService.getVODProviderInput(thisScope, itemName);
+				msgIn = providerService
+						.getVODProviderInput(thisScope, itemName);
 				if (msgIn == null) {
 					sendStreamNotFoundStatus(currentItem);
 					throw new StreamNotFoundException(itemName);
@@ -439,25 +465,22 @@ public final class PlayEngine implements IFilter, IPushableConsumer,
 			if (msg instanceof RTMPMessage) {
 				IRTMPEvent body = ((RTMPMessage) msg).getBody();
 				if (itemLength == 0) {
-					//find and send first video frame
-					do {
-						//use the incoming body if its video
-						if (body instanceof VideoData) {
-							break;
-						}
-						//grab the next message
+					// Only send first video frame
+					body = ((RTMPMessage) msg).getBody();
+					while (body != null && !(body instanceof VideoData)) {
 						msg = msgIn.pullMessage();
-						if (msg != null && msg instanceof RTMPMessage) {
-							body = ((RTMPMessage) msg).getBody();							
-						} else {
-							//bail out if message is null
+						if (msg == null) {
 							break;
 						}
-					} while (body != null);
+						if (!(msg instanceof RTMPMessage)) {
+							continue;
+						}
+						body = ((RTMPMessage) msg).getBody();
+					}
 				}
-				//set the timestamp
+
 				if (body != null) {
-					//adjust timestamp when playing lists
+					// adjust timestamp when playing lists
 					body.setTimestamp(body.getTimestamp() + timestampOffset);
 				}
 			}
@@ -488,8 +511,11 @@ public final class PlayEngine implements IFilter, IPushableConsumer,
 
 	/**
 	 * Pause at position
-	 * @param position                  Position in file
-	 * @throws IllegalStateException    If stream is stopped
+	 * 
+	 * @param position
+	 *            Position in file
+	 * @throws IllegalStateException
+	 *             If stream is stopped
 	 */
 	public synchronized void pause(int position) throws IllegalStateException {
 		if ((playlistSubscriberStream.state != State.PLAYING && playlistSubscriberStream.state != State.STOPPED)
@@ -506,8 +532,11 @@ public final class PlayEngine implements IFilter, IPushableConsumer,
 
 	/**
 	 * Resume playback
-	 * @param position                   Resumes playback
-	 * @throws IllegalStateException     If stream is stopped
+	 * 
+	 * @param position
+	 *            Resumes playback
+	 * @throws IllegalStateException
+	 *             If stream is stopped
 	 */
 	public synchronized void resume(int position) throws IllegalStateException {
 		if (playlistSubscriberStream.state != State.PAUSED) {
@@ -535,13 +564,18 @@ public final class PlayEngine implements IFilter, IPushableConsumer,
 
 	/**
 	 * Seek position in file
-	 * @param position                  Position
-	 * @throws IllegalStateException    If stream is in stopped state
-	 * @throws OperationNotSupportedException If this object doesn't support the operation.
+	 * 
+	 * @param position
+	 *            Position
+	 * @throws IllegalStateException
+	 *             If stream is in stopped state
+	 * @throws OperationNotSupportedException
+	 *             If this object doesn't support the operation.
 	 */
-	public synchronized void seek(int position) throws IllegalStateException, OperationNotSupportedException {
+	public synchronized void seek(int position) throws IllegalStateException,
+			OperationNotSupportedException {
 		log.debug("Seek: {}", position);
-		if (playlistSubscriberStream.state != State.PLAYING 
+		if (playlistSubscriberStream.state != State.PLAYING
 				&& playlistSubscriberStream.state != State.PAUSED
 				&& playlistSubscriberStream.state != State.STOPPED) {
 			throw new IllegalStateException();
@@ -565,53 +599,64 @@ public final class PlayEngine implements IFilter, IPushableConsumer,
 		playbackStart = System.currentTimeMillis() - seekPos;
 		log.debug("Playback start: {} seek pos: {}", playbackStart, seekPos);
 		playlistSubscriberStream.notifyItemSeek(currentItem, seekPos);
-		
-		//if ((playlistSubscriberStream.state == State.PAUSED || playlistSubscriberStream.state == State.STOPPED) && sendCheckVideoCM(msgIn)) {
-		if (sendCheckVideoCM(msgIn)) {
-			// we send a single snapshot on pause
-			// TODO take BWC into account
+		boolean messageSent = false;
+		boolean startPullPushThread = false;
+		if ((playlistSubscriberStream.state == State.PAUSED || playlistSubscriberStream.state == State.STOPPED)
+				&& sendCheckVideoCM(msgIn)) {
+			// we send a single snapshot on pause.
+			// XXX we need to take BWC into account, for
+			// now send forcefully.
 			IMessage msg;
-			do {
+			try {
+				msg = msgIn.pullMessage();
+			} catch (Throwable err) {
+				log.error("Error while pulling message", err);
+				msg = null;
+			}
+			while (msg != null) {
+				if (msg instanceof RTMPMessage) {
+					RTMPMessage rtmpMessage = (RTMPMessage) msg;
+					IRTMPEvent body = rtmpMessage.getBody();
+					if (body instanceof VideoData
+							&& ((VideoData) body).getFrameType() == FrameType.KEYFRAME) {
+						body.setTimestamp(seekPos);
+						doPushMessage(rtmpMessage);
+						rtmpMessage.getBody().release();
+						messageSent = true;
+						lastMessage = body;
+						break;
+					}
+				}
+
 				try {
 					msg = msgIn.pullMessage();
-					if (msg instanceof RTMPMessage) {
-						RTMPMessage rtmpMessage = (RTMPMessage) msg;
-						IRTMPEvent body = rtmpMessage.getBody();
-						if (body instanceof VideoData
-								&& ((VideoData) body).getFrameType() == FrameType.KEYFRAME) {
-							body.setTimestamp(seekPos);
-							doPushMessage(rtmpMessage);
-							rtmpMessage.getBody().release();
-							lastMessage = body;
-							break;
-						}
-					}
 				} catch (Throwable err) {
 					log.error("Error while pulling message", err);
 					msg = null;
 				}
-			} while (msg != null);
+			}
 		} else {
+			startPullPushThread = true;
+		}
+
+		log.trace("Message sent: {}", messageSent);
+		// dont send the blank audio if doing h.264
+		/*
+		 * if (!messageSent) { // Send blank audio packet to notify client about
+		 * new position AudioData audio = new AudioData();
+		 * audio.setTimestamp(seekPos); audio.setHeader(new Header());
+		 * audio.getHeader().setTimer(seekPos);
+		 * audio.getHeader().setTimerRelative(false); RTMPMessage audioMessage =
+		 * new RTMPMessage(); audioMessage.setBody(audio); lastMessage = audio;
+		 * doPushMessage(audioMessage); }
+		 */
+
+		if (startPullPushThread) {
 			ensurePullAndPushRunning();
 		}
 
-		//dont send the blank audio if doing h.264
-		/*
-		if (!messageSent) {
-			// Send blank audio packet to notify client about new position
-			AudioData audio = new AudioData();
-			audio.setTimestamp(seekPos);
-			audio.setHeader(new Header());
-			audio.getHeader().setTimer(seekPos);
-			audio.getHeader().setTimerRelative(false);
-			RTMPMessage audioMessage = new RTMPMessage();
-			audioMessage.setBody(audio);
-			lastMessage = audio;
-			doPushMessage(audioMessage);
-		}
-		*/
-
-		if (playlistSubscriberStream.state != State.STOPPED && currentItem.getLength() >= 0
+		if (playlistSubscriberStream.state != State.STOPPED
+				&& currentItem.getLength() >= 0
 				&& (position - streamOffset) >= currentItem.getLength()) {
 			// seek goes past end of stream
 			stop();
@@ -620,10 +665,12 @@ public final class PlayEngine implements IFilter, IPushableConsumer,
 
 	/**
 	 * Stop playback
-	 * @throws IllegalStateException    If stream is in stopped state
+	 * 
+	 * @throws IllegalStateException
+	 *             If stream is in stopped state
 	 */
 	public synchronized void stop() throws IllegalStateException {
-		if (playlistSubscriberStream.state != State.PLAYING 
+		if (playlistSubscriberStream.state != State.PLAYING
 				&& playlistSubscriberStream.state != State.PAUSED) {
 			throw new IllegalStateException();
 		}
@@ -670,8 +717,8 @@ public final class PlayEngine implements IFilter, IPushableConsumer,
 	}
 
 	/**
-	 * Check if it's okay to send the client more data. This takes the configured
-	 * bandwidth as well as the requested client buffer into account.
+	 * Check if it's okay to send the client more data. This takes the
+	 * configured bandwidth as well as the requested client buffer into account.
 	 * 
 	 * @param message
 	 * @return
@@ -679,26 +726,33 @@ public final class PlayEngine implements IFilter, IPushableConsumer,
 	private boolean okayToSendMessage(IRTMPEvent message) {
 		if (!(message instanceof IStreamData)) {
 			String itemName = "Undefined";
-			//if current item exists get the name to help debug this issue
+			// if current item exists get the name to help debug this issue
 			if (currentItem != null) {
 				itemName = currentItem.getName();
 			}
-			Object[] errorItems = new Object[]{message.getClass(), message.getDataType(), itemName};
-			throw new RuntimeException(String.format("Expected IStreamData but got %s (type %s) for %s", errorItems));
+			Object[] errorItems = new Object[] { message.getClass(),
+					message.getDataType(), itemName };
+			throw new RuntimeException(String.format(
+					"Expected IStreamData but got %s (type %s) for %s",
+					errorItems));
 		}
-		long now = System.currentTimeMillis();
+		final long now = System.currentTimeMillis();
 		// check client buffer length when we've already sent some messages
 		if (lastMessage != null) {
-			long lastMessageTs = lastMessage.getTimestamp();
-			// Duration the stream is playing
-			long delta = now - playbackStart;
+			// Duration the stream is playing / playback duration
+			final long delta = now - playbackStart;
 			// Buffer size as requested by the client
-			long buffer = playlistSubscriberStream.getClientBufferDuration();
+			final long buffer = playlistSubscriberStream
+					.getClientBufferDuration();
 			// Expected amount of data present in client buffer
-			long buffered = lastMessageTs - delta;
-			log.debug("OK to send: timestamp {} delta {} buffered {} buffer {}",
-							new Object[]{lastMessageTs, delta, buffered, buffer});
-			if (buffer > 0 && buffered > buffer) {
+			final long buffered = lastMessage.getTimestamp() - delta;
+			log
+					.debug(
+							"okayToSendMessage: timestamp {} delta {} buffered {} buffer {}",
+							new Object[] { lastMessage.getTimestamp(), delta,
+									buffered, buffer });
+			// Fix for SN-122, this sends double the size of the client buffer
+			if (buffer > 0 && buffered > (buffer * 2)) {
 				// Client is likely to have enough data in the buffer
 				return false;
 			}
@@ -718,25 +772,24 @@ public final class PlayEngine implements IFilter, IPushableConsumer,
 			return false;
 		}
 
-		ByteBuffer streamData = ((IStreamData) message).getData();
-		if (streamData != null) {
-    		int size = streamData.limit();
-    		if (message instanceof VideoData) {
-    			if (checkBandwidth
-    					&& !videoBucket.acquireTokenNonblocking(size, this)) {
-    				waitingForToken = true;
-    				return false;
-    			}
-    		} else if (message instanceof AudioData) {
-    			if (checkBandwidth
-    					&& !audioBucket.acquireTokenNonblocking(size, this)) {
-    				waitingForToken = true;
-    				return false;
-    			}
-    		}
-		} else {
+		if (((IStreamData) message).getData() == null) {
 			// TODO: when can this happen?
-			log.warn("Stream data was null");			
+			return true;
+		}
+
+		final int size = ((IStreamData) message).getData().limit();
+		if (message instanceof VideoData) {
+			if (checkBandwidth
+					&& !videoBucket.acquireTokenNonblocking(size, this)) {
+				waitingForToken = true;
+				return false;
+			}
+		} else if (message instanceof AudioData) {
+			if (checkBandwidth
+					&& !audioBucket.acquireTokenNonblocking(size, this)) {
+				waitingForToken = true;
+				return false;
+			}
 		}
 
 		return true;
@@ -746,16 +799,12 @@ public final class PlayEngine implements IFilter, IPushableConsumer,
 	 * Make sure the pull and push processing is running.
 	 */
 	private void ensurePullAndPushRunning() {
-		if (!pullMode) {
-			// We don't need this for live streams
-			return;
-		}
-
-		if (pullAndPushFuture == null) {
+		if (pullMode && pullAndPushFuture == null) {
 			synchronized (this) {
 				// client buffer is at least 100ms
-				pullAndPushFuture = playlistSubscriberStream.getExecutor().scheduleWithFixedDelay(
-						new PullAndPushRunnable(), 0, 10, TimeUnit.MILLISECONDS);
+				pullAndPushFuture = playlistSubscriberStream.getExecutor()
+						.scheduleWithFixedDelay(new PullAndPushRunnable(), 0,
+								10, TimeUnit.MILLISECONDS);
 			}
 		}
 	}
@@ -764,7 +813,8 @@ public final class PlayEngine implements IFilter, IPushableConsumer,
 	 * Receive then send if message is data (not audio or video)
 	 */
 	protected synchronized void pullAndPush() throws IOException {
-		if (playlistSubscriberStream.state == State.PLAYING && pullMode && !waitingForToken) {
+		if (playlistSubscriberStream.state == State.PLAYING && pullMode
+				&& !waitingForToken) {
 			if (pendingMessage != null) {
 				IRTMPEvent body = pendingMessage.getBody();
 				if (!okayToSendMessage(body)) {
@@ -786,7 +836,7 @@ public final class PlayEngine implements IFilter, IPushableConsumer,
 							IRTMPEvent body = rtmpMessage.getBody();
 							if (!receiveAudio && body instanceof AudioData) {
 								// The user doesn't want to get audio packets
-								((IStreamData) body).getData().release();
+								((IStreamData) body).getData().free();
 								if (sendBlankAudio) {
 									// Send reset audio packet
 									sendBlankAudio = false;
@@ -806,7 +856,7 @@ public final class PlayEngine implements IFilter, IPushableConsumer,
 							} else if (!receiveVideo
 									&& body instanceof VideoData) {
 								// The user doesn't want to get video packets
-								((IStreamData) body).getData().release();
+								((IStreamData) body).getData().free();
 								continue;
 							}
 
@@ -814,9 +864,10 @@ public final class PlayEngine implements IFilter, IPushableConsumer,
 							body.setTimestamp(body.getTimestamp()
 									+ timestampOffset);
 							if (okayToSendMessage(body)) {
-								//System.err.println("ts: " + rtmpMessage.getBody().getTimestamp());
+								log.trace("ts: {}", rtmpMessage.getBody()
+										.getTimestamp());
 								sendMessage(rtmpMessage);
-								((IStreamData) body).getData().release();
+								((IStreamData) body).getData().free();
 							} else {
 								pendingMessage = rtmpMessage;
 							}
@@ -853,43 +904,48 @@ public final class PlayEngine implements IFilter, IPushableConsumer,
 		message.setBody(status);
 		doPushMessage(message);
 	}
-	
+
 	/**
 	 * Send message to output stream and handle exceptions.
 	 * 
-	 * @param message The message to send.
+	 * @param message
+	 *            The message to send.
 	 */
 	private void doPushMessage(AbstractMessage message) {
 		try {
 			msgOut.pushMessage(message);
 			if (message instanceof RTMPMessage) {
 				IRTMPEvent body = ((RTMPMessage) message).getBody();
-				if (body instanceof IStreamData) {
-    				ByteBuffer data = ((IStreamData) body).getData();
-    				if (data != null) {
-    					bytesSent += data.limit();
-    				}
+				IoBuffer streamData = null;
+				if (body instanceof IStreamData
+						&& (streamData = ((IStreamData) body).getData()) != null) {
+					bytesSent += streamData.limit();
 				}
 			}
 		} catch (IOException err) {
-			log.error("Error while pushing message.", err);
+			log.error("Error while pushing message", err);
 		}
 	}
 
 	/**
 	 * Send RTMP message
-	 * @param message        RTMP message
+	 * 
+	 * @param message
+	 *            RTMP message
 	 */
 	private void sendMessage(RTMPMessage message) {
-		log.debug("sendMessage: streamStartTS={}, length={}, streamOffset={}, timestamp={}",
-				new Object[]{streamStartTS, currentItem.getLength(), streamOffset,
-						message.getBody().getTimestamp()});
+		int ts = message.getBody().getTimestamp();
+		log
+				.debug(
+						"sendMessage: streamStartTS={}, length={}, streamOffset={}, timestamp={}",
+						new Object[] { streamStartTS, currentItem.getLength(),
+								streamOffset, ts });
 		if (streamStartTS == -1) {
 			log.debug("sendMessage: resetting streamStartTS");
-			streamStartTS = message.getBody().getTimestamp();
+			streamStartTS = ts;
 		} else {
 			if (currentItem.getLength() >= 0) {
-				int duration = message.getBody().getTimestamp() - streamStartTS;
+				int duration = ts - streamStartTS;
 				if (duration - streamOffset >= currentItem.getLength()) {
 					// Sent enough data to client
 					stop();
@@ -943,47 +999,55 @@ public final class PlayEngine implements IFilter, IPushableConsumer,
 
 	/**
 	 * Send reset status for item
-	 * @param item            Playlist item
+	 * 
+	 * @param item
+	 *            Playlist item
 	 */
 	private void sendResetStatus(IPlayItem item) {
 		Status reset = new Status(StatusCodes.NS_PLAY_RESET);
 		reset.setClientid(streamId);
 		reset.setDetails(item.getName());
-		reset.setDesciption(String.format("Playing and resetting %s.", item.getName()));
+		reset.setDesciption(String.format("Playing and resetting %s.", item
+				.getName()));
 
 		doPushMessage(reset);
 	}
 
 	/**
 	 * Send playback start status notification
-	 * @param item            Playlist item
+	 * 
+	 * @param item
+	 *            Playlist item
 	 */
 	private void sendStartStatus(IPlayItem item) {
 		Status start = new Status(StatusCodes.NS_PLAY_START);
 		start.setClientid(streamId);
 		start.setDetails(item.getName());
-		start.setDesciption(String.format("Started playing %s.", item.getName()));
+		start.setDesciption(String
+				.format("Started playing %s.", item.getName()));
 
 		doPushMessage(start);
 	}
 
-
 	/**
 	 * Send playback stoppage status notification
-	 * @param item            Playlist item
+	 * 
+	 * @param item
+	 *            Playlist item
 	 */
 	private void sendStopStatus(IPlayItem item) {
 		Status stop = new Status(StatusCodes.NS_PLAY_STOP);
 		stop.setClientid(streamId);
-		stop.setDesciption(String.format("Stopped playing %s.", item.getName()));
+		stop
+				.setDesciption(String.format("Stopped playing %s.", item
+						.getName()));
 		stop.setDetails(item.getName());
 
 		doPushMessage(stop);
 	}
 
-
 	private void sendOnPlayStatus(String code, int duration, long bytes) {
-		ByteBuffer buf = ByteBuffer.allocate(1024);
+		IoBuffer buf = IoBuffer.allocate(1024);
 		buf.setAutoExpand(true);
 		Output out = new Output(buf);
 		out.writeString("onPlayStatus");
@@ -1018,7 +1082,7 @@ public final class PlayEngine implements IFilter, IPushableConsumer,
 
 	/**
 	 * Send playlist complete status notification
-	 *
+	 * 
 	 */
 	private void sendCompleteStatus() {
 		// TODO: find correct duration to send
@@ -1028,22 +1092,27 @@ public final class PlayEngine implements IFilter, IPushableConsumer,
 
 	/**
 	 * Send seek status notification
-	 * @param item            Playlist item
-	 * @param position        Seek position
+	 * 
+	 * @param item
+	 *            Playlist item
+	 * @param position
+	 *            Seek position
 	 */
 	private void sendSeekStatus(IPlayItem item, int position) {
 		Status seek = new Status(StatusCodes.NS_SEEK_NOTIFY);
 		seek.setClientid(streamId);
 		seek.setDetails(item.getName());
-		seek.setDesciption(String.format("Seeking %d (stream ID: %d).", position, streamId));
+		seek.setDesciption(String.format("Seeking %d (stream ID: %d).",
+				position, streamId));
 
 		doPushMessage(seek);
 	}
 
-
 	/**
 	 * Send pause status notification
-	 * @param item            Playlist item
+	 * 
+	 * @param item
+	 *            Playlist item
 	 */
 	private void sendPauseStatus(IPlayItem item) {
 		Status pause = new Status(StatusCodes.NS_PAUSE_NOTIFY);
@@ -1053,10 +1122,11 @@ public final class PlayEngine implements IFilter, IPushableConsumer,
 		doPushMessage(pause);
 	}
 
-
 	/**
 	 * Send resume status notification
-	 * @param item            Playlist item
+	 * 
+	 * @param item
+	 *            Playlist item
 	 */
 	private void sendResumeStatus(IPlayItem item) {
 		Status resume = new Status(StatusCodes.NS_UNPAUSE_NOTIFY);
@@ -1066,10 +1136,11 @@ public final class PlayEngine implements IFilter, IPushableConsumer,
 		doPushMessage(resume);
 	}
 
-
 	/**
 	 * Send published status notification
-	 * @param item            Playlist item
+	 * 
+	 * @param item
+	 *            Playlist item
 	 */
 	private void sendPublishedStatus(IPlayItem item) {
 		Status published = new Status(StatusCodes.NS_PLAY_PUBLISHNOTIFY);
@@ -1079,10 +1150,11 @@ public final class PlayEngine implements IFilter, IPushableConsumer,
 		doPushMessage(published);
 	}
 
-
 	/**
 	 * Send unpublished status notification
-	 * @param item            Playlist item
+	 * 
+	 * @param item
+	 *            Playlist item
 	 */
 	private void sendUnpublishedStatus(IPlayItem item) {
 		Status unpublished = new Status(StatusCodes.NS_PLAY_UNPUBLISHNOTIFY);
@@ -1092,10 +1164,11 @@ public final class PlayEngine implements IFilter, IPushableConsumer,
 		doPushMessage(unpublished);
 	}
 
-
 	/**
 	 * Stream not found status notification
-	 * @param item            Playlist item
+	 * 
+	 * @param item
+	 *            Playlist item
 	 */
 	private void sendStreamNotFoundStatus(IPlayItem item) {
 		Status notFound = new Status(StatusCodes.NS_PLAY_STREAMNOTFOUND);
@@ -1106,10 +1179,11 @@ public final class PlayEngine implements IFilter, IPushableConsumer,
 		doPushMessage(notFound);
 	}
 
-
 	/**
 	 * Insufficient bandwidth notification
-	 * @param item            Playlist item
+	 * 
+	 * @param item
+	 *            Playlist item
 	 */
 	private void sendInsufficientBandwidthStatus(IPlayItem item) {
 		Status insufficientBW = new Status(StatusCodes.NS_PLAY_INSUFFICIENT_BW);
@@ -1124,8 +1198,11 @@ public final class PlayEngine implements IFilter, IPushableConsumer,
 
 	/**
 	 * Send VOD init control message
-	 * @param msgIn           Message input
-	 * @param item            Playlist item
+	 * 
+	 * @param msgIn
+	 *            Message input
+	 * @param item
+	 *            Playlist item
 	 */
 	private void sendVODInitCM(IMessageInput msgIn, IPlayItem item) {
 		OOBControlMessage oobCtrlMsg = new OOBControlMessage();
@@ -1139,9 +1216,12 @@ public final class PlayEngine implements IFilter, IPushableConsumer,
 
 	/**
 	 * Send VOD seek control message
-	 * @param msgIn            Message input
-	 * @param position         Playlist item
-	 * @return                 Out-of-band control message call result or -1 on failure
+	 * 
+	 * @param msgIn
+	 *            Message input
+	 * @param position
+	 *            Playlist item
+	 * @return Out-of-band control message call result or -1 on failure
 	 */
 	private int sendVODSeekCM(IMessageInput msgIn, int position) {
 		OOBControlMessage oobCtrlMsg = new OOBControlMessage();
@@ -1231,7 +1311,9 @@ public final class PlayEngine implements IFilter, IPushableConsumer,
 			RTMPMessage rtmpMessage = (RTMPMessage) message;
 			IRTMPEvent body = rtmpMessage.getBody();
 			if (!(body instanceof IStreamData)) {
-				throw new RuntimeException(String.format("Expected IStreamData but got %s (type %s)", body.getClass(), body.getDataType()));
+				throw new RuntimeException(String.format(
+						"Expected IStreamData but got %s (type %s)", body
+								.getClass(), body.getDataType()));
 			}
 
 			int size = ((IStreamData) body).getData().limit();
@@ -1245,7 +1327,8 @@ public final class PlayEngine implements IFilter, IPushableConsumer,
 					}
 				}
 
-				//dont try to drop frames if video codec is null - related to SN-77
+				// dont try to drop frames if video codec is null - related to
+				// SN-77
 				if (videoCodec != null && videoCodec.canDropFrames()) {
 					if (playlistSubscriberStream.state == State.PAUSED) {
 						// The subscriber paused the video
@@ -1257,20 +1340,23 @@ public final class PlayEngine implements IFilter, IPushableConsumer,
 					long pendingVideos = pendingVideoMessages();
 					if (!videoFrameDropper.canSendPacket(rtmpMessage,
 							pendingVideos)) {
-						// Drop frame as it depends on other frames that were dropped before.
+						// Drop frame as it depends on other frames that were
+						// dropped before.
 						return;
 					}
 
 					boolean drop = !videoBucket.acquireToken(size, 0);
 					if (!receiveVideo || drop) {
-						// The client disabled video or the app doesn't have enough bandwidth
+						// The client disabled video or the app doesn't have
+						// enough bandwidth
 						// allowed for this stream.
 						videoFrameDropper.dropPacket(rtmpMessage);
 						return;
 					}
 
 					if (pendingVideos > 1) {
-						// We drop because the client has insufficient bandwidth.
+						// We drop because the client has insufficient
+						// bandwidth.
 						long now = System.currentTimeMillis();
 						if (bufferCheckInterval > 0
 								&& now >= nextCheckBufferUnderrun) {
@@ -1295,9 +1381,8 @@ public final class PlayEngine implements IFilter, IPushableConsumer,
 						body.setTimestamp(0);
 					}
 					rtmpMessage.setBody(body);
-				} else if (playlistSubscriberStream.state == State.PAUSED 
-						|| !receiveAudio
-						|| !audioBucket.acquireToken(size, 0)) {
+				} else if (playlistSubscriberStream.state == State.PAUSED
+						|| !receiveAudio || !audioBucket.acquireToken(size, 0)) {
 					return;
 				}
 			}
@@ -1333,7 +1418,8 @@ public final class PlayEngine implements IFilter, IPushableConsumer,
 
 	/**
 	 * Get number of pending video messages
-	 * @return          Number of pending video messages
+	 * 
+	 * @return Number of pending video messages
 	 */
 	private long pendingVideoMessages() {
 		OOBControlMessage pendingRequest = new OOBControlMessage();
@@ -1349,28 +1435,29 @@ public final class PlayEngine implements IFilter, IPushableConsumer,
 
 	/**
 	 * Get number of pending messages to be sent
-	 * @return          Number of pending messages
+	 * 
+	 * @return Number of pending messages
 	 */
 	private long pendingMessages() {
 		return playlistSubscriberStream.getConnection().getPendingMessages();
 	}
-	
+
 	public boolean isPullMode() {
 		return pullMode;
 	}
-	
+
 	public boolean isPaused() {
 		return playlistSubscriberStream.state == State.PAUSED;
 	}
-	
+
 	public IRTMPEvent getLastMessage() {
 		return lastMessage;
 	}
-	
+
 	public long getPlaybackStart() {
 		return playbackStart;
 	}
-	
+
 	public void sendBlankAudio(boolean sendBlankAudio) {
 		this.sendBlankAudio = sendBlankAudio;
 	}
@@ -1382,24 +1469,25 @@ public final class PlayEngine implements IFilter, IPushableConsumer,
 	 */
 	public boolean receiveAudio() {
 		return receiveAudio;
-	}	
-	
+	}
+
 	/**
-	 * Returns true if the engine currently receives audio and
-	 * sets the new value.
+	 * Returns true if the engine currently receives audio and sets the new
+	 * value.
 	 * 
-	 * @param receive new value
+	 * @param receive
+	 *            new value
 	 * @return old value
 	 */
 	public boolean receiveAudio(boolean receive) {
 		boolean oldValue = receiveAudio;
-		//set new value
+		// set new value
 		if (receiveAudio != receive) {
 			receiveAudio = receive;
 		}
 		return oldValue;
 	}
-	
+
 	/**
 	 * Returns true if the engine currently receives video.
 	 * 
@@ -1407,23 +1495,25 @@ public final class PlayEngine implements IFilter, IPushableConsumer,
 	 */
 	public boolean receiveVideo() {
 		return receiveVideo;
-	}	
-	
+	}
+
 	/**
-	 * Returns true if the engine currently receives video and
-	 * sets the new value.
-	 * @param receive new value
+	 * Returns true if the engine currently receives video and sets the new
+	 * value.
+	 * 
+	 * @param receive
+	 *            new value
 	 * @return old value
 	 */
 	public boolean receiveVideo(boolean receive) {
 		boolean oldValue = receiveVideo;
-		//set new value
+		// set new value
 		if (receiveVideo != receive) {
 			receiveVideo = receive;
 		}
 		return oldValue;
-	}	
-	
+	}
+
 	/**
 	 * Releases pending message body, nullifies pending message object
 	 */
@@ -1432,7 +1522,7 @@ public final class PlayEngine implements IFilter, IPushableConsumer,
 			IRTMPEvent body = pendingMessage.getBody();
 			if (body instanceof IStreamData
 					&& ((IStreamData) body).getData() != null) {
-				((IStreamData) body).getData().release();
+				((IStreamData) body).getData().free();
 			}
 			pendingMessage.setBody(null);
 			pendingMessage = null;

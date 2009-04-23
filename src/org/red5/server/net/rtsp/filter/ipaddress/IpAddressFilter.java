@@ -32,8 +32,8 @@ package org.red5.server.net.rtsp.filter.ipaddress;
 
 import java.net.InetSocketAddress;
 
-import org.apache.mina.common.IoFilterAdapter;
-import org.apache.mina.common.IoSession;
+import org.apache.mina.core.filterchain.IoFilterAdapter;
+import org.apache.mina.core.session.IoSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -112,7 +112,7 @@ public class IpAddressFilter extends IoFilterAdapter {
 
 	protected void blockSession(IoSession session) {
 		log.info("Blocked connection from : " + session.getRemoteAddress());
-		session.close();
+		session.close(true);
 	}
 
 	public String getFilterClassName() {

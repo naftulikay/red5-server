@@ -19,7 +19,7 @@ package org.red5.server.api.cache;
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA 
  */
 
-import org.apache.mina.common.ByteBuffer;
+import org.apache.mina.core.buffer.IoBuffer;
 
 /**
  * Base interface for objects that can be made cacheable.
@@ -72,6 +72,6 @@ public interface ICacheable {
 	 * 
 	 * @return     Read-only byte buffer with cached data
 	 */
-	public ByteBuffer getByteBuffer();
+	public IoBuffer getByteBuffer();
 
 }

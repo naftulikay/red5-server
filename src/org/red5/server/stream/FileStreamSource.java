@@ -71,32 +71,33 @@ public class FileStreamSource implements ISeekableStreamSource, Constants {
      * @return  RTMP event
      */
     public IRTMPEvent dequeue() {
-    	log.debug("dequeue");
-    	IRTMPEvent msg = null;
 		if (reader.hasMoreTags()) {
-    		ITag tag = reader.readTag();   	
-    		switch (tag.getDataType()) {
-    			case TYPE_AUDIO_DATA:
-    				msg = new AudioData(tag.getBody());
-    				break;
-    			case TYPE_VIDEO_DATA:
-    				msg = new VideoData(tag.getBody());
-    				break;
-    			case TYPE_INVOKE:
-    				msg = new Invoke(tag.getBody());
-    				break;
-    			case TYPE_NOTIFY:
-    				msg = new Notify(tag.getBody());
-    				break;
-    			default:
-    				log.warn("Unexpected type? {}", tag.getDataType());
-    				msg = new Unknown(tag.getDataType(), tag.getBody());
-    				break;
-    		}
-    		msg.setTimestamp(tag.getTimestamp());
-    		//msg.setSealed(true);
+	    	ITag tag = reader.readTag();   	
+			IRTMPEvent msg;
+			switch (tag.getDataType()) {
+				case TYPE_AUDIO_DATA:
+					msg = new AudioData(tag.getBody());
+					break;
+				case TYPE_VIDEO_DATA:
+					msg = new VideoData(tag.getBody());
+					break;
+				case TYPE_INVOKE:
+					msg = new Invoke(tag.getBody());
+					break;
+				case TYPE_NOTIFY:
+					msg = new Notify(tag.getBody());
+					break;
+				default:
+					log.warn("Unexpected type? {}", tag.getDataType());
+					msg = new Unknown(tag.getDataType(), tag.getBody());
+					break;
+			}
+			msg.setTimestamp(tag.getTimestamp());
+			//msg.setSealed(true);
+			return msg;			
+		} else {
+			return null;
 		}
-		return msg;
 	}
 
 	/** {@inheritDoc} */

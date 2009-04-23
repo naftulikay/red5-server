@@ -19,8 +19,10 @@ package org.red5.server.net.rtmp;
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA 
  */
 
-import org.apache.mina.common.ByteBuffer;
+import org.apache.mina.core.buffer.IoBuffer;
+import org.red5.server.api.IScope;
 import org.red5.server.api.stream.IClientStream;
+import org.red5.server.api.stream.IRtmpSampleAccess;
 import org.red5.server.net.rtmp.event.IRTMPEvent;
 import org.red5.server.net.rtmp.event.Invoke;
 import org.red5.server.net.rtmp.event.Notify;
@@ -37,11 +39,13 @@ import org.slf4j.LoggerFactory;
  * Identified connection that transfers packets.
  */
 public class Channel {
+	
     /**
      * Logger
      */
 	protected static Logger log = LoggerFactory.getLogger(Channel.class);
-    /**
+    
+	/**
      * RTMP connection used to transfer packets.
      */
 	private RTMPConnection connection;
@@ -51,7 +55,6 @@ public class Channel {
      */
     private int id;
 
-	//private Stream stream;
     /**
      * Creates channel from connection and channel id
      * @param conn                Connection
@@ -139,16 +142,22 @@ public class Channel {
 			final PendingCall call = new PendingCall(null, "onStatus", new Object[] { status });
  			invoke = new Invoke();
 			if (status.getCode().equals(StatusCodes.NS_PLAY_START)) {
-				/* RtmpSampleAccess : video true, audio true
-				0x7c, 0x52, 0x74, 0x6d, 0x70, 0x53, 0x61, 0x6d,
-				0x70, 0x6c, 0x65, 0x41, 0x63, 0x63, 0x65, 0x73,
-				0x73, 0x01, 0x01, 0x01, 0x01 */
-				final Call call2 = new Call(null, "|RtmpSampleAccess", null);
-				Notify notify = new Notify();
-				notify.setInvokeId(1);
-				notify.setCall(call2);
-				notify.setData(ByteBuffer.wrap(new byte[]{0x01, 0x01, 0x01, 0x01}));
-				write(notify, connection.getStreamIdForChannel(id));
+				IScope scope = connection.getScope();
+				if (scope.getContext().getApplicationContext().containsBean(IRtmpSampleAccess.BEAN_NAME)) {
+    				IRtmpSampleAccess sampleAccess = (IRtmpSampleAccess) scope.getContext().getApplicationContext().getBean(IRtmpSampleAccess.BEAN_NAME);
+    				boolean videoAccess = sampleAccess.isVideoAllowed(scope);
+    				boolean audioAccess = sampleAccess.isAudioAllowed(scope);
+    				if (videoAccess || audioAccess) {
+        				final Call call2 = new Call(null, "|RtmpSampleAccess", null);
+        				Notify notify = new Notify();
+        				notify.setInvokeId(1);
+        				notify.setCall(call2);
+        				notify.setData(IoBuffer.wrap(new byte[]{
+        						0x01, (byte) (audioAccess ? 0x01 : 0x00),
+            					0x01, (byte) (videoAccess ? 0x01 : 0x00)}));
+        				write(notify, connection.getStreamIdForChannel(id));
+    				}
+				}
 			}
 			invoke.setInvokeId(1);
 			invoke.setCall(call);

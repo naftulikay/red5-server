@@ -57,9 +57,7 @@ public class ConnectionConsumer implements IPushableConsumer,
 	/**
 	 * Logger
 	 */
-	private static final Logger log = LoggerFactory
-			.getLogger(ConnectionConsumer.class);
-
+    private static final Logger log = LoggerFactory.getLogger(ConnectionConsumer.class);
 	/**
 	 * Connection consumer class name
 	 */
@@ -146,7 +144,7 @@ public class ConnectionConsumer implements IPushableConsumer,
 			Header header = new Header();
 			int timestamp = streamTracker.add(msg);
 			if (timestamp < 0) {
-				log.warn("Skipping message with negative timestamp: {}",
+				log.info("Skipping message with negative timestamp: {}",
 						timestamp);
 				return;
 			}
@@ -249,17 +247,13 @@ public class ConnectionConsumer implements IPushableConsumer,
 			long maxStream = 0;
 			IBWControllable bwControllable = conn;
 			// Search FC containing valid BWC
-			while (bwControllable != null
-					&& bwControllable.getBandwidthConfigure() == null) {
+			while (bwControllable != null && bwControllable.getBandwidthConfigure() == null) {
 				bwControllable = bwControllable.getParentBWControllable();
 			}
-			if (bwControllable != null
-					&& bwControllable.getBandwidthConfigure() != null) {
-				IBandwidthConfigure bwc = bwControllable
-						.getBandwidthConfigure();
+			if (bwControllable != null && bwControllable.getBandwidthConfigure() != null) {
+				IBandwidthConfigure bwc = bwControllable.getBandwidthConfigure();
 				if (bwc instanceof IConnectionBWConfig) {
-					maxStream = ((IConnectionBWConfig) bwc)
-							.getDownstreamBandwidth() / 8;
+					maxStream = ((IConnectionBWConfig) bwc).getDownstreamBandwidth() / 8;
 				}
 			}
 			if (maxStream <= 0) {
@@ -271,11 +265,8 @@ public class ConnectionConsumer implements IPushableConsumer,
 
 			// Return the current delta between sent bytes and bytes the client
 			// reported to have received, and the interval the client should use
-			// for generating BytesRead messages (half of the allowed
-			// bandwidth).
-			oobCtrlMsg.setResult(new Long[] {
-					conn.getWrittenBytes() - conn.getClientBytesRead(),
-					maxStream / 2 });
+			// for generating BytesRead messages (half of the allowed bandwidth).
+			oobCtrlMsg.setResult(new Long[]{conn.getWrittenBytes() - conn.getClientBytesRead(), maxStream / 2});
 		} else if ("chunkSize".equals(oobCtrlMsg.getServiceName())) {
 			int newSize = (Integer) oobCtrlMsg.getServiceParamMap().get(
 					"chunkSize");

@@ -57,6 +57,7 @@ import org.red5.server.util.FileUtil;
 import org.slf4j.Logger;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
+import org.springframework.context.support.AbstractApplicationContext;
 import org.springframework.web.context.ConfigurableWebApplicationContext;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.context.support.XmlWebApplicationContext;
@@ -470,9 +471,8 @@ public class TomcatLoader extends LoaderBase implements
 								: servletContext.getInitParameter(org.springframework.web.context.ContextLoader.LOCATOR_FACTORY_KEY_PARAM);
 						log.debug("Spring parent context key: {}", parentContextKey);
 
-						//set current threads classloader to the webapp parent classloader
-						ClassLoader webappParentClassLoader = webClassLoader.getParent();
-						Thread.currentThread().setContextClassLoader(webappParentClassLoader);
+						//set current threads classloader to the webapp classloader
+						Thread.currentThread().setContextClassLoader(webClassLoader);
 						
 						//create a thread to speed-up application loading
 						Thread thread = new Thread("Launcher:" + servletContext
@@ -484,10 +484,10 @@ public class TomcatLoader extends LoaderBase implements
 								final String contextClass = servletContext.getInitParameter(org.springframework.web.context.ContextLoader.CONTEXT_CLASS_PARAM) == null 
 									? XmlWebApplicationContext.class.getName()
 									: servletContext.getInitParameter(org.springframework.web.context.ContextLoader.CONTEXT_CLASS_PARAM);
-									ConfigurableWebApplicationContext appctx=null;
+									ConfigurableWebApplicationContext appctx = null;
 								try {
-									Class<?>clazz=Class.forName(contextClass,true,webClassLoader);
-									appctx=(ConfigurableWebApplicationContext)clazz.newInstance();
+									Class<?> clazz = Class.forName(contextClass, true, webClassLoader);
+									appctx = (ConfigurableWebApplicationContext) clazz.newInstance();
 								} catch (Throwable e) {
 									throw new RuntimeException("Failed to load webapplication context class.",e);
 								}
@@ -495,11 +495,15 @@ public class TomcatLoader extends LoaderBase implements
 								appctx.setParent((ApplicationContext) applicationContext
 										.getBean(parentContextKey));
 								appctx.setServletContext(servletContext);
+								//refresh the factory
+								log.debug("Classloader prior to refresh: {}", appctx.getClassLoader());
+								appctx.refresh();
 								// set the root webapp ctx attr on the each
 								// servlet context so spring can find it later
-								servletContext.setAttribute(
-										WebApplicationContext.ROOT_WEB_APPLICATION_CONTEXT_ATTRIBUTE, appctx);
-								appctx.refresh();
+								servletContext.setAttribute(WebApplicationContext.ROOT_WEB_APPLICATION_CONTEXT_ATTRIBUTE, appctx);
+								if (log.isDebugEnabled()) {
+									log.debug("Red5 app is active: {} running: {}", appctx.isActive(), appctx.isRunning());
+								}
 							}
 						};
 						thread.setDaemon(true);
@@ -626,14 +630,16 @@ public class TomcatLoader extends LoaderBase implements
 					: servletContext.getInitParameter("parentContextKey");
 			log.debug("Spring parent context key: {}", parentContextKey);	
 			
-			//set current threads classloader to the webapp parent classloader
-			ClassLoader webappParentClassLoader = webClassLoader.getParent();
-			Thread.currentThread().setContextClassLoader(webappParentClassLoader);
+			//set current threads classloader to the webapp classloader
+			Thread.currentThread().setContextClassLoader(webClassLoader);
 			
 			//create a thread to speed-up application loading
 			Thread thread = new Thread("Launcher:" + servletContext
 					.getContextPath()) {
 				public void run() {
+					//set current threads classloader to the webapp classloader
+					Thread.currentThread().setContextClassLoader(webClassLoader);
+					
 					// create a spring web application context
 					XmlWebApplicationContext appctx = new XmlWebApplicationContext();
 					appctx.setClassLoader(webClassLoader);
@@ -720,7 +726,7 @@ public class TomcatLoader extends LoaderBase implements
 	 * @param connector Connector
 	 */
 	public void setConnector(Connector connector) {
-		log.info("Setting connector: " + connector.getClass().getName());
+		log.info("Setting connector: {}", connector.getClass().getName());
 		this.connector = connector;
 	}
 
@@ -828,9 +834,34 @@ public class TomcatLoader extends LoaderBase implements
 	 */
 	public void shutdown() {
 		log.info("Shutting down Tomcat context");
+		//run through the applications and ensure that spring is told
+		//to commence shutdown / disposal
+		AbstractApplicationContext absCtx = (AbstractApplicationContext) LoaderBase.getApplicationContext();
+		if (absCtx != null) {
+			log.debug("Using loader base application context for shutdown");
+			//get all the app (web) contexts and shut them down first
+			Map<String, IApplicationContext> contexts = LoaderBase.getRed5ApplicationContexts();
+			if (contexts.isEmpty()) {
+				log.info("No contexts were found to shutdown");
+			}
+			for (Map.Entry<String, IApplicationContext> entry : contexts.entrySet()) {
+				//stop the context
+				log.debug("Calling stop on context: {}", entry.getKey());
+				entry.getValue().stop();
+			}			
+			if (absCtx.isActive()) {
+        		log.debug("Closing application context");
+        		absCtx.close();
+			}
+		} else {
+			log.error("Error getting Spring bean factory for shutdown");
+		}
+		//shutdown jmx
 		JMXAgent.shutdown();
 		try {
+			//stop tomcat
 			embedded.stop();
+			//kill the jvm
 			System.exit(0);
 		} catch (Exception e) {
 			log.warn("Tomcat could not be stopped", e);

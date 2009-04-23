@@ -34,8 +34,7 @@ import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 
-public class RTMPConnManager implements IRTMPConnManager,
-		ApplicationContextAware {
+public class RTMPConnManager implements IRTMPConnManager, ApplicationContextAware {
 	
 	private static final Logger log = LoggerFactory.getLogger(RTMPConnManager.class);
 	
@@ -116,8 +115,6 @@ public class RTMPConnManager implements IRTMPConnManager,
 		RTMPConnection conn = null;
 		if (cls == RTMPMinaConnection.class) {
 			conn = (RTMPMinaConnection) appCtx.getBean("rtmpMinaConnection");
-		} else if (cls == EdgeRTMPMinaConnection.class) {
-			conn = (EdgeRTMPMinaConnection) appCtx.getBean("rtmpEdgeMinaConnection");
 		} else if (cls == RTMPTConnection.class) {
 			conn = (RTMPTConnection) appCtx.getBean("rtmptConnection");
 		} else {

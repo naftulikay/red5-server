@@ -14,7 +14,7 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.mina.common.ByteBuffer;
+import org.apache.mina.core.buffer.IoBuffer;
 import org.red5.io.object.Deserializer;
 import org.red5.io.utils.HexDump;
 import org.red5.server.net.protocol.ProtocolException;
@@ -91,8 +91,8 @@ public class CaptureViewerServlet extends HttpServlet {
 			}
 			capMappedFile.order(ByteOrder.BIG_ENDIAN);
 			rawMappedFile.order(ByteOrder.BIG_ENDIAN);
-			ByteBuffer cap = ByteBuffer.wrap(capMappedFile);
-			ByteBuffer in = ByteBuffer.wrap(rawMappedFile);
+			IoBuffer cap = IoBuffer.wrap(capMappedFile);
+			IoBuffer in = IoBuffer.wrap(rawMappedFile);
 
 			boolean serverMode = (cap.get() == (byte) 0x01);
 			out.write("Mode: " + (serverMode ? "UPSTREAM" : "DOWNSTREAM"));
@@ -142,8 +142,8 @@ public class CaptureViewerServlet extends HttpServlet {
 							if (decodedObject instanceof Packet) {
 								out.write(formatHTML((Packet) decodedObject,
 										id++, 0));
-							} else if (decodedObject instanceof ByteBuffer) {
-								ByteBuffer buf = (ByteBuffer) decodedObject;
+							} else if (decodedObject instanceof IoBuffer) {
+								IoBuffer buf = (IoBuffer) decodedObject;
 								out
 										.write("<div class=\"handshake\"><pre>"
 												+ HexDump.formatHexDump(buf

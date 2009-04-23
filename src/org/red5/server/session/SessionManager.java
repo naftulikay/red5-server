@@ -19,16 +19,13 @@ package org.red5.server.session;
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA 
  */
  
-import java.security.NoSuchAlgorithmException;
 import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicLong;
 
-import jonelo.jacksum.JacksumAPI;
-import jonelo.jacksum.algorithm.AbstractChecksum;
-
+import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang.StringUtils;
 import org.red5.server.api.scheduling.IScheduledJob;
 import org.red5.server.api.scheduling.ISchedulingService;
@@ -129,18 +126,7 @@ public class SessionManager {
 	}
 
 	public static String createHash(String str) {
-		//logger.debug("createHash for " + str);
-		AbstractChecksum checksum = null;
-		try {
-			// select an algorithm (md5 in this case)
-			checksum = JacksumAPI.getChecksumInstance("md5");
-			checksum.setEncoding(AbstractChecksum.HEX);
-			checksum.update(str.getBytes());
-		} catch (NoSuchAlgorithmException nsae) {
-			log.warn("Algorithm doesnt exist");
-		}
-		//logger.debug("Formatted " + checksum.getFormattedValue() + " checksum " + checksum);
-		return checksum.getFormattedValue();
+        return DigestUtils.md5Hex(str.getBytes());
 	}		
 	
 	/**

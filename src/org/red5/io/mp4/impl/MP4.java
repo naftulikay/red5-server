@@ -26,7 +26,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Map;
 
-import org.apache.mina.common.ByteBuffer;
+import org.apache.mina.core.buffer.IoBuffer;
 import org.red5.io.ITagReader;
 import org.red5.io.ITagWriter;
 import org.red5.io.flv.meta.IMetaData;
@@ -132,7 +132,7 @@ public class MP4 implements IMP4 {
 	 */
 	public ITagReader getReader() throws IOException {
 		MP4Reader reader = null;
-		ByteBuffer fileData = null;
+		IoBuffer fileData = null;
 		String fileName = file.getName();
 		if (file.exists()) {
 			log.debug("File name: {} size: {}", fileName, file.length());

@@ -30,7 +30,7 @@ package org.red5.server.net.rtp;
  *                                                                         *
  ***************************************************************************/
 
-import org.apache.mina.common.ByteBuffer;
+import org.apache.mina.core.buffer.IoBuffer;
 
 /**
  * Base interface for RTP and RTCP packets
@@ -39,5 +39,5 @@ import org.apache.mina.common.ByteBuffer;
  */
 public interface Packet {
 
-	public ByteBuffer toByteBuffer();
+	public IoBuffer toByteBuffer();
 }

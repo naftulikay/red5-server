@@ -42,12 +42,12 @@ import org.red5.server.messaging.IPullableProvider;
 import org.red5.server.messaging.OOBControlMessage;
 import org.red5.server.messaging.PipeConnectionEvent;
 import org.red5.server.net.rtmp.event.AudioData;
-import org.red5.server.net.rtmp.event.FlexStreamSend;
 import org.red5.server.net.rtmp.event.IRTMPEvent;
 import org.red5.server.net.rtmp.event.Invoke;
 import org.red5.server.net.rtmp.event.Notify;
 import org.red5.server.net.rtmp.event.Unknown;
 import org.red5.server.net.rtmp.event.VideoData;
+import org.red5.server.net.rtmp.event.FlexStreamSend;
 import org.red5.server.net.rtmp.message.Constants;
 import org.red5.server.stream.ISeekableProvider;
 import org.red5.server.stream.IStreamTypeAwareProvider;
@@ -63,9 +63,7 @@ public class FileProvider implements IPassive, ISeekableProvider,
 	/**
 	 * Logger
 	 */
-	private static final Logger log = LoggerFactory
-			.getLogger(FileProvider.class);
-
+    private static final Logger log = LoggerFactory.getLogger(FileProvider.class);
 	/**
 	 * Class name
 	 */
@@ -131,18 +129,21 @@ public class FileProvider implements IPassive, ISeekableProvider,
 
 	/** {@inheritDoc} */
 	public synchronized IMessage pullMessage(IPipe pipe) throws IOException {
-		log.debug("pullMessage");
-		RTMPMessage rtmpMsg = null;
-		if (this.pipe == pipe) {
+		if (this.pipe != pipe) {
+			return null;
+		}
 			if (this.reader == null) {
 				init();
 			}
-			if (reader.hasMoreTags()) {
+		if (!reader.hasMoreTags()) {
+			// TODO send OOBCM to notify EOF
+			// Do not unsubscribe as this kills VOD seek while in buffer
+			// this.pipe.unsubscribe(this);
+			return null;
+		}
 				ITag tag = reader.readTag();
 				IRTMPEvent msg = null;
 				int timestamp = tag.getTimestamp();
-				log.debug("Got tag - timestamp: {} data type: {}", timestamp,
-						tag.getDataType());
 				switch (tag.getDataType()) {
 					case Constants.TYPE_AUDIO_DATA:
 						msg = new AudioData(tag.getBody());
@@ -164,10 +165,8 @@ public class FileProvider implements IPassive, ISeekableProvider,
 						msg = new Unknown(tag.getDataType(), tag.getBody());
 				}
 				msg.setTimestamp(timestamp);
-				rtmpMsg = new RTMPMessage();
+		RTMPMessage rtmpMsg = new RTMPMessage();
 				rtmpMsg.setBody(msg);
-			}
-		}
 		return rtmpMsg;
 	}
 
@@ -203,8 +202,7 @@ public class FileProvider implements IPassive, ISeekableProvider,
 			OOBControlMessage oobCtrlMsg) {
 		String serviceName = oobCtrlMsg.getServiceName();
 		String target = oobCtrlMsg.getTarget();
-		log.debug("onOOBControlMessage - service name: {} target: {}",
-				serviceName, target);
+    	log.debug("onOOBControlMessage - service name: {} target: {}", serviceName, target);
 		if (serviceName != null) {
 			if (IPassive.KEY.equals(target)) {
 				if ("init".equals(serviceName)) {
@@ -214,11 +212,10 @@ public class FileProvider implements IPassive, ISeekableProvider,
 				}
 			} else if (ISeekableProvider.KEY.equals(target)) {
 				if ("seek".equals(serviceName)) {
-					Integer position = (Integer) oobCtrlMsg
-							.getServiceParamMap().get("position");
+    				Integer position = (Integer) oobCtrlMsg.getServiceParamMap()
+    						.get("position");
 					int seekPos = seek(position.intValue());
-					log.debug("Returning position: {}", seekPos);
-					//return position we seeked to
+    				// Return position we seeked to
 					oobCtrlMsg.setResult(seekPos);
 				}
 			} else if (IStreamTypeAwareProvider.KEY.equals(target)) {
@@ -234,24 +231,19 @@ public class FileProvider implements IPassive, ISeekableProvider,
 	 * seeks to start position
 	 */
 	private void init() throws IOException {
-		log.debug("Initialize");
 		IStreamableFileFactory factory = (IStreamableFileFactory) ScopeUtils
 				.getScopeService(scope, IStreamableFileFactory.class,
 						StreamableFileFactory.class);
 		IStreamableFileService service = factory.getService(file);
-		if (service != null) {
+		if (service == null) {
+			log.error("No service found for {}", file.getAbsolutePath());
+			return;
+		}
 			IStreamableFile streamFile = service.getStreamableFile(file);
 			reader = streamFile.getReader();
-			log.debug("Reader: {}", reader.getClass().getName());
-			// TODO: may want to do init of readers here
 			if (start > 0) {
 				seek(start);
 			}
-		} else {
-			log.error("No service found for {}", file.getAbsolutePath());
-			// need to let the player know that the file cannot be served
-
-		}
 	}
 
 	/**

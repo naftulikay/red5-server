@@ -30,8 +30,8 @@ package org.red5.server.net.rtsp.codec;
  *                                                                         *
  ***************************************************************************/
 
-import org.apache.mina.common.ByteBuffer;
-import org.apache.mina.common.IoSession;
+import org.apache.mina.core.buffer.IoBuffer;
+import org.apache.mina.core.session.IoSession;
 import org.apache.mina.filter.codec.ProtocolEncoder;
 import org.apache.mina.filter.codec.ProtocolEncoderException;
 import org.apache.mina.filter.codec.ProtocolEncoderOutput;
@@ -53,7 +53,7 @@ public class RTSPEncoder implements ProtocolEncoder {
 		// Serialization to string is already provided in RTSP messages.
 		String val = ((RTSPMessage) message).toString();
 		/*
-		ByteBuffer buf = ByteBuffer.allocate( val.length() );
+		IoBuffer buf = IoBuffer.allocate( val.length() );
 		for ( int i = 0; i < val.length(); i++ ) {
 			buf.put( (byte) val.charAt( i ) );
 		}
@@ -62,7 +62,7 @@ public class RTSPEncoder implements ProtocolEncoder {
 		*/
 
 		// TODO: Alternative implementation, should be better.
-		ByteBuffer buf = ByteBuffer.wrap(val.getBytes());
+		IoBuffer buf = IoBuffer.wrap(val.getBytes());
 
 		out.write(buf);
 	}

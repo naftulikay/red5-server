@@ -30,7 +30,7 @@ package org.red5.server.net.rtp.rtcp;
  *                                                                         *
  ***************************************************************************/
 
-import org.apache.mina.common.ByteBuffer;
+import org.apache.mina.core.buffer.IoBuffer;
 import org.red5.io.object.UnsignedByte;
 import org.red5.io.object.UnsignedInt;
 import org.red5.server.net.rtp.Packet;
@@ -99,7 +99,7 @@ public class RTCPPacket implements Packet {
 	 * informations are extracted such as the SSRC identificator. The rest of
 	 * the packet is saved but not processed nor validated (for now).
 	 */
-	public RTCPPacket(ByteBuffer buffer) {
+	public RTCPPacket(IoBuffer buffer) {
 		byte c = buffer.get();
 		// |V=2|P=1| SC=5 |
 		version = (byte) ((c & 0xC0) >> 6);
@@ -120,9 +120,9 @@ public class RTCPPacket implements Packet {
 		 * System.err.println( "version: " + version ); System.err.println(
 		 * "Padding: " + padding ); System.err.println( "count: " + count );
 		 * System.err.println( "packetType: " + Type.fromByte( packetType ) );
-		 * System.err.println( "length: " + length ); System.err.println( "ssrc: " +
-		 * Long.toHexString( (long) ssrc & 0xFFFFFFFFL ) ); System.err.println(
-		 * "buffer: " + Arrays.toString( packetBuffer ) );
+		 * System.err.println( "length: " + length ); System.err.println(
+		 * "ssrc: " + Long.toHexString( (long) ssrc & 0xFFFFFFFFL ) );
+		 * System.err.println( "buffer: " + Arrays.toString( packetBuffer ) );
 		 */
 
 		/**
@@ -167,11 +167,11 @@ public class RTCPPacket implements Packet {
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see rtspproxy.rtp.Packet#toByteBuffer()
+	 * @see rtspproxy.rtp.Packet#toIoBuffer()
 	 */
-	public ByteBuffer toByteBuffer() {
+	public IoBuffer toByteBuffer() {
 		int packetSize = (packetBuffer.length + 2) * 4; // content
-		ByteBuffer buffer = ByteBuffer.allocate(packetSize);
+		IoBuffer buffer = IoBuffer.allocate(packetSize);
 		buffer.limit(packetSize);
 
 		// |V=2|P=1| SC=5 |

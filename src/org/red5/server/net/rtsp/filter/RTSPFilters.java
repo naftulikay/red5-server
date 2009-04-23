@@ -30,9 +30,10 @@ package org.red5.server.net.rtsp.filter;
  *                                                                         *
  ***************************************************************************/
 
-import org.apache.mina.common.IoFilter;
-import org.apache.mina.common.IoFilterChain;
-import org.apache.mina.common.IoFilterChainBuilder;
+import org.apache.mina.core.filterchain.IoFilter;
+import org.apache.mina.core.filterchain.IoFilterChain;
+import org.apache.mina.core.filterchain.IoFilterChainBuilder;
+import org.apache.mina.core.session.IoSession;
 import org.apache.mina.filter.codec.ProtocolCodecFactory;
 import org.apache.mina.filter.codec.ProtocolCodecFilter;
 import org.apache.mina.filter.codec.ProtocolDecoder;
@@ -56,11 +57,11 @@ public abstract class RTSPFilters implements IoFilterChainBuilder {
 
 		private ProtocolDecoder rtspDecoder = new RTSPDecoder();
 
-		public ProtocolEncoder getEncoder() {
+		public ProtocolEncoder getEncoder(IoSession session) {
 			return rtspEncoder;
 		}
 
-		public ProtocolDecoder getDecoder() {
+		public ProtocolDecoder getDecoder(IoSession session) {
 			return rtspDecoder;
 		}
 	};

@@ -34,8 +34,8 @@ import java.net.MalformedURLException;
 import java.net.URL;
 
 import org.apache.log4j.Logger;
-import org.apache.mina.common.IoFilterAdapter;
-import org.apache.mina.common.IoSession;
+import org.apache.mina.core.filterchain.IoFilterAdapter;
+import org.apache.mina.core.session.IoSession;
 import org.red5.server.net.rtsp.RTSPRequest;
 import org.red5.server.net.rtsp.RTSPResponse;
 import org.red5.server.net.rtsp.messages.RTSPMessage;

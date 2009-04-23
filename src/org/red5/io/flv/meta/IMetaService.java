@@ -23,7 +23,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
-import org.apache.mina.common.ByteBuffer;
+import org.apache.mina.core.buffer.IoBuffer;
 
 /**
  * IMetaService Defines the MetaData Service API
@@ -74,7 +74,7 @@ public interface IMetaService {
 	 * @return metaData         Metadata
      * @param buffer            Byte buffer source
 	 */
-	public MetaData<?, ?> readMetaData(ByteBuffer buffer);
+	public MetaData<?, ?> readMetaData(IoBuffer buffer);
 
 	/**
 	 * Read the Meta Cue Points

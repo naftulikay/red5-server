@@ -40,8 +40,8 @@ import java.nio.CharBuffer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.apache.mina.common.ByteBuffer;
-import org.apache.mina.common.IoSession;
+import org.apache.mina.core.buffer.IoBuffer;
+import org.apache.mina.core.session.IoSession;
 import org.apache.mina.filter.codec.ProtocolDecoder;
 import org.apache.mina.filter.codec.ProtocolDecoderException;
 import org.apache.mina.filter.codec.ProtocolDecoderOutput;
@@ -97,10 +97,10 @@ public class RTSPDecoder implements ProtocolDecoder {
 	 * message.
 	 * 
 	 * @see org.apache.mina.protocol.ProtocolDecoder#decode(org.apache.mina.protocol.IoSession,
-	 *      org.apache.mina.common.ByteBuffer,
+	 *      org.apache.mina.common.IoBuffer,
 	 *      org.apache.mina.protocol.ProtocolDecoderOutput)
 	 */
-	public void decode(IoSession session, ByteBuffer buffer,
+	public void decode(IoSession session, IoBuffer buffer,
 			ProtocolDecoderOutput out) throws ProtocolDecoderException {
 		BufferedReader reader = null;
 		try {

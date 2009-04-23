@@ -79,11 +79,11 @@ public class LoggingContextSelector implements ContextSelector {
 				// We have to create a new LoggerContext
 				loggerContext = new LoggerContext();
 				loggerContext.setName(contextName);
-
+				
 				// allow override using logbacks system prop
 				String overrideProperty = System.getProperty("logback.configurationFile");
 				if (overrideProperty == null) {
-				contextConfigFile = String.format("logback-%s.xml", contextName);
+					contextConfigFile = String.format("logback-%s.xml", contextName);					
 				} else {
 					contextConfigFile = String.format(overrideProperty, contextName);
 				}				

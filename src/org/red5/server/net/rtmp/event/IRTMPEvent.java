@@ -67,20 +67,6 @@ public interface IRTMPEvent extends IEvent {
      */
     public void setTimestamp(int timestamp);
     
-	/**
-     * Getter for extended timestamp
-     *
-     * @return  Event extended timestamp
-     */
-    public int getExtendedTimestamp();
-
-	/**
-     * Setter for extended timestamp
-     *
-     * @param timestamp  New event extended timestamp
-     */
-    public void setExtendedTimestamp(int timestamp);
-
     /**
      * Retain event
      */

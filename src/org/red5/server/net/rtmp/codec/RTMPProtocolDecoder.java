@@ -38,6 +38,7 @@ import org.red5.server.net.protocol.ProtocolException;
 import org.red5.server.net.protocol.ProtocolState;
 import org.red5.server.net.protocol.SimpleProtocolDecoder;
 import org.red5.server.net.rtmp.RTMPUtils;
+import org.red5.server.net.rtmp.event.Abort;
 import org.red5.server.net.rtmp.event.AudioData;
 import org.red5.server.net.rtmp.event.BytesRead;
 import org.red5.server.net.rtmp.event.ChunkSize;
@@ -335,27 +336,25 @@ public class RTMPProtocolDecoder implements Constants, SimpleProtocolDecoder,
 		// Move the position back to the start
 		in.position(position);
 
-		final Header header = decodeHeader(in, rtmp.getLastReadHeader(channelId));
-
+		Header lastHeader = rtmp.getLastReadHeader(channelId);
+		final Header header = decodeHeader(in, lastHeader);
 		if (header == null) {
 			throw new ProtocolException("Header is null, check for error");
 		}
-
-		// Save the header
 		rtmp.setLastReadHeader(channelId, header);
+
 
 		// Check to see if this is a new packets or continue decoding an
 		// existing one.
 		Packet packet = rtmp.getLastReadPacket(channelId);
 
 		if (packet == null) {
-			packet = new Packet(header);
+			packet = new Packet(header.clone());
 			rtmp.setLastReadPacket(channelId, packet);
 		}
 
 		final IoBuffer buf = packet.getData();
-		final int addSize = (header.getTimer() == 0xffffff ? 4 : 0);
-		final int readRemaining = header.getSize() + addSize - buf.position();
+		final int readRemaining = header.getSize() - buf.position();
 		final int chunkSize = rtmp.getReadChunkSize();
 		final int readAmount = (readRemaining > chunkSize) ? chunkSize
 				: readRemaining;
@@ -371,26 +370,66 @@ public class RTMPProtocolDecoder implements Constants, SimpleProtocolDecoder,
 
 		BufferUtils.put(buf, in, readAmount);
 
-		if (buf.position() < header.getSize() + addSize) {
+		if (buf.position() < header.getSize()) {
 			rtmp.continueDecoding();
 			return null;
 		}
 
 		// Check workaround for SN-19 to find cause for BufferOverflowException
-		if (buf.position() > header.getSize() + addSize) {
+		if (buf.position() > header.getSize()) {
 			log.warn("Packet size expanded from {} to {} ({})", new Object[] {
-					(header.getSize() + addSize), buf.position(), header });
+					(header.getSize()), buf.position(), header });
 		}
 
 		buf.flip();
 
 		try {
 			final IRTMPEvent message = decodeMessage(rtmp, packet.getHeader(), buf);
+			message.setHeader(packet.getHeader());
+			// Unfortunately flash will, especially when resetting a video
+			// stream with a new key frame, sometime send an earlier
+			// time stamp.  To avoid dropping it, we just give it the minimal
+			// increment since the last message.  But to avoid relative
+			// time stamps being mis-computed, we don't reset the header
+			// we stored.
+			final Header lastReadHeader = rtmp.getLastReadPacketHeader(channelId);
+			if (lastReadHeader != null
+					&& (message instanceof AudioData || message instanceof VideoData)
+					&& RTMPUtils.compareTimestamps(lastReadHeader.getTimer(), packet.getHeader().getTimer()) >= 0)
+			{
+				log.trace("non monotonically increasing timestamps; type: {}; adjusting to {}; ts: {}; last: {}",
+						new Object[]{
+						header.getDataType(),
+						lastReadHeader.getTimer()+1,
+						header.getTimer(),
+						lastReadHeader.getTimer()});
+				message.setTimestamp(lastReadHeader.getTimer()+1);
+			} else
+				message.setTimestamp(header.getTimer());
+			rtmp.setLastReadPacketHeader(channelId, packet.getHeader());
+
 			packet.setMessage(message);
 
 			if (message instanceof ChunkSize) {
 				ChunkSize chunkSizeMsg = (ChunkSize) message;
 				rtmp.setReadChunkSize(chunkSizeMsg.getSize());
+			} else if (message instanceof Abort) {
+				// The client is aborting a message; reset the packet
+				// because the next chunk on that stream will start a new packet.
+				Abort abort = (Abort) message;
+				rtmp.setLastReadPacket(abort.getChannelId(), null);
+				packet = null;
+			}
+			if (packet.getHeader().isGarbage()) {
+				// discard this packet; this gets rid of the garbage
+				// audio data FP inserts
+				log.trace("Dropping garbage packet: {}, {}", packet, packet.getHeader());
+				packet = null;
+			} else {
+				// collapse the time stamps on the last packet so that it works
+				// right for chunk type 3 later
+				lastHeader = rtmp.getLastReadHeader(channelId);
+				lastHeader.setTimerBase(header.getTimer());
 			}
 		} finally {
 			rtmp.setLastReadPacket(channelId, null);
@@ -431,43 +470,71 @@ public class RTMPProtocolDecoder implements Constants, SimpleProtocolDecoder,
 				byteCount);
 		Header header = new Header();
 		header.setChannelId(channelId);
-		header.setTimerRelative(headerSize != HEADER_NEW);
-
+		header.setIsGarbage(false);
+		
 		if (headerSize != HEADER_NEW && lastHeader == null) {
 			log.error("Last header null not new, headerSize: {}, channelId {}", headerSize, channelId);
 			lastHeader = new Header();
 			lastHeader.setChannelId(channelId);
-			lastHeader.setTimerRelative(headerSize != HEADER_NEW);
 		}
-		
+
+		int timeValue;
 		switch (headerSize) {
 
 			case HEADER_NEW:
-				header.setTimer(RTMPUtils.readUnsignedMediumInt(in));
+				// an absolute time value
+				timeValue = RTMPUtils.readUnsignedMediumInt(in);
 				header.setSize(RTMPUtils.readUnsignedMediumInt(in));
 				header.setDataType(in.get());
 				header.setStreamId(RTMPUtils.readReverseInt(in));
+				if (timeValue == 0xffffff)
+					timeValue = in.getInt();
+				header.setTimerBase(timeValue);
+				header.setTimerDelta(0);
 				break;
 
 			case HEADER_SAME_SOURCE:
-				header.setTimer(RTMPUtils.readUnsignedMediumInt(in));
+				// a delta time value
+				timeValue = RTMPUtils.readUnsignedMediumInt(in);
 				header.setSize(RTMPUtils.readUnsignedMediumInt(in));
 				header.setDataType(in.get());
 				header.setStreamId(lastHeader.getStreamId());
+				if (timeValue == 0xffffff)
+					timeValue = in.getInt();
+				else if (timeValue == 0
+						&& header.getDataType() == TYPE_AUDIO_DATA) {
+					header.setIsGarbage(true);
+					log.trace("audio with zero delta; setting to garbage; ChannelId: {}; DataType: {}; HeaderSize: {}", 
+							new Object[]{header.getChannelId(), header.getDataType(), headerSize});
+				}
+				header.setTimerBase(lastHeader.getTimerBase());
+				header.setTimerDelta(timeValue);
 				break;
 
 			case HEADER_TIMER_CHANGE:
-				header.setTimer(RTMPUtils.readUnsignedMediumInt(in));
+				// a delta time value
+				timeValue = RTMPUtils.readUnsignedMediumInt(in);
 				header.setSize(lastHeader.getSize());
 				header.setDataType(lastHeader.getDataType());
 				header.setStreamId(lastHeader.getStreamId());
+				if (timeValue == 0xffffff)
+					timeValue = in.getInt();
+				else if (timeValue == 0
+						&& header.getDataType() == TYPE_AUDIO_DATA) {
+					header.setIsGarbage(true);
+					log.trace("audio with zero delta; setting to garbage; ChannelId: {}; DataType: {}; HeaderSize: {}", 
+							new Object[]{header.getChannelId(), header.getDataType(), headerSize});
+				}
+				header.setTimerBase(lastHeader.getTimerBase());
+				header.setTimerDelta(timeValue);
 				break;
 
 			case HEADER_CONTINUE:
-				header.setTimer(lastHeader.getTimer());
 				header.setSize(lastHeader.getSize());
 				header.setDataType(lastHeader.getDataType());
 				header.setStreamId(lastHeader.getStreamId());
+				header.setTimerBase(lastHeader.getTimerBase());
+				header.setTimerDelta(lastHeader.getTimerDelta());
 				break;
 
 			default:
@@ -475,6 +542,7 @@ public class RTMPProtocolDecoder implements Constants, SimpleProtocolDecoder,
 				return null;
 
 		}
+		log.trace("CHUNK, D, {}, {}", header, headerSize);
 		return header;
 	}
 
@@ -488,15 +556,12 @@ public class RTMPProtocolDecoder implements Constants, SimpleProtocolDecoder,
 	 */
 	public IRTMPEvent decodeMessage(RTMP rtmp, Header header, IoBuffer in) {
 		IRTMPEvent message;
-		if (header.getTimer() == 0xffffff) {
-			// Skip first four bytes
-			int unknown = in.getInt();
-			log.debug("Unknown 4 bytes: {}", unknown);
-		}
-
 		switch (header.getDataType()) {
 			case TYPE_CHUNK_SIZE:
 				message = decodeChunkSize(in);
+				break;
+			case TYPE_ABORT:
+				message = decodeAbort(in);
 				break;
 			case TYPE_INVOKE:
 				message = decodeInvoke(in, rtmp);
@@ -543,10 +608,13 @@ public class RTMPProtocolDecoder implements Constants, SimpleProtocolDecoder,
 				message = decodeUnknown(header.getDataType(), in);
 				break;
 		}
-		message.setHeader(header);
-		message.setTimestamp(header.getTimer());
 		return message;
 	}
+
+	public IRTMPEvent decodeAbort(IoBuffer in) {
+		return new Abort(in.getInt());
+	}
+
 
 	/**
 	 * Decodes server bandwidth.

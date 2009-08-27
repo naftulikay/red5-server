@@ -697,7 +697,6 @@ public final class PlayEngine implements IFilter, IPushableConsumer,
 			audio.setTimestamp(seekPos);
 			audio.setHeader(new Header());
 			audio.getHeader().setTimer(seekPos);
-			audio.getHeader().setTimerRelative(false);
 			RTMPMessage audioMessage = new RTMPMessage();
 			audioMessage.setBody(audio);
 			lastMessage = audio;

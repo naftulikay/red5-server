@@ -60,11 +60,6 @@ public abstract class BaseEvent implements Constants, IRTMPEvent, Externalizable
 	protected int timestamp;
 
 	/**
-	 * Event extended timestamp
-	 */
-	protected int extendedTimestamp = -1;
-	
-	/**
 	 * Event RTMP packet header
 	 */
 	protected Header header = null;
@@ -152,16 +147,6 @@ public abstract class BaseEvent implements Constants, IRTMPEvent, Externalizable
 	}
 
 	/** {@inheritDoc} */
-    public int getExtendedTimestamp() {
-    	return extendedTimestamp;
-    }
-
-	/** {@inheritDoc} */
-    public void setExtendedTimestamp(int timestamp) {
-    	this.extendedTimestamp = timestamp;
-    }
-    
-	/** {@inheritDoc} */
     public void retain() {
 		if (allocationDebugging) {
 			AllocationDebugger.getInstance().retain(this);
@@ -191,16 +176,10 @@ public abstract class BaseEvent implements Constants, IRTMPEvent, Externalizable
 	public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
 		type = (Type) in.readObject();
 		timestamp = in.readInt();
-		if (timestamp == 0xffffff) {
-			extendedTimestamp = in.readInt();
-		}
 	}
 
 	public void writeExternal(ObjectOutput out) throws IOException {
 		out.writeObject(type);
 		out.writeInt(timestamp);
-		if (extendedTimestamp > -1) {
-			out.writeInt(extendedTimestamp);
-		}
 	}
 }

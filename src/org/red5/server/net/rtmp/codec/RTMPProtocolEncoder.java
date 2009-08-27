@@ -123,7 +123,7 @@ public class RTMPProtocolEncoder extends BaseProtocolEncoder
 		header.setSize(data.limit());
 
 		final Header lastHeader = rtmp.getLastWriteHeader(channelId);
-		final int headerSize = calculateHeaderSize(header, lastHeader);
+		final int headerSize = calculateHeaderSize(rtmp, header, lastHeader);
 		
 		rtmp.setLastWriteHeader(channelId, header);
 		rtmp.setLastWritePacket(channelId, packet);
@@ -140,7 +140,7 @@ public class RTMPProtocolEncoder extends BaseProtocolEncoder
 				+ (numChunks > 0 ? (numChunks - 1) * chunkHeaderSize : 0);
 		final IoBuffer out = IoBuffer.allocate(bufSize, false);
 		
-		encodeHeader(header, lastHeader, out);
+		encodeHeader(rtmp, header, lastHeader, out);
 		
 		if (numChunks == 1) {
 			// we can do it with a single copy
@@ -164,23 +164,34 @@ public class RTMPProtocolEncoder extends BaseProtocolEncoder
     /**
      * Determine type of header to use.
      * 
+     * @param rtmp        The protocol state
      * @param header      RTMP message header
      * @param lastHeader  Previous header
      * @return            Header type to use.
      */
-    private byte getHeaderType(Header header, Header lastHeader) {
-		byte headerType;
-		if (lastHeader == null
-				|| header.getStreamId() != lastHeader.getStreamId()
-				|| !header.isTimerRelative()) {
+    private byte getHeaderType(final RTMP rtmp, final Header header, final Header lastHeader) {
+		if (lastHeader == null)
+			return HEADER_NEW;
+		
+		final Integer lastFullTs = rtmp.getLastFullTimestampWritten(header.getChannelId());
+		if (lastFullTs == null)
+			return HEADER_NEW;
+		
+		final byte headerType;
+		final long diff = RTMPUtils.diffTimestamps(header.getTimer(), lastHeader.getTimer());
+		final long timeSinceFullTs = RTMPUtils.diffTimestamps(header.getTimer(), lastFullTs);
+		if (header.getStreamId() != lastHeader.getStreamId()
+				|| diff < 0
+				|| timeSinceFullTs >= 250
+				) {
             // New header mark if header for another stream
             headerType = HEADER_NEW;
 		} else if (header.getSize() != lastHeader.getSize()
 				|| header.getDataType() != lastHeader.getDataType()) {
             // Same source header if last header data type or size differ
             headerType = HEADER_SAME_SOURCE;
-		} else if (header.getTimer() != lastHeader.getTimer()) {
-            // Timer change marker if there's time gap between headers timestamps
+		} else if (header.getTimer() != lastHeader.getTimer()+lastHeader.getTimerDelta()) {
+            // Timer change marker if there's time gap between header time stamps
             headerType = HEADER_TIMER_CHANGE;
 		} else {
             // Continue encoding
@@ -192,12 +203,13 @@ public class RTMPProtocolEncoder extends BaseProtocolEncoder
     /**
      * Calculate number of bytes necessary to encode the header.
      * 
+     * @param rtmp        The protocol state
      * @param header      RTMP message header
      * @param lastHeader  Previous header
      * @return            Calculated size
      */
-    private int calculateHeaderSize(Header header, Header lastHeader) {
-		final byte headerType = getHeaderType(header, lastHeader);
+    private int calculateHeaderSize(final RTMP rtmp, final Header header, final Header lastHeader) {
+		final byte headerType = getHeaderType(rtmp, header, lastHeader);
 		int channelIdAdd;
 		if (header.getChannelId() > 320) {
 			channelIdAdd = 2;
@@ -211,48 +223,78 @@ public class RTMPProtocolEncoder extends BaseProtocolEncoder
     
     /**
      * Encode RTMP header.
-	 *
+     * @param rtmp        The protocol state
      * @param header      RTMP message header
      * @param lastHeader  Previous header
      * @return            Encoded header data
      */
-    public IoBuffer encodeHeader(Header header, Header lastHeader) {
-    	IoBuffer result = IoBuffer.allocate(calculateHeaderSize(header, lastHeader));
-    	encodeHeader(header, lastHeader, result);
+    public IoBuffer encodeHeader(final RTMP rtmp, final Header header, final Header lastHeader) {
+    	final IoBuffer result = IoBuffer.allocate(calculateHeaderSize(rtmp, header, lastHeader));
+    	encodeHeader(rtmp, header, lastHeader, result);
     	return result;
     }
     
     /**
      * Encode RTMP header into given IoBuffer.
 	 *
+     * @param rtmp        The protocol state
      * @param header      RTMP message header
      * @param lastHeader  Previous header
      * @param buf         Buffer to write encoded header to
      */
-    public void encodeHeader(Header header, Header lastHeader, IoBuffer buf) {
-		final byte headerType = getHeaderType(header, lastHeader);
-		RTMPUtils.encodeHeaderByte(buf, headerType, header
-				.getChannelId());
-
+    public void encodeHeader(final RTMP rtmp, final Header header, final Header lastHeader, final IoBuffer buf) {
+		final byte headerType = getHeaderType(rtmp, header, lastHeader);
+		RTMPUtils.encodeHeaderByte(buf, headerType, header.getChannelId());
+		
+		final int timer;
 		switch (headerType) {
 			case HEADER_NEW:
-				RTMPUtils.writeMediumInt(buf, header.getTimer());
+				timer = header.getTimer();
+				if (timer < 0 || timer >= 0xffffff)
+					RTMPUtils.writeMediumInt(buf, 0xffffff);
+				else
+					RTMPUtils.writeMediumInt(buf, timer);
 				RTMPUtils.writeMediumInt(buf, header.getSize());
 				buf.put(header.getDataType());
 				RTMPUtils.writeReverseInt(buf, header.getStreamId());
+				if (timer < 0 || timer >= 0xffffff)
+					buf.putInt(timer);
+				header.setTimerBase(timer);
+				header.setTimerDelta(0);
+				rtmp.setLastFullTimestampWritten(header.getChannelId(), timer);
 				break;
 			case HEADER_SAME_SOURCE:
-				RTMPUtils.writeMediumInt(buf, header.getTimer());
+				timer = (int) RTMPUtils.diffTimestamps(header.getTimer(), lastHeader.getTimer()); 
+				if (timer < 0 || timer >= 0xffffff)
+					RTMPUtils.writeMediumInt(buf, 0xffffff);
+				else
+					RTMPUtils.writeMediumInt(buf, timer);
 				RTMPUtils.writeMediumInt(buf, header.getSize());
 				buf.put(header.getDataType());
+				if (timer < 0 || timer >= 0xffffff)
+					buf.putInt(timer);
+				header.setTimerBase(header.getTimer()-timer);
+				header.setTimerDelta(timer);
 				break;
 			case HEADER_TIMER_CHANGE:
-				RTMPUtils.writeMediumInt(buf, header.getTimer());
+				timer = (int) RTMPUtils.diffTimestamps(header.getTimer(), lastHeader.getTimer()); 
+				if (timer < 0 || timer >= 0xffffff) {
+					RTMPUtils.writeMediumInt(buf, 0xffffff);
+					buf.putInt(timer);
+				} else
+					RTMPUtils.writeMediumInt(buf, timer);
+				header.setTimerBase(header.getTimer()-timer);
+				header.setTimerDelta(timer);
 				break;
 			case HEADER_CONTINUE:
+				timer = (int) RTMPUtils.diffTimestamps(header.getTimer(), lastHeader.getTimer()); 
+				header.setTimerBase(header.getTimer()-timer);
+				header.setTimerDelta(timer);
 				break;
 			default:
+				break;
 		}
+		log.trace("CHUNK, E, {}, {}", header, headerType);
 	}
 
     /**

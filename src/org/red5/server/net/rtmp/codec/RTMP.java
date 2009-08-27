@@ -101,19 +101,29 @@ public class RTMP extends ProtocolState {
     /**
      * Read headers.
      */
-	private Map<Integer, Header> readHeaders = new HashMap<Integer, Header>();
+	private final Map<Integer, Header> readHeaders = new HashMap<Integer, Header>();
     /**
      * Write headers.
      */
-	private Map<Integer, Header> writeHeaders = new HashMap<Integer, Header>();
+	private final Map<Integer, Header> writeHeaders = new HashMap<Integer, Header>();
+
+	/**
+	 * Headers actually used for a packet
+	 */
+	private final Map<Integer, Header> readPacketHeaders = new HashMap<Integer, Header>();
     /**
      * Read packets.
      */
-	private Map<Integer, Packet> readPackets = new HashMap<Integer, Packet>();
+	private final Map<Integer, Packet> readPackets = new HashMap<Integer, Packet>();
     /**
      * Written packets.
      */
-	private Map<Integer, Packet> writePackets = new HashMap<Integer, Packet>();
+	private final Map<Integer, Packet> writePackets = new HashMap<Integer, Packet>();
+	/**
+	 * Written timestamps
+	 */
+	private final Map<Integer, Integer> writeTimestamps = new HashMap<Integer, Integer>();
+	
     /**
      * Read chunk size. Packets are read and written chunk-by-chunk.
      */
@@ -414,5 +424,21 @@ public class RTMP extends ProtocolState {
 		ToStringCreator tsc = new ToStringCreator(this);
 		return tsc.toString();
 	}
-    
+
+	public void setLastFullTimestampWritten(int channelId, int timer) {
+		writeTimestamps.put(channelId, timer);
+	}
+	
+	public Integer getLastFullTimestampWritten(int channelId)
+	{
+		return writeTimestamps.get(channelId);
+	}
+
+	public void setLastReadPacketHeader(int channelId, Header header) {
+		readPacketHeaders.put(channelId, header);
+	}
+	public Header getLastReadPacketHeader(int channelId)
+	{
+		return readPacketHeaders.get(channelId);
+	}
 }

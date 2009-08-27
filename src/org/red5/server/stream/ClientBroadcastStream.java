@@ -99,9 +99,6 @@ public class ClientBroadcastStream extends AbstractClientStream implements
 	 */
 	private static final Logger log = LoggerFactory.getLogger(ClientBroadcastStream.class);
 
-	/** Stores absolute time for audio stream. */
-	private int audioTime = -1;
-
 	/**
 	 * Total number of bytes received.
 	 */
@@ -127,11 +124,8 @@ public class ClientBroadcastStream extends AbstractClientStream implements
 	 */
 	private IMessageOutput connMsgOut;
 
-	/** Stores absolute time for data stream. */
-	private int dataTime = -1;
-
 	/** Stores timestamp of first packet. */
-	private int firstPacketTime = -1;
+	private long firstPacketTime = -1;
 
 	/**
 	 * Pipe for live streaming
@@ -178,13 +172,6 @@ public class ClientBroadcastStream extends AbstractClientStream implements
 	 */
 	private StatisticsCounter subscriberStats = new StatisticsCounter();
 
-	/** Stores absolute time for video stream. */
-	private int videoTime = -1;
-
-	private int lastEventTime = -1;
-	
-	private int minStreamTime;
-	
 	/**
 	 * Stores the streams metadata
 	 */
@@ -192,15 +179,8 @@ public class ClientBroadcastStream extends AbstractClientStream implements
 	
 	/** Listeners to get notified about received packets. */
 	private Set<IStreamListener> listeners = new CopyOnWriteArraySet<IStreamListener>();
-	
-	/**
-	 * Sets the minimum stream time.
-	 * 
-	 * @param minStreamTime
-	 */
-	public void setMinStreamTime(int minStreamTime) { 
-		this.minStreamTime = minStreamTime; 
-	}
+
+	private long latestTimeStamp=-1;
 	
 	/**
 	 * Check and send notification if necessary
@@ -271,34 +251,16 @@ public class ClientBroadcastStream extends AbstractClientStream implements
 			if (firstPacketTime == -1) {
 				firstPacketTime = rtmpEvent.getTimestamp();
 				log.debug(String.format("CBS=@%08x: firstPacketTime=%d %s",
-						System.identityHashCode(this), firstPacketTime,
-						(rtmpEvent.getHeader().isTimerRelative() ? "(rel)"
-								: "(abs)")));
+						System.identityHashCode(this), firstPacketTime));
 			}
+			log
+			.debug(String
+					.format(
+							"CBS=@%08x: rtmpEvent=%s  timestamp=%d",
+							System.identityHashCode(this),
+							rtmpEvent.getClass().getSimpleName(),
+							rtmpEvent.getTimestamp()));
 
-			int basetime = ((rtmpEvent instanceof VideoData) ? videoTime
-					: ((rtmpEvent instanceof AudioData) ? audioTime : dataTime));
-			if (rtmpEvent.getHeader().isTimerRelative()) {
-				int abstime = rtmpEvent.getTimestamp() + basetime;
-				log
-						.debug(String
-								.format(
-										"CBS=@%08x: rtmpEvent=%s  timestamp=%d (relative)+%d = %d",
-										System.identityHashCode(this),
-										rtmpEvent.getClass().getSimpleName(),
-										rtmpEvent.getTimestamp(), basetime,
-										abstime));
-			} else {
-				int deltime = rtmpEvent.getTimestamp() - basetime;
-				log
-						.debug(String
-								.format(
-										"CBS=@%08x: rtmpEvent=%s  timestamp=%d (absolute)-%d = %d",
-										System.identityHashCode(this),
-										rtmpEvent.getClass().getSimpleName(),
-										rtmpEvent.getTimestamp(), basetime,
-										deltime));
-			}
 		}
 		//get the buffer only once per call
 		IoBuffer buf = null;
@@ -309,15 +271,7 @@ public class ClientBroadcastStream extends AbstractClientStream implements
 			if (info != null) {
 				info.setHasAudio(true);
 			}
-			if (rtmpEvent.getHeader().isTimerRelative()) {
-				if (audioTime == 0) {
-					log.warn("First Audio timestamp is relative! {}", rtmpEvent.getTimestamp());
-				}
-				audioTime  = rtmpEvent.getTimestamp()+lastEventTime;
-			} else {
-				audioTime = rtmpEvent.getTimestamp();
-			}
-			eventTime = audioTime;
+			eventTime = rtmpEvent.getTimestamp();
 			log.trace("Audio: {}", eventTime);
 		} else if (rtmpEvent instanceof VideoData) {
 			
@@ -339,43 +293,10 @@ public class ClientBroadcastStream extends AbstractClientStream implements
 			if (info != null) {
 				info.setHasVideo(true);
 			}
-			if (rtmpEvent.getHeader().isTimerRelative()) {
-				if (videoTime == 0) {
-					log.warn("First Video timestamp is relative! {}", rtmpEvent.getTimestamp());
-				}
-				
-				videoTime = rtmpEvent.getTimestamp() + lastEventTime;
-				
-			} else {
-				videoTime = rtmpEvent.getTimestamp();
-				// Flash player may send first VideoData with old-absolute timestamp.
-				// This ruins the stream's timebase in FileConsumer.
-				// We don't want to discard the packet, as it may be a video keyframe.
-				// Generally a Data or Audio packet has set the timebase to a reasonable value,
-				// Eventually a new/correct absolute time will come on the video channel.
-				// We could put this logic between livePipe and filePipe;
-				// This would work for Audio Data as well, but have not seen the need.
-				int cts = Math.max(audioTime, dataTime);
-				cts = Math.max(cts, minStreamTime);
-				int fudge = 20;
-				// accept some slightly (20ms) retro timestamps [this may not be needed,
-				// the publish Data should strictly precede the video data]
-				if (videoTime + fudge < cts) {
-					log.info("dispatchEvent: adjust archaic videoTime, from: {} to {}", videoTime, cts);
-					videoTime = cts;
-				}
-			}
-			eventTime = videoTime;	
+			eventTime = rtmpEvent.getTimestamp();
 			log.trace("Video: {}", eventTime);
 		} else if (rtmpEvent instanceof Invoke) {
-			if (rtmpEvent.getHeader().isTimerRelative()) {
-				if (dataTime < 0) {
-					log.warn("First data [Invoke] timestamp is relative! {}", rtmpEvent.getTimestamp());
-				}
-				dataTime = rtmpEvent.getTimestamp() + lastEventTime;
-			} else {
-				dataTime = rtmpEvent.getTimestamp();
-			}
+			eventTime = rtmpEvent.getTimestamp();
 			//do we want to return from here?
 			//event / stream listeners will not be notified of invokes
 			return;
@@ -390,18 +311,10 @@ public class ClientBroadcastStream extends AbstractClientStream implements
 				}
 			}
 			
-			if (rtmpEvent.getHeader().isTimerRelative()) {
-				if (dataTime < 0) {
-					log.warn("First data [Notify] timestamp is relative! {}", rtmpEvent.getTimestamp());
-				}
-				dataTime = rtmpEvent.getTimestamp() + lastEventTime;
-			} else {
-				dataTime = rtmpEvent.getTimestamp();
-			}
-			eventTime = dataTime;
+			eventTime = rtmpEvent.getTimestamp();
 		}
-		
-		lastEventTime = eventTime;
+		if (eventTime > latestTimeStamp)
+			latestTimeStamp = eventTime;
 		
 		// Notify event listeners
 		checkSendNotifications(event);
@@ -452,7 +365,7 @@ public class ClientBroadcastStream extends AbstractClientStream implements
 
 	/** {@inheritDoc} */
 	public int getCurrentTimestamp() {
-		return Math.max(Math.max(videoTime, audioTime), dataTime);
+		return (int)latestTimeStamp;
 	}
 
 	/** {@inheritDoc} */
@@ -845,7 +758,7 @@ public class ClientBroadcastStream extends AbstractClientStream implements
 		IConsumerService consumerManager = (IConsumerService) getScope().getContext().getBean(IConsumerService.KEY);
 		checkVideoCodec = true;
 		firstPacketTime = -1;
-		audioTime = videoTime = dataTime = 0;
+		latestTimeStamp = -1;
 		connMsgOut = consumerManager.getConsumerOutput(this);
 		connMsgOut.subscribe(this, null);
 		recordPipe = new InMemoryPushPushPipe();

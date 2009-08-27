@@ -147,24 +147,30 @@ public abstract class BaseEvent implements Constants, IRTMPEvent, Externalizable
 	}
 
 	/** {@inheritDoc} */
+    @SuppressWarnings("all")
     public void retain() {
 		if (allocationDebugging) {
 			AllocationDebugger.getInstance().retain(this);
 		}
-		if (refcount.get() > 0) {
-			refcount.incrementAndGet();
+		final int baseCount = refcount.getAndIncrement();
+		if (allocationDebugging && baseCount < 1)
+		{
+			throw new RuntimeException("attempt to retain object with invalid ref count" );
 		}
 	}
 
 	/** {@inheritDoc} */
+    @SuppressWarnings("all")
     public void release() {
 		if (allocationDebugging) {
 			AllocationDebugger.getInstance().release(this);
 		}
-		if (refcount.get() > 0) {
-			if (refcount.decrementAndGet() == 0) {
-				releaseInternal();
-			}
+		final int baseCount = refcount.decrementAndGet();
+		if (baseCount == 0) {
+			releaseInternal();
+		} else if (allocationDebugging && baseCount < 0)
+		{
+			throw new RuntimeException("attempt to retain object with invalid ref count" );
 		}
 	}
 

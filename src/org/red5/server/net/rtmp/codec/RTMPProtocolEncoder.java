@@ -61,8 +61,7 @@ import org.slf4j.LoggerFactory;
 /**
  * RTMP protocol encoder encodes RTMP messages and packets to byte buffers.
  */
-public class RTMPProtocolEncoder extends BaseProtocolEncoder 
-	implements SimpleProtocolEncoder, Constants, IEventEncoder {
+public class RTMPProtocolEncoder extends BaseProtocolEncoder implements SimpleProtocolEncoder, Constants, IEventEncoder {
 
     /**
      * Logger.
@@ -75,8 +74,7 @@ public class RTMPProtocolEncoder extends BaseProtocolEncoder
     private Serializer serializer;
 
 	/** {@inheritDoc} */
-    public IoBuffer encode(ProtocolState state, Object message)
-			throws Exception {
+    public IoBuffer encode(ProtocolState state, Object message) throws Exception {
 		try {
 			final RTMP rtmp = (RTMP) state;
 			if (message instanceof IoBuffer) {
@@ -134,8 +132,7 @@ public class RTMPProtocolEncoder extends BaseProtocolEncoder
 			chunkHeaderSize = 3;
 		else if (header.getChannelId() > 63)
 			chunkHeaderSize = 2;
-		final int numChunks = (int) Math.ceil(header.getSize()
-				/ (float) chunkSize);
+		final int numChunks = (int) Math.ceil(header.getSize() / (float) chunkSize);
 		final int bufSize = header.getSize() + headerSize
 				+ (numChunks > 0 ? (numChunks - 1) * chunkHeaderSize : 0);
 		final IoBuffer out = IoBuffer.allocate(bufSize, false);
@@ -148,8 +145,7 @@ public class RTMPProtocolEncoder extends BaseProtocolEncoder
 		} else {
 			for (int i = 0; i < numChunks - 1; i++) {
 				BufferUtils.put(out, data, chunkSize);
-				RTMPUtils.encodeHeaderByte(out, HEADER_CONTINUE, header
-						.getChannelId());
+				RTMPUtils.encodeHeaderByte(out, HEADER_CONTINUE, header.getChannelId());
 			}
 			BufferUtils.put(out, data, out.remaining());
 		}
@@ -210,13 +206,12 @@ public class RTMPProtocolEncoder extends BaseProtocolEncoder
      */
     private int calculateHeaderSize(final RTMP rtmp, final Header header, final Header lastHeader) {
 		final byte headerType = getHeaderType(rtmp, header, lastHeader);
-		int channelIdAdd;
-		if (header.getChannelId() > 320) {
+		int channelIdAdd = 0;
+		int channelId = header.getChannelId();
+		if (channelId > 320) {
 			channelIdAdd = 2;
-		} else if (header.getChannelId() > 63) {
+		} else if (channelId > 63) {
 			channelIdAdd = 1;
-		} else {
-			channelIdAdd = 0;
 		}
 		return RTMPUtils.getHeaderLength(headerType) + channelIdAdd;
     }

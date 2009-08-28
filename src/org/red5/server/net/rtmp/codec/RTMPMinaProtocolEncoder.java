@@ -29,15 +29,12 @@ import org.red5.server.net.protocol.ProtocolState;
 /**
  * Mina protocol encoder for RTMP.
  */
-public class RTMPMinaProtocolEncoder extends RTMPProtocolEncoder implements
-		ProtocolEncoder {
+public class RTMPMinaProtocolEncoder extends RTMPProtocolEncoder implements ProtocolEncoder {
 
 	/** {@inheritDoc} */
-    public void encode(IoSession session, Object message,
-			ProtocolEncoderOutput out) throws ProtocolCodecException {
+    public void encode(IoSession session, Object message, ProtocolEncoderOutput out) throws ProtocolCodecException {
 		try {
-			final ProtocolState state = (ProtocolState) session
-					.getAttribute(ProtocolState.SESSION_KEY);
+			final ProtocolState state = (ProtocolState) session.getAttribute(ProtocolState.SESSION_KEY);
 			// We need to synchronize on the output and flush the
 			// generated data to prevent two packages to the same channel
 			// to be sent in different order thus resulting in wrong

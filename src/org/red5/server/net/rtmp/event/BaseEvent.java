@@ -44,6 +44,11 @@ public abstract class BaseEvent implements Constants, IRTMPEvent, Externalizable
 	 */
 	private Type type;
 
+    /**
+	 * Source type
+	 */
+	private byte sourceType;
+	
 	/**
 	 * Event target object
 	 */
@@ -103,6 +108,14 @@ public abstract class BaseEvent implements Constants, IRTMPEvent, Externalizable
 		this.type = type;
 	}
     
+	public byte getSourceType() {
+		return sourceType;
+	}
+
+	public void setSourceType(byte sourceType) {
+		this.sourceType = sourceType;
+	}
+
 	/** {@inheritDoc} */
     public Object getObject() {
 		return object;

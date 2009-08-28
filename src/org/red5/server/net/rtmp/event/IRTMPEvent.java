@@ -67,6 +67,20 @@ public interface IRTMPEvent extends IEvent {
      */
     public void setTimestamp(int timestamp);
     
+	/**
+     * Getter for source type
+     *
+     * @return  Source type
+     */
+    public byte getSourceType();    
+
+	/**
+     * Setter for source type
+     *
+     * @param sourceType 
+     */
+    public void setSourceType(byte sourceType);
+        
     /**
      * Retain event
      */

@@ -147,6 +147,7 @@ public class ConnectionConsumer implements IPushableConsumer, IPipeConnectionLis
 					AudioData audioData = new AudioData(((AudioData) msg).getData().asReadOnlyBuffer());
 					audioData.setHeader(header);
 					audioData.setTimestamp(header.getTimer());
+					audioData.setSourceType(((AudioData)msg).getSourceType());
 					audio.write(audioData);
 					break;
 				case Constants.TYPE_VIDEO_DATA:
@@ -154,6 +155,7 @@ public class ConnectionConsumer implements IPushableConsumer, IPipeConnectionLis
 					VideoData videoData = new VideoData(((VideoData) msg).getData().asReadOnlyBuffer());
 					videoData.setHeader(header);
 					videoData.setTimestamp(header.getTimer());
+					videoData.setSourceType(((VideoData)msg).getSourceType());
 					video.write(videoData);
 					break;
 				case Constants.TYPE_PING:

@@ -56,13 +56,11 @@ import org.springframework.context.ApplicationContextAware;
  * 
  * @author The Red5 Project (red5@osflash.org)
  */
-public abstract class BaseRTMPHandler implements IRTMPHandler, Constants,
-		StatusCodes, ApplicationContextAware {
+public abstract class BaseRTMPHandler implements IRTMPHandler, Constants, StatusCodes, ApplicationContextAware {
 	/**
 	 * Logger
 	 */
-	private static Logger log = LoggerFactory
-			.getLogger(BaseRTMPHandler.class);
+	private static Logger log = LoggerFactory.getLogger(BaseRTMPHandler.class);
 
 	/**
 	 * Application context
@@ -93,23 +91,20 @@ public abstract class BaseRTMPHandler implements IRTMPHandler, Constants,
 	}
 
 	/** {@inheritDoc} */
-	public void setApplicationContext(ApplicationContext appCtx)
-			throws BeansException {
+	public void setApplicationContext(ApplicationContext appCtx) throws BeansException {
 		this.appCtx = appCtx;
 	}
 
 	/** {@inheritDoc} */
 	public void connectionOpened(RTMPConnection conn, RTMP state) {
 		if (state.getMode() == RTMP.MODE_SERVER && appCtx != null) {
-			ISchedulingService service = (ISchedulingService) appCtx
-					.getBean(ISchedulingService.BEAN_NAME);
+			ISchedulingService service = (ISchedulingService) appCtx.getBean(ISchedulingService.BEAN_NAME);
 			conn.startWaitForHandshake(service);
 		}
 	}
 
 	/** {@inheritDoc} */
-	public void messageReceived(RTMPConnection conn, ProtocolState state,
-			Object in) throws Exception {
+	public void messageReceived(RTMPConnection conn, ProtocolState state, Object in) throws Exception {
 
 		IRTMPEvent message = null;
 		try {
@@ -118,8 +113,7 @@ public abstract class BaseRTMPHandler implements IRTMPHandler, Constants,
 			message = packet.getMessage();
 			final Header header = packet.getHeader();
 			final Channel channel = conn.getChannel(header.getChannelId());
-			final IClientStream stream = conn.getStreamById(header
-					.getStreamId());
+			final IClientStream stream = conn.getStreamById(header.getStreamId());
 
 			log.debug("Message received, header: {}", header);
 
@@ -143,12 +137,9 @@ public abstract class BaseRTMPHandler implements IRTMPHandler, Constants,
 
 				case TYPE_INVOKE:
 				case TYPE_FLEX_MESSAGE:
-					onInvoke(conn, channel, header, (Invoke) message,
-							(RTMP) state);
-					if (message.getHeader().getStreamId() != 0
-							&& ((Invoke) message).getCall().getServiceName() == null
-							&& ACTION_PUBLISH.equals(((Invoke) message)
-									.getCall().getServiceMethodName())) {
+					onInvoke(conn, channel, header, (Invoke) message, (RTMP) state);
+					if (message.getHeader().getStreamId() != 0 && ((Invoke) message).getCall().getServiceName() == null
+							&& ACTION_PUBLISH.equals(((Invoke) message).getCall().getServiceMethodName())) {
 						if (stream != null) {
 							// Only dispatch if stream really was created
 							((IEventDispatcher) stream).dispatchEvent(message);
@@ -161,8 +152,7 @@ public abstract class BaseRTMPHandler implements IRTMPHandler, Constants,
 						// Stream metadata
 						((IEventDispatcher) stream).dispatchEvent(message);
 					} else {
-						onInvoke(conn, channel, header, (Notify) message,
-								(RTMP) state);
+						onInvoke(conn, channel, header, (Notify) message, (RTMP) state);
 					}
 					break;
 
@@ -177,8 +167,7 @@ public abstract class BaseRTMPHandler implements IRTMPHandler, Constants,
 					break;
 
 				case TYPE_BYTES_READ:
-					onStreamBytesRead(conn, channel, header,
-							(BytesRead) message);
+					onStreamBytesRead(conn, channel, header, (BytesRead) message);
 					break;
 
 				case TYPE_AUDIO_DATA:
@@ -187,8 +176,9 @@ public abstract class BaseRTMPHandler implements IRTMPHandler, Constants,
 					// ts:"+source.getTimer());
 
 					//mark the event as from a live source
+					//log.trace("Marking message as originating from a Live source");
 					message.setSourceType(Constants.SOURCE_TYPE_LIVE);
-					
+
 					// NOTE: If we respond to "publish" with
 					// "NetStream.Publish.BadName",
 					// the client sends a few stream packets before stopping. We
@@ -199,8 +189,7 @@ public abstract class BaseRTMPHandler implements IRTMPHandler, Constants,
 					break;
 				case TYPE_FLEX_SHARED_OBJECT:
 				case TYPE_SHARED_OBJECT:
-					onSharedObject(conn, channel, header,
-							(SharedObjectMessage) message);
+					onSharedObject(conn, channel, header, (SharedObjectMessage) message);
 					break;
 				default:
 					log.debug("Unknown type: {}", header.getDataType());
@@ -274,8 +263,7 @@ public abstract class BaseRTMPHandler implements IRTMPHandler, Constants,
 	 * @param chunkSize
 	 *            New chunk size
 	 */
-	protected abstract void onChunkSize(RTMPConnection conn, Channel channel,
-			Header source, ChunkSize chunkSize);
+	protected abstract void onChunkSize(RTMPConnection conn, Channel channel, Header source, ChunkSize chunkSize);
 
 	/**
 	 * Handler for pending call result. Dispatches results to all pending call
@@ -288,8 +276,7 @@ public abstract class BaseRTMPHandler implements IRTMPHandler, Constants,
 	 */
 	protected void handlePendingCallResult(RTMPConnection conn, Notify invoke) {
 		final IServiceCall call = invoke.getCall();
-		final IPendingServiceCall pendingCall = conn.retrievePendingCall(invoke
-				.getInvokeId());
+		final IPendingServiceCall pendingCall = conn.retrievePendingCall(invoke.getInvokeId());
 		if (pendingCall != null) {
 			// The client sent a response to a previously made call.
 			Object[] args = call.getArguments();
@@ -306,8 +293,7 @@ public abstract class BaseRTMPHandler implements IRTMPHandler, Constants,
 					try {
 						callback.resultReceived(pendingCall);
 					} catch (Exception e) {
-						log.error("Error while executing callback {} {}",
-								callback, e);
+						log.error("Error while executing callback {} {}", callback, e);
 					}
 				}
 			}
@@ -328,8 +314,7 @@ public abstract class BaseRTMPHandler implements IRTMPHandler, Constants,
 	 * @param rtmp
 	 *            RTMP connection state
 	 */
-	protected abstract void onInvoke(RTMPConnection conn, Channel channel,
-			Header source, Notify invoke, RTMP rtmp);
+	protected abstract void onInvoke(RTMPConnection conn, Channel channel, Header source, Notify invoke, RTMP rtmp);
 
 	/**
 	 * Ping event handler.
@@ -343,8 +328,7 @@ public abstract class BaseRTMPHandler implements IRTMPHandler, Constants,
 	 * @param ping
 	 *            Ping event context
 	 */
-	protected abstract void onPing(RTMPConnection conn, Channel channel,
-			Header source, Ping ping);
+	protected abstract void onPing(RTMPConnection conn, Channel channel, Header source, Ping ping);
 
 	/**
 	 * Stream bytes read event handler.
@@ -358,8 +342,7 @@ public abstract class BaseRTMPHandler implements IRTMPHandler, Constants,
 	 * @param streamBytesRead
 	 *            Bytes read event context
 	 */
-	protected void onStreamBytesRead(RTMPConnection conn, Channel channel,
-			Header source, BytesRead streamBytesRead) {
+	protected void onStreamBytesRead(RTMPConnection conn, Channel channel, Header source, BytesRead streamBytesRead) {
 		conn.receivedBytesRead(streamBytesRead.getBytesRead());
 	}
 
@@ -375,7 +358,7 @@ public abstract class BaseRTMPHandler implements IRTMPHandler, Constants,
 	 * @param object
 	 *            Shared object event context
 	 */
-	protected abstract void onSharedObject(RTMPConnection conn,
-			Channel channel, Header source, SharedObjectMessage object);
+	protected abstract void onSharedObject(RTMPConnection conn, Channel channel, Header source,
+			SharedObjectMessage object);
 
 }

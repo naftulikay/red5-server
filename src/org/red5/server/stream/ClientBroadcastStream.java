@@ -89,10 +89,9 @@ import org.slf4j.LoggerFactory;
  *
  * This type of stream uses two different pipes for live streaming and recording.
  */
-public class ClientBroadcastStream extends AbstractClientStream implements
-		IClientBroadcastStream, IFilter, IPushableConsumer,
-		IPipeConnectionListener, IEventDispatcher,
-		IClientBroadcastStreamStatistics, ClientBroadcastStreamMBean {
+public class ClientBroadcastStream extends AbstractClientStream implements IClientBroadcastStream, IFilter,
+		IPushableConsumer, IPipeConnectionListener, IEventDispatcher, IClientBroadcastStreamStatistics,
+		ClientBroadcastStreamMBean {
 
 	/**
 	 * Logger
@@ -176,12 +175,12 @@ public class ClientBroadcastStream extends AbstractClientStream implements
 	 * Stores the streams metadata
 	 */
 	protected Notify metaData;
-	
+
 	/** Listeners to get notified about received packets. */
 	private Set<IStreamListener> listeners = new CopyOnWriteArraySet<IStreamListener>();
 
-	private long latestTimeStamp=-1;
-	
+	private long latestTimeStamp = -1;
+
 	/**
 	 * Check and send notification if necessary
 	 * @param event          Event
@@ -220,10 +219,9 @@ public class ClientBroadcastStream extends AbstractClientStream implements
 	/**
 	 * Dispatches event
 	 * @param event          Event to dispatch
-	 */	
+	 */
 	public void dispatchEvent(IEvent event) {
-		if (!(event instanceof IRTMPEvent)
-				&& (event.getType() != IEvent.Type.STREAM_CONTROL)
+		if (!(event instanceof IRTMPEvent) && (event.getType() != IEvent.Type.STREAM_CONTROL)
 				&& (event.getType() != IEvent.Type.STREAM_DATA) || closed) {
 			// ignored event
 			log.debug("dispatchEvent: {}", event.getType());
@@ -250,16 +248,12 @@ public class ClientBroadcastStream extends AbstractClientStream implements
 			// absolute? no matter: it's never used!
 			if (firstPacketTime == -1) {
 				firstPacketTime = rtmpEvent.getTimestamp();
-				log.debug(String.format("CBS=@%08x: firstPacketTime=%d %s",
-						System.identityHashCode(this), firstPacketTime));
+				log.debug(String
+						.format("CBS=@%08x: rtmpEvent=%s firstPacketTime=%d", System.identityHashCode(this), rtmpEvent
+								.getClass().getSimpleName(), firstPacketTime));
 			}
-			log
-			.debug(String
-					.format(
-							"CBS=@%08x: rtmpEvent=%s  timestamp=%d",
-							System.identityHashCode(this),
-							rtmpEvent.getClass().getSimpleName(),
-							rtmpEvent.getTimestamp()));
+			log.debug(String.format("CBS=@%08x: rtmpEvent=%s  timestamp=%d", System.identityHashCode(this), rtmpEvent
+					.getClass().getSimpleName(), rtmpEvent.getTimestamp()));
 
 		}
 		//get the buffer only once per call
@@ -274,7 +268,7 @@ public class ClientBroadcastStream extends AbstractClientStream implements
 			eventTime = rtmpEvent.getTimestamp();
 			log.trace("Audio: {}", eventTime);
 		} else if (rtmpEvent instanceof VideoData) {
-			
+
 			IVideoStreamCodec videoStreamCodec = null;
 			if (checkVideoCodec) {
 				videoStreamCodec = VideoCodecFactory.getVideoCodec(buf);
@@ -310,19 +304,19 @@ public class ClientBroadcastStream extends AbstractClientStream implements
 					log.warn("Metadata could not be duplicated for this stream", e);
 				}
 			}
-			
+
 			eventTime = rtmpEvent.getTimestamp();
 		}
 		if (eventTime > latestTimeStamp)
 			latestTimeStamp = eventTime;
-		
+
 		// Notify event listeners
 		checkSendNotifications(event);
 
 		// Create new RTMP message, initialize it and push through pipe
 		RTMPMessage msg = new RTMPMessage();
 		msg.setBody(rtmpEvent);
-		msg.getBody().setTimestamp(eventTime); 
+		msg.getBody().setTimestamp(eventTime);
 		// rtmpEvent.setTimestamp(eventTime); ~ABSOLUTE!
 		// note this timestamp is set in event/body but not in the associated header.
 		try {
@@ -340,10 +334,10 @@ public class ClientBroadcastStream extends AbstractClientStream implements
 			sendRecordFailedNotify(err.getMessage());
 			stop();
 		}
-		
+
 		// Notify listeners about received packet
 		if (rtmpEvent instanceof IStreamPacket) {
-			for (IStreamListener listener: getStreamListeners()) {
+			for (IStreamListener listener : getStreamListeners()) {
 				try {
 					listener.packetReceived(this, (IStreamPacket) rtmpEvent);
 				} catch (Exception e) {
@@ -365,7 +359,7 @@ public class ClientBroadcastStream extends AbstractClientStream implements
 
 	/** {@inheritDoc} */
 	public int getCurrentTimestamp() {
-		return (int)latestTimeStamp;
+		return (int) latestTimeStamp;
 	}
 
 	/** {@inheritDoc} */
@@ -455,14 +449,12 @@ public class ClientBroadcastStream extends AbstractClientStream implements
 	 * @param pipe             Pipe that used to send OOB message
 	 * @param oobCtrlMsg       Out-of-band control message
 	 */
-	public void onOOBControlMessage(IMessageComponent source, IPipe pipe,
-			OOBControlMessage oobCtrlMsg) {
+	public void onOOBControlMessage(IMessageComponent source, IPipe pipe, OOBControlMessage oobCtrlMsg) {
 		if ("ClientBroadcastStream".equals(oobCtrlMsg.getTarget())) {
-    		if ("chunkSize".equals(oobCtrlMsg.getServiceName())) {
-    			chunkSize = (Integer) oobCtrlMsg.getServiceParamMap().get(
-    					"chunkSize");
-    			notifyChunkSize();
-    		}
+			if ("chunkSize".equals(oobCtrlMsg.getServiceName())) {
+				chunkSize = (Integer) oobCtrlMsg.getServiceParamMap().get("chunkSize");
+				notifyChunkSize();
+			}
 		}
 	}
 
@@ -474,10 +466,9 @@ public class ClientBroadcastStream extends AbstractClientStream implements
 	public void onPipeConnectionEvent(PipeConnectionEvent event) {
 		switch (event.getType()) {
 			case PipeConnectionEvent.PROVIDER_CONNECT_PUSH:
-				if (event.getProvider() == this
-						&& event.getSource() != connMsgOut
+				if (event.getProvider() == this && event.getSource() != connMsgOut
 						&& (event.getParamMap() == null || !event.getParamMap().containsKey("record"))) {
-					
+
 					this.livePipe = (IPipe) event.getSource();
 					for (IConsumer consumer : this.livePipe.getConsumers()) {
 						subscriberStats.increment();
@@ -493,7 +484,7 @@ public class ClientBroadcastStream extends AbstractClientStream implements
 				if (this.livePipe == event.getSource()) {
 					notifyChunkSize();
 				}
-				
+
 				if (metaData != null) {
 					RTMPMessage msg = new RTMPMessage();
 					msg.setBody(metaData);
@@ -504,9 +495,9 @@ public class ClientBroadcastStream extends AbstractClientStream implements
 						log.warn("Error sending metadata", e);
 					}
 				}
-				
+
 				subscriberStats.increment();
-				
+
 				break;
 			case PipeConnectionEvent.CONSUMER_DISCONNECT:
 				subscriberStats.decrement();
@@ -533,7 +524,8 @@ public class ClientBroadcastStream extends AbstractClientStream implements
 	 * @throws ResourceNotFoundException     Resource doesn't exist when trying to append.
 	 * @throws ResourceExistException        Resource exist when trying to create.
 	 */
-	public void saveAs(String name, boolean isAppend) throws IOException, ResourceNotFoundException, ResourceExistException {
+	public void saveAs(String name, boolean isAppend) throws IOException, ResourceNotFoundException,
+			ResourceExistException {
 		log.debug("SaveAs - name: {} append: {}", name, isAppend);
 		// Get stream scope
 		IStreamCapableConnection conn = getConnection();
@@ -543,12 +535,11 @@ public class ClientBroadcastStream extends AbstractClientStream implements
 		}
 		IScope scope = conn.getScope();
 		// Get stream filename generator
-		IStreamFilenameGenerator generator = (IStreamFilenameGenerator) ScopeUtils
-				.getScopeService(scope, IStreamFilenameGenerator.class,
-						DefaultStreamFilenameGenerator.class);
+		IStreamFilenameGenerator generator = (IStreamFilenameGenerator) ScopeUtils.getScopeService(scope,
+				IStreamFilenameGenerator.class, DefaultStreamFilenameGenerator.class);
 
 		// Generate filename
-		recordingFilename = generator.generateFilename(scope, name, ".flv",	GenerationType.RECORD);
+		recordingFilename = generator.generateFilename(scope, name, ".flv", GenerationType.RECORD);
 		// Get file for that filename
 		File file;
 		if (generator.resolvesToAbsolutePath()) {
@@ -590,22 +581,22 @@ public class ClientBroadcastStream extends AbstractClientStream implements
 			}
 
 			file.createNewFile();
-		} 
-		
+		}
+
 		//remove existing meta file
 		File meta = new File(file.getCanonicalPath() + ".meta");
 		if (meta.exists()) {
-   			log.trace("Meta file exists");
-    		if (meta.delete()) {
-    			log.debug("Meta file deleted - {}", meta.getName());
-    		} else {
-    			log.warn("Meta file was not deleted - {}", meta.getName());
-    			meta.deleteOnExit();
-    		}
+			log.trace("Meta file exists");
+			if (meta.delete()) {
+				log.debug("Meta file deleted - {}", meta.getName());
+			} else {
+				log.warn("Meta file was not deleted - {}", meta.getName());
+				meta.deleteOnExit();
+			}
 		} else {
-   			log.debug("Meta file does not exist: {}", meta.getCanonicalPath());
+			log.debug("Meta file does not exist: {}", meta.getCanonicalPath());
 		}
-		
+
 		log.debug("Recording file: {}", file.getCanonicalPath());
 		recordingFile = new FileConsumer(scope, file);
 		Map<Object, Object> paramMap = new HashMap<Object, Object>(1);
@@ -743,8 +734,8 @@ public class ClientBroadcastStream extends AbstractClientStream implements
 			JMXAgent.updateMBeanAttribute(oName, "publishedName", name);
 		} else {
 			//create a new mbean for this instance with the new name
-			oName = JMXFactory.createObjectName("type",	"ClientBroadcastStream", "publishedName", name);
-			JMXAgent.registerMBean(this, this.getClass().getName(),	ClientBroadcastStreamMBean.class, oName);
+			oName = JMXFactory.createObjectName("type", "ClientBroadcastStream", "publishedName", name);
+			JMXAgent.registerMBean(this, this.getClass().getName(), ClientBroadcastStreamMBean.class, oName);
 		}
 		this.publishedName = name;
 	}
@@ -798,7 +789,7 @@ public class ClientBroadcastStream extends AbstractClientStream implements
 			sendRecordStopNotify();
 		}
 	}
-	
+
 	public boolean isRecording() {
 		return recording;
 	}

@@ -194,11 +194,14 @@ public abstract class BaseEvent implements Constants, IRTMPEvent, Externalizable
 
 	public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
 		type = (Type) in.readObject();
+		sourceType = in.readByte();
 		timestamp = in.readInt();
 	}
 
 	public void writeExternal(ObjectOutput out) throws IOException {
 		out.writeObject(type);
+		out.writeByte(sourceType);
 		out.writeInt(timestamp);
+		
 	}
 }

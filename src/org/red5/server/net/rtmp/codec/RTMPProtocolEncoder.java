@@ -97,11 +97,13 @@ public class RTMPProtocolEncoder extends BaseProtocolEncoder implements SimplePr
 	 */
 	public IoBuffer encodePacket(RTMP rtmp, Packet packet) {
 
+		IoBuffer out = null;
+		IoBuffer data = null;
+		
 		final Header header = packet.getHeader();
 		final int channelId = header.getChannelId();
 		final IRTMPEvent message = packet.getMessage();
-		IoBuffer data;
-
+		
 		if (message instanceof ChunkSize) {
 			ChunkSize chunkSizeMsg = (ChunkSize) message;
 			rtmp.setWriteChunkSize(chunkSizeMsg.getSize());
@@ -112,47 +114,49 @@ public class RTMPProtocolEncoder extends BaseProtocolEncoder implements SimplePr
 		} finally {
 			message.release();
 		}
-
-		if (data.position() != 0) {
-			data.flip();
-		} else {
-			data.rewind();
-		}
-		header.setSize(data.limit());
-
-		final Header lastHeader = rtmp.getLastWriteHeader(channelId);
-		final int headerSize = calculateHeaderSize(rtmp, header, lastHeader);
-
-		rtmp.setLastWriteHeader(channelId, header);
-		rtmp.setLastWritePacket(channelId, packet);
-
-		final int chunkSize = rtmp.getWriteChunkSize();
-		int chunkHeaderSize = 1;
-		if (header.getChannelId() > 320) {
-			chunkHeaderSize = 3;			
-		} else if (header.getChannelId() > 63) {
-			chunkHeaderSize = 2;
-		}
-		final int numChunks = (int) Math.ceil(header.getSize() / (float) chunkSize);
-		final int bufSize = header.getSize() + headerSize + (numChunks > 0 ? (numChunks - 1) * chunkHeaderSize : 0);
-		final IoBuffer out = IoBuffer.allocate(bufSize, false);
-
-		encodeHeader(rtmp, header, lastHeader, out);
-
-		if (numChunks == 1) {
-			// we can do it with a single copy
-			BufferUtils.put(out, data, out.remaining());
-		} else {
-			for (int i = 0; i < numChunks - 1; i++) {
-				BufferUtils.put(out, data, chunkSize);
-				RTMPUtils.encodeHeaderByte(out, HEADER_CONTINUE, header.getChannelId());
+		
+		if (data != null) {
+			if (data.position() != 0) {
+				data.flip();
+			} else {
+				data.rewind();
 			}
-			BufferUtils.put(out, data, out.remaining());
-		}
+			header.setSize(data.limit());
 
-		data.free();
-		out.flip();
-		data = null;
+			Header lastHeader = rtmp.getLastWriteHeader(channelId);
+			int headerSize = calculateHeaderSize(rtmp, header, lastHeader);
+
+			rtmp.setLastWriteHeader(channelId, header);
+			rtmp.setLastWritePacket(channelId, packet);
+
+			int chunkSize = rtmp.getWriteChunkSize();
+			int chunkHeaderSize = 1;
+			if (header.getChannelId() > 320) {
+				chunkHeaderSize = 3;			
+			} else if (header.getChannelId() > 63) {
+				chunkHeaderSize = 2;
+			}
+			int numChunks = (int) Math.ceil(header.getSize() / (float) chunkSize);
+			int bufSize = header.getSize() + headerSize + (numChunks > 0 ? (numChunks - 1) * chunkHeaderSize : 0);
+			out = IoBuffer.allocate(bufSize, false);
+
+			encodeHeader(rtmp, header, lastHeader, out);
+
+			if (numChunks == 1) {
+				// we can do it with a single copy
+				BufferUtils.put(out, data, out.remaining());
+			} else {
+				for (int i = 0; i < numChunks - 1; i++) {
+					BufferUtils.put(out, data, chunkSize);
+					RTMPUtils.encodeHeaderByte(out, HEADER_CONTINUE, header.getChannelId());
+				}
+				BufferUtils.put(out, data, out.remaining());
+			}
+
+			data.free();
+			out.flip();
+			data = null;
+		}
 
 		return out;
 	}
@@ -313,8 +317,12 @@ public class RTMPProtocolEncoder extends BaseProtocolEncoder implements SimplePr
 			case TYPE_BYTES_READ:
 				return encodeBytesRead((BytesRead) message);
 			case TYPE_AUDIO_DATA:
+				//TODO: drop the message if its "late"
+				
 				return encodeAudioData((AudioData) message);
 			case TYPE_VIDEO_DATA:
+				//TODO: drop the message if its "late"
+				
 				return encodeVideoData((VideoData) message);
 			case TYPE_FLEX_SHARED_OBJECT:
 				return encodeFlexSharedObject((ISharedObjectMessage) message, rtmp);
@@ -330,8 +338,8 @@ public class RTMPProtocolEncoder extends BaseProtocolEncoder implements SimplePr
 				return encodeFlexStreamSend((FlexStreamSend) message);
 			default:
 				log.warn("Unknown object type: {}", header.getDataType());
-				return null;
 		}
+		return null;
 	}
 
 	/**

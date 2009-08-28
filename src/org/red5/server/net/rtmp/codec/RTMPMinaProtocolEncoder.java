@@ -45,6 +45,8 @@ public class RTMPMinaProtocolEncoder extends RTMPProtocolEncoder implements Prot
 					out.write(buf);
 					out.mergeAll();
 					out.flush();
+				} else {
+					log.info("Response buffer was null after encoding");
 				}
 			}
 		} catch (Exception ex) {

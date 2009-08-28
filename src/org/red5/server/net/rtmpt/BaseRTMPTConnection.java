@@ -242,10 +242,14 @@ public abstract class BaseRTMPTConnection extends RTMPConnection {
 				return;
 			}
 
-			// Mark packet as being written
-			writingMessage(packet);
-
-			pendingMessages.add(new PendingData(data, packet));
+			if (data != null) {
+    			// Mark packet as being written
+    			writingMessage(packet);
+    			//add to pending
+    			pendingMessages.add(new PendingData(data, packet));			
+			} else {
+				log.info("Response buffer was null after encoding");
+			}
 		} finally {
 			getWriteLock().unlock();
 		}

@@ -1196,6 +1196,9 @@ public abstract class RTMPConnection extends BaseConnection implements
 						new Object[] { RTMPConnection.this, getId(), 
 							(lastPingSent.get() - lastPongReceived.get()),
 							(System.currentTimeMillis() - lastPingSent.get())});
+				// Add the following line to (hopefully) deal with a very common support request
+				// on the Red5 list
+				log.warn("This often happens if YOUR Red5 application generated an exception on start-up.  Check earlier in the log for that exception first!");
 				onInactive();
 				return;
 			}

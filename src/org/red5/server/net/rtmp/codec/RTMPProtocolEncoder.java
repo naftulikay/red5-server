@@ -499,8 +499,7 @@ public class RTMPProtocolEncoder extends BaseProtocolEncoder implements SimplePr
 
 				default:
 					//log.error("Unknown event " + event.getType());
-					// XXX: come back here, need to make this work in server or
-					// client mode
+					// XXX: come back here, need to make this work in server or client mode
 					// talk to joachim about this part.
 					out.put(type);
 					mark = out.position();

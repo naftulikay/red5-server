@@ -39,9 +39,7 @@ import org.springframework.context.ApplicationContextAware;
  * Handles all RTMP protocol events fired by the MINA framework.
  */
 public class RTMPMinaIoHandler extends IoHandlerAdapter implements ApplicationContextAware {
-	/**
-	 * Logger
-	 */
+	
 	private static Logger log = LoggerFactory.getLogger(RTMPMinaIoHandler.class);
 
 	/**
@@ -74,6 +72,9 @@ public class RTMPMinaIoHandler extends IoHandlerAdapter implements ApplicationCo
 		// moved protocol state from connection object to RTMP object
 		RTMP rtmp = new RTMP(mode);
 		session.setAttribute(ProtocolState.SESSION_KEY, rtmp);
+		//add traffic shaping filter here if bandwidth control is requested
+		
+		//add protocol filter next
 		session.getFilterChain().addFirst("protocolFilter",	new ProtocolCodecFilter(codecFactory));
 		if (log.isTraceEnabled()) {
 			session.getFilterChain().addLast("logger", new LoggingFilter());

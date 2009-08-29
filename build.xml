@@ -1,0 +1,33 @@
+<?xml version="1.0" ?>
+<project name="dummyPlugin" basedir="." default="all">
+
+    <property name="classes.dir" value="bin"/>
+    <property name="dist.dir" value="."/>
+	   
+    <target name="clean">
+        <delete file="${ant.project.name}.jar"/>    	
+    </target>
+    
+    <target name="jar">
+        <tstamp prefix="build">
+            <format property="TODAY" pattern="d-MMMM-yyyy" locale="en"/>
+        </tstamp>
+        <jar destfile="${dist.dir}/${ant.project.name}.jar">
+            <fileset dir="${classes.dir}">
+                <include name="**"/>
+            </fileset>
+			<manifest>
+				<attribute name="Built" value="${build.TODAY} by ${user.name}"/>
+				<attribute name="Build-OS" value="${os.name} ${os.version}"/>
+				<attribute name="Build-Java" value="Java ${java.version}"/>
+			</manifest>
+        </jar>
+    </target>
+	
+	<target name="all" depends="clean, jar"/>
+    
+    <target name="usage">
+        <echo>Type ant -p for available targets"</echo>
+    </target>
+    
+</project>

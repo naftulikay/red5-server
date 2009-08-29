@@ -59,7 +59,6 @@ public class SDESInfo implements RTCPInfo {
 		}
 	}
 
-	@SuppressWarnings("unused")
 	private class Chunk {
 
 		public int ssrc;

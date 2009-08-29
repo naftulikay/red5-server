@@ -32,9 +32,10 @@ import org.red5.server.api.IBWControllable;
  * @author Steven Gong (steven.gong@gmail.com)
  */
 public class DummyBWControlService implements IBWControlService {
+	
 	private ITokenBucket dummyBucket = new DummyTokenBukcet();
-	private Map<IBWControllable, IBWControlContext> contextMap =
-		new HashMap<IBWControllable, IBWControlContext>();
+
+	private Map<IBWControllable, IBWControlContext> contextMap = new HashMap<IBWControllable, IBWControlContext>();
 
 	public ITokenBucket getAudioBucket(IBWControlContext context) {
 		return dummyBucket;
@@ -73,44 +74,43 @@ public class DummyBWControlService implements IBWControlService {
 	static class DummyTokenBukcet implements ITokenBucket {
 
 		/** {@inheritDoc} */
-        public boolean acquireToken(long tokenCount, long wait) {
+		public boolean acquireToken(long tokenCount, long wait) {
 			return true;
 		}
 
 		/** {@inheritDoc} */
-        public long acquireTokenBestEffort(long upperLimitCount) {
+		public long acquireTokenBestEffort(long upperLimitCount) {
 			return upperLimitCount;
 		}
 
 		/** {@inheritDoc} */
-        public boolean acquireTokenNonblocking(long tokenCount,
-				ITokenBucketCallback callback) {
+		public boolean acquireTokenNonblocking(long tokenCount, ITokenBucketCallback callback) {
 			return true;
 		}
 
 		/** {@inheritDoc} */
-        public long getCapacity() {
+		public long getCapacity() {
 			return 0;
 		}
 
 		/** {@inheritDoc} */
-        public double getSpeed() {
+		public double getSpeed() {
 			return 0;
 		}
 
 		/** {@inheritDoc} */
-        public void reset() {
+		public void reset() {
 		}
 
 	}
-	
+
 	private class DummyBWContext implements IBWControlContext {
 		private IBWControllable controllable;
-		
+
 		public DummyBWContext(IBWControllable controllable) {
 			this.controllable = controllable;
 		}
-		
+
 		public IBWControllable getBWControllable() {
 			return controllable;
 		}

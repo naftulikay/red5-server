@@ -52,18 +52,19 @@ import org.slf4j.LoggerFactory;
  * one thread is accessing the context object at a time.
  * 
  * @author Steven Gong (steven.gong@gmail.com)
- * @version $Id$
  */
-public class SimpleBWControlService extends TimerTask
-implements IBWControlService {
+public class SimpleBWControlService extends TimerTask implements IBWControlService {
+	
 	private static final Logger log = LoggerFactory.getLogger(SimpleBWControlService.class);
-	
-	protected Map<IBWControllable, BWContext> contextMap =
-		new ConcurrentHashMap<IBWControllable, BWContext>();
+
+	protected Map<IBWControllable, BWContext> contextMap = new ConcurrentHashMap<IBWControllable, BWContext>();
+
 	protected Timer tokenDistributor;
+
 	protected long interval;
+
 	protected long defaultCapacity;
-	
+
 	public void init() {
 		tokenDistributor = new Timer("Token Distributor", true);
 		tokenDistributor.scheduleAtFixedRate(this, 0, interval);
@@ -72,13 +73,13 @@ implements IBWControlService {
 	public void shutdown() {
 		tokenDistributor.cancel();
 	}
-	
+
 	public void run() {
 		if (contextMap.isEmpty()) {
 			// Early bail out, nothing to do.
 			return;
 		}
-		
+
 		Collection<BWContext> contexts = contextMap.values();
 		for (BWContext context : contexts) {
 			synchronized (context) {
@@ -111,19 +112,22 @@ implements IBWControlService {
 	}
 
 	public ITokenBucket getAudioBucket(IBWControlContext context) {
-		if (!(context instanceof BWContext)) return null;
+		if (!(context instanceof BWContext))
+			return null;
 		BWContext c = (BWContext) context;
 		return c.buckets[0];
 	}
 
 	public ITokenBucket getVideoBucket(IBWControlContext context) {
-		if (!(context instanceof BWContext)) return null;
+		if (!(context instanceof BWContext))
+			return null;
 		BWContext c = (BWContext) context;
 		return c.buckets[1];
 	}
-	
+
 	public ITokenBucket getDataBucket(IBWControlContext context) {
-		if (!(context instanceof BWContext)) return null;
+		if (!(context instanceof BWContext))
+			return null;
 		BWContext c = (BWContext) context;
 		return c.buckets[2];
 	}
@@ -160,7 +164,8 @@ implements IBWControlService {
 	}
 
 	public void resetBuckets(IBWControlContext context) {
-		if (!(context instanceof BWContext)) return;
+		if (!(context instanceof BWContext))
+			return;
 		BWContext c = (BWContext) context;
 		for (int i = 0; i < 3; i++) {
 			c.buckets[i].reset();
@@ -171,13 +176,14 @@ implements IBWControlService {
 		resetBuckets(context);
 		contextMap.remove(context.getBWControllable());
 	}
-	
+
 	public IBWControlContext lookupContext(IBWControllable bc) {
 		return contextMap.get(bc);
 	}
 
 	public void updateBWConfigure(IBWControlContext context) {
-		if (!(context instanceof BWContext)) return;
+		if (!(context instanceof BWContext))
+			return;
 		BWContext c = (BWContext) context;
 		IBWControllable bc = c.getBWControllable();
 		synchronized (c) {
@@ -204,17 +210,16 @@ implements IBWControlService {
 					}
 				} else {
 					// we have scheduled before, so migration of token is needed
-					if (c.bwConfig[IBandwidthConfigure.OVERALL_CHANNEL] >=0 &&
-							oldConfig[IBandwidthConfigure.OVERALL_CHANNEL] < 0) {
-						c.tokenRc[IBandwidthConfigure.OVERALL_CHANNEL] +=
-							c.tokenRc[IBandwidthConfigure.AUDIO_CHANNEL] +
-							c.tokenRc[IBandwidthConfigure.VIDEO_CHANNEL] +
-							c.tokenRc[IBandwidthConfigure.DATA_CHANNEL];
+					if (c.bwConfig[IBandwidthConfigure.OVERALL_CHANNEL] >= 0
+							&& oldConfig[IBandwidthConfigure.OVERALL_CHANNEL] < 0) {
+						c.tokenRc[IBandwidthConfigure.OVERALL_CHANNEL] += c.tokenRc[IBandwidthConfigure.AUDIO_CHANNEL]
+								+ c.tokenRc[IBandwidthConfigure.VIDEO_CHANNEL]
+								+ c.tokenRc[IBandwidthConfigure.DATA_CHANNEL];
 						for (int i = 0; i < 3; i++) {
 							c.tokenRc[i] = 0;
 						}
-					} else if (c.bwConfig[IBandwidthConfigure.OVERALL_CHANNEL] < 0 &&
-							oldConfig[IBandwidthConfigure.OVERALL_CHANNEL] >= 0) {
+					} else if (c.bwConfig[IBandwidthConfigure.OVERALL_CHANNEL] < 0
+							&& oldConfig[IBandwidthConfigure.OVERALL_CHANNEL] >= 0) {
 						for (int i = 0; i < 3; i++) {
 							if (c.bwConfig[i] >= 0) {
 								c.tokenRc[i] += c.tokenRc[IBandwidthConfigure.OVERALL_CHANNEL];
@@ -227,15 +232,15 @@ implements IBWControlService {
 			}
 		}
 	}
-	
+
 	public void setInterval(long interval) {
 		this.interval = interval;
 	}
-	
+
 	public void setDefaultCapacity(long capacity) {
 		this.defaultCapacity = capacity;
 	}
-	
+
 	protected boolean processRequest(TokenRequest request) {
 		IBWControllable bc = request.initialBC;
 		while (bc != null) {
@@ -277,7 +282,7 @@ implements IBWControlService {
 		}
 		return true;
 	}
-	
+
 	private boolean processBlockingRequest(TokenRequest request, BWContext context) {
 		context.timeToWait = request.timeout;
 		do {
@@ -288,7 +293,8 @@ implements IBWControlService {
 					return true;
 				}
 			} else {
-				if (context.tokenRc[request.channel] < 0) return true;
+				if (context.tokenRc[request.channel] < 0)
+					return true;
 				if (context.tokenRc[request.channel] >= request.requestToken) {
 					context.tokenRc[request.channel] -= request.requestToken;
 					request.timeout = context.timeToWait;
@@ -304,7 +310,7 @@ implements IBWControlService {
 		} while (context.timeToWait > 0);
 		return false;
 	}
-	
+
 	private boolean processNonblockingRequest(TokenRequest request, BWContext context) {
 		if (context.bwConfig[3] >= 0) {
 			if (context.tokenRc[3] >= request.requestToken) {
@@ -312,7 +318,8 @@ implements IBWControlService {
 				return true;
 			}
 		} else {
-			if (context.tokenRc[request.channel] < 0) return true;
+			if (context.tokenRc[request.channel] < 0)
+				return true;
 			if (context.tokenRc[request.channel] >= request.requestToken) {
 				context.tokenRc[request.channel] -= request.requestToken;
 				return true;
@@ -321,7 +328,7 @@ implements IBWControlService {
 		context.pendingRequestArray[request.channel].add(request);
 		return false;
 	}
-	
+
 	private boolean processBestEffortRequest(TokenRequest request, BWContext context) {
 		if (context.bwConfig[3] >= 0) {
 			if (context.tokenRc[3] >= request.requestToken) {
@@ -331,7 +338,8 @@ implements IBWControlService {
 				context.tokenRc[3] = 0;
 			}
 		} else {
-			if (context.tokenRc[request.channel] < 0) return true;
+			if (context.tokenRc[request.channel] < 0)
+				return true;
 			if (context.tokenRc[request.channel] >= request.requestToken) {
 				context.tokenRc[request.channel] -= request.requestToken;
 			} else {
@@ -339,10 +347,12 @@ implements IBWControlService {
 				context.tokenRc[request.channel] = 0;
 			}
 		}
-		if (request.requestToken == 0) return false;
-		else return true;
+		if (request.requestToken == 0)
+			return false;
+		else
+			return true;
 	}
-	
+
 	protected void invokeCallback(BWContext context) {
 		// loop through all channels in a context
 		for (int i = 0; i < 3; i++) {
@@ -382,7 +392,7 @@ implements IBWControlService {
 			}
 		}
 	}
-	
+
 	/**
 	 * Give back the acquired tokens due to failing to accomplish the requested
 	 * operation or over-charged tokens in the case of best-effort request.
@@ -404,7 +414,8 @@ implements IBWControlService {
 						} else {
 							if (context.bwConfig[request.channel] >= 0) {
 								if (request.type == TokenRequestType.BEST_EFFORT) {
-									context.tokenRc[request.channel] += requestContext.acquiredToken - request.requestToken;
+									context.tokenRc[request.channel] += requestContext.acquiredToken
+											- request.requestToken;
 								} else {
 									context.tokenRc[request.channel] += requestContext.acquiredToken;
 								}
@@ -415,18 +426,20 @@ implements IBWControlService {
 			}
 		}
 	}
-	
+
 	private class Bucket implements ITokenBucket {
 		private IBWControllable bc;
+
 		private int channel;
-		
+
 		public Bucket(IBWControllable bc, int channel) {
 			this.bc = bc;
 			this.channel = channel;
 		}
 
 		public boolean acquireToken(long tokenCount, long wait) {
-			if (wait < 0) return false;
+			if (wait < 0)
+				return false;
 			TokenRequest request = new TokenRequest();
 			request.type = TokenRequestType.BLOCKING;
 			request.timeout = wait;
@@ -507,49 +520,58 @@ implements IBWControlService {
 				bc = bc.getParentBWControllable();
 			}
 		}
-		
+
 	}
-	
+
 	protected class TokenRequest {
 		TokenRequestType type;
+
 		ITokenBucket.ITokenBucketCallback callback;
+
 		long timeout;
+
 		int channel;
+
 		IBWControllable initialBC;
+
 		double requestToken;
+
 		Stack<TokenRequestContext> acquiredStack = new Stack<TokenRequestContext>();
 	}
-	
+
 	protected class TokenRequestContext {
 		IBWControllable bc;
+
 		double acquiredToken;
 	}
-	
+
 	protected enum TokenRequestType {
-		BLOCKING,
-		NONBLOCKING,
-		BEST_EFFORT
+		BLOCKING, NONBLOCKING, BEST_EFFORT
 	}
-	
+
 	protected class BWContext implements IBWControlContext {
 		long[] bwConfig;
+
 		double[] tokenRc = new double[4];
+
 		ITokenBucket[] buckets = new ITokenBucket[3];
+
 		List<TokenRequest>[] pendingRequestArray = null;
+
 		long lastSchedule;
+
 		long timeToWait;
-		
+
 		private IBWControllable controllable;
-		
+
 		@SuppressWarnings("unchecked")
 		public BWContext(IBWControllable controllable) {
 			this.controllable = controllable;
 			Arrays.fill(tokenRc, 0);
-			pendingRequestArray = new List[] {new CopyOnWriteArrayList<TokenRequest>(),
-					new CopyOnWriteArrayList<TokenRequest>(),
-					new CopyOnWriteArrayList<TokenRequest>()};
+			pendingRequestArray = new List[] { new CopyOnWriteArrayList<TokenRequest>(),
+					new CopyOnWriteArrayList<TokenRequest>(), new CopyOnWriteArrayList<TokenRequest>() };
 		}
-		
+
 		public IBWControllable getBWControllable() {
 			return controllable;
 		}

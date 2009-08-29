@@ -99,11 +99,11 @@ public class RTMPProtocolEncoder extends BaseProtocolEncoder implements SimplePr
 
 		IoBuffer out = null;
 		IoBuffer data = null;
-		
+
 		final Header header = packet.getHeader();
 		final int channelId = header.getChannelId();
 		final IRTMPEvent message = packet.getMessage();
-		
+
 		if (message instanceof ChunkSize) {
 			ChunkSize chunkSizeMsg = (ChunkSize) message;
 			rtmp.setWriteChunkSize(chunkSizeMsg.getSize());
@@ -114,7 +114,7 @@ public class RTMPProtocolEncoder extends BaseProtocolEncoder implements SimplePr
 		} finally {
 			message.release();
 		}
-		
+
 		if (data != null) {
 			if (data.position() != 0) {
 				data.flip();
@@ -132,7 +132,7 @@ public class RTMPProtocolEncoder extends BaseProtocolEncoder implements SimplePr
 			int chunkSize = rtmp.getWriteChunkSize();
 			int chunkHeaderSize = 1;
 			if (header.getChannelId() > 320) {
-				chunkHeaderSize = 3;			
+				chunkHeaderSize = 3;
 			} else if (header.getChannelId() > 63) {
 				chunkHeaderSize = 2;
 			}
@@ -170,13 +170,13 @@ public class RTMPProtocolEncoder extends BaseProtocolEncoder implements SimplePr
 	 * @return            Header type to use.
 	 */
 	private byte getHeaderType(final RTMP rtmp, final Header header, final Header lastHeader) {
-		if (lastHeader == null)
+		if (lastHeader == null) {
 			return HEADER_NEW;
-
+		}
 		final Integer lastFullTs = rtmp.getLastFullTimestampWritten(header.getChannelId());
-		if (lastFullTs == null)
+		if (lastFullTs == null) {
 			return HEADER_NEW;
-
+		}
 		final byte headerType;
 		final long diff = RTMPUtils.diffTimestamps(header.getTimer(), lastHeader.getTimer());
 		final long timeSinceFullTs = RTMPUtils.diffTimestamps(header.getTimer(), lastFullTs);
@@ -245,29 +245,33 @@ public class RTMPProtocolEncoder extends BaseProtocolEncoder implements SimplePr
 		switch (headerType) {
 			case HEADER_NEW:
 				timer = header.getTimer();
-				if (timer < 0 || timer >= 0xffffff)
+				if (timer < 0 || timer >= 0xffffff) {
 					RTMPUtils.writeMediumInt(buf, 0xffffff);
-				else
+				} else {
 					RTMPUtils.writeMediumInt(buf, timer);
+				}
 				RTMPUtils.writeMediumInt(buf, header.getSize());
 				buf.put(header.getDataType());
 				RTMPUtils.writeReverseInt(buf, header.getStreamId());
-				if (timer < 0 || timer >= 0xffffff)
+				if (timer < 0 || timer >= 0xffffff) {
 					buf.putInt(timer);
+				}
 				header.setTimerBase(timer);
 				header.setTimerDelta(0);
 				rtmp.setLastFullTimestampWritten(header.getChannelId(), timer);
 				break;
 			case HEADER_SAME_SOURCE:
 				timer = (int) RTMPUtils.diffTimestamps(header.getTimer(), lastHeader.getTimer());
-				if (timer < 0 || timer >= 0xffffff)
+				if (timer < 0 || timer >= 0xffffff) {
 					RTMPUtils.writeMediumInt(buf, 0xffffff);
-				else
+				} else {
 					RTMPUtils.writeMediumInt(buf, timer);
+				}
 				RTMPUtils.writeMediumInt(buf, header.getSize());
 				buf.put(header.getDataType());
-				if (timer < 0 || timer >= 0xffffff)
+				if (timer < 0 || timer >= 0xffffff) {
 					buf.putInt(timer);
+				}
 				header.setTimerBase(header.getTimer() - timer);
 				header.setTimerDelta(timer);
 				break;
@@ -276,8 +280,9 @@ public class RTMPProtocolEncoder extends BaseProtocolEncoder implements SimplePr
 				if (timer < 0 || timer >= 0xffffff) {
 					RTMPUtils.writeMediumInt(buf, 0xffffff);
 					buf.putInt(timer);
-				} else
+				} else {
 					RTMPUtils.writeMediumInt(buf, timer);
+				}
 				header.setTimerBase(header.getTimer() - timer);
 				header.setTimerDelta(timer);
 				break;
@@ -318,11 +323,11 @@ public class RTMPProtocolEncoder extends BaseProtocolEncoder implements SimplePr
 				return encodeBytesRead((BytesRead) message);
 			case TYPE_AUDIO_DATA:
 				//TODO: drop the message if its "late"
-				
+
 				return encodeAudioData((AudioData) message);
 			case TYPE_VIDEO_DATA:
 				//TODO: drop the message if its "late"
-				
+
 				return encodeVideoData((VideoData) message);
 			case TYPE_FLEX_SHARED_OBJECT:
 				return encodeFlexSharedObject((ISharedObjectMessage) message, rtmp);

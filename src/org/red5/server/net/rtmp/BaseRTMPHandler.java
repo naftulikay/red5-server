@@ -44,7 +44,6 @@ import org.red5.server.net.rtmp.message.Header;
 import org.red5.server.net.rtmp.message.Packet;
 import org.red5.server.net.rtmp.status.StatusCodes;
 import org.red5.server.so.SharedObjectMessage;
-import org.red5.server.stream.PlaylistSubscriberStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
@@ -126,9 +125,7 @@ public abstract class BaseRTMPHandler implements IRTMPHandler, Constants, Status
 			// Increase number of received messages
 			conn.messageReceived();
 
-			// if (message instanceof IRTMPEvent) {
 			message.setSource(conn);
-			// }
 
 			switch (header.getDataType()) {
 				case TYPE_CHUNK_SIZE:
@@ -208,22 +205,12 @@ public abstract class BaseRTMPHandler implements IRTMPHandler, Constants, Status
 	/** {@inheritDoc} */
 	public void messageSent(RTMPConnection conn, Object message) {
 		log.debug("Message sent");
-
 		if (message instanceof IoBuffer) {
 			return;
 		}
 
-		Packet sent = (Packet) message;
-
 		// Increase number of sent messages
-		conn.messageSent(sent);
-
-		final int channelId = sent.getHeader().getChannelId();
-		final IClientStream stream = conn.getStreamByChannelId(channelId);
-		// XXX we'd better use new event model for notification
-		if (stream != null && (stream instanceof PlaylistSubscriberStream)) {
-			((PlaylistSubscriberStream) stream).written(sent.getMessage());
-		}
+		conn.messageSent((Packet) message);
 	}
 
 	/** {@inheritDoc} */

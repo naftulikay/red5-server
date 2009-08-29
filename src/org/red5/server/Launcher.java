@@ -19,22 +19,10 @@ package org.red5.server;
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA 
  */
 
-import java.io.File;
-import java.io.FilenameFilter;
-import java.util.Iterator;
-
-import org.java.plugin.ObjectFactory;
-import org.java.plugin.Plugin;
-import org.java.plugin.PluginManager;
-import org.java.plugin.PluginManager.PluginLocation;
-import org.java.plugin.registry.PluginDescriptor;
-import org.java.plugin.standard.StandardPluginLocation;
 import org.red5.logging.Red5LoggerFactory;
 import org.red5.server.api.Red5;
-import org.red5.server.api.plugin.IRed5Plugin;
 import org.slf4j.Logger;
 import org.slf4j.bridge.SLF4JBridgeHandler;
-import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.FileSystemXmlApplicationContext;
 
 /**
@@ -78,43 +66,6 @@ public class Launcher {
 					log.trace("Bean name: {}", name);
 				}
 			}
-			ApplicationContext common = (ApplicationContext) ctx.getBean("red5.common");
-			Server server = (Server) common.getBean("red5.server");
-			
-			//server should be up and running at this point so load any plug-ins now			
-
-	        //create instance of plug-in manager - uses config values from jpf.properties
-	        PluginManager pluginManager = ObjectFactory.newInstance(null).createManager();
-	        //get the plugins dir
-	        File pluginsDir = new File(System.getProperty("red5.root"), "plugins");
-	        
-	        File[] plugins = pluginsDir.listFiles(new FilenameFilter() {
-	            public boolean accept(File dir, String name) {
-	                return name.toLowerCase().endsWith(".jar");
-	            }
-	        });
-	        
-	        PluginLocation[] locations = new PluginLocation[plugins.length];
-            for (int i = 0; i < plugins.length; i++) {
-	            locations[i] = StandardPluginLocation.create(plugins[i]);
-	        }
-            
-            //publish discovered plug-ins
-	        pluginManager.publishPlugins(locations);			
-	        
-	        //add the server to each of our plugins so they may actual do something
-	        Iterator<PluginDescriptor> it = pluginManager.getRegistry().getPluginDescriptors().iterator();
-	        while (it.hasNext()) {
-    	        PluginDescriptor desc = (PluginDescriptor) it.next();
-    	        Plugin o = pluginManager.getPlugin(desc.getId());
-    	    	if (o instanceof IRed5Plugin) {
-        	        IRed5Plugin plugin = (IRed5Plugin) o;
-        	        //set top-level context
-        	        plugin.setApplicationContext(ctx);
-        	        //set server reference
-        	        plugin.setServer(server);
-    	    	}
-	        }
 			
 		} catch (Exception e) {
 			e.printStackTrace();

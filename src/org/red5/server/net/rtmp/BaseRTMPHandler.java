@@ -251,21 +251,6 @@ public abstract class BaseRTMPHandler implements IRTMPHandler, Constants, Status
 	}
 
 	/**
-	 * Chunk size change event handler. Abstract, to be implemented in
-	 * subclasses.
-	 * 
-	 * @param conn
-	 *            Connection
-	 * @param channel
-	 *            Channel
-	 * @param source
-	 *            Header
-	 * @param chunkSize
-	 *            New chunk size
-	 */
-	protected abstract void onChunkSize(RTMPConnection conn, Channel channel, Header source, ChunkSize chunkSize);
-
-	/**
 	 * Handler for pending call result. Dispatches results to all pending call
 	 * handlers.
 	 * 
@@ -300,6 +285,21 @@ public abstract class BaseRTMPHandler implements IRTMPHandler, Constants, Status
 		}
 	}
 
+	/**
+	 * Chunk size change event handler. Abstract, to be implemented in
+	 * subclasses.
+	 * 
+	 * @param conn
+	 *            Connection
+	 * @param channel
+	 *            Channel
+	 * @param source
+	 *            Header
+	 * @param chunkSize
+	 *            New chunk size
+	 */
+	protected abstract void onChunkSize(RTMPConnection conn, Channel channel, Header source, ChunkSize chunkSize);	
+	
 	/**
 	 * Invocation event handler.
 	 * 

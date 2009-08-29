@@ -74,8 +74,7 @@ import org.slf4j.Logger;
  * @author Dan Rossi
  * @author Tiago Daniel Jacobs (tiago@imdt.com.br)
  */
-public final class PlayEngine implements IFilter, IPushableConsumer,
-		IPipeConnectionListener, ITokenBucketCallback {
+public final class PlayEngine implements IFilter, IPushableConsumer, IPipeConnectionListener, ITokenBucketCallback {
 
 	private static final Logger log = Red5LoggerFactory.getLogger(PlayEngine.class);
 
@@ -1526,7 +1525,6 @@ public final class PlayEngine implements IFilter, IPushableConsumer,
 	 * Periodically triggered by executor to send messages to the client.
 	 */
 	private class PullAndPushRunnable implements Runnable {
-
 		/**
 		 * Trigger sending of messages.
 		 */

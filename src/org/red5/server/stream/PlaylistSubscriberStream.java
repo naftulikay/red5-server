@@ -291,7 +291,8 @@ public class PlaylistSubscriberStream extends AbstractClientStream implements
 	public void close() {
 		engine.close();
 		// unregister myself from bandwidth controller
-		bwController.unregisterBWControllable(bwContext);
+		if (bwController != null)
+			bwController.unregisterBWControllable(bwContext);
 		notifySubscriberClose();
 	}
 

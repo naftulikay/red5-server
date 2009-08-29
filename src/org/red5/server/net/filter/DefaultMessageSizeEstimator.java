@@ -69,7 +69,7 @@ public class DefaultMessageSizeEstimator implements MessageSizeEstimator {
 			answer += ((IoBuffer) message).remaining();
 		} else if (message instanceof CharSequence) {
 			answer += ((CharSequence) message).length() << 1;
-		} else if (message instanceof Iterable) {
+		} else if (message instanceof Iterable<?>) {
 			for (Object m : (Iterable<?>) message) {
 				answer += estimateSize(m);
 			}

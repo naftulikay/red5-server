@@ -65,5 +65,26 @@ public class AuthPlugin implements IRed5Plugin {
 		return "authPlugin";
 	}
 	
+	//methods specific to this plug-in
+	
+	public FMSAuthenticationHandler getFMSAuthenticationHandler() {
+		FMSAuthenticationHandler fah = null;
+		try {
+			fah = (FMSAuthenticationHandler) Class.forName("org.red5.server.plugin.FMSAuthenticationHandler").newInstance();
+		} catch (Exception e) {
+			log.error("FMSAuthenticationHandler could not be loaded", e);
+		}
+		return fah;		
+	}
+	
+	public SecureTokenHandler getSecureTokenHandler() {
+		SecureTokenHandler sth = null;
+		try {
+			sth = (SecureTokenHandler) Class.forName("org.red5.server.plugin.SecureTokenHandler").newInstance();
+		} catch (Exception e) {
+			log.error("SecureTokenHandler could not be loaded", e);
+		}
+		return sth;
+	}		
 	
 }

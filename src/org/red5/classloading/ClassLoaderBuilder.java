@@ -193,6 +193,30 @@ public final class ClassLoaderBuilder {
 				e.printStackTrace();
 			}
 			
+			//add the plugins 
+			
+			//get red5 lib system property, if not found build it	
+			String pluginsPath = System.getProperty("red5.plugins_root");
+			if (pluginsPath == null) {
+    			//construct the plugins path
+				pluginsPath = home + "/plugins";
+			}
+			
+			File pluginsDir = new File(pluginsPath);
+			//if we are on osx with spaces in our path this may occur
+			if (pluginsDir == null) {
+				pluginsDir = new File(home, "plugins");
+			}
+			File[] pluginsFiles = pluginsDir.listFiles(jarFileFilter);
+			for (int i = 0; i < pluginsFiles.length; i++) {
+				try {
+					urlList.add(pluginsFiles[i].toURI().toURL());
+				} catch (MalformedURLException e) {
+					e.printStackTrace();
+				}
+			}
+			
+			//create the url array that the classloader wants
 			urls = urlList.toArray(new URL[0]);
 			
 			if (parent == null) {

@@ -49,54 +49,57 @@ public class PluginLauncher implements ApplicationContextAware, InitializingBean
 			}
 		});
 
-		for (File plugin : plugins) {
-			JarFile jar = new JarFile(plugin, false);
-			if (jar == null) {
-				continue;
-			}
-			Manifest manifest = jar.getManifest();
-			if (manifest == null) {
-				continue;
-			}
-			Attributes attributes = manifest.getMainAttributes();
-			if (attributes == null) {
-				continue;
-			}
-			String pluginMainClass = attributes.getValue("Red5-Plugin-Main-Class");
-			if (pluginMainClass == null) {
-				continue;
-			}
-			// attempt to load the class; since it's in the lib directory this should work
-			ClassLoader loader = common.getClassLoader();
-			Class<?> pluginClass;
-			try {
-				pluginClass = Class.forName(pluginMainClass, true, loader);
-			} catch (ClassNotFoundException e) {
-				continue;
-			}
-			String pluginMainMethod = attributes.getValue("Red5-Plugin-Main-Method");
-			if (pluginMainMethod == null) {
-				continue;
-			}
-			Method method;
-			try {
-				method = pluginClass.getMethod(pluginMainMethod, (Class<?>[]) null);
-			} catch (NoSuchMethodException e) {
-				continue;
-			}
-			Object o = method.invoke(null, (Object[]) null);
-			if (o != null && o instanceof IRed5Plugin) {
-				IRed5Plugin red5Plugin = (IRed5Plugin) o;
-				//set top-level context
-				red5Plugin.setApplicationContext(applicationContext);
-				//set server reference
-				red5Plugin.setServer(server);
-				//register the plug-in to make it available for lookups
-				PluginRegistry.register(red5Plugin);
-				//start the plugin
-				red5Plugin.doStart();
-			}
-
+		if (plugins != null) {
+    		for (File plugin : plugins) {
+    			JarFile jar = new JarFile(plugin, false);
+    			if (jar == null) {
+    				continue;
+    			}
+    			Manifest manifest = jar.getManifest();
+    			if (manifest == null) {
+    				continue;
+    			}
+    			Attributes attributes = manifest.getMainAttributes();
+    			if (attributes == null) {
+    				continue;
+    			}
+    			String pluginMainClass = attributes.getValue("Red5-Plugin-Main-Class");
+    			if (pluginMainClass == null) {
+    				continue;
+    			}
+    			// attempt to load the class; since it's in the lib directory this should work
+    			ClassLoader loader = common.getClassLoader();
+    			Class<?> pluginClass;
+    			try {
+    				pluginClass = Class.forName(pluginMainClass, true, loader);
+    			} catch (ClassNotFoundException e) {
+    				continue;
+    			}
+    			String pluginMainMethod = attributes.getValue("Red5-Plugin-Main-Method");
+    			if (pluginMainMethod == null) {
+    				continue;
+    			}
+    			Method method;
+    			try {
+    				method = pluginClass.getMethod(pluginMainMethod, (Class<?>[]) null);
+    			} catch (NoSuchMethodException e) {
+    				continue;
+    			}
+    			Object o = method.invoke(null, (Object[]) null);
+    			if (o != null && o instanceof IRed5Plugin) {
+    				IRed5Plugin red5Plugin = (IRed5Plugin) o;
+    				//set top-level context
+    				red5Plugin.setApplicationContext(applicationContext);
+    				//set server reference
+    				red5Plugin.setServer(server);
+    				//register the plug-in to make it available for lookups
+    				PluginRegistry.register(red5Plugin);
+    				//start the plugin
+    				red5Plugin.doStart();
+    			}
+    		}
+		} else {
+			log.info("Plugins directory cannot be accessed or doesnt exist");
 		}
 
 	}

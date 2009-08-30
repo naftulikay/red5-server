@@ -167,9 +167,9 @@ public final class ClassLoaderBuilder {
 				libDir = new File(home, "lib");
 			}
 			File[] libFiles = libDir.listFiles(jarFileFilter);
-			for (int i = 0; i < libFiles.length; i++) {
+			for (File lib : libFiles) {
 				try {
-					urlList.add(libFiles[i].toURI().toURL());
+					urlList.add(lib.toURI().toURL());
 				} catch (MalformedURLException e) {
 					e.printStackTrace();
 				}
@@ -208,12 +208,15 @@ public final class ClassLoaderBuilder {
 				pluginsDir = new File(home, "plugins");
 			}
 			File[] pluginsFiles = pluginsDir.listFiles(jarFileFilter);
-			for (int i = 0; i < pluginsFiles.length; i++) {
-				try {
-					urlList.add(pluginsFiles[i].toURI().toURL());
-				} catch (MalformedURLException e) {
-					e.printStackTrace();
-				}
+			//this can be null if the dir doesnt exist
+			if (pluginsFiles != null) {
+    			for (File plugin : pluginsFiles) {
+    				try {
+    					urlList.add(plugin.toURI().toURL());
+    				} catch (MalformedURLException e) {
+    					e.printStackTrace();
+    				}
+    			}
 			}
 			
 			//create the url array that the classloader wants

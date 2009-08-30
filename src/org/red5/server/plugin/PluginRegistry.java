@@ -49,7 +49,11 @@ public class PluginRegistry {
 				IRed5Plugin oldPlugin = plugins.get(pluginName);
 				//if they are not the same shutdown the older one
 				if (!plugin.equals(oldPlugin)) {			
-					oldPlugin.doStop();
+					try {
+						oldPlugin.doStop();
+					} catch (Exception e) {
+						log.warn("Exception caused when stopping old plugin", e);
+					}
 					//replace old one
 					plugins.replace(pluginName, plugin);
 				}

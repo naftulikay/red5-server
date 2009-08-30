@@ -52,12 +52,16 @@ public interface IRed5Plugin {
 
 	/**
 	 * Lifecycle method called when the plug-in is started.
+	 * 
+	 * @throws Exception 
 	 */
-	void doStart();
+	void doStart() throws Exception;
 		
 	/**
 	 * Lifecycle method called when the plug-in is stopped.
+	 * 
+	 * @throws Exception 
 	 */
-	void doStop();
+	void doStop() throws Exception;
 
 }

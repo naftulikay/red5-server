@@ -38,8 +38,7 @@ import org.red5.io.object.Serializer;
  * @author Luke Hubbard, Codegent Ltd (luke@codegent.com)
  */
 @Anonymous
-public class StatusObject
-implements Serializable, ICustomSerializable, Externalizable {
+public class StatusObject implements Serializable, ICustomSerializable, Externalizable {
 
 	private static final long serialVersionUID = 8817297676191096283L;
 

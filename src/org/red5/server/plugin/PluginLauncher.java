@@ -48,9 +48,12 @@ public class PluginLauncher implements ApplicationContextAware, InitializingBean
 				return name.toLowerCase().endsWith(".jar");
 			}
 		});
-
+		
 		if (plugins != null) {
-    		for (File plugin : plugins) {
+
+			IRed5Plugin red5Plugin = null;
+
+			for (File plugin : plugins) {
     			JarFile jar = new JarFile(plugin, false);
     			if (jar == null) {
     				continue;
@@ -75,28 +78,33 @@ public class PluginLauncher implements ApplicationContextAware, InitializingBean
     			} catch (ClassNotFoundException e) {
     				continue;
     			}
-    			String pluginMainMethod = attributes.getValue("Red5-Plugin-Main-Method");
-    			if (pluginMainMethod == null) {
-    				continue;
-    			}
-    			Method method;
     			try {
-    				method = pluginClass.getMethod(pluginMainMethod, (Class<?>[]) null);
-    			} catch (NoSuchMethodException e) {
-    				continue;
-    			}
-    			Object o = method.invoke(null, (Object[]) null);
-    			if (o != null && o instanceof IRed5Plugin) {
-    				IRed5Plugin red5Plugin = (IRed5Plugin) o;
-    				//set top-level context
-    				red5Plugin.setApplicationContext(applicationContext);
-    				//set server reference
-    				red5Plugin.setServer(server);
-    				//register the plug-in to make it available for lookups
-    				PluginRegistry.register(red5Plugin);
-    				//start the plugin
-    				red5Plugin.doStart();
-    			}
+					//handle plug-ins without "main" methods
+					String pluginMainMethod = attributes.getValue("Red5-Plugin-Main-Method");
+					if (pluginMainMethod == null) {
+						//just get an instance of the class
+						red5Plugin = (IRed5Plugin) pluginClass.newInstance();    				
+					} else {
+						Method method = pluginClass.getMethod(pluginMainMethod, (Class<?>[]) null);
+						Object o = method.invoke(null, (Object[]) null);
+						if (o != null && o instanceof IRed5Plugin) {
+							red5Plugin = (IRed5Plugin) o;
+						}
+					}
+					//register and start
+					if (red5Plugin != null) {
+						//set top-level context
+						red5Plugin.setApplicationContext(applicationContext);
+						//set server reference
+						red5Plugin.setServer(server);
+						//register the plug-in to make it available for lookups
+						PluginRegistry.register(red5Plugin);
+						//start the plugin
+						red5Plugin.doStart();
+					}
+				} catch (Exception e) {
+					log.error("Error loading plugin: {}", pluginMainClass, e);
+				}
     		}
 		} else {
 			log.info("Plugins directory cannot be accessed or doesnt exist");

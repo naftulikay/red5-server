@@ -19,7 +19,6 @@ package org.red5.server.plugin;
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA 
  */
 
-import org.java.plugin.Plugin;
 import org.red5.logging.Red5LoggerFactory;
 import org.red5.server.Server;
 import org.red5.server.api.plugin.IRed5Plugin;
@@ -31,9 +30,9 @@ import org.springframework.context.ApplicationContext;
  * 
  * @author Paul Gregoire
  */
-public class NSVPlugin extends Plugin implements IRed5Plugin {
+public class NSVPlugin implements IRed5Plugin {
 
-	private static Logger log = Red5LoggerFactory.getLogger(DummyPlugin.class, "plugins");
+	private static Logger log = Red5LoggerFactory.getLogger(NSVPlugin.class, "plugins");
 	
 	@SuppressWarnings("unused")
 	private ApplicationContext context;
@@ -41,13 +40,11 @@ public class NSVPlugin extends Plugin implements IRed5Plugin {
 	@SuppressWarnings("unused")
 	private Server server;
 	
-	@Override
-	protected void doStart() throws Exception {
+	public void doStart() throws Exception {
 		log.debug("Start");
 	}
 
-	@Override
-	protected void doStop() throws Exception {
+	public void doStop() throws Exception {
 		log.debug("Stop");
 	}
 
@@ -63,5 +60,9 @@ public class NSVPlugin extends Plugin implements IRed5Plugin {
 		this.server = server;
 	}
 	
+	@Override
+	public String getName() {
+		return "nsvPlugin";
+	}
 	
 }

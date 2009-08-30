@@ -1,7 +1,0 @@
-<?xml version="1.0" ?>
-<!DOCTYPE plugin PUBLIC "-//JPF//Java Plug-in Manifest 1.0" "http://jpf.sourceforge.net/plugin_1_0.dtd">
-<plugin id="nsvPlugin" version="1.0.0" class="org.red5.server.plugin.NSVPlugin">
-    <runtime>
-        <library id="nsv" path="/" type="code"/>
-    </runtime>
-</plugin>

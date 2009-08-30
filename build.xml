@@ -20,6 +20,7 @@
 				<attribute name="Built" value="${build.TODAY} by ${user.name}"/>
 				<attribute name="Build-OS" value="${os.name} ${os.version}"/>
 				<attribute name="Build-Java" value="Java ${java.version}"/>
+                <attribute name="Red5-Plugin-Main-Class" value="org.red5.server.plugin.NSVPlugin"/>
 			</manifest>
         </jar>
     </target>

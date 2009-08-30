@@ -1,7 +1,0 @@
-<?xml version="1.0" ?>
-<!DOCTYPE plugin PUBLIC "-//JPF//Java Plug-in Manifest 1.0" "http://jpf.sourceforge.net/plugin_1_0.dtd">
-<plugin id="dummyPlugin" version="1.0.0" class="org.red5.server.plugin.DummyPlugin">
-    <runtime>
-        <library id="dummy" path="/" type="code"/>
-    </runtime>
-</plugin>

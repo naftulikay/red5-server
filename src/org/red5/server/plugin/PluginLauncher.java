@@ -67,12 +67,13 @@ public class PluginLauncher implements ApplicationContextAware, InitializingBean
     				continue;
     			}
     			String pluginMainClass = attributes.getValue("Red5-Plugin-Main-Class");
-    			if (pluginMainClass == null) {
+    			if (pluginMainClass == null || pluginMainClass.length() <= 0) {
     				continue;
     			}
     			// attempt to load the class; since it's in the lib directory this should work
     			ClassLoader loader = common.getClassLoader();
     			Class<?> pluginClass;
+    			String pluginMainMethod=null;
     			try {
     				pluginClass = Class.forName(pluginMainClass, true, loader);
     			} catch (ClassNotFoundException e) {
@@ -80,8 +81,8 @@ public class PluginLauncher implements ApplicationContextAware, InitializingBean
     			}
     			try {
 					//handle plug-ins without "main" methods
-					String pluginMainMethod = attributes.getValue("Red5-Plugin-Main-Method");
-					if (pluginMainMethod == null) {
+					pluginMainMethod = attributes.getValue("Red5-Plugin-Main-Method");
+					if (pluginMainMethod == null || pluginMainMethod.length() <= 0) {
 						//just get an instance of the class
 						red5Plugin = (IRed5Plugin) pluginClass.newInstance();    				
 					} else {
@@ -102,8 +103,10 @@ public class PluginLauncher implements ApplicationContextAware, InitializingBean
 						//start the plugin
 						red5Plugin.doStart();
 					}
+					log.info("Loaded plugin: {}", pluginMainClass);
 				} catch (Exception e) {
-					log.error("Error loading plugin: {}", pluginMainClass, e);
+					log.error("Error loading plugin: {}; Method: {}; Exception: {}",
+							new Object[]{pluginMainClass, pluginMainMethod, e});
 				}
     		}
 		} else {

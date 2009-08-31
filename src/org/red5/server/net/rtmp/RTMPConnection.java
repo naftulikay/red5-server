@@ -295,7 +295,7 @@ public abstract class RTMPConnection extends BaseConnection implements IStreamCa
 			}
 			return success;
 		} catch (ClientRejectedException e) {
-			log.warn("client rejected, unscheduling waitForHandshakeJob", e);
+			log.warn("Client rejected, unscheduling waitForHandshakeJob", e);
 			unscheduleWaitForHandshakeJob();
 			throw e;
 		}
@@ -1158,8 +1158,9 @@ public abstract class RTMPConnection extends BaseConnection implements IStreamCa
 			if (thisRead > previousReadBytes) {
 				// Client sent data since last check and thus is not dead. No
 				// need to ping.
-				if (lastBytesRead.compareAndSet(previousReadBytes, thisRead))
+				if (lastBytesRead.compareAndSet(previousReadBytes, thisRead)) {
 					lastBytesReadTime = System.currentTimeMillis();
+				}
 				return;
 			}
 			// Client didn't send response to ping command 

@@ -144,8 +144,7 @@ public class StatusObject implements Serializable, ICustomSerializable, External
 	/** {@inheritDoc} */
     @Override
 	public String toString() {
-		return "Status code: " + getCode() + " desc: " + getDescription()
-				+ " level: " + getLevel();
+		return String.format("Status code: %s level: %s description: %s", code, level, description);
 	}
 
     /**

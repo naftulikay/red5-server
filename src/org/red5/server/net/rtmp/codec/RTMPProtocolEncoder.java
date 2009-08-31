@@ -550,7 +550,8 @@ public class RTMPProtocolEncoder extends BaseProtocolEncoder implements SimplePr
 		Output output = new org.red5.io.amf.Output(out);
 		final IServiceCall call = invoke.getCall();
 		final boolean isPending = (call.getStatus() == Call.STATUS_PENDING);
-
+		log.debug("Call: {} pending: {}", call, isPending);
+		
 		if (!isPending) {
 			log.debug("Call has been executed, send result");
 			serializer.serialize(output, call.isSuccess() ? "_result" : "_error"); // seems right
@@ -584,14 +585,16 @@ public class RTMPProtocolEncoder extends BaseProtocolEncoder implements SimplePr
 		if (!isPending && (invoke instanceof Invoke)) {
 			IPendingServiceCall pendingCall = (IPendingServiceCall) call;
 			if (!call.isSuccess()) {
+				log.debug("Call was not successful");
 				StatusObject status = generateErrorResult(StatusCodes.NC_CALL_FAILED, call.getException());
 				pendingCall.setResult(status);
 			}
-			log.debug("Writing result: {}", pendingCall.getResult());
-			serializer.serialize(output, pendingCall.getResult());
+			Object res = pendingCall.getResult();
+			log.debug("Writing result: {}", res);
+			serializer.serialize(output, res);
 		} else {
 			log.debug("Writing params");
-			final Object[] args = invoke.getCall().getArguments();
+			final Object[] args = call.getArguments();
 			if (args != null) {
 				for (Object element : args) {
 					serializer.serialize(output, element);

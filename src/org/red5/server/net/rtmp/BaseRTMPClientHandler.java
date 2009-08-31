@@ -483,7 +483,8 @@ public abstract class BaseRTMPClientHandler extends BaseRTMPHandler {
 		}
 		log.debug("onInvoke: {}, invokeId: {}", invoke, invoke.getInvokeId());
 		final IServiceCall call = invoke.getCall();
-		if (call.getServiceMethodName().equals("_result") || call.getServiceMethodName().equals("_error")) {
+		String methodName = call.getServiceMethodName();
+		if ("_result".equals(methodName) || "_error".equals(methodName)) {
 			final IPendingServiceCall pendingCall = conn.getPendingCall(invoke.getInvokeId());
 			log.debug("Received result for pending call {}", pendingCall);
 			if (pendingCall != null) {

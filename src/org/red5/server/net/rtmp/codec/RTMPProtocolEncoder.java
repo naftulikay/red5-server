@@ -33,6 +33,7 @@ import org.red5.server.net.protocol.BaseProtocolEncoder;
 import org.red5.server.net.protocol.ProtocolState;
 import org.red5.server.net.protocol.SimpleProtocolEncoder;
 import org.red5.server.net.rtmp.RTMPUtils;
+import org.red5.server.net.rtmp.codec.RTMP.LiveTimestampMapping;
 import org.red5.server.net.rtmp.event.AudioData;
 import org.red5.server.net.rtmp.event.BytesRead;
 import org.red5.server.net.rtmp.event.ChunkSize;
@@ -46,6 +47,7 @@ import org.red5.server.net.rtmp.event.Ping;
 import org.red5.server.net.rtmp.event.ServerBW;
 import org.red5.server.net.rtmp.event.Unknown;
 import org.red5.server.net.rtmp.event.VideoData;
+import org.red5.server.net.rtmp.event.VideoData.FrameType;
 import org.red5.server.net.rtmp.message.Constants;
 import org.red5.server.net.rtmp.message.Header;
 import org.red5.server.net.rtmp.message.Packet;
@@ -72,7 +74,12 @@ public class RTMPProtocolEncoder extends BaseProtocolEncoder implements SimplePr
 	 * Serializer object.
 	 */
 	private Serializer serializer;
-
+	
+	/**
+	 * Tolerance (in milliseconds) for late media on live streams
+	 */
+	private long lateLiveTolerance=250;
+	
 	/** {@inheritDoc} */
 	public IoBuffer encode(ProtocolState state, Object message) throws Exception {
 		try {
@@ -110,6 +117,9 @@ public class RTMPProtocolEncoder extends BaseProtocolEncoder implements SimplePr
 		}
 
 		try {
+			if (dropMessage(rtmp, channelId, message))
+				return null;
+			
 			data = encodeMessage(rtmp, header, message);
 		} finally {
 			message.release();
@@ -159,6 +169,67 @@ public class RTMPProtocolEncoder extends BaseProtocolEncoder implements SimplePr
 		}
 
 		return out;
+	}
+
+	/**
+	 * Determine if this message should be dropped for lateness.
+	 * @param rtmp the protocol state
+	 * @param channelId the channel ID
+	 * @param message the message
+	 * @return true to drop; false to send
+	 */
+	private boolean dropMessage(RTMP rtmp, int channelId, IRTMPEvent message) {
+		if (!(message instanceof VideoData || message instanceof AudioData))
+			return false;
+		if (message.getSourceType() != Constants.SOURCE_TYPE_LIVE)
+			return false;
+
+		final long timestamp = (message.getTimestamp() & 0xFFFFFFFFL);
+		LiveTimestampMapping mapping = rtmp.getLastTimestampMapping(channelId);
+		
+		// just get the current time ONCE per packet
+		final long now= System.currentTimeMillis();
+		if (mapping == null || timestamp < mapping.getLastStreamTime())
+		{
+			log.error("Resetting clock time ({}) to stream time ({})", now, timestamp);
+			// either first time through, or time stamps were reset
+			mapping = new LiveTimestampMapping(now, timestamp);
+			rtmp.setLastTimestampMapping(channelId, mapping);
+		}
+		mapping.setLastStreamTime(timestamp);
+		
+		final boolean doDrop;
+		
+		final long clockTimeOfMessage = mapping.getClockStartTime()+timestamp-mapping.getStreamStartTime();
+		final long tardiness = clockTimeOfMessage - now;
+//		log.trace("Packet timestamp: {}; tardiness: {}; now: {}; message clock time: {}",
+//				new Object[]{timestamp,
+//				tardiness,
+//				now,
+//				clockTimeOfMessage});
+		if (tardiness < -getLateLiveTolerance()) {
+			// packet is too late!
+			if (message instanceof VideoData)
+				mapping.setKeyFrameNeeded(true);
+			log.debug("Dropping late message; timestamp: {}; message: {}; tardiness: {}", 
+					new Object[]{timestamp, message, tardiness});
+			doDrop = true;
+		} else if (mapping.isKeyFrameNeeded() && message instanceof VideoData) {
+			VideoData video = (VideoData) message;
+			if (video.getFrameType() == FrameType.KEYFRAME) {
+				log.debug("Resuming live stream with key frame; timestamp: {}; message: {}", timestamp, message);
+				mapping.setKeyFrameNeeded(false);
+				doDrop = false;
+			} else {
+				log.debug("Dropping non late video since not key; timestamp: {}; message: {}", timestamp, message);
+				// drop it since we need a key
+				doDrop = true;
+			}
+		} else {
+			doDrop = false;
+		}
+		
+		return doDrop;
 	}
 
 	/**
@@ -688,6 +759,14 @@ public class RTMPProtocolEncoder extends BaseProtocolEncoder implements SimplePr
 	public IoBuffer encodeFlexStreamSend(FlexStreamSend msg) {
 		final IoBuffer result = msg.getData();
 		return result;
+	}
+
+	public void setLateLiveTolerance(long lateLiveTolerance) {
+		this.lateLiveTolerance = lateLiveTolerance;
+	}
+
+	public long getLateLiveTolerance() {
+		return lateLiveTolerance;
 	}
 
 }

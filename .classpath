@@ -5,7 +5,8 @@
 	<classpathentry combineaccessrules="false" kind="src" path="/red5_server_xuggle_timestamp_fixes"/>
 	<classpathentry kind="var" path="Red5/lib/slf4j-api-1.5.8.jar"/>
 	<classpathentry kind="var" path="Red5/lib/spring-context-2.5.6.jar"/>
-	<classpathentry kind="var" path="Red5/lib/jpf-1.5.1.jar"/>
 	<classpathentry kind="var" path="Red5/lib/mina-core-2.0.0-M7-SNAPSHOT.jar"/>
+	<classpathentry kind="var" path="Red5/lib/bcprov-jdk16-139.jar"/>
+	<classpathentry kind="var" path="Red5/lib/commons-codec-1.4.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

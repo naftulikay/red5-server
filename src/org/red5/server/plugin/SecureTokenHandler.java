@@ -43,7 +43,7 @@ public class SecureTokenHandler extends ApplicationLifecycle {
 		
 		//send the status object
 		log.debug("Status: {}", status);
-		FMSAuthenticationHandler.writeStatus(conn, status);
+		AuthPlugin.writeStatus(conn, status);
 		
 		return true;
 	}

@@ -50,23 +50,36 @@ import com.kennardconsulting.core.net.UrlEncodedQueryString;
 public class FMSAuthenticationHandler extends ApplicationLifecycle {
 
 	private static Logger log = Red5LoggerFactory.getLogger(FMSAuthenticationHandler.class, "plugins");
-
-	private static Serializer serializer = new Serializer();
 	
 	private static StatusObject rejectMissingAuth;
+	private static StatusObject noSuchUser;
+	private static StatusObject invalidSessionId;
+	private static StatusObject invalidAuthMod;
 
 	static {
 		rejectMissingAuth = new StatusObject(StatusCodes.NC_CONNECT_REJECTED, StatusObject.ERROR,
 				"[ code=403 .need auth; authmod=adobe ]");
+		noSuchUser = new StatusObject(StatusCodes.NC_CONNECT_REJECTED, StatusObject.ERROR, 
+		        "[ AccessManager.Reject ] : [ authmod=adobe ] : ?reason=nosuchuser&opaque=sTQAAA=");
+		invalidSessionId = new StatusObject(StatusCodes.NC_CONNECT_REJECTED, StatusObject.ERROR, 
+		        "[ AccessManager.Reject ] : [ authmod=adobe ] : ?reason=invalid_session_id&opaque=-");
+		invalidAuthMod = new StatusObject(StatusCodes.NC_CONNECT_REJECTED, StatusObject.ERROR, 
+        		"[ AccessManager.Reject ] : [ authmod=adobe ] : ?reason=invalid_authmod&opaque=-");
 	}
 
 	public boolean appConnect(IConnection conn, Object[] params) {
 
+        log.info("appConnect");
+
 		boolean result = false;
+
+		log.debug("Connection: {}", conn);
+		log.debug("Params: {}", params);
 		
 		StatusObject status = null;
 		
 		Map<String, Object> connectionParams = conn.getConnectParams();
+		log.debug("Connection params: {}", connectionParams);
 		
 		if (!connectionParams.containsKey("queryString")) {
 			//set as missing auth notification
@@ -87,28 +100,34 @@ public class FMSAuthenticationHandler extends ApplicationLifecycle {
     			String authmod = queryString.get("authmod");    			
     			log.debug("Authmod: {}", authmod);
     			
-    			String response = queryString.get("response");
-    			log.debug("Response: {}", response);
-    			/*
-    			 * Base64 base64 = new Base64(); byte[] salt =
-    			 * base64.decode("salt=0xkAAA==&challenge=sTQAAA==&opaque=sTQAAA="
-    			 * );
-    			 * 
-    			 * System.out.println(salt.toString());
-    			 * challenge=khcAAA==&response
-    			 * =Qp0GSBumMwziL6I6y3iZaQ==&opaque=ExcAAA==.
-    			 * 
-    			 * danielr:thechallenge:theresponse
-    			 */
-    			if (authmod != null && user != null && response == null) {
-    				//set as rejected
-    				status = new StatusObject(StatusCodes.NC_CONNECT_REJECTED, StatusObject.ERROR, 
-    						String.format("[ AccessManager.Reject ] : [ authmod=%s ] : ?reason=needauth&user=%s&salt=0xkAAA==&challenge=sTQAAA==&opaque=sTQAAA=", authmod, user));
+    			//make sure they requested adobe auth
+    			if ("adobe".equals(authmod)) {
+        			String response = queryString.get("response");
+        			log.debug("Response: {}", response);
+        			/*
+        			 * Base64 base64 = new Base64(); 
+        			 * byte[] salt =
+        			 * base64.decode("salt=0xkAAA==&challenge=sTQAAA==&opaque=sTQAAA="
+        			 * );
+        			 * 
+        			 * System.out.println(salt.toString());
+        			 * challenge=khcAAA==&response=Qp0GSBumMwziL6I6y3iZaQ==&opaque=ExcAAA==.
+        			 * 
+        			 * danielr:thechallenge:theresponse
+        			 */
+        			if (authmod != null && user != null && response == null) {
+        				//set as rejected
+        				status = new StatusObject(StatusCodes.NC_CONNECT_REJECTED, StatusObject.ERROR, 
+        						String.format("[ AccessManager.Reject ] : [ authmod=%s ] : ?reason=needauth&user=%s&salt=0xkAAA==&challenge=sTQAAA==&opaque=sTQAAA=", authmod, user));
+        			} else {
+        				//dont send success or this will override the rest of the listeners, just send true
+        				//status = new StatusObject(StatusCodes.NC_CONNECT_SUCCESS, StatusObject.STATUS, "Connection succeeded.");
+        				result = true;
+        			}    				
     			} else {
-    				//set to success
-    				status = new StatusObject(StatusCodes.NC_CONNECT_SUCCESS, StatusObject.STATUS, "Connection succeeded.");
-    				result = true;
+    				status = invalidAuthMod;
     			}
+
     		} catch (Exception e) {
     			log.error("Error authenticating", e);
     		}
@@ -118,51 +137,12 @@ public class FMSAuthenticationHandler extends ApplicationLifecycle {
 		
 		//send the status object
 		log.debug("Status: {}", status);
-		FMSAuthenticationHandler.writeStatus(conn, status);
-		
+		if (!result) {
+		    AuthPlugin.writeStatus(conn, status);
+        }
+    		
 		return result;
 	}
 	
-	/**
-	 * Invokes the "onStatus" event on the client, passing our derived status.
-	 * 
-	 * @param conn
-	 * @param status
-	 */
-	public static void writeStatus(IConnection conn, StatusObject status) {
-		//make a buffer to put our data in
-		IoBuffer buf = IoBuffer.allocate(128);
-		buf.setAutoExpand(true);
-		//create amf output
-		Output out = new Output(buf);
-		//mark it as an amf object
-		buf.put(AMF.TYPE_OBJECT);
-		//serialize our status
-    	status.serialize(out, serializer);
-    	//write trailer
-		buf.put((byte) 0x00);
-		buf.put((byte) 0x00);
-		buf.put(AMF.TYPE_END_OF_OBJECT);
-		//make the buffer read to be read
-		buf.flip();
-		
-		//create an RTMP event of Notify type
-		IRTMPEvent event = new Notify(buf);
 
-		//construct a packet
-		Header header = new Header();
-		Packet packet = new Packet(header, event);
-
-		//get our stream id
-		int streamId = BaseRTMPHandler.getStreamId();
-		//set channel to "data" which im pretty sure is 3
-		header.setChannelId(3);
-		header.setTimer(event.getTimestamp()); //0
-		header.setStreamId(streamId);
-		header.setDataType(event.getDataType());
-		
-		//write to the client
-		((RTMPConnection) conn).write(packet);
-	}
-	
 }

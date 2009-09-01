@@ -25,6 +25,7 @@ import static org.red5.server.api.ScopeUtils.isRoom;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
@@ -43,6 +44,7 @@ import org.red5.server.api.IConnection;
 import org.red5.server.api.IScope;
 import org.red5.server.api.Red5;
 import org.red5.server.api.ScopeUtils;
+import org.red5.server.api.plugin.IRed5Plugin;
 import org.red5.server.api.scheduling.IScheduledJob;
 import org.red5.server.api.scheduling.ISchedulingService;
 import org.red5.server.api.service.ServiceUtils;
@@ -65,6 +67,8 @@ import org.red5.server.api.stream.IStreamService;
 import org.red5.server.api.stream.ISubscriberStream;
 import org.red5.server.api.stream.ISubscriberStreamService;
 import org.red5.server.exception.ClientRejectedException;
+import org.red5.server.plugin.PluginDescriptor;
+import org.red5.server.plugin.PluginRegistry;
 import org.red5.server.scheduling.QuartzSchedulingService;
 import org.red5.server.so.SharedObjectService;
 import org.red5.server.stream.IBroadcastScope;
@@ -347,6 +351,39 @@ public class MultiThreadedApplicationAdapter extends StatefulScopeWrappingAdapte
 		if (log == null) {
 			log = Red5LoggerFactory.getLogger(this.getClass());
 		}
+		
+		//setup plug-ins
+		log.trace("Plugins: {}", plugins);
+		if (plugins != null) {
+			for (PluginDescriptor desc : plugins) {
+				log.debug("Plugin: {}", desc);
+				try {
+					//ensure plug-in class can be resolved
+					Class<?> clazz = Class.forName(desc.getPluginType());
+					log.trace("Class: {}", clazz);
+					//get the plug-in from the registry
+					IRed5Plugin plugin = PluginRegistry.getPlugin(desc.getPluginName());
+					log.debug("Got plugin from the registry: {}", plugin);
+					//when a plug-in method is specified do invokes
+				    if (desc.getMethod() != null) {
+    					Method method = plugin.getClass().getMethod(desc.getMethod(), (Class[]) null);
+    					//if a return type is not specified for the plug-in method just invoke it
+    					if (desc.getMethodReturnType() == null) {
+    						log.debug("Invoking plugin");
+    						method.invoke(plugin, (Object[]) null);
+    					} else {
+    						//since this is a red5/web application assume the plug-in return
+    						//is a listener
+    						log.debug("Invoking plugin and adding result to listeners");
+    						addListener((IApplication) method.invoke(plugin, (Object[]) null));
+    					}
+				    }
+				} catch (Exception e) {
+					log.warn("Exception setting up a plugin", e);
+				}
+			}			
+		}
+		
 		if (!super.start(scope)) {
 			return false;
 		}

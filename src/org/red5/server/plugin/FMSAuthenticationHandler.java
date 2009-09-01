@@ -22,19 +22,10 @@ package org.red5.server.plugin;
 import java.net.URI;
 import java.util.Map;
 
-import org.apache.mina.core.buffer.IoBuffer;
-import org.red5.io.amf.AMF;
-import org.red5.io.amf.Output;
-import org.red5.io.object.Serializer;
 import org.red5.logging.Red5LoggerFactory;
 import org.red5.server.adapter.ApplicationLifecycle;
 import org.red5.server.api.IConnection;
-import org.red5.server.net.rtmp.BaseRTMPHandler;
-import org.red5.server.net.rtmp.RTMPConnection;
-import org.red5.server.net.rtmp.event.IRTMPEvent;
-import org.red5.server.net.rtmp.event.Notify;
-import org.red5.server.net.rtmp.message.Header;
-import org.red5.server.net.rtmp.message.Packet;
+import org.red5.server.exception.ClientRejectedException;
 import org.red5.server.net.rtmp.status.StatusCodes;
 import org.red5.server.net.rtmp.status.StatusObject;
 import org.slf4j.Logger;
@@ -51,21 +42,19 @@ public class FMSAuthenticationHandler extends ApplicationLifecycle {
 
 	private static Logger log = Red5LoggerFactory.getLogger(FMSAuthenticationHandler.class, "plugins");
 	
-	private static StatusObject rejectMissingAuth;
-	private static StatusObject noSuchUser;
-	private static StatusObject invalidSessionId;
-	private static StatusObject invalidAuthMod;
+	private static StatusObject rejectMissingAuth = new StatusObject(StatusCodes.NC_CONNECT_REJECTED,
+			StatusObject.ERROR, "[ code=403 .need auth; authmod=adobe ]");
 
-	static {
-		rejectMissingAuth = new StatusObject(StatusCodes.NC_CONNECT_REJECTED, StatusObject.ERROR,
-				"[ code=403 .need auth; authmod=adobe ]");
-		noSuchUser = new StatusObject(StatusCodes.NC_CONNECT_REJECTED, StatusObject.ERROR, 
-		        "[ AccessManager.Reject ] : [ authmod=adobe ] : ?reason=nosuchuser&opaque=sTQAAA=");
-		invalidSessionId = new StatusObject(StatusCodes.NC_CONNECT_REJECTED, StatusObject.ERROR, 
-		        "[ AccessManager.Reject ] : [ authmod=adobe ] : ?reason=invalid_session_id&opaque=-");
-		invalidAuthMod = new StatusObject(StatusCodes.NC_CONNECT_REJECTED, StatusObject.ERROR, 
-        		"[ AccessManager.Reject ] : [ authmod=adobe ] : ?reason=invalid_authmod&opaque=-");
-	}
+	private static StatusObject invalidAuthMod = new StatusObject(StatusCodes.NC_CONNECT_REJECTED, StatusObject.ERROR,
+			"[ AccessManager.Reject ] : [ authmod=adobe ] : ?reason=invalid_authmod&opaque=-");
+
+	/*
+	private static StatusObject noSuchUser = new StatusObject(StatusCodes.NC_CONNECT_REJECTED, StatusObject.ERROR,
+			"[ AccessManager.Reject ] : [ authmod=adobe ] : ?reason=nosuchuser&opaque=sTQAAA=");
+
+	private static StatusObject invalidSessionId = new StatusObject(StatusCodes.NC_CONNECT_REJECTED,
+			StatusObject.ERROR, "[ AccessManager.Reject ] : [ authmod=adobe ] : ?reason=invalid_session_id&opaque=-");
+	*/
 
 	public boolean appConnect(IConnection conn, Object[] params) {
 
@@ -121,7 +110,6 @@ public class FMSAuthenticationHandler extends ApplicationLifecycle {
         						String.format("[ AccessManager.Reject ] : [ authmod=%s ] : ?reason=needauth&user=%s&salt=0xkAAA==&challenge=sTQAAA==&opaque=sTQAAA=", authmod, user));
         			} else {
         				//dont send success or this will override the rest of the listeners, just send true
-        				//status = new StatusObject(StatusCodes.NC_CONNECT_SUCCESS, StatusObject.STATUS, "Connection succeeded.");
         				result = true;
         			}    				
     			} else {
@@ -138,7 +126,8 @@ public class FMSAuthenticationHandler extends ApplicationLifecycle {
 		//send the status object
 		log.debug("Status: {}", status);
 		if (!result) {
-		    AuthPlugin.writeStatus(conn, status);
+			//AuthPlugin.writeStatus(conn, status);
+			throw new ClientRejectedException(status);
         }
     		
 		return result;

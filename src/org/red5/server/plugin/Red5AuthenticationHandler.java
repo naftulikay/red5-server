@@ -31,14 +31,11 @@ import javax.crypto.spec.SecretKeySpec;
 
 import org.apache.commons.codec.binary.Base64;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
-import org.red5.io.object.Serializer;
 import org.red5.logging.Red5LoggerFactory;
 import org.red5.server.adapter.ApplicationLifecycle;
 import org.red5.server.api.IConnection;
 import org.red5.server.exception.ClientRejectedException;
 import org.red5.server.net.rtmp.RTMPConnection;
-import org.red5.server.net.rtmp.status.StatusCodes;
-import org.red5.server.net.rtmp.status.StatusObject;
 import org.red5.server.session.SessionManager;
 import org.slf4j.Logger;
 
@@ -67,10 +64,10 @@ public class Red5AuthenticationHandler extends ApplicationLifecycle {
 	private static Logger log = Red5LoggerFactory.getLogger(Red5AuthenticationHandler.class, "plugins");
 	
 	private static String rejectMissingAuth = "[ code=403 .need auth; authmod=red5 ]";
-	private static String noSuchUser = "[ AccessManager.Reject ] : [ authmod=red5 ] : ?reason=nosuchuser";
-	private static String invalidSessionId = "[ AccessManager.Reject ] : [ authmod=red5 ] : ?reason=invalid_session_id";
 	private static String invalidAuthMod = "[ AccessManager.Reject ] : [ authmod=red5 ] : ?reason=invalid_authmod"; 
 	private static String badAuth = "[ AccessManager.Reject ] : [ authmod=red5 ] : ?reason=badauth";
+	//private static String noSuchUser = "[ AccessManager.Reject ] : [ authmod=red5 ] : ?reason=nosuchuser";
+	//private static String invalidSessionId = "[ AccessManager.Reject ] : [ authmod=red5 ] : ?reason=invalid_session_id";
 	
 	private Mac hmacSHA256;
 	

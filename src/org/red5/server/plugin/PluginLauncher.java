@@ -32,7 +32,6 @@ public class PluginLauncher implements ApplicationContextAware, InitializingBean
 	 */
 	private ApplicationContext applicationContext;
 
-	@Override
 	public void afterPropertiesSet() throws Exception {
 
 		ApplicationContext common = (ApplicationContext) applicationContext.getBean("red5.common");
@@ -115,12 +114,10 @@ public class PluginLauncher implements ApplicationContextAware, InitializingBean
 
 	}
 
-	@Override
 	public void destroy() throws Exception {
 		PluginRegistry.shutdown();
 	}
 
-	@Override
 	public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
 		log.debug("Setting application context");
 		this.applicationContext = applicationContext;

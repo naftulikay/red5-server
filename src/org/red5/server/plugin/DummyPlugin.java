@@ -48,22 +48,18 @@ public class DummyPlugin implements IRed5Plugin {
 		log.debug("Stop");
 	}
 
-	@Override
 	public void setApplicationContext(ApplicationContext context) {
 		log.debug("Set application context: {}", context);
 		this.context = context;
 	}
 
-	@Override
 	public void setServer(Server server) {
 		log.debug("Set server: {}", server);
 		this.server = server;
 	}
 
-	@Override
 	public String getName() {
 		return "dummyPlugin";
 	}
-	
-	
+		
 }

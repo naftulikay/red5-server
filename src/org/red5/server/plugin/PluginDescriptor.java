@@ -1,5 +1,7 @@
 package org.red5.server.plugin;
 
+import java.util.Map;
+
 /*
  * RED5 Open Source Flash Server - http://www.osflash.org/red5
  * 
@@ -33,6 +35,8 @@ public final class PluginDescriptor {
 	private String method;
 
 	private String methodReturnType;
+	
+	private Map<String, Object> properties;
 
 	public String getPluginName() {
 		return pluginName;
@@ -64,6 +68,14 @@ public final class PluginDescriptor {
 
 	public void setMethodReturnType(String methodReturnType) {
 		this.methodReturnType = methodReturnType;
+	}
+
+	public Map<String, Object> getProperties() {
+		return properties;
+	}
+
+	public void setProperties(Map<String, Object> properties) {
+		this.properties = properties;
 	}
 
 }

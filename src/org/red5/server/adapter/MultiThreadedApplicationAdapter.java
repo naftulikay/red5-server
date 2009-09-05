@@ -31,6 +31,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.red5.io.IStreamableFile;
@@ -45,6 +46,7 @@ import org.red5.server.api.IScope;
 import org.red5.server.api.Red5;
 import org.red5.server.api.ScopeUtils;
 import org.red5.server.api.plugin.IRed5Plugin;
+import org.red5.server.api.plugin.IRed5PluginHandler;
 import org.red5.server.api.scheduling.IScheduledJob;
 import org.red5.server.api.scheduling.ISchedulingService;
 import org.red5.server.api.service.ServiceUtils;
@@ -375,6 +377,17 @@ public class MultiThreadedApplicationAdapter extends StatefulScopeWrappingAdapte
     					} else {
     						log.debug("Invoking plugin");
     						Object returnClass = method.invoke(plugin, (Object[]) null);
+    						if (returnClass instanceof IRed5PluginHandler) {
+    							//if there are props add them
+    							Map<String, Object> props = desc.getProperties();
+    							if (props != null) {
+    								Method setProps = returnClass.getClass().getMethod("setProperties", new Class[]{Map.class});
+        							setProps.invoke(returnClass, new Object[]{props});
+    							}
+    							//initialize
+    							Method init = returnClass.getClass().getMethod("init", (Class[]) null);
+    							init.invoke(returnClass, (Object[]) null);
+    						}
     						if (returnClass instanceof IApplication) {
     							//if its an IApplcation add it to the listeners
         						log.debug("Adding result class to listeners");

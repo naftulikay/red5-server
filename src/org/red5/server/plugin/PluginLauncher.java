@@ -44,7 +44,10 @@ public class PluginLauncher implements ApplicationContextAware, InitializingBean
 
 		File[] plugins = pluginsDir.listFiles(new FilenameFilter() {
 			public boolean accept(File dir, String name) {
-				return name.toLowerCase().endsWith(".jar");
+				//lower the case
+				String tmp = name.toLowerCase();
+				//accept jars and zips
+				return tmp.endsWith(".jar") || tmp.endsWith(".zip");
 			}
 		});
 		
@@ -72,7 +75,7 @@ public class PluginLauncher implements ApplicationContextAware, InitializingBean
     			// attempt to load the class; since it's in the lib directory this should work
     			ClassLoader loader = common.getClassLoader();
     			Class<?> pluginClass;
-    			String pluginMainMethod=null;
+    			String pluginMainMethod = null;
     			try {
     				pluginClass = Class.forName(pluginMainClass, true, loader);
     			} catch (ClassNotFoundException e) {

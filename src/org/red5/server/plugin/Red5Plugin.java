@@ -35,11 +35,11 @@ public abstract class Red5Plugin implements IRed5Plugin {
 	
 	protected Server server;
 	
-	@Override
+	/** {@inheritDoc} */
 	public void doStart() throws Exception {
 	}
 	
-	@Override
+	/** {@inheritDoc} */
 	public void doStop() throws Exception {
 	}
 
@@ -49,12 +49,12 @@ public abstract class Red5Plugin implements IRed5Plugin {
 	public void init() {
 	}
 	
-	@Override
+	/** {@inheritDoc} */
 	public String getName() {
 		return null;
 	}
 
-	@Override
+	/** {@inheritDoc} */
 	public void setApplicationContext(ApplicationContext context) {
 		this.context = context;
 	}
@@ -68,7 +68,7 @@ public abstract class Red5Plugin implements IRed5Plugin {
 		return server;
 	}
 	
-	@Override
+	/** {@inheritDoc} */
 	public void setServer(Server server) {
 		this.server = server;
 	}

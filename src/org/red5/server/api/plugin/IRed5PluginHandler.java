@@ -19,49 +19,34 @@ package org.red5.server.api.plugin;
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA 
  */
 
-import org.red5.server.Server;
-import org.springframework.context.ApplicationContext;
+import java.util.Map;
+
+import org.red5.server.adapter.MultiThreadedApplicationAdapter;
 
 /**
- * Base interface for a Red5 server Plug-in.
+ * Base interface for handlers originating from plug-ins.
  * 
- * @author Paul Gregoire (mondain@gmail.com)
+ * @author Paul Gregoire
  */
-public interface IRed5Plugin {
-	
-	/**
-	 * Returns a name / identifier for the plug-in.
-	 * 
-	 * @return plug-in's name
-	 */
-	String getName();
-	
-	/**
-	 * Sets the top-most ApplicationContext within Red5.
-	 * 
-	 * @param context
-	 */
-	void setApplicationContext(ApplicationContext context);	
-	
-	/**
-	 * Sets a reference to the server.
-	 * 
-	 * @param server
-	 */
-	void setServer(Server server);
+public interface IRed5PluginHandler {
 
 	/**
-	 * Lifecycle method called when the plug-in is started.
-	 * 
-	 * @throws Exception 
+	 * Initialize the plug-in handler.
 	 */
-	void doStart() throws Exception;
-		
+	void init();
+	
 	/**
-	 * Lifecycle method called when the plug-in is stopped.
+	 * Set the application making use of this plug-in handler.
 	 * 
-	 * @throws Exception 
+	 * @param application
 	 */
-	void doStop() throws Exception;
+	void setApplication(MultiThreadedApplicationAdapter application);
 
+	/**
+	 * Set properties to be used by this handler.
+	 * 
+	 * @param props
+	 */
+	void setProperties(Map<String, Object> props);
+	
 }

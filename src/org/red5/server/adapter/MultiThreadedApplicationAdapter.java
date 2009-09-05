@@ -69,6 +69,7 @@ import org.red5.server.api.stream.ISubscriberStreamService;
 import org.red5.server.exception.ClientRejectedException;
 import org.red5.server.plugin.PluginDescriptor;
 import org.red5.server.plugin.PluginRegistry;
+import org.red5.server.plugin.Red5Plugin;
 import org.red5.server.scheduling.QuartzSchedulingService;
 import org.red5.server.so.SharedObjectService;
 import org.red5.server.stream.IBroadcastScope;
@@ -372,11 +373,21 @@ public class MultiThreadedApplicationAdapter extends StatefulScopeWrappingAdapte
     						log.debug("Invoking plugin");
     						method.invoke(plugin, (Object[]) null);
     					} else {
-    						//since this is a red5/web application assume the plug-in return
-    						//is a listener
-    						log.debug("Invoking plugin and adding result to listeners");
-    						addListener((IApplication) method.invoke(plugin, (Object[]) null));
+    						log.debug("Invoking plugin");
+    						Object returnClass = method.invoke(plugin, (Object[]) null);
+    						if (returnClass instanceof IApplication) {
+    							//if its an IApplcation add it to the listeners
+        						log.debug("Adding result class to listeners");
+        						addListener((IApplication) returnClass);
+    						} else {
+        						log.info("Returned class did not implement IApplication");
+    						}
     					}
+				    }
+				    //if the plugin class extends the red5 plug-in we will add the application to it
+				    if (plugin instanceof Red5Plugin) {
+    				    //pass the app to the plugin so that it may be manipulated directly by the plug-in
+    				    ((Red5Plugin) plugin).setApplication(this);
 				    }
 				} catch (Exception e) {
 					log.warn("Exception setting up a plugin", e);

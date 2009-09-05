@@ -23,7 +23,7 @@ import org.springframework.context.ApplicationContext;
  */
 
 /**
- * Base interface for a Red5 server Plugin.
+ * Base interface for a Red5 server Plug-in.
  * 
  * @author Paul Gregoire (mondain@gmail.com)
  */

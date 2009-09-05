@@ -1321,7 +1321,7 @@ public final class PlayEngine implements IFilter, IPushableConsumer, IPipeConnec
 	/**
 	 * Returns true if the engine currently receives audio.
 	 * 
-	 * @return engine receives audio
+	 * @return receive audio
 	 */
 	public boolean receiveAudio() {
 		return receiveAudio;

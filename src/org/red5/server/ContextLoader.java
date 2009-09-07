@@ -32,6 +32,7 @@ import javax.management.ObjectName;
 
 import org.red5.server.jmx.JMXAgent;
 import org.red5.server.jmx.JMXFactory;
+import org.red5.server.plugin.PluginRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
@@ -152,11 +153,9 @@ public class ContextLoader implements ApplicationContextAware, ContextLoaderMBea
 
 		// Load properties file
 		props.load(res.getInputStream());
-
 		
 		// Pattern for arbitrary property substitution
 		Pattern patt = Pattern.compile("\\$\\{([^\\}]+)\\}");
-
 		
 		// Iterate thru properties keys and replace config attributes with
 		// system attributes
@@ -167,18 +166,17 @@ public class ContextLoader implements ApplicationContextAware, ContextLoaderMBea
 			
 			Matcher m = patt.matcher(config);
 			
-			while(m.find()) {
+			while (m.find()) {
 				String sysProp = m.group(1);
 				String replaceString = "${" + sysProp + "}";
 				
 				String systemPropValue = System.getProperty(sysProp);
 				
-				if(systemPropValue == null)
+				if(systemPropValue == null) {
 					systemPropValue = "null";
-				
+				}
 				configReplaced = configReplaced.replace(replaceString, systemPropValue);
 			}
-			
 			
 			log.info("Loading: {} = {}", name, config + " => " + configReplaced);
 
@@ -195,6 +193,12 @@ public class ContextLoader implements ApplicationContextAware, ContextLoaderMBea
 	public void uninit() {
 		log.debug("ContextLoader un-init");		
 		JMXAgent.unregisterMBean(oName);
+		//shutdown the plug-in launcher here
+		try {
+			PluginRegistry.shutdown();
+		} catch (Exception e) {
+			log.warn("Exception shutting down plugin registry", e);
+		}
 		//unload all the contexts in the map
 		for (Map.Entry<String, ApplicationContext> entry : contextMap.entrySet()) {
 			unloadContext(entry.getKey());

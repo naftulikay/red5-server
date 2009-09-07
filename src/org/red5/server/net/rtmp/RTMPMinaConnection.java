@@ -23,15 +23,11 @@ import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.List;
 
 import javax.management.ObjectName;
 
 import org.apache.mina.core.buffer.IoBuffer;
-import org.apache.mina.core.filterchain.IoFilter;
 import org.apache.mina.core.session.IoSession;
-import org.red5.server.adapter.Config;
-import org.red5.server.api.IContext;
 import org.red5.server.api.IScope;
 import org.red5.server.jmx.JMXAgent;
 import org.red5.server.jmx.JMXFactory;
@@ -117,6 +113,7 @@ public class RTMPMinaConnection extends RTMPConnection implements RTMPMinaConnec
 		} else {
             log.warn("Client was null");			
 		}
+		/*
 		if (ioSession != null) {
 			if (scope.getDepth() == 1) {
 				log.debug("Top level scope detected, configuration will be applied if it exists");
@@ -150,6 +147,7 @@ public class RTMPMinaConnection extends RTMPConnection implements RTMPMinaConnec
 		} else {
 			log.debug("Session was null");
 		}
+		*/
 		return success;
 	}
 

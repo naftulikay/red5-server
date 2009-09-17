@@ -33,9 +33,6 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.mina.core.buffer.IoBuffer;
 import org.red5.server.BaseConnection;
-import org.red5.server.api.IBWControllable;
-import org.red5.server.api.IBandwidthConfigure;
-import org.red5.server.api.IConnectionBWConfig;
 import org.red5.server.api.IScope;
 import org.red5.server.api.Red5;
 import org.red5.server.api.scheduling.IScheduledJob;
@@ -53,18 +50,14 @@ import org.red5.server.api.stream.IStreamService;
 import org.red5.server.exception.ClientRejectedException;
 import org.red5.server.net.rtmp.codec.RTMP;
 import org.red5.server.net.rtmp.event.BytesRead;
-import org.red5.server.net.rtmp.event.ClientBW;
 import org.red5.server.net.rtmp.event.Invoke;
 import org.red5.server.net.rtmp.event.Notify;
 import org.red5.server.net.rtmp.event.Ping;
-import org.red5.server.net.rtmp.event.ServerBW;
 import org.red5.server.net.rtmp.event.VideoData;
 import org.red5.server.net.rtmp.message.Packet;
 import org.red5.server.service.Call;
 import org.red5.server.service.PendingCall;
 import org.red5.server.stream.ClientBroadcastStream;
-import org.red5.server.stream.IBWControlContext;
-import org.red5.server.stream.IBWControlService;
 import org.red5.server.stream.OutputStream;
 import org.red5.server.stream.PlaylistSubscriberStream;
 import org.red5.server.stream.StreamService;
@@ -80,9 +73,6 @@ import org.slf4j.LoggerFactory;
 public abstract class RTMPConnection extends BaseConnection implements IStreamCapableConnection,
 		IServiceCapableConnection {
 
-	/**
-	 * Logger
-	 */
 	private static Logger log = LoggerFactory.getLogger(RTMPConnection.class);
 
 	public static final String RTMP_CONNECTION_KEY = "rtmp.conn";
@@ -121,7 +111,7 @@ public abstract class RTMPConnection extends BaseConnection implements IStreamCa
 	private final HashSet<DeferredResult> deferredResults = new HashSet<DeferredResult>();
 
 	/**
-	 * Last ping roundtrip time
+	 * Last ping round trip time
 	 */
 	private AtomicInteger lastPingTime = new AtomicInteger(-1);
 
@@ -153,27 +143,17 @@ public abstract class RTMPConnection extends BaseConnection implements IStreamCa
 	/**
 	 * Data read interval
 	 */
-	private int bytesReadInterval = 120 * 1024;
+	protected int bytesReadInterval = 120 * 1024;
 
 	/**
 	 * Number of bytes to read next.
 	 */
-	private int nextBytesRead = 120 * 1024;
+	protected int nextBytesRead = 120 * 1024;
 
 	/**
 	 * Number of bytes the client reported to have received.
 	 */
 	private long clientBytesRead = 0;
-
-	/**
-	 * Bandwidth configure.
-	 */
-	private IConnectionBWConfig bwConfig;
-
-	/**
-	 * Bandwidth context used by bandwidth controller.
-	 */
-	private IBWControlContext bwContext;
 
 	/**
 	 * Map for pending video packets and stream IDs.
@@ -277,21 +257,7 @@ public abstract class RTMPConnection extends BaseConnection implements IStreamCa
 		try {
 			boolean success = super.connect(newScope, params);
 			if (success) {
-				getWriteLock().lock();
-				try {
-					// XXX Bandwidth control service should not be bound to
-					// a specific scope because it's designed to control
-					// the bandwidth system-wide.
-					IScope s = getScope();
-					if (s != null && s.getContext() != null) {
-						IBWControlService bwController = (IBWControlService) s.getContext().getBean(
-								IBWControlService.KEY);
-						bwContext = bwController.registerBWControllable(this);
-					}
-					unscheduleWaitForHandshakeJob();
-				} finally {
-					getWriteLock().unlock();
-				}
+				unscheduleWaitForHandshakeJob();
 			}
 			return success;
 		} catch (ClientRejectedException e) {
@@ -622,18 +588,6 @@ public abstract class RTMPConnection extends BaseConnection implements IStreamCa
 			streams.clear();
 		}
 		channels.clear();
-
-		getWriteLock().lock();
-		try {
-			if (bwContext != null && getScope() != null && getScope().getContext() != null) {
-				IBWControlService bwController = (IBWControlService) getScope().getContext().getBean(
-						IBWControlService.KEY);
-				bwController.unregisterBWControllable(bwContext);
-				bwContext = null;
-			}
-		} finally {
-			getWriteLock().unlock();
-		}
 		super.close();
 	}
 
@@ -818,60 +772,6 @@ public abstract class RTMPConnection extends BaseConnection implements IStreamCa
 	}
 
 	/** {@inheritDoc} */
-	public IBandwidthConfigure getBandwidthConfigure() {
-		getReadLock().lock();
-		try {
-			return bwConfig;
-		} finally {
-			getReadLock().unlock();
-		}
-	}
-
-	/** {@inheritDoc} */
-	public IBWControllable getParentBWControllable() {
-		// TODO return the client object
-		return null;
-	}
-
-	/** {@inheritDoc} */
-	public void setBandwidthConfigure(IBandwidthConfigure config) {
-		if (!(config instanceof IConnectionBWConfig)) {
-			return;
-		}
-
-		IConnectionBWConfig connectionBWConfig = (IConnectionBWConfig) config;
-
-		// Notify client about new bandwidth settings (in bytes per second)
-		if (connectionBWConfig.getDownstreamBandwidth() > 0) {
-			ServerBW serverBW = new ServerBW((int) connectionBWConfig.getDownstreamBandwidth() / 8);
-			getChannel(2).write(serverBW);
-		}
-		if (connectionBWConfig.getUpstreamBandwidth() > 0) {
-			ClientBW clientBW = new ClientBW((int) connectionBWConfig.getUpstreamBandwidth() / 8, (byte) 0);
-			getChannel(2).write(clientBW);
-		}
-
-		getWriteLock().lock();
-		try {
-			this.bwConfig = connectionBWConfig;
-			if (connectionBWConfig.getUpstreamBandwidth() > 0) {
-				// Update generation of BytesRead messages
-				// TODO: what are the correct values here?
-				bytesReadInterval = (int) connectionBWConfig.getUpstreamBandwidth() / 8;
-				nextBytesRead = (int) getWrittenBytes();
-			}
-
-			if (bwContext != null) {
-				IBWControlService bwController = (IBWControlService) getScope().getContext().getBean(
-						IBWControlService.KEY);
-				bwController.updateBWConfigure(bwContext);
-			}
-		} finally {
-			getWriteLock().unlock();
-		}
-	}
-
-	/** {@inheritDoc} */
 	@Override
 	public long getReadBytes() {
 		return 0;
@@ -955,7 +855,6 @@ public abstract class RTMPConnection extends BaseConnection implements IStreamCa
 				pending.decrementAndGet();
 			}
 		}
-
 		writtenMessages.incrementAndGet();
 	}
 
@@ -1043,11 +942,6 @@ public abstract class RTMPConnection extends BaseConnection implements IStreamCa
 		getWriteLock().lock();
 		try {
 			if (keepAliveJobName == null) {
-				// log.debug("Scope null = {}", (scope == null));
-				// log.debug("getScope null = {}", (getScope() == null));
-				// log.debug("Context null = {}", (scope.getContext() == null));
-				// ISchedulingService schedulingService = (ISchedulingService)
-				// scope.getContext().getBean(ISchedulingService.BEAN_NAME);
 				keepAliveJobName = schedulingService.addScheduledJob(pingInterval, new KeepAliveJob());
 			}
 			log.debug("Keep alive job name {} for client id {}", keepAliveJobName, getId());
@@ -1078,8 +972,6 @@ public abstract class RTMPConnection extends BaseConnection implements IStreamCa
 	/** {@inheritDoc} */
 	@Override
 	public String toString() {
-		// http://java.sun.com/j2se/1.5.0/docs/api/java/lang/String.html#format(
-		// java.lang.String,%20java.lang.Object...)
 		Object[] args = new Object[] { getClass().getSimpleName(), getRemoteAddress(), getRemotePort(), getHost(),
 				getReadBytes(), getWrittenBytes() };
 		return String.format("%1$s from %2$s : %3$s to %4$s (in: %5$s out %6$s )", args);
@@ -1187,8 +1079,7 @@ public abstract class RTMPConnection extends BaseConnection implements IStreamCa
 								(System.currentTimeMillis() - lastPingSent.get()) });
 				// Add the following line to (hopefully) deal with a very common support request
 				// on the Red5 list
-				log
-						.warn("This often happens if YOUR Red5 application generated an exception on start-up.  Check earlier in the log for that exception first!");
+				log.warn("This often happens if YOUR Red5 application generated an exception on start-up. Check earlier in the log for that exception first!");
 				onInactive();
 				return;
 			}

@@ -72,8 +72,6 @@ public class RTMPMinaIoHandler extends IoHandlerAdapter implements ApplicationCo
 		// moved protocol state from connection object to RTMP object
 		RTMP rtmp = new RTMP(mode);
 		session.setAttribute(ProtocolState.SESSION_KEY, rtmp);
-		//add traffic shaping filter here if bandwidth control is requested
-
 		//add protocol filter next
 		session.getFilterChain().addFirst("protocolFilter", new ProtocolCodecFilter(codecFactory));
 		if (log.isTraceEnabled()) {
@@ -99,8 +97,7 @@ public class RTMPMinaIoHandler extends IoHandlerAdapter implements ApplicationCo
 			out.flip();
 			session.write(out);
 		} else {
-			final RTMPMinaConnection conn = (RTMPMinaConnection) session
-					.getAttribute(RTMPConnection.RTMP_CONNECTION_KEY);
+			final RTMPMinaConnection conn = (RTMPMinaConnection) session.getAttribute(RTMPConnection.RTMP_CONNECTION_KEY);
 			handler.connectionOpened(conn, rtmp);
 		}
 	}

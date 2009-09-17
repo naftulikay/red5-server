@@ -242,8 +242,7 @@ public class RTMPUtils implements Constants {
      * @param b Second time stamp
      * @return -1 if a < b, 1 if a > b, or 0 if a == b
      */
-    public static int compareTimestamps(final int a, final int b)
-    {
+    public static int compareTimestamps(final int a, final int b) {
     	long diff = diffTimestamps(a, b);
     	return diff < 0 ? -1 : (diff > 0 ? 1 : 0);
     }
@@ -256,8 +255,7 @@ public class RTMPUtils implements Constants {
      * @param b Second time stamp
      * @return the distance between a and b, which will be negative if a is less than b.
      */
-    public static long diffTimestamps(final int a, final int b)
-    {
+    public static long diffTimestamps(final int a, final int b) {
     	// first convert each to unsigned integers
     	final long unsignedA = a & 0xFFFFFFFFL;
     	final long unsignedB = b & 0xFFFFFFFFL;

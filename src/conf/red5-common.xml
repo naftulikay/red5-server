@@ -116,17 +116,16 @@
 	<!-- Provides output to consumers -->
 	<bean id="consumerService" class="org.red5.server.stream.ConsumerService"/>
 	
-	<!-- Simple bandwidth control -->
-	<bean id="BWControlService" class="org.red5.server.stream.SimpleBWControlService" init-method="init" destroy-method="shutdown">
-		<property name="interval" value="100"/>
-		<property name="defaultCapacity" value="104857600"/>
-		<!-- 100MB -->
-	</bean>
-	<!-- Dummy bandwidth control that does nothing -->
-	<!--
-    <bean id="BWControlService" class="org.red5.server.stream.DummyBWControlService"/> 
-    -->
-    
+	<!-- Bandwidth control -->
+
+	<!-- Limits bandwidth (bytes per second) related with read and write operations on a per-session basis -->
+	<bean id="bandwidthFilter" class="org.red5.server.net.filter.TrafficShapingFilter" scope="prototype">
+		<!-- Maximum read throughput (0 = Unlimited) -->
+		<constructor-arg index="0" value="0"/>
+		<!-- Maximum write throughput (0 = Unlimited) -->
+		<constructor-arg index="1" value="512000"/>
+	</bean>	
+
 	<!-- Scheduling service -->
 	<bean id="schedulingService" class="org.red5.server.scheduling.QuartzSchedulingService"/>
 		 
@@ -136,15 +135,10 @@
         <property name="checkInterval" value="600000"/>
         <property name="deploymentDirectory" value="${red5.root}/webapps"/>
     </bean>		 
-		 
-	<!-- Threadpool settings for the remoting clients -->
-	<bean id="remotingPool" class="org.red5.server.pooling.ThreadPool">
-		<property name="poolSize" value="8"/>
-	</bean>
-	
+
 	<!-- Use injection to setup thread pool for remoting clients -->
 	<bean id="remotingClient" class="org.red5.server.net.remoting.RemotingClient">
-		<property name="threadPool" ref="remotingPool"/>
+		<property name="poolSize" value="8"/>
 	</bean>
 	
 	<!--

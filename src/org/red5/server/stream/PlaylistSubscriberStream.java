@@ -79,16 +79,6 @@ public class PlaylistSubscriberStream extends AbstractClientStream implements
 	private PlayEngine engine;
 
 	/**
-	 * Service that controls bandwidth
-	 */
-	private IBWControlService bwController;
-
-	/**
-	 * Operating context for bandwidth controller
-	 */
-	private IBWControlContext bwContext;
-
-	/**
 	 * Rewind mode state
 	 */
 	private boolean rewind;
@@ -290,9 +280,6 @@ public class PlaylistSubscriberStream extends AbstractClientStream implements
 	/** {@inheritDoc} */
 	public void close() {
 		engine.close();
-		// unregister myself from bandwidth controller
-		if (bwController != null)
-			bwController.unregisterBWControllable(bwContext);
 		notifySubscriberClose();
 	}
 

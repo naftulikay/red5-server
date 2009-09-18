@@ -304,8 +304,7 @@ public class Context implements IContext, ApplicationContextAware, ContextMBean 
 	 */
 	public IScopeHandler lookupScopeHandler(String contextPath) {
 		// Get target scope handler name
-		String scopeHandlerName = getMappingStrategy().mapScopeHandlerName(
-				contextPath);
+		String scopeHandlerName = getMappingStrategy().mapScopeHandlerName(contextPath);
 		// Get bean from bean factory
 		Object bean = applicationContext.getBean(scopeHandlerName);
 		if (bean != null && bean instanceof IScopeHandler) {

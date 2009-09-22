@@ -1,34 +1,88 @@
 <?xml version="1.0" ?>
-<project name="nsvplugin" basedir="." default="all">
+<project name="nsvplugin" basedir="." default="all" xmlns:ivy="antlib:org.apache.ivy.ant">
 
-    <property name="classes.dir" value="bin"/>
-    <property name="dist.dir" value="."/>
-	   
-    <target name="clean">
-        <delete file="${ant.project.name}.jar"/>    	
-    </target>
-    
-    <target name="jar">
-        <tstamp prefix="build">
-            <format property="TODAY" pattern="d-MMMM-yyyy" locale="en"/>
-        </tstamp>
-        <jar destfile="${dist.dir}/${ant.project.name}.jar">
-            <fileset dir="${classes.dir}">
-                <include name="**"/>
-            </fileset>
-			<manifest>
-				<attribute name="Built" value="${build.TODAY} by ${user.name}"/>
-				<attribute name="Build-OS" value="${os.name} ${os.version}"/>
-				<attribute name="Build-Java" value="Java ${java.version}"/>
-                <attribute name="Red5-Plugin-Main-Class" value="org.red5.server.plugin.NSVPlugin"/>
-			</manifest>
-        </jar>
-    </target>
-	
-	<target name="all" depends="clean, jar"/>
-    
-    <target name="usage">
-        <echo>Type ant -p for available targets"</echo>
-    </target>
-    
-</project>
+	    <!-- project properties -->
+	    <property environment="env"/>
+	    <!-- user overides for project properties -->
+	    <property file="${user.home}/build.properties"/>
+	    <!-- base project properties -->
+	    <property file="build.properties"/>
+	    
+	    <property name="java.home" value="${env.JDK_HOME}"/>
+
+	    <property name="src.dir" value="src"/>
+	    <property name="classes.dir" value="bin"/>
+	    <property name="dist.dir" value="."/>
+	       
+	    <path id="project.classpath">
+	        <fileset dir="${red5.root}/lib"/>
+	        <pathelement location="${red5.root}/red5.jar"/>
+	        <pathelement location="${red5.root}/lib/red5.jar"/>
+	        <!-- project specific libs -->
+	        <fileset dir="lib"/>
+	    </path>    
+	       
+	    <target name="prepare">
+	        <mkdir dir="${classes.dir}"/>
+	    </target>
+	           
+	    <target name="clean">
+	        <delete file="${ant.project.name}.jar"/>        
+	        <delete dir="${classes.dir}"/>
+	    </target>
+	    
+	    <target name="retrieve" description="Retrieves the libraries if needed">
+	        <taskdef uri="antlib:org.apache.ivy.ant" resource="org/apache/ivy/ant/antlib.xml"
+	         classpath="${basedir}/lib/ivy-trunk.jar"/>
+	        <ivy:settings file="ivysettings.xml"/>
+	        <ivy:resolve file="ivy.xml" conf="build" />
+	        <ivy:retrieve conf="build" pattern="${basedir}/lib/[artifact](-[revision]).[ext]"/>
+	    </target>      
+	    
+	    <target name="compile" depends="prepare, retrieve">
+	        <condition property="java.target_version" value="1.6">
+	            <not>
+	                <isset property="java.target_version"/>
+	            </not>
+	        </condition>
+	        <echo>java.home is ${java.home} and the target version is ${java.target_version}</echo>
+	        <echo>red5.root is ${red5.root}</echo>
+	        <echo>javac version: ${java.version}</echo>
+	        <property name="dest.dir" value="${classes.dir}"/>
+	        <javac sourcepath="" srcdir="${src.dir}" destdir="${dest.dir}" classpathref="project.classpath"
+	             optimize="${build.optimize}" verbose="${build.verbose}" fork="${build.fork}" nowarn="${build.nowarn}"
+	             deprecation="${build.deprecation}" debug="${debug.state}" compiler="modern"
+	             source="${java.target_version}" target="${java.target_version}" listfiles="false"/>
+	             
+	        <copy todir="${dest.dir}" failonerror="false">
+	            <fileset dir="${src.dir}">
+	                <include name="**/*.xml"/>
+	                <include name="**/*.properties"/>
+	            </fileset>
+	        </copy>          
+	    </target>   
+	        
+	    <target name="jar">
+	        <tstamp prefix="build">
+	            <format property="TODAY" pattern="d-MMMM-yyyy" locale="en"/>
+	        </tstamp>
+	        <jar destfile="${dist.dir}/${ant.project.name}.jar">
+	            <fileset dir="${classes.dir}">
+	                <include name="**"/>
+	            </fileset>
+	            <manifest>
+	                <attribute name="Built" value="${build.TODAY} by ${user.name}"/>
+	                <attribute name="Build-OS" value="${os.name} ${os.version}"/>
+	                <attribute name="Build-Java" value="Java ${java.version}"/>
+	                <attribute name="Red5-Plugin-Main-Class" value="org.red5.server.plugin.NSVPlugin"/>
+	            </manifest>
+	        </jar>
+	    </target>
+	    
+	    <target name="all" depends="clean, compile, jar"/>
+	    
+	    <target name="usage">
+	        <echo>Type ant -p for available targets"</echo>
+	    </target>
+	    
+	</project>

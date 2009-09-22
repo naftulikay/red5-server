@@ -20,25 +20,18 @@ package org.red5.server.plugin;
  */
 
 import org.red5.logging.Red5LoggerFactory;
-import org.red5.server.Server;
-import org.red5.server.api.plugin.IRed5Plugin;
 import org.slf4j.Logger;
-import org.springframework.context.ApplicationContext;
 
 /**
  * Provides a means to stream media via NSV.
  * 
- * @author Paul Gregoire
+ * @author Paul Gregoire (mondain@gmail.com)
+ * @author Wittawas Nakkasem (vittee@hotmail.com)
+ * @author Andy Shaules (bowljoman@hotmail.com)
  */
-public class NSVPlugin implements IRed5Plugin {
+public class NSVPlugin extends Red5Plugin {
 
 	private static Logger log = Red5LoggerFactory.getLogger(NSVPlugin.class, "plugins");
-	
-	@SuppressWarnings("unused")
-	private ApplicationContext context;
-	
-	@SuppressWarnings("unused")
-	private Server server;
 	
 	public void doStart() throws Exception {
 		log.debug("Start");
@@ -48,18 +41,6 @@ public class NSVPlugin implements IRed5Plugin {
 		log.debug("Stop");
 	}
 
-	@Override
-	public void setApplicationContext(ApplicationContext context) {
-		log.debug("Set application context: {}", context);
-		this.context = context;
-	}
-
-	@Override
-	public void setServer(Server server) {
-		log.debug("Set server: {}", server);
-		this.server = server;
-	}
-	
 	@Override
 	public String getName() {
 		return "nsvPlugin";

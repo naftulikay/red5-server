@@ -60,7 +60,8 @@ public class NSVStreamConfig {
 	private WriteLock writeLock = lock.writeLock();
 
 	public void writeFrame(NSVFrame frame) {
-		totalFrames.incrementAndGet();
+		long frameNumber = totalFrames.incrementAndGet();
+		frame.setFrameNumber(frameNumber);
 		try {
 			writeLock.lock();
 			frames.add(frame);

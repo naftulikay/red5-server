@@ -25,9 +25,9 @@ import java.util.Map;
 import org.apache.mina.core.buffer.IoBuffer;
 import org.red5.io.amf.Output;
 import org.red5.io.object.Serializer;
+import org.red5.logging.Red5LoggerFactory;
 import org.red5.server.api.IContext;
 import org.red5.server.api.IScope;
-
 import org.red5.server.net.rtmp.event.IRTMPEvent;
 import org.red5.server.net.rtmp.event.Notify;
 import org.red5.server.plugin.icy.IICYMarshal;
@@ -38,49 +38,54 @@ import org.red5.server.stream.BroadcastScope;
 import org.red5.server.stream.IBroadcastScope;
 import org.red5.server.stream.IProviderService;
 import org.red5.server.stream.codec.AACAudio;
+import org.slf4j.Logger;
 
 /**
  * This class registers the stream name in the provided scope and packages the buffers into rtmp events.
  * 
  * @author Wittawas Nakkasem (vittee@hotmail.com)
  * @author Andy Shaules (bowljoman@hotmail.com)
+ * @author Paul Gregoire (mondain@gmail.com)
  */
 public class ICYMarshal implements IICYMarshal {
+	
+	private static Logger log = Red5LoggerFactory.getLogger(ICYMarshal.class, "plugins");
 
 	private AudioFramer audioFramer;
 
 	private VideoFramer videoFramer;
 
-	private IScope _scope;
+	private IScope scope;
 
-	private String _name;
+	private String name;
 
-	private ICYStream _stream;
+	private ICYStream stream;
 
-	private String _content;
+	@SuppressWarnings("unused")
+	private String content;
 
-	private String _type;
+	private String type;
 
-	private String _fourCCAudio;
+	private String fourCCAudio;
 
-	private String _fourCCVideo;
+	private String fourCCVideo;
 
-	private Map<String, Object> _metaData;
+	private Map<String, Object> metaData;
 
 	public ICYMarshal(IScope outputScope, String outputName) {
-		_scope = outputScope;
-		_name = outputName;
-		_stream = new ICYStream(_name, true, true);
-		_stream.setScope(outputScope);
+		scope = outputScope;
+		name = outputName;
+		stream = new ICYStream(name, true, true);
+		stream.setScope(outputScope);
 
 		IContext context = outputScope.getContext();
 		IProviderService providerService = (IProviderService) context.getBean(IProviderService.BEAN_NAME);
-		if (providerService.registerBroadcastStream(outputScope, _stream.getPublishedName(), _stream)) {
-			IBroadcastScope bsScope = (BroadcastScope) providerService.getLiveProviderInput(outputScope, _stream
+		if (providerService.registerBroadcastStream(outputScope, stream.getPublishedName(), stream)) {
+			IBroadcastScope bsScope = (BroadcastScope) providerService.getLiveProviderInput(outputScope, stream
 					.getPublishedName(), true);
-			bsScope.setAttribute(IBroadcastScope.STREAM_ATTRIBUTE, _stream);
+			bsScope.setAttribute(IBroadcastScope.STREAM_ATTRIBUTE, stream);
 		}
-		audioFramer = new AudioFramer(_stream);
+		audioFramer = new AudioFramer(stream);
 
 	}
 
@@ -93,95 +98,103 @@ public class ICYMarshal implements IICYMarshal {
 	}
 
 	public IScope getScope() {
-		return _scope;
+		return scope;
 	}
 
 	public ICYStream getStream() {
-		return _stream;
+		return stream;
 	}
 
 	public String getContentType() {
-		return _type;
+		return type;
 	}
 
 	public String getAudioType() {
-		return _fourCCAudio;
+		return fourCCAudio;
 	}
 
 	public String getVideoType() {
-		return _fourCCVideo;
+		return fourCCVideo;
 	}
 
 	public void reset(String content, String type) {
-
-		_content = content;
-		_type = type;
-		_stream.reset();
+		log.debug("Reset - content: {} type: {}", content, type);
+		this.content = content;
+		this.type = type;
+		stream.reset();
 		audioFramer.reset();
 
 		if (content.equals("audio")) {
 			if (type.startsWith("aac")) {
 				AACAudio audioCodec = new AACAudio();
-				_stream.setAudioReader(audioCodec);
-				_stream.audioFramer = audioFramer;
+				stream.setAudioReader(audioCodec);
+				stream.audioFramer = audioFramer;
 
 			} else if (type.equals("mpeg")) {
 				//MP3Audio
+			} else {
+				log.debug("Unsupported content type at reset: {}", type);
 			}
 		} else if (content.equals("video")) {
-			videoFramer = new VideoFramer(_stream);
-
+			videoFramer = new VideoFramer(stream);
 		}
 
 	}
 
 	public void onAuxData(String fourCC, IoBuffer buffer) {
-		// TODO Auto-generated method stub
 
 	}
 
 	public void onConnected(String vidType, String audioType) {
-
-		_fourCCAudio = audioType;
-		_fourCCVideo = vidType;
-
-		if (_content.equals("video")) {
-			if (audioType.startsWith("AAC")) {
-				AACAudio audioCodec = new AACAudio();
-				_stream.setAudioReader(audioCodec);
-				_stream.audioFramer = audioFramer;
-
-			} else if (audioType.equals("MP3")) {
-				//TODO
-				//MP3Audio
-			}
-
+		fourCCAudio = audioType;
+		if (fourCCAudio.startsWith("AAC")) {
+			AACAudio audioCodec = new AACAudio();
+			stream.setAudioReader(audioCodec);
+			stream.audioFramer = audioFramer;
+		} else if (fourCCAudio.equals("MP3")) {
+			//TODO MP3Audio
+		} else {
+			log.debug("Unsupported audio type: {}", audioType);
 		}
-
+		fourCCVideo = vidType;
+		if (fourCCVideo.startsWith("VP6") || fourCCVideo.startsWith("H264")) {
+			
+    	} else {
+    		log.debug("Unsupported video type: {}", vidType);
+    	}
 	}
 
 	public void onAudioData(int[] data) {
-		if (_stream.getCodecReader().getName().equals("AAC")) {
+		String codecName = stream.getCodecReader().getName();
+		if ("AAC".equals(codecName)) {
 			audioFramer.onAACData(data);
-		} else if (_stream.getCodecReader().getName().equals("MP3")) {
+		} else if ("MP3".equals(codecName)) {
 			audioFramer.onMP3Data(data);
 		}
+	}
+	
+	public void onVideoData(int[] buffer) {
+		if (fourCCVideo.startsWith("VP6")) {
+			videoFramer.pushVP6Frame(buffer, 0);
+		} else if (fourCCVideo.startsWith("H264")) {
+			videoFramer.pushAVCFrame(buffer, 0);
+		}
+	}
+
+	public void onMetaData(Map<String, Object> metaData) {
+		this.metaData = metaData;
+		IRTMPEvent event = getMetaDataEvent();
+		if (event != null) {
+			stream.setMetaDataEvent(event);
+		}
+		stream.dispatchEvent(event);
 	}
 
 	public void onDisconnected() {
 	}
-
-	public void onMetaData(Map<String, Object> metaData) {
-		_metaData = metaData;
-		IRTMPEvent event = getMetaDataEvent();
-		if (event != null) {
-			_stream.setMetaDataEvent(event);
-		}
-		_stream.dispatchEvent(event);
-	}
-
+	
 	private IRTMPEvent getMetaDataEvent() {
-		if (_metaData == null) {
+		if (metaData == null) {
 			return null;
 		}
 
@@ -191,21 +204,13 @@ public class ICYMarshal implements IICYMarshal {
 		out.writeString("onMetaData");
 
 		Map<Object, Object> props = new HashMap<Object, Object>();
-		props.putAll(_metaData);
+		props.putAll(metaData);
 		props.put("canSeekToEnd", false);
 
 		out.writeMap(props, new Serializer());
 		buf.flip();
 
 		return new Notify(buf);
-	}
-
-	public void onVideoData(int[] buffer) {
-		if (_fourCCVideo.startsWith("VP6")) {
-			videoFramer.pushVP6Frame(buffer, 0);
-		} else if (_fourCCVideo.startsWith("H264")) {
-			videoFramer.pushAVCFrame(buffer, 0);
-		}
 	}
 
 	public void start() {

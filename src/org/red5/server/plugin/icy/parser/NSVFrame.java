@@ -26,9 +26,9 @@ package org.red5.server.plugin.icy.parser;
  */
 public class NSVFrame {
 
-	public long frame_type = 0x8080;//empty	
+	public long frameType = 0x8080;//empty	
 
-	public int frame_number = 0;
+	public long frameNumber = 0;
 
 	public int parser_info = 0;
 
@@ -40,11 +40,11 @@ public class NSVFrame {
 
 	public int height = 0;
 
-	public double framerate = 0;
+	public double frameRate = 0;
 
-	public int frame_rate_encoded = 0x0;
+	public int frameRateEncoded = 0x0;
 
-	public int offset_current = 0;
+	public int offsetCurrent = 0;
 
 	public int[] vid_data;
 
@@ -59,14 +59,13 @@ public class NSVFrame {
 	public long timeStamp = 0;
 
 	public NSVFrame(NSVStreamConfig id, long type) {
-		frame_type = type;
-		aud_type = id.audio_format;
-		vid_type = id.video_format;
-		width = id.video_width;
-		height = id.video_height;
-		framerate = id.frame_rate;
-		frame_rate_encoded = id.frame_rate_encoded;
-
+		frameType = type;
+		aud_type = id.audioFormat;
+		vid_type = id.videoFormat;
+		width = id.videoWidth;
+		height = id.videoHeight;
+		frameRate = id.frameRate;
+		frameRateEncoded = id.frameRateEncoded;
 	}
 
 	/**
@@ -77,7 +76,7 @@ public class NSVFrame {
 		ret[0] = 0;
 		int length = 0;
 		NSVBitStream bs = new NSVBitStream();
-		switch ((frame_type == NSVStream.NSV_SYNC_DWORD) ? 1 : 2) {
+		switch ((frameType == NSVStream.NSV_SYNC_DWORD) ? 1 : 2) {
 			case 1:
 				length = (24) + (vid_len) + (aud_len);
 				ret = new int[length];
@@ -97,9 +96,9 @@ public class NSVFrame {
 				ret[13] = ((width) >> 8);
 				ret[14] = ((height << 8) >> 8);
 				ret[15] = ((height) >> 8);
-				ret[16] = frame_rate_encoded;//frame rate
-				ret[17] = ((offset_current << 8) >> 8);
-				ret[18] = ((offset_current) >> 8);
+				ret[16] = frameRateEncoded;//frame rate
+				ret[17] = ((offsetCurrent << 8) >> 8);
+				ret[18] = ((offsetCurrent) >> 8);
 				bs = new NSVBitStream();
 				bs.putBits(4, num_aux);
 				bs.putBits(20, vid_len);
@@ -140,6 +139,14 @@ public class NSVFrame {
 				break;
 		}
 		return ret;
+	}
+
+	public long getFrameNumber() {
+		return frameNumber;
+	}
+
+	public void setFrameNumber(long frameNumber) {
+		this.frameNumber = frameNumber;
 	}
 
 }

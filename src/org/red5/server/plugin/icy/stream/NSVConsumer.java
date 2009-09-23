@@ -19,8 +19,8 @@ package org.red5.server.plugin.icy.stream;
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA 
  */
 
-import org.red5.server.plugin.icy.IFlowControl;
 import org.red5.server.plugin.icy.IICYMarshal;
+import org.red5.server.plugin.icy.StreamManager;
 import org.red5.server.plugin.icy.parser.NSVSenderThread;
 import org.red5.server.plugin.icy.parser.NSVThread;
 
@@ -32,7 +32,7 @@ import org.red5.server.plugin.icy.parser.NSVThread;
  * @author Andy Shaules (bowljoman@hotmail.com)
  * @author Paul Gregoire (mondain@gmail.com)
  */
-public class NSVConsumer implements IFlowControl, Runnable {
+public class NSVConsumer {
 
 	public static int SERVER_MODE = 0;
 
@@ -50,20 +50,41 @@ public class NSVConsumer implements IFlowControl, Runnable {
 
 	private String host;
 
-	private boolean mKeepRunning = true;
-
-	private int waitTime = 50;
-
-	public NSVConsumer(int serverType, IICYMarshal pHandler, String host) {
-		handler = pHandler;
-		this.host = host;
+	public NSVConsumer(int serverType, IICYMarshal handler, String host) {
 		mode = serverType;
+		this.handler = handler;
+		this.host = host;
 	}
 
-	public NSVConsumer(int serverType, IICYMarshal pHandler) {
-		handler = pHandler;
-		this.host = "";
+	public NSVConsumer(int serverType, IICYMarshal handler) {
 		mode = serverType;
+		this.handler = handler;
+		this.host = "";
+	}
+	
+	public void init() {
+		//create a thread to handle the nsv stream
+		nsv = new NSVThread(mode, host, handler, new NSVSenderThread(handler));
+		nsv.setPort(port);
+		nsv.setPassword(password);
+		//initialize the inputs
+		nsv.listen();
+		//submit the thread for execution
+		StreamManager.submit(nsv);
+	}
+
+	public void stop() {
+		if (nsv != null) {
+			nsv.stop();
+		}
+	}
+
+	public boolean isConnected() {
+		if (nsv != null) {
+			return nsv.isConnected();
+		} else {
+			return false;
+		}
 	}
 
 	public IICYMarshal getMarshal() {
@@ -76,8 +97,6 @@ public class NSVConsumer implements IFlowControl, Runnable {
 
 	public void setHost(String val) {
 		host = val;
-		if (nsv != null)
-			nsv.setHost(val);
 	}
 
 	public int getMode() {
@@ -90,81 +109,10 @@ public class NSVConsumer implements IFlowControl, Runnable {
 
 	public void setPort(int val) {
 		port = val;
-		if (nsv != null) {
-			nsv.setPort(val);
-		}
 	}
 
 	public void setPassword(String val) {
 		password = val;
-		if (nsv != null) {
-			nsv.setPassword(val);
-		}
-	}
-
-	@Override
-	public void run() {
-		
-		nsv = new NSVThread(mode, host, handler, this, new NSVSenderThread(handler));
-		nsv.setPort(port);
-		nsv.setPassword(password);
-		nsv.listen();
-
-		while (mKeepRunning) {
-
-			process();
-
-			try {
-				Thread.sleep(5000);
-			} catch (Exception e) {
-
-			}
-
-		}
-	}
-
-	private void process() {
-
-		while (mKeepRunning) {
-			try {
-				nsv.execute(null);
-			} catch (CloneNotSupportedException e1) {
-				e1.printStackTrace();
-			}
-
-			try {
-				Thread.sleep(waitTime);
-			} catch (Exception e) {
-			}
-		}
-	}
-
-	@Override
-	public void notifyIdler(int stat) {
-		if (stat == 0) {
-			waitTime = 100;
-		} else {
-			waitTime = 1;
-		}
-		waitTime = (waitTime < 1) ? 1 : waitTime;
-		waitTime = (waitTime > 300) ? 300 : waitTime;
-	}
-
-	public void start() {
-
-		thread.start();
-	}
-
-	public void stop() {
-		mKeepRunning = false;
-	}
-
-	public boolean isConnected() {
-		if (nsv != null) {
-			return nsv.isConnected();
-		} else {
-			return false;
-		}
 	}
 
 }

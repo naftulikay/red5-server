@@ -15,15 +15,19 @@
 								
 	<bean id="nsvConsumer" class="org.red5.server.plugin.icy.stream.NSVConsumer" scope="prototype">
 		<property name="password" value="changeme"/>
-		<property name="waitTime" value="50"/>
 		<property name="host" value=""/>
-		<property name="port" value="8001"/>
+		<property name="port" value="8000"/>
 	</bean>
 
 	<bean id="nsvThread" class="org.red5.server.plugin.icy.parser.NSVThread" scope="prototype">
+        <property name="waitTime" value="50"/>
 		<property name="password" value="changeme"/>
 		<property name="host" value=""/>
-		<property name="port" value="8001"/>
+		<property name="port" value="8000"/>
+		<!-- Whether or not to send "flipped" meta tag to indicate upside down video. If 
+		      flipped meta tag is not used, the dimensions will be negative.
+		-->
+		<property name="notifyFlipped" value="true"/>
 	</bean>
 		
 </beans>

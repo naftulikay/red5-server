@@ -19,13 +19,8 @@ package org.red5.server.plugin.icy.parser;
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA 
  */
 
-import org.apache.mina.core.buffer.IoBuffer;
-import org.red5.server.api.scheduling.IScheduledJob;
-import org.red5.server.api.scheduling.ISchedulingService;
-import org.red5.server.plugin.icy.IFlowControl;
-import org.red5.server.plugin.icy.IICYHandler;
-
-import java.io.*;
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.URL;
@@ -33,27 +28,30 @@ import java.net.URLConnection;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.mina.core.buffer.IoBuffer;
+import org.red5.server.plugin.icy.IFlowControl;
+import org.red5.server.plugin.icy.IICYHandler;
+import org.red5.server.plugin.icy.StreamManager;
+
 /**
  * Handles the main parsing work.
  * 
  * @author Paul Gregoire (mondain@gmail.com)
  * @author Andy Shaules (bowljoman@hotmail.com)
  */
-public class NSVThread implements Runnable {
+public class NSVThread implements Runnable, IFlowControl {
 
-	public static int SERVER_MODE = 0;
+	public static final int SERVER_MODE = 0;
 
-	public static int CLIENT_MODE = 1;
+	public static final int CLIENT_MODE = 1;
 
-	private int _mode = 0;
+	private int mode = 0;
 
-	private InputStream m_input = null;
+	private InputStream input;
 
 	private URL u;
 
-	private boolean connected = false;
-
-	private int frames = -1;
+	private boolean connected;
 
 	public Map<String, Object> metaData = new HashMap<String, Object>();
 
@@ -62,18 +60,18 @@ public class NSVThread implements Runnable {
 	public ServerSocket outSock;
 
 	private IICYHandler handler;
+	
+	private boolean keepRunning = true;
 
-	private IFlowControl idler;
+	private boolean getFrame = true;
 
-	private boolean get_frame = true;
+	private boolean gotFrame;
 
-	private boolean got_frame = false;
+	private int oldBytes = 0;
 
-	private int old_bytes = 0;
+	private int lastRead;
 
-	private int last_read;
-
-	private int[] prev_bits;
+	private int[] prevBits;
 
 	private long lastData = 0;
 
@@ -83,9 +81,9 @@ public class NSVThread implements Runnable {
 
 	public Socket client;
 
-	private boolean verified = false;
+	private boolean verified;
 
-	private boolean initiated = false;
+	private boolean initiated;
 
 	private String password = "changeme";
 
@@ -93,11 +91,30 @@ public class NSVThread implements Runnable {
 
 	public NSVStreamConfig config;
 
-	private long dataTimeout = 10000;//milliseconds
+	//thread sleep period
+	private int waitTime = 50;
+	
+	//data timeout in milliseconds
+	private long dataTimeout = 10000;
 
 	@SuppressWarnings("unused")
 	private String audioType;
 
+	//determines how to notify players that the video is upside down
+	private boolean notifyFlipped;
+	
+	/**
+	 * 
+	 * @param mode
+	 * @param val
+	 * @param senderThread
+	 */
+	public NSVThread(int mode, IICYHandler handler, NSVSenderThread senderThread) {
+		this.mode = mode;
+		this.handler = handler;
+		sender = senderThread;
+	}
+	
 	/**
 	 * 
 	 * @param mode
@@ -105,26 +122,11 @@ public class NSVThread implements Runnable {
 	 * @param val
 	 * @param senderThread
 	 */
-	public NSVThread(int mode, String p_host, IICYHandler val, IFlowControl pIdler, NSVSenderThread senderThread) {
-
-		idler = pIdler;
-		host = p_host;
-		_mode = mode;
-		handler = val;
+	public NSVThread(int mode, String host, IICYHandler handler, NSVSenderThread senderThread) {
+		this.mode = mode;
+		this.host = host;
+		this.handler = handler;
 		sender = senderThread;
-	}
-
-	/**
-	 * 
-	 * @param mode
-	 * @param val
-	 * @param senderThread
-	 */
-	public NSVThread(int mode, IICYHandler val, NSVSenderThread senderThread) {
-		handler = val;
-		sender = senderThread;
-		_mode = mode;
-
 	}
 
 	/**
@@ -132,21 +134,27 @@ public class NSVThread implements Runnable {
 	 * @return
 	 */
 	public int getMode() {
-		return _mode;
+		return mode;
 	}
 
+	/**
+	 * Returns the number of frames created / written
+	 * @return
+	 */
 	public int getFrames() {
+		int frames = -1;
+		if (config != null) {
+			frames = Long.valueOf(config.totalFrames.get()).intValue();
+		}
 		return frames;
 	}
 
 	public void listen() {
-
 		initiated = false;
 		verified = false;
 		connected = false;
 		metaData.clear();
-		switch (_mode) {
-
+		switch (mode) {
 			case 1:
 				try {
 					// client mode;						
@@ -155,21 +163,19 @@ public class NSVThread implements Runnable {
 					u = new URL(host);
 					uc = u.openConnection();
 					uc.connect();
-					m_input = uc.getInputStream();
+					input = uc.getInputStream();
 					lastData = System.currentTimeMillis();
 					//connected=true;
-
 				} catch (IOException er0) {
 				}
 
 				break;
 			case 0:
 				try {
-
 					//  server mode;	
 					outSock = new ServerSocket(port);
 					client = outSock.accept();
-					m_input = client.getInputStream();
+					input = client.getInputStream();
 					lastData = System.currentTimeMillis();
 					connected = true;
 					outSock.close();
@@ -189,6 +195,14 @@ public class NSVThread implements Runnable {
 		password = val;
 	}
 
+	public int getWaitTime() {
+		return waitTime;
+	}
+
+	public void setWaitTime(int waitTime) {
+		this.waitTime = waitTime;
+	}
+
 	private String sample(int passWordLength, int[] buffer) {
 		String password = "";
 		for (int g = 0; g < passWordLength; g++) {
@@ -199,256 +213,251 @@ public class NSVThread implements Runnable {
 
 	@Override
 	public void run() {
-		if (m_input == null) {
-			return;
-		} else {
-			try {
-				idler.notifyIdler(m_input.available());
-			} catch (IOException e) {
-				m_input = null;
-				old_bytes = 0;
-				prev_bits = new int[0];
-				listen();
-			}
-		}
-
-		try {
-			if (m_input.available() > 0) {
-				lastData = System.currentTimeMillis();
+		while (keepRunning) {
+			if (input == null) {
+				return;
 			} else {
-				if (System.currentTimeMillis() - lastData > dataTimeout) {
-					connected = false;
-					m_input.close();
-					old_bytes = 0;
-					prev_bits = new int[0];
+				try {
+					notifyIdler(input.available());
+				} catch (IOException e) {
+					input = null;
+					oldBytes = 0;
+					prevBits = new int[0];
 					listen();
 				}
 			}
-		} catch (IOException e) {
-			old_bytes = 0;
-			prev_bits = new int[0];
-			listen();
-		}
 
-		//send frames
-		sender.execute(service);
-
-		last_read = 0;
-
-		try {
-
-			int[] bits;
-			int offset = 0;//=prev_bits.length;
-			if (old_bytes > 0) {
-				offset = prev_bits.length;
-
-				bits = new int[offset + m_input.available()];
-				for (int j = 0; j < offset; j++) {
-					bits[j] = prev_bits[j];
-				}
-
-				old_bytes = 0;
-			} else {
-				if (m_input.available() < 1)
-					return;
-				bits = new int[m_input.available()];
-			}
-			//Password
-			if (!verified) {
-				if (m_input.available() < password.length()) {
-					return;
-				}
-				for (int m = offset; m < bits.length; m++) {
-					bits[m] = (m_input.read());
-				}
-				if (sample(password.length(), bits).equals(password)) {
-					verified = true;
-					client.getOutputStream().write("OK2\r\nicy-caps:11\r\n\r\n".getBytes());
-					client.getOutputStream().flush();
-
+			try {
+				if (input.available() > 0) {
+					lastData = System.currentTimeMillis();
 				} else {
-					client.getOutputStream().write("invalid password\r\n".getBytes());
-					client.getOutputStream().flush();
-					client.close();
-					m_input.close();
-					this.connected = false;
-
-					return;
-
-				}
-			} else
-				//store chunk
-				for (int m = offset; m < bits.length; m++) {
-					bits[m] = (m_input.read());
-				}
-
-			while (get_frame) {
-				for (int h = 0; h < bits.length; h++) {
-					int limit = bits.length;
-					if (h < bits.length - 4) {
-						if (got_frame && (_mode == 0 || _mode == 1)) {
-							if ((char) bits[h] == 0xef) {
-								if ((char) bits[h + 1] == 0xbe) {
-
-									int enough = h;
-									enough = chnkFrame(enough, bits);
-									if (enough < 0) {
-										continue;
-									}
-									if (enough == h) {
-										save(bits.length - h, h, bits);
-										//sender.execute(service);
-										return;
-									} else {
-										h = enough;
-										last_read = bits.length - h;
-										//	System.out.println("bytes left "+last_read);
-										if (last_read == 0) {
-											//sender.execute(service);
-											return;
-										}
-									}
-									//Adjust for next parser.
-									h--;
-								}
-							}
-							if (limit < h + 4) {
-								save(bits.length - h, h, bits);
-								return;
-							}
-						}
-						//*******************************************************************************
-						if (initiated && (_mode == 0 || _mode == 1)) {
-							if (((bits[h]) | ((bits[h + 1]) << 8) | ((bits[h + 2]) << 16) | ((bits[h + 3]) << 24)) == NSVStream.NSV_SYNC_DWORD) {
-
-								int was_enough = syncFrame(h, bits);
-								if (was_enough < 0)//invalid
-									continue;
-
-								if (was_enough == h) {
-									save(bits.length - h, h, bits);
-
-									return;
-								} else {
-									h = was_enough;
-									last_read = bits.length - h;
-
-									if (last_read == 0) {
-										return;
-									}
-								}
-
-								h--;
-							}
-							if (limit < h + 2) {
-								save(bits.length - h, h, bits);
-								return;
-							}
-						}
-						if ((char) bits[h] == 'i' && (char) bits[h + 1] == 'c' && (char) bits[h + 2] == 'y') {
-							if (limit < h + 1024) {
-								save(bits.length - h, h, bits);
-								return;
-							}
-
-							char[] chars = new char[1024];
-							for (int j = 0; j < 1024; j++) {
-								if ((char) bits[h + j] == '\r' || (char) bits[h + j] == '\n') {
-									break;
-								}
-								chars[j] = (char) bits[h + j];
-							}
-
-							String meta = new String(chars);
-							String[] item = meta.split("cy-", 2);
-							String[] value = item[1].split(":", 2);
-							item = item[1].split(":", 2);
-							metaData.put(item[0], value[1]);
-
-							if (initiated) {
-								handler.onMetaData(metaData);
-							}
-						}
-
-						//*******************************************************************************
-						if ((char) bits[h] == 'c' && (char) bits[h + 1] == 'o' && (char) bits[h + 2] == 'n'
-								&& (char) bits[h + 3] == 't') {
-
-							char[] chars = new char[36];
-							for (int j = 0; j < 36; j++) {
-								if ((char) bits[h + j] == '\r' || (char) bits[h + j] == '\n') {
-									//last_read=j;
-									//h=j;
-									break;
-								}
-								chars[j] = (char) bits[h + j];
-							}
-
-							String meta = new String(chars);
-
-							String[] value = meta.split(":", 2);
-							String[] type = value[1].split("/", 2);
-							if (!initiated) {
-								initiated = true;
-							}
-							//Switch mode if wrong content
-							if (_mode == 3 || _mode == 2) {
-								if (type[0].equals("video")) {
-									_mode = (_mode == 3) ? 0 : 1;
-								} else {
-									audioType = type[1];
-								}
-							} else {
-								if (type[0].equals("audio")) {
-									if (_mode == 0)
-										_mode = 3;
-									else
-										_mode = 2;
-
-									audioType = type[1];
-								}
-							}
-							connected = true;
-							//Notify handler of new content.
-							handler.reset(type[0], type[1]);
-						}
-
-						//Audio only
-						if (_mode == 3 && initiated) {
-							handler.onAudioData(bits);
-							return;
-						}
-
-						//Audio only
-						if (_mode == 2 && initiated) {
-							handler.onAudioData(bits);
-							return;
-						}
-
-					} else {
-						//Not enough to parse.
-						save(last_read, bits.length - last_read, bits);
-						break;
+					if (System.currentTimeMillis() - lastData > dataTimeout) {
+						connected = false;
+						input.close();
+						oldBytes = 0;
+						prevBits = new int[0];
+						listen();
 					}
 				}
-
-				break;
+			} catch (IOException e) {
+				oldBytes = 0;
+				prevBits = new int[0];
+				listen();
 			}
 
-		} catch (IOException er0) {
-		}
+			lastRead = 0;
 
+			try {
+
+				int[] bits;
+				int offset = 0;//=prev_bits.length;
+				if (oldBytes > 0) {
+					offset = prevBits.length;
+					bits = new int[offset + input.available()];
+					for (int j = 0; j < offset; j++) {
+						bits[j] = prevBits[j];
+					}
+
+					oldBytes = 0;
+				} else {
+					if (input.available() < 1) {
+						return;
+					}
+					bits = new int[input.available()];
+				}
+				//Password
+				if (!verified) {
+					if (input.available() < password.length()) {
+						return;
+					}
+					for (int m = offset; m < bits.length; m++) {
+						bits[m] = (input.read());
+					}
+					if (sample(password.length(), bits).equals(password)) {
+						verified = true;
+						client.getOutputStream().write("OK2\r\nicy-caps:11\r\n\r\n".getBytes());
+						client.getOutputStream().flush();
+					} else {
+						client.getOutputStream().write("invalid password\r\n".getBytes());
+						client.getOutputStream().flush();
+						client.close();
+						input.close();
+						this.connected = false;
+						return;
+					}
+				} else {
+					//store chunk
+					for (int m = offset; m < bits.length; m++) {
+						bits[m] = (input.read());
+					}
+				}
+				while (getFrame) {
+					for (int h = 0; h < bits.length; h++) {
+						int limit = bits.length;
+						if (h < bits.length - 4) {
+							if (gotFrame && (mode == 0 || mode == 1)) {
+								if ((char) bits[h] == 0xef) {
+									if ((char) bits[h + 1] == 0xbe) {
+										int enough = h;
+										enough = chnkFrame(enough, bits);
+										if (enough < 0) {
+											continue;
+										}
+										if (enough == h) {
+											save(bits.length - h, h, bits);
+											//sender.execute(service);
+											return;
+										} else {
+											h = enough;
+											lastRead = bits.length - h;
+											//	System.out.println("bytes left "+last_read);
+											if (lastRead == 0) {
+												//sender.execute(service);
+												return;
+											}
+										}
+										//Adjust for next parser.
+										h--;
+									}
+								}
+								if (limit < h + 4) {
+									save(bits.length - h, h, bits);
+									return;
+								}
+							}
+							//*******************************************************************************
+							if (initiated && (mode == 0 || mode == 1)) {
+								if (((bits[h]) | ((bits[h + 1]) << 8) | ((bits[h + 2]) << 16) | ((bits[h + 3]) << 24)) == NSVStream.NSV_SYNC_DWORD) {
+									int was_enough = syncFrame(h, bits);
+									if (was_enough > 0) {
+	    								if (was_enough == h) {
+	    									save(bits.length - h, h, bits);    
+	    									return;
+	    								} else {
+	    									h = was_enough;
+	    									lastRead = bits.length - h;
+	    									if (lastRead == 0) {
+	    										return;
+	    									}
+	    								}
+	    
+	    								h--;
+									}
+								}
+								if (limit < h + 2) {
+									save(bits.length - h, h, bits);
+									return;
+								}
+							}
+							if ((char) bits[h] == 'i' && (char) bits[h + 1] == 'c' && (char) bits[h + 2] == 'y') {
+								if (limit < h + 1024) {
+									save(bits.length - h, h, bits);
+									return;
+								}
+
+								char[] chars = new char[1024];
+								for (int j = 0; j < 1024; j++) {
+									if ((char) bits[h + j] == '\r' || (char) bits[h + j] == '\n') {
+										break;
+									}
+									chars[j] = (char) bits[h + j];
+								}
+
+								String meta = new String(chars);
+								String[] item = meta.split("cy-", 2);
+								String[] value = item[1].split(":", 2);
+								item = item[1].split(":", 2);
+								metaData.put(item[0], value[1]);
+
+								if (initiated) {
+									handler.onMetaData(metaData);
+								}
+							}
+
+							//*******************************************************************************
+							if ((char) bits[h] == 'c' && (char) bits[h + 1] == 'o' && (char) bits[h + 2] == 'n'
+									&& (char) bits[h + 3] == 't') {
+
+								char[] chars = new char[36];
+								for (int j = 0; j < 36; j++) {
+									if ((char) bits[h + j] == '\r' || (char) bits[h + j] == '\n') {
+										//last_read=j;
+										//h=j;
+										break;
+									}
+									chars[j] = (char) bits[h + j];
+								}
+
+								String meta = new String(chars);
+
+								String[] value = meta.split(":", 2);
+								String[] type = value[1].split("/", 2);
+								if (!initiated) {
+									initiated = true;
+								}
+								//Switch mode if wrong content
+								if (mode == 3 || mode == 2) {
+									if (type[0].equals("video")) {
+										mode = (mode == 3) ? 0 : 1;
+									} else {
+										audioType = type[1];
+									}
+								} else {
+									if (type[0].equals("audio")) {
+										if (mode == 0) {
+											mode = 3;
+										} else {
+											mode = 2;
+										}
+										audioType = type[1];
+									}
+								}
+								connected = true;
+								//Notify handler of new content.
+								handler.reset(type[0], type[1]);
+							}
+
+							//Audio only
+							if (initiated && (mode == 2 || mode == 3)) {
+								handler.onAudioData(bits);
+								return;
+							}
+						} else {
+							//Not enough to parse.
+							save(lastRead, bits.length - lastRead, bits);
+							break;
+						}
+					}
+
+					break;
+				}
+
+			} catch (IOException er0) {
+			}
+			
+			//sleep for a few ticks
+			try {
+				Thread.sleep(waitTime);
+			} catch (Exception e) {
+			}			
+		}
 	}
 
+	public void stop() {
+		keepRunning = false;
+		//flushing the config will also cause the sender thread
+		//to stop, so its win-win
+		config.flush();
+	}
+	
 	/**
 	 * Called when sync frame header is found.
 	 * 
-	 * @param poffset current offset in data array.
+	 * @param offset current offset in data array.
 	 * @param data contains nsv bitstream.
-	 * @return position in data array or < 0 on in invalid frame. Returns poffset if valid frame but needs more data.
+	 * @return position in data array or < 0 on in invalid frame. Returns offset if valid frame but needs more data.
 	 */
-	private int syncFrame(int poffset, int[] data) {
-		int offset = poffset;
+	private int syncFrame(int offset, int[] data) {
 		int mark = offset;
 		int total_aux_used = 0;
 		int limit = data.length - offset;
@@ -456,30 +465,46 @@ public class NSVThread implements Runnable {
 			return offset;
 		}
 		offset += 4;//NSVs;
-		if (!got_frame) { //First frame with full data.
-			String p_Vidtype = String.valueOf((char) data[offset++]) + String.valueOf((char) data[offset++])
+		if (!gotFrame) { 
+			//First frame with full data.
+			String vidtype = String.valueOf((char) data[offset++]) + String.valueOf((char) data[offset++])
 					+ String.valueOf((char) data[offset++]) + String.valueOf((char) data[offset++]);
-			String p_Audtype = String.valueOf((char) data[offset++]) + String.valueOf((char) data[offset++])
+			String audtype = String.valueOf((char) data[offset++]) + String.valueOf((char) data[offset++])
 					+ String.valueOf((char) data[offset++]) + String.valueOf((char) data[offset++]);
 
-			int p_width = data[offset++] | data[offset++] << 8;
-			int p_height = data[offset++] | data[offset++] << 8;
-			int frame_rate_encoded = data[offset++];
-			double p_framerate = NSVStream.framerateToDouble(frame_rate_encoded);
-			config = NSVStream.create(p_Vidtype, p_Audtype, p_width, p_height, p_framerate);
-			config.frameRateEncoded = frame_rate_encoded;
+			int width = data[offset++] | data[offset++] << 8;
+			int height = data[offset++] | data[offset++] << 8;
+			int frameRateEncoded = data[offset++];
+			
+			double frameRate = NSVStream.framerateToDouble(frameRateEncoded);
+
+			config = StreamManager.createStreamConfig(vidtype, audtype, width, height, frameRate);
+			config.frameRateEncoded = frameRateEncoded;
+			
 			sender.config = config;
-			handler.onConnected(p_Vidtype, p_Audtype);
-			//Upside down format. Send negative values?
+			
+			//now that the sender has a config, submit it for execution
+			StreamManager.submit(sender);
+			
+			handler.onConnected(vidtype, audtype);
+
 			//TODO use standard codec meta tags.
-			metaData.put("width", config.videoWidth * -1);
-			metaData.put("height", config.videoHeight * -1);
+			
+			//upside down format. Send negative values?
+			if (notifyFlipped) {
+				metaData.put("width", config.videoWidth);
+				metaData.put("height", config.videoHeight);
+				metaData.put("flipped", true);
+			} else {
+				metaData.put("width", config.videoWidth * -1);
+				metaData.put("height", config.videoHeight * -1);			
+			}
 			metaData.put("frameRate", config.frameRate);
 			metaData.put("videoCodec", config.videoFormat);
 			metaData.put("audioCodec", config.audioFormat);
 
 			handler.onMetaData(metaData);
-			got_frame = true;
+			gotFrame = true;
 		} else {
 			offset += 4;//vid
 			offset += 4;//aud
@@ -489,10 +514,7 @@ public class NSVThread implements Runnable {
 		}
 		
 		NSVFrame frame = new NSVFrame(config, NSVStream.NSV_SYNC_DWORD);
-
-		frame.frame_number = frames++;
-
-		frame.offset_current = data[offset++] | data[offset++] << 8;
+		frame.offsetCurrent = data[offset++] | data[offset++] << 8;
 		//	System.out.println("av sync "+frame.offset_current);
 
 		NSVBitStream bs0 = new NSVBitStream();
@@ -548,27 +570,26 @@ public class NSVThread implements Runnable {
 		}
 
 		config.writeFrame(frame);
+		
 		return offset;
 	}
 
 	/**
 	 * Called when chunk frame header is found.
-	 * @param poffset current offset in data array.
+	 * @param offset current offset in data array.
 	 * @param data contains nsv bitstream.
-	 * @return position in data array or < 0 on in invalid frame. Returns poffset if valid frame but needs more data.
+	 * @return position in data array or < 0 on in invalid frame. Returns offset if valid frame but needs more data.
 	 */
-	private int chnkFrame(int poffset, int[] data) {
-		int offset = poffset;
-
+	private int chnkFrame(int offset, int[] data) {
 		int total_aux_used = 0;
-		int limit = data.length - poffset;
+		int limit = data.length - offset;
 		if (limit < 7) {
-			return poffset;
+			return offset;
 		}
 		offset++;//0xbeef;
 		offset++;
-		NSVFrame frame = new NSVFrame(config, NSVStream.NSV_NONSYNC_WORD);//NSVStream.stream(config,NSVStream.NSV_NONSYNC_WORD);
-		frame.frame_number = frames++;
+		NSVFrame frame = new NSVFrame(config, NSVStream.NSV_NONSYNC_WORD);
+
 		NSVBitStream bs0 = new NSVBitStream();
 
 		bs0.putBits(8, data[offset++]);
@@ -588,9 +609,9 @@ public class NSVThread implements Runnable {
 			return -1;
 		}
 
-		int bytesNeeded = (7) + (vid_len) + (aud_len);
+		int bytesNeeded = 7 + vid_len + aud_len;
 		if (limit < bytesNeeded) {
-			return poffset;
+			return offset;
 		}
 		frame.vid_len = vid_len;
 		frame.aud_len = aud_len;
@@ -624,13 +645,24 @@ public class NSVThread implements Runnable {
 	}
 
 	private void save(int num, int offSet, int[] pbits) {
-		old_bytes = num;
-		this.prev_bits = new int[old_bytes];
+		oldBytes = num;
+		this.prevBits = new int[oldBytes];
 		for (int i = 0; i < num; i++) {
-			prev_bits[i] = pbits[i + offSet];
+			prevBits[i] = pbits[i + offSet];
 		}
 	}
-
+	
+	@Override
+	public void notifyIdler(int stat) {
+		if (stat == 0) {
+			waitTime = 100;
+		} else {
+			waitTime = 1;
+		}
+		waitTime = (waitTime < 1) ? 1 : waitTime;
+		waitTime = (waitTime > 300) ? 300 : waitTime;
+	}
+	
 	public boolean isConnected() {
 		return connected;
 	}
@@ -638,4 +670,13 @@ public class NSVThread implements Runnable {
 	public void setHost(String val) {
 		host = val;
 	}
+
+	public boolean isNotifyFlipped() {
+		return notifyFlipped;
+	}
+
+	public void setNotifyFlipped(boolean notifyFlipped) {
+		this.notifyFlipped = notifyFlipped;
+	}
+	
 }

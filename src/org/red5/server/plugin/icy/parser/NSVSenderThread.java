@@ -31,9 +31,7 @@ public class NSVSenderThread implements Runnable {
 
 	public IICYMarshal reader;
 
-	public NSVStreamConfig config = new NSVStreamConfig();
-
-	public int time = 0;
+	public NSVStreamConfig config;
 
 	public NSVSenderThread(IICYMarshal reader) {
 		this.reader = reader;
@@ -54,5 +52,5 @@ public class NSVSenderThread implements Runnable {
 		}
 
 	}
-
+	
 }

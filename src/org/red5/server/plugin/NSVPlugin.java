@@ -40,7 +40,6 @@ public class NSVPlugin extends Red5Plugin {
 
 	private static FileSystemXmlApplicationContext nsvContext;
 	
-
 	/**
 	 * Create a thread to listen for a connection from nsv or winamp shoutcast dsp encoders.
 	 * @param outputScope the stream is registered in.
@@ -85,17 +84,13 @@ public class NSVPlugin extends Red5Plugin {
 
 	public void doStart() throws Exception {
 		log.debug("Start");
-		
 		//create app context
-		nsvContext = new FileSystemXmlApplicationContext(new String[]{"classpath:/nsv.xml"}, true, context);	
-		
+		nsvContext = new FileSystemXmlApplicationContext(new String[]{"classpath:/nsv.xml"}, true, context);		
 	}
 
 	public void doStop() throws Exception {
 		log.debug("Stop");
-		
 		nsvContext.close();
-		
 	}
 
 	@Override

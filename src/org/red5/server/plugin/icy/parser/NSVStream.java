@@ -19,7 +19,6 @@ package org.red5.server.plugin.icy.parser;
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA 
  */
 
-import java.util.ArrayList;
 
 /**
  * NSV constants and utility functions
@@ -46,10 +45,6 @@ public class NSVStream {
 	public static long NSV_SYNC_DWORD = (makeType('N', 'S', 'V', 's'));
 
 	public static long NSV_HDR_DWORD = (makeType('N', 'S', 'V', 'f'));
-
-	private static int streamIds = 0;
-
-	public static ArrayList<NSVStreamConfig> streams = new ArrayList<NSVStreamConfig>();
 
 	public static double framerateToDouble(int fr) {
 		double ret = 0;
@@ -83,20 +78,6 @@ public class NSVStream {
 				break;
 		}
 		return ret;
-	}
-
-	public static NSVStreamConfig create(String p_Vidtype, String p_Audtype, int p_width, int p_height,
-			double p_framerate) {
-
-		NSVStreamConfig newConfig = new NSVStreamConfig();
-		newConfig.streamId = ++streamIds;
-		newConfig.video_format = p_Vidtype;
-		newConfig.audio_format = p_Audtype;
-		newConfig.video_width = p_width;
-		newConfig.video_height = p_height;
-		newConfig.frame_rate = p_framerate;
-		streams.add(newConfig);
-		return newConfig;
 	}
 
 	public static long makeType(char A, char B, char C, char D) {

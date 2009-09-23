@@ -6,5 +6,7 @@
 	<classpathentry kind="var" path="Red5/lib/slf4j-api-1.5.8.jar"/>
 	<classpathentry kind="var" path="Red5/lib/spring-context-2.5.6.jar"/>
 	<classpathentry kind="var" path="Red5/lib/mina-core-2.0.0-M7-SNAPSHOT.jar"/>
+	<classpathentry kind="var" path="Red5/lib/spring-beans-2.5.6.jar"/>
+	<classpathentry kind="var" path="Red5/lib/spring-core-2.5.6.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

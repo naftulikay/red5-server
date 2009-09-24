@@ -49,6 +49,7 @@ public class NSVPlugin extends Red5Plugin {
 	 * @return The running thread wrapper.
 	 */
 	public static NSVConsumer openServerPort(IScope outputScope, String outputName, int port, String password) {
+		log.debug("Open server port: {} scope: {} name: {} password: {}", new Object[]{port, outputScope, outputName, password});
 		ICYMarshal marsh = new ICYMarshal(outputScope, outputName);
 		NSVConsumer nsv = new NSVConsumer(NSVConsumer.SERVER_MODE, marsh);
 		nsv.setPort(port);
@@ -58,19 +59,26 @@ public class NSVPlugin extends Red5Plugin {
 			StreamManager mgr = (StreamManager) nsvContext.getBean("streamManager");
 			//add the consumer for execution
 			mgr.addConsumer(nsv);
+		} else {
+			log.warn("Stream manager not found");
 		}
+		
 		return nsv;
 	}
 
 	/**
 	 * Create a thread to subscribe to a shoutcast server. Host format "http://host:port/;stream.nsv".
 	 * Note. The ';' is not a typo. 
+	 * 
+	 * Test link (vp6/aac): http://stream.dreamcatch-radio.net:10000/stream.nsv
+	 * 
 	 * @param outputScope The stream is registered to.
 	 * @param outputName The output stream name.
 	 * @param host	The url to subscribe to.
 	 * @return The running thread wrapper.
 	 */
 	public static NSVConsumer openExternalURI(IScope outputScope, String outputName, String host) {
+		log.debug("Open external host: {} scope: {} name: {}", new Object[]{host, outputScope, outputName});
 		ICYMarshal marsh = new ICYMarshal(outputScope, outputName);
 		NSVConsumer nsv = new NSVConsumer(NSVConsumer.CLIENT_MODE, marsh, host);
 		//lookup the stream manager
@@ -78,7 +86,10 @@ public class NSVPlugin extends Red5Plugin {
 			StreamManager mgr = (StreamManager) nsvContext.getBean("streamManager");
 			//add the consumer for execution
 			mgr.addConsumer(nsv);
+		} else {
+			log.warn("Stream manager not found");
 		}
+
 		return nsv;
 	}
 

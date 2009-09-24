@@ -81,8 +81,7 @@ public class ICYMarshal implements IICYMarshal {
 		IContext context = outputScope.getContext();
 		IProviderService providerService = (IProviderService) context.getBean(IProviderService.BEAN_NAME);
 		if (providerService.registerBroadcastStream(outputScope, stream.getPublishedName(), stream)) {
-			IBroadcastScope bsScope = (BroadcastScope) providerService.getLiveProviderInput(outputScope, stream
-					.getPublishedName(), true);
+			IBroadcastScope bsScope = (BroadcastScope) providerService.getLiveProviderInput(outputScope, stream.getPublishedName(), true);
 			bsScope.setAttribute(IBroadcastScope.STREAM_ATTRIBUTE, stream);
 		}
 		audioFramer = new AudioFramer(stream);

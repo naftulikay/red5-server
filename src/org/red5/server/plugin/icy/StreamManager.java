@@ -59,11 +59,16 @@ public class StreamManager implements InitializingBean, DisposableBean {
 		}
 	}
 	
-	public void addConsumer(NSVConsumer consumer) {
+	public void addConsumer(final NSVConsumer consumer) {
 		//add consumer to collection
 		if (consumers.add(consumer)) {
-    		//start the consumer
-    		consumer.init();
+			Runnable initer = new Runnable() {
+				public void run() {
+		    		//start the consumer
+		    		consumer.init();	
+				}
+			};
+			StreamManager.submit(initer);
 		}
 	}
 	

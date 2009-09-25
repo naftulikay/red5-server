@@ -128,7 +128,6 @@ public class ICYMarshal implements IICYMarshal {
 				AACAudio audioCodec = new AACAudio();
 				stream.setAudioReader(audioCodec);
 				stream.audioFramer = audioFramer;
-
 			} else if (type.equals("mpeg")) {
 				//MP3Audio
 			} else {

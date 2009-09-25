@@ -21,6 +21,7 @@ package org.red5.server.plugin.icy.parser;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.URL;
@@ -29,9 +30,11 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.mina.core.buffer.IoBuffer;
+import org.red5.logging.Red5LoggerFactory;
 import org.red5.server.plugin.icy.IFlowControl;
 import org.red5.server.plugin.icy.IICYHandler;
 import org.red5.server.plugin.icy.StreamManager;
+import org.slf4j.Logger;
 
 /**
  * Handles the main parsing work.
@@ -41,6 +44,8 @@ import org.red5.server.plugin.icy.StreamManager;
  */
 public class NSVThread implements Runnable, IFlowControl {
 
+	private static Logger log = Red5LoggerFactory.getLogger(NSVThread.class, "plugins");
+	
 	public static final int SERVER_MODE = 0;
 
 	public static final int CLIENT_MODE = 1;
@@ -157,7 +162,7 @@ public class NSVThread implements Runnable, IFlowControl {
 		switch (mode) {
 			case 1:
 				try {
-					// client mode;						
+					// client mode
 					verified = true;
 					//u = new URL("http://192.168.2.62:8000/;stream.nsv");
 					u = new URL(host);
@@ -165,11 +170,10 @@ public class NSVThread implements Runnable, IFlowControl {
 					uc.connect();
 					input = uc.getInputStream();
 					lastData = System.currentTimeMillis();
-					//connected=true;
 				} catch (IOException er0) {
 				}
-
 				break;
+			
 			case 0:
 				try {
 					//  server mode;	
@@ -183,6 +187,9 @@ public class NSVThread implements Runnable, IFlowControl {
 					e.printStackTrace();
 				}
 				break;
+				
+			default:
+				log.debug("Unhandled mode: {}", mode);
 		}
 
 	}
@@ -213,44 +220,37 @@ public class NSVThread implements Runnable, IFlowControl {
 
 	@Override
 	public void run() {
+		//initialize the inputs
+		listen();
+		//if no input, no need to continue
+		if (input == null) {
+			log.warn("No input available");
+			return;
+		}
+		//start the loop
 		while (keepRunning) {
-			if (input == null) {
-				return;
-			} else {
-				try {
-					notifyIdler(input.available());
-				} catch (IOException e) {
-					input = null;
-					oldBytes = 0;
-					prevBits = new int[0];
-					listen();
-				}
-			}
-
 			try {
 				if (input.available() > 0) {
 					lastData = System.currentTimeMillis();
 				} else {
-					if (System.currentTimeMillis() - lastData > dataTimeout) {
+					long delta = System.currentTimeMillis() - lastData;
+					if (delta > dataTimeout) {
+						log.debug("Data too late exit time: {} > timeout: {}", delta, dataTimeout);
+						//disconnect if late?
 						connected = false;
-						input.close();
-						oldBytes = 0;
-						prevBits = new int[0];
-						listen();
+						reset();
+						break;
 					}
 				}
 			} catch (IOException e) {
-				oldBytes = 0;
-				prevBits = new int[0];
-				listen();
+				e.printStackTrace();
 			}
 
 			lastRead = 0;
 
 			try {
-
 				int[] bits;
-				int offset = 0;//=prev_bits.length;
+				int offset = 0;
 				if (oldBytes > 0) {
 					offset = prevBits.length;
 					bits = new int[offset + input.available()];
@@ -260,37 +260,40 @@ public class NSVThread implements Runnable, IFlowControl {
 
 					oldBytes = 0;
 				} else {
-					if (input.available() < 1) {
-						return;
+					if (input.available() > 0) {
+						bits = new int[input.available()];						
+					} else {
+						continue;
 					}
-					bits = new int[input.available()];
 				}
 				//Password
 				if (!verified) {
+					log.debug("Not verified, check password");
 					if (input.available() < password.length()) {
-						return;
+						log.debug("Bytes not long enough to match against password");
 					}
 					for (int m = offset; m < bits.length; m++) {
-						bits[m] = (input.read());
+						bits[m] = input.read();
 					}
+					OutputStream os = client.getOutputStream();
 					if (sample(password.length(), bits).equals(password)) {
 						verified = true;
-						client.getOutputStream().write("OK2\r\nicy-caps:11\r\n\r\n".getBytes());
-						client.getOutputStream().flush();
+						os.write("OK2\r\nicy-caps:11\r\n\r\n".getBytes());
+						os.flush();
 					} else {
-						client.getOutputStream().write("invalid password\r\n".getBytes());
-						client.getOutputStream().flush();
-						client.close();
-						input.close();
-						this.connected = false;
-						return;
+						log.debug("Invalid password, reset and close");
+						os.write("invalid password\r\n".getBytes());
+						os.flush();
+						reset();
+						break;
 					}
 				} else {
 					//store chunk
 					for (int m = offset; m < bits.length; m++) {
-						bits[m] = (input.read());
+						bits[m] = input.read();
 					}
 				}
+				log.debug("Entering getFrame loop");
 				while (getFrame) {
 					for (int h = 0; h < bits.length; h++) {
 						int limit = bits.length;
@@ -305,15 +308,13 @@ public class NSVThread implements Runnable, IFlowControl {
 										}
 										if (enough == h) {
 											save(bits.length - h, h, bits);
-											//sender.execute(service);
-											return;
+											break;
 										} else {
 											h = enough;
 											lastRead = bits.length - h;
 											//	System.out.println("bytes left "+last_read);
 											if (lastRead == 0) {
-												//sender.execute(service);
-												return;
+												break;
 											}
 										}
 										//Adjust for next parser.
@@ -322,7 +323,7 @@ public class NSVThread implements Runnable, IFlowControl {
 								}
 								if (limit < h + 4) {
 									save(bits.length - h, h, bits);
-									return;
+									break;
 								}
 							}
 							//*******************************************************************************
@@ -332,12 +333,12 @@ public class NSVThread implements Runnable, IFlowControl {
 									if (was_enough > 0) {
 	    								if (was_enough == h) {
 	    									save(bits.length - h, h, bits);    
-	    									return;
+	    									break;
 	    								} else {
 	    									h = was_enough;
 	    									lastRead = bits.length - h;
 	    									if (lastRead == 0) {
-	    										return;
+	    										break;
 	    									}
 	    								}
 	    
@@ -346,13 +347,13 @@ public class NSVThread implements Runnable, IFlowControl {
 								}
 								if (limit < h + 2) {
 									save(bits.length - h, h, bits);
-									return;
+									break;
 								}
 							}
 							if ((char) bits[h] == 'i' && (char) bits[h + 1] == 'c' && (char) bits[h + 2] == 'y') {
 								if (limit < h + 1024) {
 									save(bits.length - h, h, bits);
-									return;
+									break;
 								}
 
 								char[] chars = new char[1024];
@@ -375,21 +376,17 @@ public class NSVThread implements Runnable, IFlowControl {
 							}
 
 							//*******************************************************************************
-							if ((char) bits[h] == 'c' && (char) bits[h + 1] == 'o' && (char) bits[h + 2] == 'n'
-									&& (char) bits[h + 3] == 't') {
+							if ((char) bits[h] == 'c' && (char) bits[h + 1] == 'o' && (char) bits[h + 2] == 'n'	&& (char) bits[h + 3] == 't') {
 
 								char[] chars = new char[36];
 								for (int j = 0; j < 36; j++) {
 									if ((char) bits[h + j] == '\r' || (char) bits[h + j] == '\n') {
-										//last_read=j;
-										//h=j;
 										break;
 									}
 									chars[j] = (char) bits[h + j];
 								}
 
 								String meta = new String(chars);
-
 								String[] value = meta.split(":", 2);
 								String[] type = value[1].split("/", 2);
 								if (!initiated) {
@@ -420,31 +417,57 @@ public class NSVThread implements Runnable, IFlowControl {
 							//Audio only
 							if (initiated && (mode == 2 || mode == 3)) {
 								handler.onAudioData(bits);
-								return;
 							}
 						} else {
 							//Not enough to parse.
 							save(lastRead, bits.length - lastRead, bits);
-							break;
 						}
+						
+						break;
 					}
-
+					
 					break;
 				}
 
-			} catch (IOException er0) {
+			} catch (IOException ex) {
+				ex.printStackTrace();
 			}
 			
 			//sleep for a few ticks
 			try {
+				log.trace("Sleep for {}ms", waitTime);
 				Thread.sleep(waitTime);
 			} catch (Exception e) {
 			}			
 		}
+		log.debug("Exiting run block");
+	}
+	
+	private void reset() {
+		if (input != null) {
+			try {
+				input.close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+		input = null;
+		if (client != null) {
+			try {
+				client.close();
+				connected = false;
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+		oldBytes = 0;
+		prevBits = new int[0];
 	}
 
 	public void stop() {
 		keepRunning = false;
+		//reset everything
+		reset();
 		//flushing the config will also cause the sender thread
 		//to stop, so its win-win
 		config.flush();
@@ -494,7 +517,7 @@ public class NSVThread implements Runnable, IFlowControl {
 			if (notifyFlipped) {
 				metaData.put("width", config.videoWidth);
 				metaData.put("height", config.videoHeight);
-				metaData.put("flipped", true);
+				metaData.put("flipped", "true");
 			} else {
 				metaData.put("width", config.videoWidth * -1);
 				metaData.put("height", config.videoHeight * -1);			
@@ -576,6 +599,7 @@ public class NSVThread implements Runnable, IFlowControl {
 
 	/**
 	 * Called when chunk frame header is found.
+	 * 
 	 * @param offset current offset in data array.
 	 * @param data contains nsv bitstream.
 	 * @return position in data array or < 0 on in invalid frame. Returns offset if valid frame but needs more data.

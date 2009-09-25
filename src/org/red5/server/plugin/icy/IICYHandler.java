@@ -48,5 +48,5 @@ public interface IICYHandler {
 	public void stop();
 
 	public void reset(String content, String type);
-	
+
 }

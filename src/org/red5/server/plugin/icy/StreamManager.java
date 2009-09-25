@@ -8,8 +8,10 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.red5.logging.Red5LoggerFactory;
 import org.red5.server.plugin.icy.parser.NSVStreamConfig;
 import org.red5.server.plugin.icy.stream.NSVConsumer;
+import org.slf4j.Logger;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.InitializingBean;
 
@@ -20,6 +22,8 @@ import org.springframework.beans.factory.InitializingBean;
  */
 public class StreamManager implements InitializingBean, DisposableBean {
 
+	private static Logger log = Red5LoggerFactory.getLogger(StreamManager.class, "plugins");
+	
 	//executor thread pool size
 	private int poolSize = 1;
 
@@ -60,6 +64,7 @@ public class StreamManager implements InitializingBean, DisposableBean {
 	}
 	
 	public void addConsumer(final NSVConsumer consumer) {
+		log.debug("Add consumer: {}", consumer);
 		//add consumer to collection
 		if (consumers.add(consumer)) {
 			Runnable initer = new Runnable() {
@@ -73,6 +78,7 @@ public class StreamManager implements InitializingBean, DisposableBean {
 	}
 	
 	public void removeConsumer(NSVConsumer consumer) {
+		log.debug("Remove consumer: {}", consumer);
 		//remove it
 		if (consumers.remove(consumer)) {
 			consumer.stop();
@@ -85,6 +91,7 @@ public class StreamManager implements InitializingBean, DisposableBean {
 	 * @param runnable
 	 */
 	public static void submit(Runnable runnable) {
+		log.debug("Submit runnable");
 		executor.execute(runnable);
 	}
 
@@ -99,6 +106,7 @@ public class StreamManager implements InitializingBean, DisposableBean {
 	 * @return
 	 */
 	public static NSVStreamConfig createStreamConfig(String vidtype, String audtype, int width, int height, double frameRate) {
+		log.debug("Create config - video: {} audio: {} width: {} height: {} fps: {}", new Object[]{vidtype, audtype, width, height, frameRate});
 		NSVStreamConfig newConfig = new NSVStreamConfig();
 		newConfig.streamId = streamId.incrementAndGet();
 		newConfig.videoFormat = vidtype;

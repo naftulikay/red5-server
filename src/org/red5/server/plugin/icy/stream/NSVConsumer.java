@@ -19,9 +19,8 @@ package org.red5.server.plugin.icy.stream;
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA 
  */
 
+import org.red5.server.plugin.icy.ICYSocketHandler;
 import org.red5.server.plugin.icy.IICYMarshal;
-import org.red5.server.plugin.icy.StreamManager;
-import org.red5.server.plugin.icy.parser.NSVSenderThread;
 import org.red5.server.plugin.icy.parser.NSVThread;
 
 /**
@@ -45,6 +44,8 @@ public class NSVConsumer {
 	private String password = "changeme";
 
 	private NSVThread nsv;
+	
+	private ICYSocketHandler socketHandler;
 
 	private int mode = 1;
 
@@ -64,24 +65,38 @@ public class NSVConsumer {
 	
 	public void init() {
 		//create a thread to handle the nsv stream
-		nsv = new NSVThread(mode, host, handler, new NSVSenderThread(handler));
-		nsv.setPort(port);
-		nsv.setPassword(password);
-		//initialize the inputs
-		nsv.listen();
+		//nsv = new NSVThread(mode, host, handler, new NSVSenderThread(handler));
+		//nsv.setPort(port);
+		//nsv.setPassword(password);
 		//submit the thread for execution
-		StreamManager.submit(nsv);
+		//StreamManager.submit(nsv);
+		
+		//using mina
+		socketHandler = new ICYSocketHandler();
+		//socketHandler.setDataTimeout(10000);
+		socketHandler.setHandler(handler);
+		socketHandler.setHost(host);
+		socketHandler.setMode(mode);
+		socketHandler.setPassword(password);
+		socketHandler.setPort(port);
+		//socketHandler.setWaitTime(50);
+		socketHandler.start();
 	}
 
 	public void stop() {
 		if (nsv != null) {
 			nsv.stop();
 		}
+		if (socketHandler != null) {
+			socketHandler.stop();
+		}
 	}
 
 	public boolean isConnected() {
 		if (nsv != null) {
 			return nsv.isConnected();
+		} else if (socketHandler != null) {
+			return socketHandler.isConnected();
 		} else {
 			return false;
 		}
@@ -91,10 +106,6 @@ public class NSVConsumer {
 		return handler;
 	}
 
-	public NSVThread getNSVThread() {
-		return nsv;
-	}
-
 	public void setHost(String val) {
 		host = val;
 	}
@@ -102,6 +113,8 @@ public class NSVConsumer {
 	public int getMode() {
 		if (nsv != null) {
 			return nsv.getMode();
+		} else if (socketHandler != null) {
+			return socketHandler.getMode();			
 		} else {
 			return mode;
 		}

@@ -3,8 +3,6 @@ package org.red5.server.plugin.icy;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
-import java.nio.charset.Charset;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -17,14 +15,20 @@ import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.httpclient.params.HttpClientParams;
 import org.apache.commons.httpclient.params.HttpMethodParams;
 import org.apache.mina.core.buffer.IoBuffer;
+import org.apache.mina.core.filterchain.IoFilter;
 import org.apache.mina.core.service.IoHandlerAdapter;
 import org.apache.mina.core.session.IdleStatus;
 import org.apache.mina.core.session.IoSession;
+import org.apache.mina.filter.codec.ProtocolCodecFactory;
 import org.apache.mina.filter.codec.ProtocolCodecFilter;
-import org.apache.mina.filter.codec.textline.TextLineCodecFactory;
+import org.apache.mina.filter.codec.ProtocolDecoder;
+import org.apache.mina.filter.codec.ProtocolEncoder;
 import org.apache.mina.filter.logging.LoggingFilter;
 import org.apache.mina.transport.socket.SocketAcceptor;
 import org.apache.mina.transport.socket.nio.NioSocketAcceptor;
+import org.red5.server.plugin.icy.codec.ICYDecoder;
+import org.red5.server.plugin.icy.codec.ICYEncoder;
+import org.red5.server.plugin.icy.codec.ICYDecoder.ReadState;
 import org.red5.server.plugin.icy.parser.NSVStreamConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,12 +41,24 @@ import org.slf4j.LoggerFactory;
 public class ICYSocketHandler extends IoHandlerAdapter {
 
 	private static Logger log = LoggerFactory.getLogger(ICYSocketHandler.class);
-
-	private static final byte[] OK_MESSAGE = "OK2\r\nicy-caps:11\r\n\r\n".getBytes();
-	
-	private static final byte[] BAD_PASSWD_MESSAGE = "invalid password\r\n".getBytes();
-	
+		
 	private static final String userAgent = "Mozilla/4.0 (compatible; Red5 Server/NSV plugin)";
+
+	private static ProtocolCodecFactory codecFactory = new ProtocolCodecFactory() {
+		//coders can be shared
+		private ProtocolEncoder icyEncoder = new ICYEncoder();
+		private ProtocolDecoder icyDecoder = new ICYDecoder();
+
+		public ProtocolEncoder getEncoder(IoSession session) {
+			return icyEncoder;
+		}
+
+		public ProtocolDecoder getDecoder(IoSession session) {
+			return icyDecoder;
+		}
+	};
+	
+	private static IoFilter codecFilter = new ProtocolCodecFilter(codecFactory);
 	
 	private String host = "0.0.0.0";
 
@@ -57,8 +73,6 @@ public class ICYSocketHandler extends IoHandlerAdapter {
 	private IICYHandler handler;
 	
 	public NSVStreamConfig config;
-	
-	private Map<String, Object> metaData = new HashMap<String, Object>();
 	
 	private boolean connected;
 
@@ -136,7 +150,7 @@ public class ICYSocketHandler extends IoHandlerAdapter {
 		        	if (log.isDebugEnabled()) {
 		        		acceptor.getFilterChain().addLast("logger", new LoggingFilter());
 		        	}
-		            acceptor.getFilterChain().addLast("codec", new ProtocolCodecFilter(new TextLineCodecFactory(Charset.forName("UTF-8"))));
+		        	acceptor.getFilterChain().addLast("codec", codecFilter);
 		            acceptor.getSessionConfig().setReadBufferSize(1024);
 		            acceptor.getSessionConfig().setIdleTime(IdleStatus.BOTH_IDLE, 10);
 					
@@ -162,7 +176,7 @@ public class ICYSocketHandler extends IoHandlerAdapter {
 				log.debug("Unhandled mode: {}", mode);
 		}		
         
-        outBuffer = IoBuffer.allocate(1024);
+        outBuffer = IoBuffer.allocate(16);
         outBuffer.setAutoExpand(true);
         
 	}
@@ -172,7 +186,6 @@ public class ICYSocketHandler extends IoHandlerAdapter {
     	connected = false;
     	validated = false;
     	lastDataTs = 0L;
-    	metaData.clear();
     }
 	
 	public void stop() {
@@ -182,10 +195,27 @@ public class ICYSocketHandler extends IoHandlerAdapter {
 	}
 	
 	@Override
+	public void sessionOpened(IoSession session) throws Exception {
+		super.sessionOpened(session);
+		//add the password so it can be retrieved in the decoder
+		log.debug("Adding password to session");
+		session.setAttribute("password", password);
+	}
+
+	@Override
+	public void sessionClosed(IoSession session) throws Exception {
+		//reset local props
+		reset();
+		super.sessionClosed(session);
+	}
+
+	@SuppressWarnings("unchecked")
+	@Override
 	public void messageReceived(IoSession session, Object message) throws Exception {
 		log.info("Incomming: {}", session.getRemoteAddress().toString());
-		log.debug("Message: {}", message.getClass().getName());
+		log.trace("Message: {}", message.getClass().getName());
 		
+		/*
 		if (lastDataTs > 0) {
         	long delta = System.currentTimeMillis() - lastDataTs;
         	if (delta > dataTimeout) {
@@ -196,30 +226,32 @@ public class ICYSocketHandler extends IoHandlerAdapter {
 		}
 		lastDataTs = System.currentTimeMillis();
 		log.debug("Data ts: {}", lastDataTs);
+		*/
 		
-		//convert to string for comparisons
-		String msg = null;
-		if (message instanceof String) {
-			msg = message.toString();
-		}
+		//check state
+		ReadState state = (ReadState) session.getAttribute("state");
+		log.debug("Current state: {}", state);
 
-		// check password?
-		if (validated) {
-			//after we stop getting text, we need to switch to binary protocol
-			if (msg == null) {
+		switch (state) {
+			case Header: 
+				if (validated) {
+					break;
+				}
+				validated = true;
+			case Failed: 
+				outBuffer.put((byte[]) message);
+        		//flip it!
+        		outBuffer.flip();	
+        		//respond to the client
+        		session.write(outBuffer);
+				break;
+			case Ready:
+				//handle meta
+				Map<String, Object> metaData = (Map<String, Object>) session.getAttribute("meta");
+				if (metaData != null) {
+					handler.onMetaData(metaData);
+				}
 				
-	            //config.writeFrame(frame);
-
-			} else if (msg.startsWith("icy") || msg.startsWith("content")) {
-				String key = msg.substring(msg.indexOf('-') + 1, msg.indexOf(':'));
-				String value = msg.substring(msg.indexOf(':') + 1);
-				log.debug("Meta: {}={}", key, value);
-				metaData.put(key, value);
-				
-			} else if (msg.length() == 0) {
-				log.debug("End of header detected");
-				//
-				handler.onMetaData(metaData);
 				//reset mode based on type
 				String[] type = ((String) metaData.get("type")).split("/");
 				if (mode == 3 || mode == 2) {
@@ -242,31 +274,19 @@ public class ICYSocketHandler extends IoHandlerAdapter {
 				handler.reset(type[0], type[1]);
 				
 				//audio only
-				//if (mode == 2 || mode == 3) {
+				if (mode == 2 || mode == 3) {
 					//handler.onAudioData(bits);
-				//}
+				}
 				
-				//remove text protocol filter
-	            acceptor.getFilterChain().remove("codec");
-	            
-	            //TODO create icy data protocol filter
-	            //http://mina.apache.org/tutorial-on-protocolcodecfilter-for-mina-2x.html
-	            //acceptor.getFilterChain().addLast("codec", new OurCoolIcyProtocolFilter());			
-			}
-		} else {
-			log.debug("Not validated, check password");
-			if (password.equals(msg)) {
-				log.debug("Passwords match!");
-				validated = true;
-				outBuffer.put(OK_MESSAGE);
-			} else {
-				log.info("Invalid password {}, reset and close", msg);
-				outBuffer.put(BAD_PASSWD_MESSAGE);
-			}
-			//flip it!
-			outBuffer.flip();	
-			//respond to the client
-			session.write(outBuffer);
+				break;
+			case Packet:			
+				//config.writeFrame(frame);
+				
+				break;
+				
+			default: 
+				log.debug("Unhandled state");
+				
 		}
 		
 	}
@@ -345,6 +365,6 @@ public class ICYSocketHandler extends IoHandlerAdapter {
 
 	public boolean isConnected() {
 		return connected;
-	}
+	}	
 	
 }

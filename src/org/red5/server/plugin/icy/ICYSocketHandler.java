@@ -31,6 +31,7 @@ import org.red5.server.plugin.icy.codec.ICYDecoder;
 import org.red5.server.plugin.icy.codec.ICYEncoder;
 import org.red5.server.plugin.icy.codec.ICYDecoder.ReadState;
 import org.red5.server.plugin.icy.parser.NSVFrame;
+import org.red5.server.plugin.icy.parser.NSVSenderThread;
 import org.red5.server.plugin.icy.parser.NSVStreamConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -322,11 +323,10 @@ public class ICYSocketHandler extends IoHandlerAdapter {
 						}
 					}
 					
-					/*		
+					NSVSenderThread sender = new NSVSenderThread((IICYMarshal) handler);		
 					sender.config = config;
 					//now that the sender has a config, submit it for execution
 					StreamManager.submit(sender);
-					*/
 					
 				}
 
@@ -357,6 +357,9 @@ public class ICYSocketHandler extends IoHandlerAdapter {
 				
 		}
 		
+		if (config != null) {
+			log.trace("Buffered frames: {}", config.count());
+		}
 	}
 
 	@Override

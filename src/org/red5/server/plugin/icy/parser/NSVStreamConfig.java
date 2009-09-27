@@ -28,6 +28,8 @@ import java.util.concurrent.locks.ReentrantReadWriteLock.WriteLock;
 /**
  * Individual stream configuration generated from the parser when the shoutcast header is received.
  * 
+ * TODO: Extract the frame "queue" to its own class
+ * 
  * @author Paul Gregoire (mondain@gmail.com)
  * @author Andy Shaules (bowljoman@hotmail.com)
  */

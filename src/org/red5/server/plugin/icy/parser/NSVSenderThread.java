@@ -20,6 +20,8 @@ package org.red5.server.plugin.icy.parser;
  */
 
 import org.red5.server.plugin.icy.IICYMarshal;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Pushes data out at specified intervals.
@@ -29,6 +31,8 @@ import org.red5.server.plugin.icy.IICYMarshal;
  */
 public class NSVSenderThread implements Runnable {
 
+	private static Logger log = LoggerFactory.getLogger(NSVSenderThread.class);	
+	
 	public IICYMarshal reader;
 
 	public NSVStreamConfig config;
@@ -50,7 +54,7 @@ public class NSVSenderThread implements Runnable {
 			}
 			reader.onVideoData(frame.videoData);
 		}
-
+		log.debug("Sender thread exiting");
 	}
 	
 }

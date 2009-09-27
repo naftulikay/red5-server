@@ -70,6 +70,7 @@ public class NSVConsumer {
 		socketHandler.setPassword(password);
 		socketHandler.setPort(port);
 		//socketHandler.setWaitTime(50);
+		socketHandler.setNotifyFlipped(true);
 		socketHandler.start();
 	}
 

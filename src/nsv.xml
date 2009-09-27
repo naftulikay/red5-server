@@ -19,7 +19,7 @@
 		<property name="port" value="8000"/>
 	</bean>
 
-	<bean id="nsvThread" class="org.red5.server.plugin.icy.parser.NSVThread" scope="prototype">
+	<bean id="nsvThread" class="org.red5.server.plugin.icy.ICYSocketHandler" scope="prototype">
         <property name="waitTime" value="50"/>
 		<property name="password" value="changeme"/>
 		<property name="host" value=""/>

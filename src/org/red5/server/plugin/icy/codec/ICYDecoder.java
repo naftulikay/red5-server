@@ -119,46 +119,110 @@ public class ICYDecoder extends CumulativeProtocolDecoder {
 			case Packet:
 				//do normal media packet handling here
 				log.trace("Hex (pkt): {}", curBuffer.getHexDump());
-
-				//debugging
-				out.write(Boolean.FALSE);
-				
+				//we need at least 7 bytes to build a frame
+				if (curBuffer.limit() >= 7) { 
+    				byte[] prefix = new byte[2];
+    				curBuffer.get(prefix);
+    				//log.trace("Prefix: {}", new String(prefix));
+    				//looking for 0xef, 0xbe bytes
+    				if (prefix[0] == (byte) 0xef && prefix[1] == (byte) 0xbe) {
+    					int position = curBuffer.position();
+    					//read data for the stream
+    					if (chnkFrame(session, curBuffer)) {
+    						NSVFrame frame = frameLocal.get();
+    						if (frame != null) {
+    	    					//write frame as decoder output
+    	    					out.write(frame);
+    	    					//clear thread local
+    	    					frameLocal.remove();
+    						}						
+    					} else {
+    						//rewind back to original position + prefix length
+    						log.trace("Frame creation failed");
+    						curBuffer.position(position - 2);						
+    					}
+    				} else {
+    					//rewind it back 2
+    					log.trace("Data frame prefix not found - 0: {} 1: {}", prefix[0], prefix[1]);
+    					curBuffer.position(curBuffer.position() - 2);
+    					
+        				//look for sync frame
+        				byte[] nsv = new byte[4];
+        				curBuffer.get(nsv);
+        				log.trace("NSV: {}", new String(nsv));
+        				int nsvSync = (nsv[0] | (nsv[1] << 8) | (nsv[2] << 16) | (nsv[3] << 24));
+        				log.trace("Sync: {} Dword: {}", nsvSync, NSVStream.NSV_SYNC_DWORD);
+        				//we need at least 20 bytes
+        				if (curBuffer.limit() >= 20 && nsvSync == NSVStream.NSV_SYNC_DWORD) {
+        					int position = curBuffer.position();
+        					//read all the configuration info for the stream
+        					if (syncFrame(session, curBuffer)) {
+        						NSVFrame frame = frameLocal.get();
+        						if (frame != null) {
+        	    					//write frame as decoder output
+        	    					out.write(frame);
+        	    					//clear thread local
+        	    					frameLocal.remove();
+        						} else {
+        							//let the handler know it should handle the "ready" stuff
+        							out.write(Boolean.TRUE);
+        						}						
+        					} else {
+        						//rewind back to original position + sync dword length
+        						log.trace("Sync frame creation failed");
+        						curBuffer.position(position - 4);						
+        					}
+        				} else {
+        					//rewind it back 4 
+        					log.trace("Not enough data available for sync frame or wrong frame type");
+        					curBuffer.position(curBuffer.position() - 4);
+        				}
+        				
+    				}    				
+				} else {
+					log.trace("Not enough data available for framing");
+				}
 				break;			
 			case Ready:
 				//look for NSV prefix
 				log.trace("Hex (rdy): {}", curBuffer.getHexDump());
 				
-				//do nsv handling		
-				//4E 53 56 73
+				//do nsv handling, magic bytes = 4E 53 56 73
+
 				//consume bytes
 				byte[] nsv = new byte[4];
 				curBuffer.get(nsv);
 				log.trace("NSV: {}", new String(nsv));
 				int nsvSync = (nsv[0] | (nsv[1] << 8) | (nsv[2] << 16) | (nsv[3] << 24));
 				log.trace("Sync: {} Dword: {}", nsvSync, NSVStream.NSV_SYNC_DWORD);
-				if (nsvSync == NSVStream.NSV_SYNC_DWORD) {
+				//we need at least 20 bytes
+				if (curBuffer.limit() >= 20 && nsvSync == NSVStream.NSV_SYNC_DWORD) {
+					int position = curBuffer.position();
 					//read all the configuration info for the stream
-					int synced = syncFrame(session, curBuffer);
-					if (synced > 0) {
-
-					}
-					
-					NSVFrame frame = frameLocal.get();
-					if (frame != null) {
-    					//write frame as decoder output
-    					out.write(frame);
-    					//clear thread local
-    					frameLocal.remove();
+					if (syncFrame(session, curBuffer)) {
+						NSVFrame frame = frameLocal.get();
+						if (frame != null) {
+	    					//write frame as decoder output
+	    					out.write(frame);
+	    					//clear thread local
+	    					frameLocal.remove();
+						} else {
+							//let the handler know it should handle the "ready" stuff
+							out.write(Boolean.TRUE);
+						}						
 					} else {
-						//let the handler know it should handle the "ready" stuff
-						out.write(Boolean.TRUE);
+						//rewind back to original position + sync dword length
+						log.trace("Sync frame creation failed");
+						curBuffer.position(position - 4);						
 					}
-					
+				} else if (nsv[0] == (byte) 0xef && nsv[1] == (byte) 0xbe) {
+					//if we get a "data" frame here fail
+					log.debug("Data frame found while awaiting initial sync frame, failing out");
+					state = ReadState.Failed;
 				} else {
 					//rewind it back 4 
+					log.trace("Not enough data available for sync frame or wrong frame type");
 					curBuffer.position(curBuffer.position() - 4);
-					//let the handler know it should handle the "ready" stuff
-					out.write(Boolean.FALSE);
 				}
 				
 				//drop any remaining current buffer data into the session
@@ -257,14 +321,14 @@ public class ICYDecoder extends CumulativeProtocolDecoder {
     					
     					//look for the end of the header marker
     					hex = headerBuf.getHexDump();
-						log.debug("Buffer head1: {}", hex);
+						log.trace("Buffer head1: {}", hex);
     					state = detectEndOfHeader(hex, state);
     					if (state != ReadState.Ready) {
     						//size our array
     						buf = new byte[headerBuf.limit()];
     						//consume bytes
     						headerBuf.get(buf);
-    						log.debug("Buffer head2: {}", headerBuf.getHexDump());
+    						log.trace("Buffer head2: {}", headerBuf.getHexDump());
     						String header = new String(buf, "US-ASCII");					
     						log.debug("Message {}", header);
     						//pull out the headers and put into meta data
@@ -379,7 +443,7 @@ public class ICYDecoder extends CumulativeProtocolDecoder {
 		} else {
 			//ignore 0 length headers 
 			if (header.length() > 0) {
-				log.debug("Unrecognized header: {}", header);			
+				log.trace("Unrecognized header: {}", header);			
 			}
 		}
 	}	
@@ -404,12 +468,10 @@ public class ICYDecoder extends CumulativeProtocolDecoder {
 	 * @param ioBuffer contains nsv bitstream
 	 * @return position in data array or < 0 on in invalid frame. Returns offset if valid frame but needs more data.
 	 */
-	private int syncFrame(IoSession session, IoBuffer ioBuffer) {
+	private boolean syncFrame(IoSession session, IoBuffer ioBuffer) {
+		boolean result = false;
+		//get the current buffers limit or amount of data available
 		int limit = ioBuffer.limit();
-		//we need at least 20 bytes
-		if (limit < 20) {
-			return limit;
-		}
 		//first frame with full data
 		byte[] fourBytes = new byte[4];
 		ioBuffer.get(fourBytes);
@@ -451,52 +513,54 @@ public class ICYDecoder extends CumulativeProtocolDecoder {
 		bs0.putBits(8, ioBuffer.get());
 		int audLen = bs0.getbits(16);
 
-		if (vidLen > NSVStream.NSV_MAX_VIDEO_LEN / 8 || audLen > NSVStream.NSV_MAX_AUDIO_LEN / 8) {
-			return -1;
-		}
+		int bytesNeeded = 20 + (vidLen + audLen);
+		if (limit >= bytesNeeded) {
+			if (vidLen > NSVStream.NSV_MAX_VIDEO_LEN / 8 || audLen > NSVStream.NSV_MAX_AUDIO_LEN / 8) {
+				log.debug("Video or audio length exceeds max allowed");
+			} else {
+				//all is well, proceed
+				
+				int totalAuxUsed = 0;
+				
+				Map<String, IoBuffer> aux = null;
+				
+				if (numAux > 0) {
+					log.debug("Number of aux: {}", numAux);
+					aux = new HashMap<String, IoBuffer>(numAux);
+					for (int a = 0; a < numAux; a++) {
+						ioBuffer.get(twoBytes);
+						int auxLen = (twoBytes[0] & 0xff) | ((twoBytes[1] & 0xff) << 8);
+						totalAuxUsed += auxLen + 6;
+						ioBuffer.get(fourBytes);
+						String auxType = new String(fourBytes);
+						log.debug("Aux type: {}", auxType);
+						IoBuffer buffer = IoBuffer.allocate(auxLen);
+						byte[] auxBytes = new byte[auxLen];
+						ioBuffer.get(auxBytes);
+						buffer.put(auxBytes);
+						buffer.flip();
+						buffer.position(0);
+						//add to the vector
+						aux.put(auxType, buffer);
+					}
+					session.setAttribute("aux", aux);
+				}
 
-		int bytesNeeded = 24 + (vidLen + audLen);
-		if (limit < bytesNeeded) {
-			return limit;
-		}
-		
-		int totalAuxUsed = 0;
-		
-		Map<String, IoBuffer> aux = null;
-		
-		if (numAux > 0) {
-			log.debug("Number of aux: {}", numAux);
-			aux = new HashMap<String, IoBuffer>(numAux);
-			for (int a = 0; a < numAux; a++) {
-				ioBuffer.get(twoBytes);
-				int auxLen = (twoBytes[0] & 0xff) | ((twoBytes[1] & 0xff) << 8);
-				totalAuxUsed += auxLen + 6;
-				ioBuffer.get(fourBytes);
-				String auxType = new String(fourBytes);
-				log.debug("Aux type: {}", auxType);
-				IoBuffer buffer = IoBuffer.allocate(auxLen);
-				byte[] auxBytes = new byte[auxLen];
-				ioBuffer.get(auxBytes);
-				buffer.put(auxBytes);
-				buffer.flip();
-				buffer.position(0);
-				//add to the vector
-				aux.put(auxType, buffer);
+				frame.videoLength = vidLen;
+				frame.videoData = new byte[vidLen - totalAuxUsed];
+				ioBuffer.get(frame.videoData);
+				
+				frame.audioLength = audLen;
+				frame.audioData = new byte[audLen];		
+				ioBuffer.get(frame.audioData);
+				
+				frameLocal.set(frame);
+				
+				result = true;
 			}
-			session.setAttribute("aux", aux);
 		}
 
-		frame.videoLength = vidLen;
-		frame.videoData = new byte[vidLen - totalAuxUsed];
-		ioBuffer.get(frame.videoData);
-		
-		frame.audioLength = audLen;
-		frame.audioData = new byte[audLen];		
-		ioBuffer.get(frame.audioData);
-		
-		frameLocal.set(frame);
-
-		return 0;
+		return result;
 	}	
 	
 	/**
@@ -506,75 +570,80 @@ public class ICYDecoder extends CumulativeProtocolDecoder {
 	 * @param ioBuffer contains nsv bitstream
 	 * @return position in data array or < 0 on in invalid frame. Returns offset if valid frame but needs more data.
 	 */
-	private int chnkFrame(IoSession session, IoBuffer ioBuffer) {
-		/*
-		int limit = data.length - offset;
-		if (limit < 7) {
-			return offset;
-		}
+	private boolean chnkFrame(IoSession session, IoBuffer ioBuffer) {
+		boolean result = false;
+		//get the current buffers limit or amount of data available
+		int limit = ioBuffer.limit();
 		
-		offset++;//0xbeef;
-		offset++;
+		//add stream config to the session
+		NSVStreamConfig config = (NSVStreamConfig) session.getAttribute("nsvconfig");
 		
 		NSVFrame frame = new NSVFrame(config, NSVStream.NSV_NONSYNC_WORD);
 
 		NSVBitStream bs0 = new NSVBitStream();
 
-		bs0.putBits(8, data[offset++]);
-		bs0.putBits(8, data[offset++]);
-		bs0.putBits(8, data[offset++]);
-		int num_aux = bs0.getbits(4);
-		int vid_len = bs0.getbits(20);
+		bs0.putBits(8, ioBuffer.get());
+		bs0.putBits(8, ioBuffer.get());
+		bs0.putBits(8, ioBuffer.get());
 
-		bs0.putBits(8, data[offset++]);
-		bs0.putBits(8, data[offset++]);
-		int aud_len = bs0.getbits(16);
+		int numAux = bs0.getbits(4);
+		int vidLen = bs0.getbits(20);
 
-		if (vid_len > NSVStream.NSV_MAX_VIDEO_LEN / 8) {
-			return -1;
-		}
-		if (aud_len > NSVStream.NSV_MAX_AUDIO_LEN / 8) {
-			return -1;
-		}
+		bs0.putBits(8, ioBuffer.get());
+		bs0.putBits(8, ioBuffer.get());
+		int audLen = bs0.getbits(16);
 
-		int bytesNeeded = 7 + vid_len + aud_len;
-		if (limit < bytesNeeded) {
-			return offset;
-		}
-		frame.vid_len = vid_len;
-		frame.aud_len = aud_len;
-		frame.vid_data = new int[vid_len];
-		frame.aud_data = new int[aud_len];
-		
-		int total_aux_used = 0;
-		
-		if (num_aux > 0) {
-			for (int a = 0; a < num_aux; a++) {
-				int aux_len = (byte) data[offset++] | (byte) data[offset++] << 8;
-				total_aux_used += aux_len + 6;
-				String aux_type = String.valueOf((char) data[offset++]) + String.valueOf((char) data[offset++])
-						+ String.valueOf((char) data[offset++]) + String.valueOf((char) data[offset++]);
-				IoBuffer buffer = IoBuffer.allocate(aux_len);
-				for (int b = 0; b < aux_len; b++) {
-					buffer.put((byte) data[offset++]);
+		int bytesNeeded = 5 + (vidLen + audLen);
+		if (limit >= bytesNeeded) {
+			if (vidLen > NSVStream.NSV_MAX_VIDEO_LEN / 8 || audLen > NSVStream.NSV_MAX_AUDIO_LEN / 8) {
+				log.debug("Video or audio length exceeds max allowed");
+			} else {
+				//all is well, proceed
+				
+				int totalAuxUsed = 0;
+				
+				Map<String, IoBuffer> aux = null;
+				
+				if (numAux > 0) {
+					log.debug("Number of aux: {}", numAux);
+					byte[] twoBytes = new byte[2];
+					byte[] fourBytes = new byte[4];
+					aux = new HashMap<String, IoBuffer>(numAux);
+					for (int a = 0; a < numAux; a++) {
+						ioBuffer.get(twoBytes);
+						int auxLen = (twoBytes[0] & 0xff) | ((twoBytes[1] & 0xff) << 8);
+						totalAuxUsed += auxLen + 6;
+						ioBuffer.get(fourBytes);
+						String auxType = new String(fourBytes);
+						log.debug("Aux type: {}", auxType);
+						IoBuffer buffer = IoBuffer.allocate(auxLen);
+						byte[] auxBytes = new byte[auxLen];
+						ioBuffer.get(auxBytes);
+						buffer.put(auxBytes);
+						buffer.flip();
+						buffer.position(0);
+						//add to the vector
+						aux.put(auxType, buffer);
+					}
+					session.setAttribute("aux", aux);
 				}
-				buffer.flip();
-				buffer.position(0);
-				handler.onAuxData(aux_type, buffer);
+
+				frame.videoLength = vidLen;
+				frame.videoData = new byte[vidLen - totalAuxUsed];
+				ioBuffer.get(frame.videoData);
+				
+				frame.audioLength = audLen;
+				frame.audioData = new byte[audLen];		
+				ioBuffer.get(frame.audioData);
+				
+				frameLocal.set(frame);
+				
+				result = true;
 			}
 		}
-		for (int vids = 0; vids < vid_len - total_aux_used; vids++) {
-			frame.vid_data[vids] = data[offset++];
-		}
-
-		for (int auds = 0; auds < aud_len; auds++) {
-			frame.aud_data[auds] = data[offset++];
-		}
-
-		config.writeFrame(frame);
 		
-		*/
-		return 0;
+		return result;
 	}	
+		
 	
 }

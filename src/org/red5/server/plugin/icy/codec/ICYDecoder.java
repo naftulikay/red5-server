@@ -106,13 +106,43 @@ public class ICYDecoder extends CumulativeProtocolDecoder {
 			log.debug("Current buffer dump (prep): {}", curBuffer.getHexDump());
 		}
 		
+		//most common action should live at the top of the switch!
 		switch (state) {
 			case Packet:
-				//most common action should live at the top of the switch!
-				
-				//look for NSV prefix
+				//do normal media packet handling here
+				log.trace("Hex (pkt): {}", curBuffer.getHexDump());
+
+				//debugging
+				out.write(Boolean.FALSE);
 				
 				break;			
+			case Ready:
+				//look for NSV prefix
+				log.trace("Hex (rdy): {}", curBuffer.getHexDump());
+				
+				//do nsv handling		
+
+				//drop any remaining current buffer data into the session
+				if (curBuffer.hasRemaining()) {
+					log.debug("Had left over bytes after EOH, adding to session");
+					//get the buffer info
+					int pos = curBuffer.position();
+					int len = curBuffer.limit();
+					log.trace("Current pos: {} len: {} size: {}", new Object[]{pos, len, (len - pos)});
+					//consume bytes
+					byte[] bf = new byte[(len - pos)];
+					curBuffer.get(bf);
+					//put bytes into the session
+					session.setAttribute("prev", bf);
+				}
+				
+				//set to packet state
+				//state = ReadState.Packet;
+
+				//let the handler know it should handle the "ready" stuff
+				out.write(Boolean.TRUE);	
+				
+				break;
 			case Notvalidated: 
 				//need to check password
 				lfIndex = curBuffer.indexOf((byte) 0x0a);
@@ -223,6 +253,19 @@ public class ICYDecoder extends CumulativeProtocolDecoder {
     						headerBuf.get(buf);
     						//set result to true just in-case no headers were read
     						result = true;
+    						//drop any remaining current buffer data into the session
+    						if (curBuffer.hasRemaining()) {
+        						log.debug("Had left over bytes after EOH, adding to session");
+        						//get the buffer info
+        						int pos = curBuffer.position();
+        						int len = curBuffer.limit();
+        						log.trace("Current pos: {} len: {} size: {}", new Object[]{pos, len, (len - pos)});
+        						//consume bytes
+        						byte[] bf = new byte[(len - pos)];
+        						curBuffer.get(bf);
+        						//put bytes into the session
+        						session.setAttribute("prev", bf);
+    						}
     						//exit header read loop
     						break;
     					}
@@ -236,18 +279,13 @@ public class ICYDecoder extends CumulativeProtocolDecoder {
 					//get the buffer info
 					int pos = headerBuf.position();
 					int len = headerBuf.limit();
-					log.trace("Current pos: {} len: {} size: {}", new Object[]{pos, len, (len - pos)});
+					log.trace("Header buffer pos: {} len: {} size: {}", new Object[]{pos, len, (len - pos)});
 					//consume bytes
 					byte[] bf = new byte[(len - pos)];
 					headerBuf.get(bf);
 					//put bytes into the session
 					session.setAttribute("prev", bf);
 				}
-				
-				break;
-			case Ready:
-				//indicate that we are handling media data now
-				state = ReadState.Packet;
 				
 				break;
 			case Failed:
@@ -304,7 +342,7 @@ public class ICYDecoder extends CumulativeProtocolDecoder {
 			String key = header.substring(header.indexOf('-') + 1, header.indexOf(':'));
 			String value = header.substring(header.indexOf(':') + 1);
 			log.debug("Meta: {}={}", key, value);
-			metaData.put(key, value);
+			metaData.put(key, value.trim());
 		} else {
 			//ignore 0 length headers 
 			if (header.length() > 0) {

@@ -73,6 +73,7 @@ public class ICYMarshal implements IICYMarshal {
 	private Map<String, Object> metaData;
 
 	public ICYMarshal(IScope outputScope, String outputName) {
+		log.debug("ICYMarshal created - name: {} scope: {}", outputName, outputScope.getName());
 		scope = outputScope;
 		name = outputName;
 		stream = new ICYStream(name, true, true);
@@ -140,10 +141,11 @@ public class ICYMarshal implements IICYMarshal {
 	}
 
 	public void onAuxData(String fourCC, IoBuffer buffer) {
-
+		log.debug("onAuxData - fourCC: {} buffer: {}", fourCC, buffer.getHexDump(32));
 	}
 
 	public void onConnected(String vidType, String audioType) {
+		log.debug("onConnected - video type: {} audio type: {}", vidType, audioType);
 		fourCCAudio = audioType;
 		if (fourCCAudio.startsWith("AAC")) {
 			AACAudio audioCodec = new AACAudio();
@@ -163,6 +165,7 @@ public class ICYMarshal implements IICYMarshal {
 	}
 
 	public void onAudioData(int[] data) {
+		log.debug("onAudioData - length: {}", data.length);
 		String codecName = stream.getCodecReader().getName();
 		if ("AAC".equals(codecName)) {
 			audioFramer.onAACData(data);
@@ -171,15 +174,17 @@ public class ICYMarshal implements IICYMarshal {
 		}
 	}
 	
-	public void onVideoData(int[] buffer) {
+	public void onVideoData(int[] data) {
+		log.debug("onMetaData - length: {}", data.length);
 		if (fourCCVideo.startsWith("VP6")) {
-			videoFramer.pushVP6Frame(buffer, 0);
+			videoFramer.pushVP6Frame(data, 0);
 		} else if (fourCCVideo.startsWith("H264")) {
-			videoFramer.pushAVCFrame(buffer, 0);
+			videoFramer.pushAVCFrame(data, 0);
 		}
 	}
 
 	public void onMetaData(Map<String, Object> metaData) {
+		log.debug("onMetaData: {}", metaData);
 		this.metaData = metaData;
 		IRTMPEvent event = getMetaDataEvent();
 		if (event != null) {

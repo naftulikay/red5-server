@@ -76,7 +76,7 @@ public class ICYSocketHandler extends IoHandlerAdapter {
 	
 	private boolean connected;
 
-	private long lastDataTs;
+	//private long lastDataTs;
 	
 	private String password;
 
@@ -185,7 +185,7 @@ public class ICYSocketHandler extends IoHandlerAdapter {
 		log.debug("Resetting icy socket");
     	connected = false;
     	validated = false;
-    	lastDataTs = 0L;
+    	//lastDataTs = 0L;
     }
 	
 	public void stop() {
@@ -247,12 +247,16 @@ public class ICYSocketHandler extends IoHandlerAdapter {
 				break;
 			case Ready:
 				//handle meta
+				log.debug("Pulling metadata");
 				Map<String, Object> metaData = (Map<String, Object>) session.getAttribute("meta");
 				if (metaData != null) {
 					handler.onMetaData(metaData);
+				} else {
+					log.debug("Metadata was null for the session");
 				}
 				
 				//reset mode based on type
+				log.debug("Checking type, resetting mode. Current mode: {}", mode);
 				String[] type = ((String) metaData.get("type")).split("/");
 				if (mode == 3 || mode == 2) {
 					if (type[0].equals("video")) {
@@ -277,6 +281,9 @@ public class ICYSocketHandler extends IoHandlerAdapter {
 				if (mode == 2 || mode == 3) {
 					//handler.onAudioData(bits);
 				}
+				
+				//set to packet state
+				session.setAttribute("state", ReadState.Packet);
 				
 				break;
 			case Packet:			

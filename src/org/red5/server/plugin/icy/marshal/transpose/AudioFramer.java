@@ -204,8 +204,8 @@ public class AudioFramer {
 			timeSpan = aacTimecodeOffset + sample2TimeCode(lastSample, sampleRate) - lastTimecode;
 			lastTimecode += timeSpan;
 		}
+		
 		IRTMPEvent audio = new AudioData(buffer);
-
 		audio.setTimestamp((int) timeSpan);
 		audio.setHeader(new Header());
 		audio.getHeader().setTimer((int) timeSpan & 0xffffff);

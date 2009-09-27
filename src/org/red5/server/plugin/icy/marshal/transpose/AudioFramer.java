@@ -86,7 +86,7 @@ public class AudioFramer {
 		lastSample = 0;
 	}
 
-	public void onAACData(int[] feed) {
+	public void onAACData(byte[] feed) {
 
 		byte[] data;
 		// merge previous tail
@@ -94,17 +94,15 @@ public class AudioFramer {
 			IoBuffer bb = IoBuffer.allocate(tail.length + feed.length);
 			bb.put(tail);
 			for (int i = 0; i < feed.length; i++) {
-				bb.put((byte) feed[i]);
+				bb.put(feed[i]);
 			}
-
 			data = bb.array();
 			tail = null;
 		} else {
 			IoBuffer bb = IoBuffer.allocate(feed.length);
 			for (int i = 0; i < feed.length; i++) {
-				bb.put((byte) feed[i]);
+				bb.put(feed[i]);
 			}
-
 			data = bb.array();
 		}
 
@@ -115,7 +113,6 @@ public class AudioFramer {
 			if (!frameSynched) {
 				if ((data[offset++] & 0xff) == 0xff) {
 					if ((data[offset++] & 0xf6) == 0xf0) {
-
 						profile = (data[offset] & 0xC0) >> 6;
 						sampleRateIndex = (data[offset] & 0x3C) >> 2;
 						channels = ((data[offset] & 0x01) << 2) | ((data[offset + 1] & 0xC0) >> 6);
@@ -180,6 +177,11 @@ public class AudioFramer {
 		}
 	}
 
+	public void onMP3Data(byte[] data) {
+		//TODO
+
+	}
+	
 	private void deliverAACFrame(IoBuffer buffer, int sampleRate, int sampleCount) {
 
 		if (saveAACfrequency == -1) {
@@ -227,11 +229,6 @@ public class AudioFramer {
 
 	private long sample2TimeCode(long time, int sampleRate) {
 		return (time * 1000L / sampleRate);
-	}
-
-	public void onMP3Data(int[] data) {
-		//TODO
-
 	}
 
 }

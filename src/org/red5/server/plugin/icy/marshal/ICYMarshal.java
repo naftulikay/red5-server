@@ -86,7 +86,6 @@ public class ICYMarshal implements IICYMarshal {
 			bsScope.setAttribute(IBroadcastScope.STREAM_ATTRIBUTE, stream);
 		}
 		audioFramer = new AudioFramer(stream);
-
 	}
 
 	public AudioFramer getAudioFramer() {
@@ -142,10 +141,11 @@ public class ICYMarshal implements IICYMarshal {
 
 	public void onAuxData(String fourCC, IoBuffer buffer) {
 		log.debug("onAuxData - fourCC: {} buffer: {}", fourCC, buffer.getHexDump(32));
+		buffer.free();
 	}
 
-	public void onConnected(String vidType, String audioType) {
-		log.debug("onConnected - video type: {} audio type: {}", vidType, audioType);
+	public void onConnected(String videoType, String audioType) {
+		log.debug("onConnected - video type: {} audio type: {}", videoType, audioType);
 		fourCCAudio = audioType;
 		if (fourCCAudio.startsWith("AAC")) {
 			AACAudio audioCodec = new AACAudio();
@@ -156,15 +156,15 @@ public class ICYMarshal implements IICYMarshal {
 		} else {
 			log.debug("Unsupported audio type: {}", audioType);
 		}
-		fourCCVideo = vidType;
+		fourCCVideo = videoType;
 		if (fourCCVideo.startsWith("VP6") || fourCCVideo.startsWith("H264")) {
 			
     	} else {
-    		log.debug("Unsupported video type: {}", vidType);
+    		log.debug("Unsupported video type: {}", videoType);
     	}
 	}
 
-	public void onAudioData(int[] data) {
+	public void onAudioData(byte[] data) {
 		log.debug("onAudioData - length: {}", data.length);
 		String codecName = stream.getCodecReader().getName();
 		if ("AAC".equals(codecName)) {
@@ -174,8 +174,8 @@ public class ICYMarshal implements IICYMarshal {
 		}
 	}
 	
-	public void onVideoData(int[] data) {
-		log.debug("onMetaData - length: {}", data.length);
+	public void onVideoData(byte[] data) {
+		log.debug("onVideoData - length: {}", data.length);
 		if (fourCCVideo.startsWith("VP6")) {
 			videoFramer.pushVP6Frame(data, 0);
 		} else if (fourCCVideo.startsWith("H264")) {

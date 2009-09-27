@@ -31,15 +31,15 @@ import org.apache.mina.core.buffer.IoBuffer;
  */
 public interface IICYHandler {
 
-	public void onConnected(String vidType, String audioType);
+	public void onConnected(String videoType, String audioType);
 
 	public void onDisconnected();
 
 	public void onAuxData(String fourCC, IoBuffer buffer);
 
-	public void onAudioData(int[] data);
+	public void onAudioData(byte[] data);
 
-	public void onVideoData(int[] data);
+	public void onVideoData(byte[] data);
 
 	public void onMetaData(Map<String, Object> metaData);
 

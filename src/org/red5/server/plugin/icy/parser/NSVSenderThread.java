@@ -44,11 +44,11 @@ public class NSVSenderThread implements Runnable {
 			if (reader.equals(null)) {
 				continue;
 			}
-			reader.onAudioData(frame.aud_data);
+			reader.onAudioData(frame.audioData);
 			if (config.videoFormat == null) {
 				continue;
 			}
-			reader.onVideoData(frame.vid_data);
+			reader.onVideoData(frame.videoData);
 		}
 
 	}

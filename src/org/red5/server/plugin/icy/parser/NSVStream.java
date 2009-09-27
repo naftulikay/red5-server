@@ -28,11 +28,11 @@ package org.red5.server.plugin.icy.parser;
  */
 public class NSVStream {
 
-	public static long NSV_MAX_AUDIO_LEN = 0x8000; // 32kb
+	public static int NSV_MAX_AUDIO_LEN = 0x8000; // 32kb
 
 	public static long NSV_MAX_VIDEO_LEN = 0x80000;// 512kb
 
-	public static long NSV_MAX_AUX_LEN = 0x8000; // 32kb for each aux stream
+	public static int NSV_MAX_AUX_LEN = 0x8000; // 32kb for each aux stream
 
 	public static long NSV_MAX_AUXSTREAMS = 15; // 15 aux streams maximum
 
@@ -40,15 +40,14 @@ public class NSVStream {
 
 	public static long NSV_NONSYNC_HEADERLEN_BITS = 56;
 
-	public static long NSV_NONSYNC_WORD = 0xBEEF;
+	public static final int NSV_NONSYNC_WORD = 0xbeef;
 
-	public static long NSV_SYNC_DWORD = (makeType('N', 'S', 'V', 's'));
+	public static final int NSV_SYNC_DWORD = makeType('N', 'S', 'V', 's');
 
-	public static long NSV_HDR_DWORD = (makeType('N', 'S', 'V', 'f'));
+	public static final int NSV_HDR_DWORD = makeType('N', 'S', 'V', 'f');
 
 	public static double framerateToDouble(int fr) {
 		double ret = 0;
-		// double[] fratetab=new double([ 30.0, 30.0*1000.0/1001.0,25.0,24.0*1000.0/1001.0]);
 		if ((fr & 0x80) == 0) {
 			return fr;
 		}
@@ -80,8 +79,8 @@ public class NSVStream {
 		return ret;
 	}
 
-	public static long makeType(char A, char B, char C, char D) {
-		return ((A) | ((B) << 8) | ((C) << 16) | ((D) << 24));
+	public static int makeType(char a, char b, char c, char d) {
+		return (a | (b << 8) | (c << 16) | (d << 24));
 	}
 
 }

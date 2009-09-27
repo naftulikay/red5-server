@@ -21,7 +21,6 @@ package org.red5.server.plugin.icy.stream;
 
 import org.red5.server.plugin.icy.ICYSocketHandler;
 import org.red5.server.plugin.icy.IICYMarshal;
-import org.red5.server.plugin.icy.parser.NSVThread;
 
 /**
  * The NSVConsumer will consume or subscribe to data from a winamp shoutcast dsp, 
@@ -42,8 +41,6 @@ public class NSVConsumer {
 	private int port;
 
 	private String password = "changeme";
-
-	private NSVThread nsv;
 	
 	private ICYSocketHandler socketHandler;
 
@@ -64,14 +61,7 @@ public class NSVConsumer {
 	}
 	
 	public void init() {
-		//create a thread to handle the nsv stream
-		//nsv = new NSVThread(mode, host, handler, new NSVSenderThread(handler));
-		//nsv.setPort(port);
-		//nsv.setPassword(password);
-		//submit the thread for execution
-		//StreamManager.submit(nsv);
-		
-		//using mina
+		//create a handler
 		socketHandler = new ICYSocketHandler();
 		//socketHandler.setDataTimeout(10000);
 		socketHandler.setHandler(handler);
@@ -84,18 +74,13 @@ public class NSVConsumer {
 	}
 
 	public void stop() {
-		if (nsv != null) {
-			nsv.stop();
-		}
 		if (socketHandler != null) {
 			socketHandler.stop();
 		}
 	}
 
 	public boolean isConnected() {
-		if (nsv != null) {
-			return nsv.isConnected();
-		} else if (socketHandler != null) {
+		if (socketHandler != null) {
 			return socketHandler.isConnected();
 		} else {
 			return false;
@@ -111,9 +96,7 @@ public class NSVConsumer {
 	}
 
 	public int getMode() {
-		if (nsv != null) {
-			return nsv.getMode();
-		} else if (socketHandler != null) {
+		if (socketHandler != null) {
 			return socketHandler.getMode();			
 		} else {
 			return mode;

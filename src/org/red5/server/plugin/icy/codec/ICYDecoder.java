@@ -29,13 +29,19 @@ import org.apache.mina.core.buffer.IoBuffer;
 import org.apache.mina.core.session.IoSession;
 import org.apache.mina.filter.codec.CumulativeProtocolDecoder;
 import org.apache.mina.filter.codec.ProtocolDecoderOutput;
+import org.red5.server.plugin.icy.StreamManager;
+import org.red5.server.plugin.icy.parser.NSVBitStream;
+import org.red5.server.plugin.icy.parser.NSVFrame;
+import org.red5.server.plugin.icy.parser.NSVStream;
+import org.red5.server.plugin.icy.parser.NSVStreamConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
  * Decoder for data coming from a source.
  * 
- * @author Paul Gregoire
+ * @author Paul Gregoire (mondain@gmail.com)
+ * @author Andy Shaules (bowljoman@hotmail.com)
  */
 public class ICYDecoder extends CumulativeProtocolDecoder {
 
@@ -67,6 +73,8 @@ public class ICYDecoder extends CumulativeProtocolDecoder {
 	private static final Pattern PATTERN_CRLF = Pattern.compile("[\\r|\\n|\u0085|\u2028]{1,2}");
 
 	private static final Pattern PATTERN_HEADER = Pattern.compile("(icy-|content-).{1,}[:]{1}.{1,}", Pattern.DOTALL);
+	
+	private ThreadLocal<NSVFrame> frameLocal = new ThreadLocal<NSVFrame>();
 	
 	@Override
 	protected boolean doDecode(IoSession session, IoBuffer in, ProtocolDecoderOutput out) throws Exception {
@@ -121,10 +129,41 @@ public class ICYDecoder extends CumulativeProtocolDecoder {
 				log.trace("Hex (rdy): {}", curBuffer.getHexDump());
 				
 				//do nsv handling		
+				//4E 53 56 73
+				//consume bytes
+				byte[] nsv = new byte[4];
+				curBuffer.get(nsv);
+				log.trace("NSV: {}", new String(nsv));
+				int nsvSync = (nsv[0] | (nsv[1] << 8) | (nsv[2] << 16) | (nsv[3] << 24));
+				log.trace("Sync: {} Dword: {}", nsvSync, NSVStream.NSV_SYNC_DWORD);
+				if (nsvSync == NSVStream.NSV_SYNC_DWORD) {
+					//read all the configuration info for the stream
+					int synced = syncFrame(session, curBuffer);
+					if (synced > 0) {
 
+					}
+					
+					NSVFrame frame = frameLocal.get();
+					if (frame != null) {
+    					//write frame as decoder output
+    					out.write(frame);
+    					//clear thread local
+    					frameLocal.remove();
+					} else {
+						//let the handler know it should handle the "ready" stuff
+						out.write(Boolean.TRUE);
+					}
+					
+				} else {
+					//rewind it back 4 
+					curBuffer.position(curBuffer.position() - 4);
+					//let the handler know it should handle the "ready" stuff
+					out.write(Boolean.FALSE);
+				}
+				
 				//drop any remaining current buffer data into the session
 				if (curBuffer.hasRemaining()) {
-					log.debug("Had left over bytes after EOH, adding to session");
+					log.debug("Had left over bytes after sync, adding to session");
 					//get the buffer info
 					int pos = curBuffer.position();
 					int len = curBuffer.limit();
@@ -134,13 +173,7 @@ public class ICYDecoder extends CumulativeProtocolDecoder {
 					curBuffer.get(bf);
 					//put bytes into the session
 					session.setAttribute("prev", bf);
-				}
-				
-				//set to packet state
-				//state = ReadState.Packet;
-
-				//let the handler know it should handle the "ready" stuff
-				out.write(Boolean.TRUE);	
+				}	
 				
 				break;
 			case Notvalidated: 
@@ -346,7 +379,7 @@ public class ICYDecoder extends CumulativeProtocolDecoder {
 		} else {
 			//ignore 0 length headers 
 			if (header.length() > 0) {
-				log.info("Unrecognized header: {}", header);			
+				log.debug("Unrecognized header: {}", header);			
 			}
 		}
 	}	
@@ -364,4 +397,184 @@ public class ICYDecoder extends CumulativeProtocolDecoder {
 		}
 	}	
     
+	/**
+	 * Called when sync frame header is found.
+	 * 
+	 * @param session
+	 * @param ioBuffer contains nsv bitstream
+	 * @return position in data array or < 0 on in invalid frame. Returns offset if valid frame but needs more data.
+	 */
+	private int syncFrame(IoSession session, IoBuffer ioBuffer) {
+		int limit = ioBuffer.limit();
+		//we need at least 20 bytes
+		if (limit < 20) {
+			return limit;
+		}
+		//first frame with full data
+		byte[] fourBytes = new byte[4];
+		ioBuffer.get(fourBytes);
+		String videoType = new String(fourBytes);
+		ioBuffer.get(fourBytes);
+		String audioType = new String(fourBytes);
+		log.debug("Types - video: {} audio: {}", videoType, audioType);
+		
+		byte[] twoBytes = new byte[2];
+		ioBuffer.get(twoBytes);
+		int width = (twoBytes[0] & 0xff) | ((twoBytes[1] & 0xff) << 8);
+		ioBuffer.get(twoBytes);
+		int height = (twoBytes[0] & 0xff) | ((twoBytes[1] & 0xff) << 8);
+		int frameRateEncoded = ioBuffer.get();
+		
+		double frameRate = NSVStream.framerateToDouble(frameRateEncoded);
+		log.debug("Width: {} Height: {} Framerate: {}", new Object[]{width, height, frameRate});
+		
+		NSVStreamConfig config = StreamManager.createStreamConfig(videoType, audioType, width, height, frameRate);
+		config.frameRateEncoded = frameRateEncoded;
+
+		//add stream config to the session
+		session.setAttribute("nsvconfig", config);
+		
+		NSVFrame frame = new NSVFrame(config, NSVStream.NSV_SYNC_DWORD);
+		ioBuffer.get(twoBytes);
+		frame.offsetCurrent = (twoBytes[0] & 0xff) | ((twoBytes[1] & 0xff) << 8);
+		log.trace("av sync {}", frame.offsetCurrent);
+
+		NSVBitStream bs0 = new NSVBitStream();
+		bs0.putBits(8, ioBuffer.get());
+		bs0.putBits(8, ioBuffer.get());
+		bs0.putBits(8, ioBuffer.get());
+		
+		int numAux = bs0.getbits(4);
+		int vidLen = bs0.getbits(20);
+
+		bs0.putBits(8, ioBuffer.get());
+		bs0.putBits(8, ioBuffer.get());
+		int audLen = bs0.getbits(16);
+
+		if (vidLen > NSVStream.NSV_MAX_VIDEO_LEN / 8 || audLen > NSVStream.NSV_MAX_AUDIO_LEN / 8) {
+			return -1;
+		}
+
+		int bytesNeeded = 24 + (vidLen + audLen);
+		if (limit < bytesNeeded) {
+			return limit;
+		}
+		
+		int totalAuxUsed = 0;
+		
+		Map<String, IoBuffer> aux = null;
+		
+		if (numAux > 0) {
+			log.debug("Number of aux: {}", numAux);
+			aux = new HashMap<String, IoBuffer>(numAux);
+			for (int a = 0; a < numAux; a++) {
+				ioBuffer.get(twoBytes);
+				int auxLen = (twoBytes[0] & 0xff) | ((twoBytes[1] & 0xff) << 8);
+				totalAuxUsed += auxLen + 6;
+				ioBuffer.get(fourBytes);
+				String auxType = new String(fourBytes);
+				log.debug("Aux type: {}", auxType);
+				IoBuffer buffer = IoBuffer.allocate(auxLen);
+				byte[] auxBytes = new byte[auxLen];
+				ioBuffer.get(auxBytes);
+				buffer.put(auxBytes);
+				buffer.flip();
+				buffer.position(0);
+				//add to the vector
+				aux.put(auxType, buffer);
+			}
+			session.setAttribute("aux", aux);
+		}
+
+		frame.videoLength = vidLen;
+		frame.videoData = new byte[vidLen - totalAuxUsed];
+		ioBuffer.get(frame.videoData);
+		
+		frame.audioLength = audLen;
+		frame.audioData = new byte[audLen];		
+		ioBuffer.get(frame.audioData);
+		
+		frameLocal.set(frame);
+
+		return 0;
+	}	
+	
+	/**
+	 * Called when chunk frame header is found.
+	 * 
+	 * @param session
+	 * @param ioBuffer contains nsv bitstream
+	 * @return position in data array or < 0 on in invalid frame. Returns offset if valid frame but needs more data.
+	 */
+	private int chnkFrame(IoSession session, IoBuffer ioBuffer) {
+		/*
+		int limit = data.length - offset;
+		if (limit < 7) {
+			return offset;
+		}
+		
+		offset++;//0xbeef;
+		offset++;
+		
+		NSVFrame frame = new NSVFrame(config, NSVStream.NSV_NONSYNC_WORD);
+
+		NSVBitStream bs0 = new NSVBitStream();
+
+		bs0.putBits(8, data[offset++]);
+		bs0.putBits(8, data[offset++]);
+		bs0.putBits(8, data[offset++]);
+		int num_aux = bs0.getbits(4);
+		int vid_len = bs0.getbits(20);
+
+		bs0.putBits(8, data[offset++]);
+		bs0.putBits(8, data[offset++]);
+		int aud_len = bs0.getbits(16);
+
+		if (vid_len > NSVStream.NSV_MAX_VIDEO_LEN / 8) {
+			return -1;
+		}
+		if (aud_len > NSVStream.NSV_MAX_AUDIO_LEN / 8) {
+			return -1;
+		}
+
+		int bytesNeeded = 7 + vid_len + aud_len;
+		if (limit < bytesNeeded) {
+			return offset;
+		}
+		frame.vid_len = vid_len;
+		frame.aud_len = aud_len;
+		frame.vid_data = new int[vid_len];
+		frame.aud_data = new int[aud_len];
+		
+		int total_aux_used = 0;
+		
+		if (num_aux > 0) {
+			for (int a = 0; a < num_aux; a++) {
+				int aux_len = (byte) data[offset++] | (byte) data[offset++] << 8;
+				total_aux_used += aux_len + 6;
+				String aux_type = String.valueOf((char) data[offset++]) + String.valueOf((char) data[offset++])
+						+ String.valueOf((char) data[offset++]) + String.valueOf((char) data[offset++]);
+				IoBuffer buffer = IoBuffer.allocate(aux_len);
+				for (int b = 0; b < aux_len; b++) {
+					buffer.put((byte) data[offset++]);
+				}
+				buffer.flip();
+				buffer.position(0);
+				handler.onAuxData(aux_type, buffer);
+			}
+		}
+		for (int vids = 0; vids < vid_len - total_aux_used; vids++) {
+			frame.vid_data[vids] = data[offset++];
+		}
+
+		for (int auds = 0; auds < aud_len; auds++) {
+			frame.aud_data[auds] = data[offset++];
+		}
+
+		config.writeFrame(frame);
+		
+		*/
+		return 0;
+	}	
+	
 }

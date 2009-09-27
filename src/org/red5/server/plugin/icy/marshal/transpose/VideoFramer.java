@@ -46,14 +46,12 @@ public class VideoFramer {
 	 * @param frame
 	 * @param timecode
 	 */
-	public void pushVP6Frame(int[] frame, int timecode) {
+	public void pushVP6Frame(byte[] frame, int timecode) {
 		IoBuffer buffV = IoBuffer.allocate(frame.length);
 		buffV.setAutoExpand(true);
 		byte flags;
 		byte crops = 0x00;
-
 		boolean key = ((frame[0] & 0x80) == 0);
-
 		if (!key) {
 			flags = (0x03) << 4 | (0x04);
 		} else {
@@ -61,10 +59,7 @@ public class VideoFramer {
 		}
 		buffV.put(flags);
 		buffV.put(crops);
-
-		for (int i = 0; i < frame.length; i++) {
-			buffV.put((byte) frame[i]);
-		}
+		buffV.put(frame);
 		buffV.flip();
 		buffV.position(0);
 
@@ -81,7 +76,7 @@ public class VideoFramer {
 	 * @param frame
 	 * @param timecode
 	 */
-	public void pushAVCFrame(int[] frame, int timecode) {
+	public void pushAVCFrame(byte[] frame, int timecode) {
 
 	}
 	

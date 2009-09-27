@@ -46,15 +46,15 @@ public class NSVFrame {
 
 	public int offsetCurrent = 0;
 
-	public int[] vid_data;
+	public byte[] videoData;
 
-	public int[] aud_data;
+	public byte[] audioData;
 
-	public int vid_len = 0;
+	public int videoLength = 0;
 
-	public int aud_len = 0;
+	public int audioLength = 0;
 
-	public int num_aux = 0;
+	public int numberAux = 0;
 
 	public long timeStamp = 0;
 
@@ -78,7 +78,7 @@ public class NSVFrame {
 		NSVBitStream bs = new NSVBitStream();
 		switch ((frameType == NSVStream.NSV_SYNC_DWORD) ? 1 : 2) {
 			case 1:
-				length = (24) + (vid_len) + (aud_len);
+				length = 24 + (videoLength + audioLength);
 				ret = new int[length];
 				ret[0] = 'N';
 				ret[1] = 'S';
@@ -100,40 +100,40 @@ public class NSVFrame {
 				ret[17] = ((offsetCurrent << 8) >> 8);
 				ret[18] = ((offsetCurrent) >> 8);
 
-				bs.putBits(4, num_aux);
-				bs.putBits(20, vid_len);
-				bs.putBits(16, aud_len);
+				bs.putBits(4, numberAux);
+				bs.putBits(20, videoLength);
+				bs.putBits(16, audioLength);
 
 				for (int i = 0; i < 5; i++) {
 					ret[19 + i] = bs.getbits(8);
 				}
-				for (int i = 0; i < vid_len; i++) {
-					ret[24 + i] = vid_data[i];
+				for (int i = 0; i < videoLength; i++) {
+					ret[24 + i] = videoData[i];
 				}
-				for (int i = 0; i < aud_len; i++) {
-					ret[(24 + vid_len + i)] = aud_data[i];
+				for (int i = 0; i < audioLength; i++) {
+					ret[(24 + videoLength + i)] = audioData[i];
 				}
 
 				break;
 			case 2:
-				length = (7) + (vid_len) + (aud_len);
+				length = 7 + (videoLength + audioLength);
 				ret = new int[length];
 
 				ret[0] = 0xef;
 				ret[1] = 0xbe;
 
-				bs.putBits(4, num_aux);
-				bs.putBits(20, vid_len);
-				bs.putBits(16, aud_len);
+				bs.putBits(4, numberAux);
+				bs.putBits(20, videoLength);
+				bs.putBits(16, audioLength);
 
 				for (int i = 0; i < 5; i++) {
 					ret[2 + i] = bs.getbits(8);
 				}
-				for (int i = 0; i < vid_len; i++) {
-					ret[7 + i] = vid_data[i];
+				for (int i = 0; i < videoLength; i++) {
+					ret[7 + i] = videoData[i];
 				}
-				for (int i = 0; i < aud_len; i++) {
-					ret[(7 + vid_len + i)] = aud_data[i];
+				for (int i = 0; i < audioLength; i++) {
+					ret[(7 + videoLength + i)] = audioData[i];
 				}
 				break;
 		}

@@ -105,12 +105,12 @@ public class StreamManager implements InitializingBean, DisposableBean {
 	 * @param frameRate
 	 * @return
 	 */
-	public static NSVStreamConfig createStreamConfig(String vidtype, String audtype, int width, int height, double frameRate) {
-		log.debug("Create config - video: {} audio: {} width: {} height: {} fps: {}", new Object[]{vidtype, audtype, width, height, frameRate});
+	public static NSVStreamConfig createStreamConfig(String videoType, String audioType, int width, int height, double frameRate) {
+		log.debug("Create config - video: {} audio: {} width: {} height: {} fps: {}", new Object[]{videoType, audioType, width, height, frameRate});
 		NSVStreamConfig newConfig = new NSVStreamConfig();
 		newConfig.streamId = streamId.incrementAndGet();
-		newConfig.videoFormat = vidtype;
-		newConfig.audioFormat = audtype;
+		newConfig.videoFormat = videoType;
+		newConfig.audioFormat = audioType;
 		newConfig.videoWidth = width;
 		newConfig.videoHeight = height;
 		newConfig.frameRate = frameRate;

@@ -3,6 +3,7 @@ package org.red5.server.plugin.icy;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -29,6 +30,7 @@ import org.apache.mina.transport.socket.nio.NioSocketAcceptor;
 import org.red5.server.plugin.icy.codec.ICYDecoder;
 import org.red5.server.plugin.icy.codec.ICYEncoder;
 import org.red5.server.plugin.icy.codec.ICYDecoder.ReadState;
+import org.red5.server.plugin.icy.parser.NSVFrame;
 import org.red5.server.plugin.icy.parser.NSVStreamConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -92,7 +94,6 @@ public class ICYSocketHandler extends IoHandlerAdapter {
 	//determines how to notify players that the video is upside down
 	private boolean notifyFlipped;
 
-	@SuppressWarnings("unused")
 	private String audioType;
 	
 	public void start() {
@@ -232,6 +233,9 @@ public class ICYSocketHandler extends IoHandlerAdapter {
 		ReadState state = (ReadState) session.getAttribute("state");
 		log.debug("Current state: {}", state);
 
+		//stream config
+		NSVStreamConfig config = null;
+		
 		switch (state) {
 			case Header: 
 				if (validated) {
@@ -282,12 +286,69 @@ public class ICYSocketHandler extends IoHandlerAdapter {
 					//handler.onAudioData(bits);
 				}
 				
+				//lookup stream config
+				config = (NSVStreamConfig) session.getAttribute("nsvconfig");
+				if (config != null) {
+					log.debug("NSV stream config found in session. Previous audio type: {}", audioType);
+					log.debug("NSV types - audio: {} video: {}", config.audioFormat, config.videoFormat);
+					handler.onConnected(config.videoFormat, config.audioFormat);
+										
+					//use standard codec meta tags.
+					if (metaData == null) {
+						metaData = new HashMap<String, Object>();
+					}
+					
+					//upside down format. Send negative values?
+					if (notifyFlipped) {
+						metaData.put("width", config.videoWidth);
+						metaData.put("height", config.videoHeight);
+						metaData.put("flipped", "true");
+					} else {
+						metaData.put("width", config.videoWidth * -1);
+						metaData.put("height", config.videoHeight * -1);			
+					}
+					metaData.put("frameRate", config.frameRate);
+					metaData.put("videoCodec", config.videoFormat);
+					metaData.put("audioCodec", config.audioFormat);
+					
+					//send updated meta data
+					handler.onMetaData(metaData);
+
+					//get any aux data
+					Map<String, IoBuffer> aux = (Map<String, IoBuffer>) session.removeAttribute("aux");
+					if (aux != null) {
+						for (Map.Entry<String, IoBuffer> entry : aux.entrySet()) {
+							handler.onAuxData(entry.getKey(), entry.getValue());
+						}
+					}
+					
+					/*		
+					sender.config = config;
+					//now that the sender has a config, submit it for execution
+					StreamManager.submit(sender);
+					*/
+					
+				}
+
+				//check for a frame
+				if (message instanceof NSVFrame) {
+					//got a frame, writing to config
+					config.writeFrame((NSVFrame) message);
+				}
+				
 				//set to packet state
 				session.setAttribute("state", ReadState.Packet);
 				
 				break;
 			case Packet:			
-				//config.writeFrame(frame);
+				//lookup stream config
+				config = (NSVStreamConfig) session.getAttribute("nsvconfig");
+				
+				//check for a frame
+				if (message instanceof NSVFrame) {
+					//got a frame, writing to config
+					config.writeFrame((NSVFrame) message);
+				}
 				
 				break;
 				

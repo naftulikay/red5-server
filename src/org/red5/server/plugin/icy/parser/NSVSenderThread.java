@@ -36,6 +36,8 @@ public class NSVSenderThread implements Runnable {
 	public IICYMarshal reader;
 
 	public NSVStreamConfig config;
+	
+	private boolean running;
 
 	public NSVSenderThread(IICYMarshal reader) {
 		this.reader = reader;
@@ -43,6 +45,7 @@ public class NSVSenderThread implements Runnable {
 
 	@Override
 	public void run() {
+		running = true;
 		while (config.hasFrames()) {
 			NSVFrame frame = config.readFrame();
 			if (reader.equals(null)) {
@@ -55,6 +58,11 @@ public class NSVSenderThread implements Runnable {
 			reader.onVideoData(frame.videoData);
 		}
 		log.debug("Sender thread exiting");
+		running = false;
+	}
+
+	public boolean isRunning() {
+		return running;
 	}
 	
 }

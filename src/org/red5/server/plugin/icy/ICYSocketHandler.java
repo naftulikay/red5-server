@@ -77,6 +77,8 @@ public class ICYSocketHandler extends IoHandlerAdapter {
 	
 	public NSVStreamConfig config;
 	
+	private NSVSenderThread sender;
+	
 	private boolean connected;
 
 	//private long lastDataTs;
@@ -188,6 +190,7 @@ public class ICYSocketHandler extends IoHandlerAdapter {
     	connected = false;
     	validated = false;
     	//lastDataTs = 0L;
+    	sender = null;
     }
 	
 	public void stop() {
@@ -323,11 +326,9 @@ public class ICYSocketHandler extends IoHandlerAdapter {
 						}
 					}
 					
-					NSVSenderThread sender = new NSVSenderThread((IICYMarshal) handler);		
+					sender = new NSVSenderThread((IICYMarshal) handler);		
 					sender.config = config;
-					//now that the sender has a config, submit it for execution
-					StreamManager.submit(sender);
-					
+				
 				}
 
 				//check for a frame
@@ -360,6 +361,12 @@ public class ICYSocketHandler extends IoHandlerAdapter {
 		if (config != null) {
 			log.trace("Buffered frames: {}", config.count());
 		}
+		
+		if (sender != null && !sender.isRunning()) {
+    		//now that the sender has a config, submit it for execution
+    		StreamManager.submit(sender);
+		}
+		
 	}
 
 	@Override

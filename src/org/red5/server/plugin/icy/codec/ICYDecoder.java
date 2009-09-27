@@ -120,7 +120,7 @@ public class ICYDecoder extends CumulativeProtocolDecoder {
 				//do normal media packet handling here
 				log.trace("Hex (pkt): {}", curBuffer.getHexDump());
 				//we need at least 7 bytes to build a frame
-				if (curBuffer.limit() >= 7) { 
+				if (curBuffer.remaining() >= 7) { 
     				byte[] prefix = new byte[2];
     				curBuffer.get(prefix);
     				//log.trace("Prefix: {}", new String(prefix));
@@ -153,7 +153,7 @@ public class ICYDecoder extends CumulativeProtocolDecoder {
         				int nsvSync = (nsv[0] | (nsv[1] << 8) | (nsv[2] << 16) | (nsv[3] << 24));
         				log.trace("Sync: {} Dword: {}", nsvSync, NSVStream.NSV_SYNC_DWORD);
         				//we need at least 20 bytes
-        				if (curBuffer.limit() >= 20 && nsvSync == NSVStream.NSV_SYNC_DWORD) {
+        				if (curBuffer.remaining() >= 20 && nsvSync == NSVStream.NSV_SYNC_DWORD) {
         					int position = curBuffer.position();
         					//read all the configuration info for the stream
         					if (syncFrame(session, curBuffer)) {
@@ -196,7 +196,7 @@ public class ICYDecoder extends CumulativeProtocolDecoder {
 				int nsvSync = (nsv[0] | (nsv[1] << 8) | (nsv[2] << 16) | (nsv[3] << 24));
 				log.trace("Sync: {} Dword: {}", nsvSync, NSVStream.NSV_SYNC_DWORD);
 				//we need at least 20 bytes
-				if (curBuffer.limit() >= 20 && nsvSync == NSVStream.NSV_SYNC_DWORD) {
+				if (curBuffer.remaining() >= 20 && nsvSync == NSVStream.NSV_SYNC_DWORD) {
 					int position = curBuffer.position();
 					//read all the configuration info for the stream
 					if (syncFrame(session, curBuffer)) {
@@ -462,7 +462,9 @@ public class ICYDecoder extends CumulativeProtocolDecoder {
 	}	
     
 	/**
-	 * Called when sync frame header is found.
+	 * Called when sync frame header is found. This may occur more than once during streaming.
+	 * The first 136 bits / 17 bytes should not change but the remaining 16 bits / 2 bytes may
+	 * change.
 	 * 
 	 * @param session
 	 * @param ioBuffer contains nsv bitstream
@@ -470,99 +472,58 @@ public class ICYDecoder extends CumulativeProtocolDecoder {
 	 */
 	private boolean syncFrame(IoSession session, IoBuffer ioBuffer) {
 		boolean result = false;
-		//get the current buffers limit or amount of data available
-		int limit = ioBuffer.limit();
-		//first frame with full data
-		byte[] fourBytes = new byte[4];
-		ioBuffer.get(fourBytes);
-		String videoType = new String(fourBytes);
-		ioBuffer.get(fourBytes);
-		String audioType = new String(fourBytes);
-		log.debug("Types - video: {} audio: {}", videoType, audioType);
 		
+		//get the buffer info
+		int pos = ioBuffer.position();
+		int len = ioBuffer.limit();
+		int remain = ioBuffer.remaining();
+		log.trace("Buffer pos: {} len: {} size: {} remaining: {}", new Object[]{pos, len, (len - pos), remain});
+		
+		//byte holders
 		byte[] twoBytes = new byte[2];
-		ioBuffer.get(twoBytes);
-		int width = (twoBytes[0] & 0xff) | ((twoBytes[1] & 0xff) << 8);
-		ioBuffer.get(twoBytes);
-		int height = (twoBytes[0] & 0xff) | ((twoBytes[1] & 0xff) << 8);
-		int frameRateEncoded = ioBuffer.get();
+		byte[] fourBytes = new byte[4];
+		//stream configuration data
+		NSVStreamConfig config = (NSVStreamConfig) session.getAttribute("nsvconfig");
+		if (config == null) {
+    		//first frame with full data
+    		ioBuffer.get(fourBytes);
+    		String videoType = new String(fourBytes);
+    		ioBuffer.get(fourBytes);
+    		String audioType = new String(fourBytes);
+    		log.debug("Types - video: {} audio: {}", videoType, audioType);
+    		//get dimensions
+    		ioBuffer.get(twoBytes);
+    		int width = (twoBytes[0] & 0xff) | ((twoBytes[1] & 0xff) << 8);
+    		ioBuffer.get(twoBytes);
+    		int height = (twoBytes[0] & 0xff) | ((twoBytes[1] & 0xff) << 8);
+    		int frameRateEncoded = ioBuffer.get();
+    		//convert the fps
+    		double frameRate = NSVStream.framerateToDouble(frameRateEncoded);
+    		log.debug("Width: {} Height: {} Framerate: {}", new Object[]{width, height, frameRate});
+    		//create a stream config
+    		config = StreamManager.createStreamConfig(videoType, audioType, width, height, frameRate);
+    		config.frameRateEncoded = frameRateEncoded;
+    		//add stream config to the session
+    		session.setAttribute("nsvconfig", config);
+		} else {
+			//read the first 13 bytes / 'N','S','V','s' already consumed
+			ioBuffer.get(new byte[13]);
+		}
 		
-		double frameRate = NSVStream.framerateToDouble(frameRateEncoded);
-		log.debug("Width: {} Height: {} Framerate: {}", new Object[]{width, height, frameRate});
-		
-		NSVStreamConfig config = StreamManager.createStreamConfig(videoType, audioType, width, height, frameRate);
-		config.frameRateEncoded = frameRateEncoded;
-
-		//add stream config to the session
-		session.setAttribute("nsvconfig", config);
-		
+		//create a sync frame
 		NSVFrame frame = new NSVFrame(config, NSVStream.NSV_SYNC_DWORD);
 		ioBuffer.get(twoBytes);
+		//the a/v sync offset (number of milliseconds ahead of the video the audio is at this frame)
+		//(treat as signed)
 		frame.offsetCurrent = (twoBytes[0] & 0xff) | ((twoBytes[1] & 0xff) << 8);
-		log.trace("av sync {}", frame.offsetCurrent);
+		log.trace("a/v sync offset: {}", frame.offsetCurrent);
 
-		NSVBitStream bs0 = new NSVBitStream();
-		bs0.putBits(8, ioBuffer.get());
-		bs0.putBits(8, ioBuffer.get());
-		bs0.putBits(8, ioBuffer.get());
+		//build the frames payload
+		result = framePayload(session, ioBuffer, frame);
 		
-		int numAux = bs0.getbits(4);
-		int vidLen = bs0.getbits(20);
-
-		bs0.putBits(8, ioBuffer.get());
-		bs0.putBits(8, ioBuffer.get());
-		int audLen = bs0.getbits(16);
-
-		int bytesNeeded = 20 + (vidLen + audLen);
-		if (limit >= bytesNeeded) {
-			if (vidLen > NSVStream.NSV_MAX_VIDEO_LEN / 8 || audLen > NSVStream.NSV_MAX_AUDIO_LEN / 8) {
-				log.debug("Video or audio length exceeds max allowed");
-			} else {
-				//all is well, proceed
-				
-				int totalAuxUsed = 0;
-				
-				Map<String, IoBuffer> aux = null;
-				
-				if (numAux > 0) {
-					log.debug("Number of aux: {}", numAux);
-					aux = new HashMap<String, IoBuffer>(numAux);
-					for (int a = 0; a < numAux; a++) {
-						ioBuffer.get(twoBytes);
-						int auxLen = (twoBytes[0] & 0xff) | ((twoBytes[1] & 0xff) << 8);
-						totalAuxUsed += auxLen + 6;
-						ioBuffer.get(fourBytes);
-						String auxType = new String(fourBytes);
-						log.debug("Aux type: {}", auxType);
-						IoBuffer buffer = IoBuffer.allocate(auxLen);
-						byte[] auxBytes = new byte[auxLen];
-						ioBuffer.get(auxBytes);
-						buffer.put(auxBytes);
-						buffer.flip();
-						buffer.position(0);
-						//add to the vector
-						aux.put(auxType, buffer);
-					}
-					session.setAttribute("aux", aux);
-				}
-
-				frame.videoLength = vidLen;
-				frame.videoData = new byte[vidLen - totalAuxUsed];
-				ioBuffer.get(frame.videoData);
-				
-				frame.audioLength = audLen;
-				frame.audioData = new byte[audLen];		
-				ioBuffer.get(frame.audioData);
-				
-				frameLocal.set(frame);
-				
-				result = true;
-			}
-		}
-
 		return result;
-	}	
-	
+	}
+
 	/**
 	 * Called when chunk frame header is found.
 	 * 
@@ -572,30 +533,54 @@ public class ICYDecoder extends CumulativeProtocolDecoder {
 	 */
 	private boolean chnkFrame(IoSession session, IoBuffer ioBuffer) {
 		boolean result = false;
-		//get the current buffers limit or amount of data available
-		int limit = ioBuffer.limit();
+
+		//get the buffer info
+		int pos = ioBuffer.position();
+		int len = ioBuffer.limit();
+		int remain = ioBuffer.remaining();
+		log.trace("Buffer pos: {} len: {} size: {} remaining: {}", new Object[]{pos, len, (len - pos), remain});
 		
 		//add stream config to the session
 		NSVStreamConfig config = (NSVStreamConfig) session.getAttribute("nsvconfig");
 		
 		NSVFrame frame = new NSVFrame(config, NSVStream.NSV_NONSYNC_WORD);
 
+		//build the frames payload
+		result = framePayload(session, ioBuffer, frame);
+		
+		return result;
+	}	
+		
+	/**
+	 * Constructs the frames payload.
+	 * 
+	 * @param session
+	 * @param ioBuffer
+	 * @param frame
+	 * @return
+	 */
+	private boolean framePayload(IoSession session, IoBuffer ioBuffer, NSVFrame frame) {
+		boolean result = false;
+		
 		NSVBitStream bs0 = new NSVBitStream();
-
 		bs0.putBits(8, ioBuffer.get());
 		bs0.putBits(8, ioBuffer.get());
 		bs0.putBits(8, ioBuffer.get());
-
+		
+		//number of auxiliary data chunks
 		int numAux = bs0.getbits(4);
-		int vidLen = bs0.getbits(20);
+		//aux length + video length. maximum 524288 + numAux * (32768 + 6) 
+		int videoAndAuxLen = bs0.getbits(20);
 
 		bs0.putBits(8, ioBuffer.get());
 		bs0.putBits(8, ioBuffer.get());
-		int audLen = bs0.getbits(16);
+		//audio length. maximum allowed 32768
+		int audioLen = bs0.getbits(16); 
 
-		int bytesNeeded = 5 + (vidLen + audLen);
-		if (limit >= bytesNeeded) {
-			if (vidLen > NSVStream.NSV_MAX_VIDEO_LEN / 8 || audLen > NSVStream.NSV_MAX_AUDIO_LEN / 8) {
+		int bytesNeeded = videoAndAuxLen + audioLen;
+		log.trace("Lengths - audio: {} video+aux: {} needed: {}", new Object[]{audioLen, videoAndAuxLen, bytesNeeded});
+		if (ioBuffer.remaining() >= bytesNeeded) {
+			if (videoAndAuxLen > NSVStream.NSV_MAX_VIDEO_LEN / 8 || audioLen > NSVStream.NSV_MAX_AUDIO_LEN / 8) {
 				log.debug("Video or audio length exceeds max allowed");
 			} else {
 				//all is well, proceed
@@ -609,8 +594,9 @@ public class ICYDecoder extends CumulativeProtocolDecoder {
 					byte[] twoBytes = new byte[2];
 					byte[] fourBytes = new byte[4];
 					aux = new HashMap<String, IoBuffer>(numAux);
-					for (int a = 0; a < numAux; a++) {
+					for (int a = 0; a < numAux; a++) {						
 						ioBuffer.get(twoBytes);
+						//aux length. maximum allowed 32768
 						int auxLen = (twoBytes[0] & 0xff) | ((twoBytes[1] & 0xff) << 8);
 						totalAuxUsed += auxLen + 6;
 						ioBuffer.get(fourBytes);
@@ -622,18 +608,18 @@ public class ICYDecoder extends CumulativeProtocolDecoder {
 						buffer.put(auxBytes);
 						buffer.flip();
 						buffer.position(0);
-						//add to the vector
+						//add to the map
 						aux.put(auxType, buffer);
 					}
 					session.setAttribute("aux", aux);
 				}
 
-				frame.videoLength = vidLen;
-				frame.videoData = new byte[vidLen - totalAuxUsed];
+				frame.videoLength = videoAndAuxLen;
+				frame.videoData = new byte[videoAndAuxLen - totalAuxUsed];
 				ioBuffer.get(frame.videoData);
 				
-				frame.audioLength = audLen;
-				frame.audioData = new byte[audLen];		
+				frame.audioLength = audioLen;
+				frame.audioData = new byte[audioLen];		
 				ioBuffer.get(frame.audioData);
 				
 				frameLocal.set(frame);
@@ -641,9 +627,7 @@ public class ICYDecoder extends CumulativeProtocolDecoder {
 				result = true;
 			}
 		}
-		
 		return result;
 	}	
-		
 	
 }

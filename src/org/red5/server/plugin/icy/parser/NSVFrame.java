@@ -24,44 +24,22 @@ package org.red5.server.plugin.icy.parser;
  *  
  * @author Andy Shaules (bowljoman@hotmail.com)
  */
-public class NSVFrame {
+public class NSVFrame extends Frame {
 
 	public long frameType = 0x8080;//empty	
 
-	public long frameNumber = 0;
-
 	public int parser_info = 0;
-
-	public String vid_type;
-
-	public String aud_type;
-
-	public int width = 0;
-
-	public int height = 0;
-
-	public double frameRate = 0;
 
 	public int frameRateEncoded = 0x0;
 
 	public int offsetCurrent = 0;
 
-	public byte[] videoData;
-
-	public byte[] audioData;
-
-	public int videoLength = 0;
-
-	public int audioLength = 0;
-
 	public int numberAux = 0;
-
-	public long timeStamp = 0;
 
 	public NSVFrame(NSVStreamConfig id, long type) {
 		frameType = type;
-		aud_type = id.audioFormat;
-		vid_type = id.videoFormat;
+		audioType = id.audioFormat;
+		videoType = id.videoFormat;
 		width = id.videoWidth;
 		height = id.videoHeight;
 		frameRate = id.frameRate;
@@ -84,14 +62,14 @@ public class NSVFrame {
 				ret[1] = 'S';
 				ret[2] = 'V';
 				ret[3] = 's';
-				ret[4] = (byte) vid_type.charAt(0);
-				ret[5] = (byte) vid_type.charAt(1);
-				ret[6] = (byte) vid_type.charAt(2);
-				ret[7] = (byte) vid_type.charAt(3);
-				ret[8] = (byte) aud_type.charAt(0);
-				ret[9] = (byte) aud_type.charAt(1);
-				ret[10] = (byte) aud_type.charAt(2);
-				ret[11] = (byte) aud_type.charAt(3);
+				ret[4] = (byte) videoType.charAt(0);
+				ret[5] = (byte) videoType.charAt(1);
+				ret[6] = (byte) videoType.charAt(2);
+				ret[7] = (byte) videoType.charAt(3);
+				ret[8] = (byte) audioType.charAt(0);
+				ret[9] = (byte) audioType.charAt(1);
+				ret[10] = (byte) audioType.charAt(2);
+				ret[11] = (byte) audioType.charAt(3);
 				ret[12] = ((width << 8) >> 8);
 				ret[13] = ((width) >> 8);
 				ret[14] = ((height << 8) >> 8);
@@ -138,14 +116,6 @@ public class NSVFrame {
 				break;
 		}
 		return ret;
-	}
-
-	public long getFrameNumber() {
-		return frameNumber;
-	}
-
-	public void setFrameNumber(long frameNumber) {
-		this.frameNumber = frameNumber;
 	}
 
 }

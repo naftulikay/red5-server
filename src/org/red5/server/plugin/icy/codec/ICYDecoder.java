@@ -30,6 +30,9 @@ import org.apache.mina.core.session.IoSession;
 import org.apache.mina.filter.codec.CumulativeProtocolDecoder;
 import org.apache.mina.filter.codec.ProtocolDecoderOutput;
 import org.red5.server.plugin.icy.StreamManager;
+import org.red5.server.plugin.icy.parser.AACFrame;
+import org.red5.server.plugin.icy.parser.Frame;
+import org.red5.server.plugin.icy.parser.MP3Frame;
 import org.red5.server.plugin.icy.parser.NSVBitStream;
 import org.red5.server.plugin.icy.parser.NSVFrame;
 import org.red5.server.plugin.icy.parser.NSVStream;
@@ -74,7 +77,7 @@ public class ICYDecoder extends CumulativeProtocolDecoder {
 
 	private static final Pattern PATTERN_HEADER = Pattern.compile("(icy-|content-).{1,}[:]{1}.{1,}", Pattern.DOTALL);
 	
-	private ThreadLocal<NSVFrame> frameLocal = new ThreadLocal<NSVFrame>();
+	private ThreadLocal<Frame> frameLocal = new ThreadLocal<Frame>();
 	
 	@Override
 	protected boolean doDecode(IoSession session, IoBuffer in, ProtocolDecoderOutput out) throws Exception {
@@ -129,7 +132,7 @@ public class ICYDecoder extends CumulativeProtocolDecoder {
     					int position = curBuffer.position();
     					//read data for the stream
     					if (chnkFrame(session, curBuffer)) {
-    						NSVFrame frame = frameLocal.get();
+    						Frame frame = frameLocal.get();
     						if (frame != null) {
     	    					//write frame as decoder output
     	    					out.write(frame);
@@ -141,23 +144,64 @@ public class ICYDecoder extends CumulativeProtocolDecoder {
     						log.trace("Frame creation failed");
     						curBuffer.position(position - 2);						
     					}
+    				} else if (prefix[0] == (byte) 0xff && prefix[1] == (byte) 0xfb) { 
+    					//look for MP3 sync FF FB
+    					log.debug("MP3 sync frame found");
+    					int position = curBuffer.position();
+    					//read all the configuration info for the stream
+    					if (syncFrameMP3(session, curBuffer)) {
+    						Frame frame = frameLocal.get();
+    						if (frame != null) {
+    	    					//write frame as decoder output
+    	    					out.write(frame);
+    	    					//clear thread local
+    	    					frameLocal.remove();
+    						} else {
+    							//let the handler know it should handle the "ready" stuff
+    							out.write(Boolean.TRUE);
+    						}
+    					} else {
+    						//rewind back to original position + sync dword length
+    						log.trace("MP3 Sync frame creation failed");
+    						curBuffer.position(position - 2);						
+    					}						
+    				} else if (prefix[0] == (byte) 0xff && prefix[1] == (byte) 0xf9) { 
+    					//look for AAC sync FF F9 5C 80 or FF F9 50 40
+    					log.debug("AAC sync frame found");
+    					int position = curBuffer.position();
+    					//read all the configuration info for the stream
+    					if (syncFrameAAC(session, curBuffer)) {
+    						Frame frame = frameLocal.get();
+    						if (frame != null) {
+    	    					//write frame as decoder output
+    	    					out.write(frame);
+    	    					//clear thread local
+    	    					frameLocal.remove();
+    						} else {
+    							//let the handler know it should handle the "ready" stuff
+    							out.write(Boolean.TRUE);
+    						}
+    					} else {
+    						//rewind back to original position + sync dword length
+    						log.trace("AAC Sync frame creation failed");
+    						curBuffer.position(position - 2);						
+    					}							
     				} else {
     					//rewind it back 2
     					log.trace("Data frame prefix not found - 0: {} 1: {}", prefix[0], prefix[1]);
     					curBuffer.position(curBuffer.position() - 2);
     					
         				//look for sync frame
-        				byte[] nsv = new byte[4];
-        				curBuffer.get(nsv);
-        				log.trace("NSV: {}", new String(nsv));
-        				int nsvSync = (nsv[0] | (nsv[1] << 8) | (nsv[2] << 16) | (nsv[3] << 24));
-        				log.trace("Sync: {} Dword: {}", nsvSync, NSVStream.NSV_SYNC_DWORD);
+        				byte[] sync = new byte[4];
+        				curBuffer.get(sync);
+        				log.trace("Sync: {}", new String(sync));
+        				int nsvSync = (sync[0] | (sync[1] << 8) | (sync[2] << 16) | (sync[3] << 24));
         				//we need at least 20 bytes
         				if (curBuffer.remaining() >= 20 && nsvSync == NSVStream.NSV_SYNC_DWORD) {
         					int position = curBuffer.position();
         					//read all the configuration info for the stream
         					if (syncFrame(session, curBuffer)) {
-        						NSVFrame frame = frameLocal.get();
+        						Frame frame = frameLocal.get();
         						if (frame != null) {
         	    					//write frame as decoder output
         	    					out.write(frame);
@@ -190,17 +234,17 @@ public class ICYDecoder extends CumulativeProtocolDecoder {
 				//do nsv handling, magic bytes = 4E 53 56 73
 
 				//consume bytes
-				byte[] nsv = new byte[4];
-				curBuffer.get(nsv);
-				log.trace("NSV: {}", new String(nsv));
-				int nsvSync = (nsv[0] | (nsv[1] << 8) | (nsv[2] << 16) | (nsv[3] << 24));
+				byte[] sync = new byte[4];
+				curBuffer.get(sync);
+				log.trace("Sync: {}", new String(sync));
+				int nsvSync = (sync[0] | (sync[1] << 8) | (sync[2] << 16) | (sync[3] << 24));
 				log.trace("Sync: {} Dword: {}", nsvSync, NSVStream.NSV_SYNC_DWORD);
 				//we need at least 20 bytes
 				if (curBuffer.remaining() >= 20 && nsvSync == NSVStream.NSV_SYNC_DWORD) {
 					int position = curBuffer.position();
 					//read all the configuration info for the stream
 					if (syncFrame(session, curBuffer)) {
-						NSVFrame frame = frameLocal.get();
+						Frame frame = frameLocal.get();
 						if (frame != null) {
 	    					//write frame as decoder output
 	    					out.write(frame);
@@ -215,10 +259,52 @@ public class ICYDecoder extends CumulativeProtocolDecoder {
 						log.trace("Sync frame creation failed");
 						curBuffer.position(position - 4);						
 					}
-				} else if (nsv[0] == (byte) 0xef && nsv[1] == (byte) 0xbe) {
+				} else if (sync[0] == (byte) 0xef && sync[1] == (byte) 0xbe) {
 					//if we get a "data" frame here fail
 					log.debug("Data frame found while awaiting initial sync frame, failing out");
 					state = ReadState.Failed;
+				} else if (sync[0] == (byte) 0xff && sync[1] == (byte) 0xfb) { 
+					//look for MP3 sync FF FB
+					log.debug("MP3 sync frame found");
+					int position = curBuffer.position();
+					//read all the configuration info for the stream
+					if (syncFrameMP3(session, curBuffer)) {
+						Frame frame = frameLocal.get();
+						if (frame != null) {
+	    					//write frame as decoder output
+	    					out.write(frame);
+	    					//clear thread local
+	    					frameLocal.remove();
+						} else {
+							//let the handler know it should handle the "ready" stuff
+							out.write(Boolean.TRUE);
+						}
+					} else {
+						//rewind back to original position + sync dword length
+						log.trace("MP3 Sync frame creation failed");
+						curBuffer.position(position - 4);						
+					}						
+				} else if (sync[0] == (byte) 0xff && sync[1] == (byte) 0xf9) { 
+					//look for AAC sync FF F9 5C 80 or FF F9 50 40
+					log.debug("AAC sync frame found");
+					int position = curBuffer.position();
+					//read all the configuration info for the stream
+					if (syncFrameAAC(session, curBuffer)) {
+						Frame frame = frameLocal.get();
+						if (frame != null) {
+	    					//write frame as decoder output
+	    					out.write(frame);
+	    					//clear thread local
+	    					frameLocal.remove();
+						} else {
+							//let the handler know it should handle the "ready" stuff
+							out.write(Boolean.TRUE);
+						}
+					} else {
+						//rewind back to original position + sync dword length
+						log.trace("AAC Sync frame creation failed");
+						curBuffer.position(position - 4);						
+					}							
 				} else {
 					//rewind it back 4 
 					log.trace("Not enough data available for sync frame or wrong frame type");
@@ -468,7 +554,7 @@ public class ICYDecoder extends CumulativeProtocolDecoder {
 	 * 
 	 * @param session
 	 * @param ioBuffer contains nsv bitstream
-	 * @return position in data array or < 0 on in invalid frame. Returns offset if valid frame but needs more data.
+	 * @return true if frame create is successful, false otherwise
 	 */
 	private boolean syncFrame(IoSession session, IoBuffer ioBuffer) {
 		boolean result = false;
@@ -529,7 +615,7 @@ public class ICYDecoder extends CumulativeProtocolDecoder {
 	 * 
 	 * @param session
 	 * @param ioBuffer contains nsv bitstream
-	 * @return position in data array or < 0 on in invalid frame. Returns offset if valid frame but needs more data.
+	 * @return true if frame create is successful, false otherwise
 	 */
 	private boolean chnkFrame(IoSession session, IoBuffer ioBuffer) {
 		boolean result = false;
@@ -627,6 +713,90 @@ public class ICYDecoder extends CumulativeProtocolDecoder {
 				result = true;
 			}
 		}
+		return result;
+	}	
+	
+
+	/**
+	 * Called when an AAC sync frame is found. 
+	 * 
+	 * @param session
+	 * @param ioBuffer contains aac data
+	 * @return true if frame create is successful, false otherwise
+	 */
+	private boolean syncFrameAAC(IoSession session, IoBuffer ioBuffer) {
+		boolean result = false;
+		
+		//get the buffer info
+		int pos = ioBuffer.position();
+		int len = ioBuffer.limit();
+		int remain = ioBuffer.remaining();
+		log.trace("Buffer pos: {} len: {} size: {} remaining: {}", new Object[]{pos, len, (len - pos), remain});
+		
+		//rewind
+		ioBuffer.position(0);
+		
+		//grab all the bytes available
+		byte[] all = new byte[ioBuffer.remaining()];
+		ioBuffer.get(all);
+		
+		//create a sync frame
+		AACFrame frame = new AACFrame(all);
+
+		frameLocal.set(frame);
+		
+		//we may return false for some reason in the future
+		result = true;
+		
+		return result;
+	}	
+	
+	/**
+	 * Called when an MP3 sync frame is found. 
+	 * 
+	 * @param session
+	 * @param ioBuffer contains mp3 data
+	 * @return true if frame create is successful, false otherwise
+	 */
+	private boolean syncFrameMP3(IoSession session, IoBuffer ioBuffer) {
+		boolean result = false;
+		
+		//get the buffer info
+		int pos = ioBuffer.position();
+		int len = ioBuffer.limit();
+		int remain = ioBuffer.remaining();
+		log.trace("Buffer pos: {} len: {} size: {} remaining: {}", new Object[]{pos, len, (len - pos), remain});
+		
+		/*
+		 * 0xffe => synchronization bits
+		 * 0x1b  => 11010b (11b == MPEG1 | 01b == Layer III | 0b == no CRC)
+		 * 0x9   => 128kbps
+		 * 0x00  => 00b == 44100 Hz | 0b == no padding | 0b == private bit
+		 * 0x44  => 0010b 0010b (00b == stereo | 10b == (unused) mode extension)
+		 *                      (0b == no copyright bit | 0b == original bit)
+		 *                      (00b == no emphasis)
+		 * Such a frame (MPEG1 Layer III) contains 1152 samples, its size is thus:
+		 * (1152*(128000/8))/44100 = 417.96 rounded to the next smaller integer, i.e.
+		 * 417.
+		 * 
+		 * There are also 32 bytes (ie 8 32 bits values) to skip after the header for such frames
+		 */
+		
+		//rewind
+		ioBuffer.position(0);
+		
+		//grab all the bytes available
+		byte[] all = new byte[ioBuffer.remaining()];
+		ioBuffer.get(all);
+		
+		//create a sync frame
+		MP3Frame frame = new MP3Frame(all);
+		
+		frameLocal.set(frame);
+		
+		//we may return false for some reason in the future
+		result = true;
+		
 		return result;
 	}	
 	

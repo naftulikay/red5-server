@@ -171,6 +171,12 @@ public class ICYMarshal implements IICYMarshal {
 			audioFramer.onAACData(data);
 		} else if ("MP3".equals(codecName)) {
 			audioFramer.onMP3Data(data);
+		} else if ("PCM".equals(codecName)) {
+			log.info("PCM is not yet supported");
+			//audioFramer.onPCMData(data);
+		} else if ("SPX".equals(codecName)) {
+			log.info("Speex is not yet supported");
+			//audioFramer.onSpeexData(data);
 		}
 	}
 	

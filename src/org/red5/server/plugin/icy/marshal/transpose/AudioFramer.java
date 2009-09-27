@@ -22,11 +22,12 @@ package org.red5.server.plugin.icy.marshal.transpose;
 import java.util.Arrays;
 
 import org.apache.mina.core.buffer.IoBuffer;
-
 import org.red5.server.net.rtmp.event.AudioData;
 import org.red5.server.net.rtmp.event.IRTMPEvent;
 import org.red5.server.net.rtmp.message.Header;
 import org.red5.server.plugin.icy.IICYEventSink;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Provides audio in pre-defined containers.
@@ -35,6 +36,8 @@ import org.red5.server.plugin.icy.IICYEventSink;
  * @author Andy Shaules (bowljoman@hotmail.com)
  */
 public class AudioFramer {
+	
+	private static Logger log = LoggerFactory.getLogger(AudioFramer.class);	
 
 	public static final int[] AAC_SAMPLERATES = { 96000, 88200, 64000, 48000, 44100, 32000, 24000, 22050, 16000, 12000,
 			11025, 8000, 7350 };
@@ -117,9 +120,14 @@ public class AudioFramer {
 						sampleRateIndex = (data[offset] & 0x3C) >> 2;
 						channels = ((data[offset] & 0x01) << 2) | ((data[offset + 1] & 0xC0) >> 6);
 
+						log.trace("Profile: {} sample rate index: {} channels: {}", new Object[]{profile, sampleRateIndex, channels});
+						
 						// frame length, ADTS excluded
 						currentFrameLeft = (((data[offset + 1] & 0x03) << 8) | ((data[offset + 2] & 0xff) << 3) | ((data[offset + 3] & 0xff) >>> 5)) - 7;
 						raw_data_block = data[(offset + 4)] & 0x3;
+
+						log.trace("Current frame left: {} raw: {}", currentFrameLeft, raw_data_block);
+
 						offset += 5; // skip ADTS		
 						adtsSkipped += 7;
 						frameSynched = true;
@@ -142,6 +150,8 @@ public class AudioFramer {
 
 				offset += bytesToRead;
 				currentFrameLeft -= bytesToRead;
+
+				log.trace("Current frame left: {}", currentFrameLeft);
 
 				if (currentFrameLeft == 0) {
 					try {

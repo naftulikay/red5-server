@@ -30,6 +30,8 @@ import org.apache.mina.transport.socket.nio.NioSocketAcceptor;
 import org.red5.server.plugin.icy.codec.ICYDecoder;
 import org.red5.server.plugin.icy.codec.ICYEncoder;
 import org.red5.server.plugin.icy.codec.ICYDecoder.ReadState;
+import org.red5.server.plugin.icy.parser.AACFrame;
+import org.red5.server.plugin.icy.parser.MP3Frame;
 import org.red5.server.plugin.icy.parser.NSVFrame;
 import org.red5.server.plugin.icy.parser.NSVSenderThread;
 import org.red5.server.plugin.icy.parser.NSVStreamConfig;
@@ -330,17 +332,12 @@ public class ICYSocketHandler extends IoHandlerAdapter {
 					sender.config = config;
 				
 				}
-
-				//check for a frame
-				if (message instanceof NSVFrame) {
-					//got a frame, writing to config
-					config.writeFrame((NSVFrame) message);
-				}
-				
+			
 				//set to packet state
 				session.setAttribute("state", ReadState.Packet);
 				
-				break;
+				//allow fall through to packet
+				
 			case Packet:			
 				//lookup stream config
 				config = (NSVStreamConfig) session.getAttribute("nsvconfig");
@@ -349,6 +346,12 @@ public class ICYSocketHandler extends IoHandlerAdapter {
 				if (message instanceof NSVFrame) {
 					//got a frame, writing to config
 					config.writeFrame((NSVFrame) message);
+				} else if (message instanceof AACFrame) {
+					//got a frame
+					handler.onAudioData(((AACFrame) message).getPayload());
+				} else if (message instanceof MP3Frame) {
+					//got a frame
+					handler.onAudioData(((MP3Frame) message).getPayload());
 				}
 				
 				break;

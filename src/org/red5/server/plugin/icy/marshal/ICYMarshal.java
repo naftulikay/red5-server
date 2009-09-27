@@ -211,10 +211,4 @@ public class ICYMarshal implements IICYMarshal {
 		return new Notify(buf);
 	}
 
-	public void start() {
-	}
-
-	public void stop() {
-	}
-
 }

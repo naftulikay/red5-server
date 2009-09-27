@@ -43,10 +43,6 @@ public interface IICYHandler {
 
 	public void onMetaData(Map<String, Object> metaData);
 
-	public void start();
-
-	public void stop();
-
 	public void reset(String content, String type);
 
 }

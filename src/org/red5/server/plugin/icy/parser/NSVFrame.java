@@ -99,7 +99,7 @@ public class NSVFrame {
 				ret[16] = frameRateEncoded;//frame rate
 				ret[17] = ((offsetCurrent << 8) >> 8);
 				ret[18] = ((offsetCurrent) >> 8);
-				bs = new NSVBitStream();
+
 				bs.putBits(4, num_aux);
 				bs.putBits(20, vid_len);
 				bs.putBits(16, aud_len);
@@ -121,7 +121,6 @@ public class NSVFrame {
 
 				ret[0] = 0xef;
 				ret[1] = 0xbe;
-				bs = new NSVBitStream();
 
 				bs.putBits(4, num_aux);
 				bs.putBits(20, vid_len);

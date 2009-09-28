@@ -104,7 +104,7 @@ public final class Installer {
 		HttpClient client = new HttpClient();
 
 		// set the proxy (WT)
-		// test if we received variables on the commandline
+		// test if we received variables on the command line
 		if ( (System.getProperty("http.proxyHost") != null) && (System.getProperty("http.proxyPort") != null) ) {
 			HostConfiguration config = client.getHostConfiguration();
 			config.setProxy(System.getProperty("http.proxyHost").toString(), Integer.parseInt( System.getProperty("http.proxyPort"))  );

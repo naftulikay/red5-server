@@ -367,6 +367,11 @@ public class MultiThreadedApplicationAdapter extends StatefulScopeWrappingAdapte
 					//get the plug-in from the registry
 					IRed5Plugin plugin = PluginRegistry.getPlugin(desc.getPluginName());
 					log.debug("Got plugin from the registry: {}", plugin);
+				    //if the plugin class extends the red5 plug-in we will add the application to it
+				    if (plugin instanceof Red5Plugin) {
+    				    //pass the app to the plugin so that it may be manipulated directly by the plug-in
+    				    ((Red5Plugin) plugin).setApplication(this);
+				    }
 					//when a plug-in method is specified do invokes
 				    if (desc.getMethod() != null) {
     					Method method = plugin.getClass().getMethod(desc.getMethod(), (Class[]) null);
@@ -396,11 +401,6 @@ public class MultiThreadedApplicationAdapter extends StatefulScopeWrappingAdapte
         						log.info("Returned class did not implement IApplication");
     						}
     					}
-				    }
-				    //if the plugin class extends the red5 plug-in we will add the application to it
-				    if (plugin instanceof Red5Plugin) {
-    				    //pass the app to the plugin so that it may be manipulated directly by the plug-in
-    				    ((Red5Plugin) plugin).setApplication(this);
 				    }
 				} catch (Exception e) {
 					log.warn("Exception setting up a plugin", e);

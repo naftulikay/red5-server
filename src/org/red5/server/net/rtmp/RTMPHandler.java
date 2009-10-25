@@ -462,6 +462,7 @@ public class RTMPHandler extends BaseRTMPHandler {
 					if (stream != null) {
 						stream.setClientBufferDuration(buffer);
 						log.debug("Client sent a buffer size: {} ms for stream id: {}", buffer, streamId);
+						log.trace("Stream type: {}", stream.getClass().getName());
 					}
 				} 
 				//catch-all to make sure buffer size is set

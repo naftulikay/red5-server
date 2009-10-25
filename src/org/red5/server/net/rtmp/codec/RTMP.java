@@ -151,35 +151,45 @@ public class RTMP extends ProtocolState {
 	 */
 	static class LiveTimestampMapping {
 		private final long clockStartTime;
+
 		private final long streamStartTime;
+
 		private boolean keyFrameNeeded;
+
 		private long lastStreamTime;
-		public LiveTimestampMapping(long clockStartTime, long streamStartTime)
-		{
+
+		public LiveTimestampMapping(long clockStartTime, long streamStartTime) {
 			this.clockStartTime = clockStartTime;
 			this.streamStartTime = streamStartTime;
 			this.keyFrameNeeded = true; // Always start with a key frame
 			this.lastStreamTime = streamStartTime;
 		}
+
 		public long getStreamStartTime() {
 			return streamStartTime;
 		}
+
 		public long getClockStartTime() {
 			return clockStartTime;
 		}
+
 		public void setKeyFrameNeeded(boolean keyFrameNeeded) {
 			this.keyFrameNeeded = keyFrameNeeded;
 		}
+
 		public boolean isKeyFrameNeeded() {
 			return keyFrameNeeded;
 		}
+
 		public long getLastStreamTime() {
 			return lastStreamTime;
 		}
+
 		public void setLastStreamTime(long lastStreamTime) {
 			this.lastStreamTime = lastStreamTime;
 		}
 	}
+
 	/**
 	 * Mapping between channel and the last clock to stream mapping
 	 */
@@ -504,13 +514,12 @@ public class RTMP extends ProtocolState {
 	public Header getLastReadPacketHeader(int channelId) {
 		return readPacketHeaders.get(channelId);
 	}
-	
-	LiveTimestampMapping getLastTimestampMapping(int channelId)
-	{
+
+	LiveTimestampMapping getLastTimestampMapping(int channelId) {
 		return liveTimestamps.get(channelId);
 	}
-	void setLastTimestampMapping(int channelId, LiveTimestampMapping mapping)
-	{
+
+	void setLastTimestampMapping(int channelId, LiveTimestampMapping mapping) {
 		liveTimestamps.put(channelId, mapping);
 	}
 }

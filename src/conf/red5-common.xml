@@ -36,7 +36,7 @@
 		<property name="remoteSSLKeystore" value="${red5.config_root}/keystore.jmx"/>
 		<property name="remoteSSLKeystorePass" value="${rtmps.keystorepass}"/>
 		<!-- Mina offers its own Mbeans so you may integrate them here -->
-		<property name="enableMinaMonitor" value="false"/>
+		<property name="enableMinaMonitor" value="true"/>
 	</bean>
 	
 	<!-- Serializes objects to AMF binary -->
@@ -57,6 +57,7 @@
 				<property name="serializer">
 					<ref bean="serializer"/>
 				</property>
+				<property name="baseTolerance" value="1000" />
 			</bean>
 		</property>
 		<property name="minaDecoder">
@@ -67,7 +68,18 @@
 			</bean>
 		</property>
 	</bean>
-	
+		
+	<!-- RTMPT codec factory -->
+	<bean id="rtmptCodecFactory" class="org.red5.server.net.rtmpt.codec.RTMPTCodecFactory"
+		 autowire="byType" init-method="init">
+		<property name="serializer">
+			<ref bean="serializer"/>
+		</property>
+		<property name="deserializer">
+			<ref bean="deserializer"/>
+		</property>
+	</bean>		
+		
 	<!-- Remoting calls codec factory -->
 	<bean id="remotingCodecFactory" class="org.red5.server.net.remoting.codec.RemotingCodecFactory"
 		 autowire="byType" init-method="init"/>

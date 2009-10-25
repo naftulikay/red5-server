@@ -496,7 +496,9 @@ public final class ClassLoaderBuilder {
     				}
     			}
     			
-    			int topVersionNumber = Integer.valueOf(topVersion[0] + topVersion[1] + (topVersion.length > 2 ? topVersion[2] : '0')).intValue();
+                //System.out.println("AOB " + checkVers + " | " + topVersion[0] + " length: " + topVersion.length);
+    			int topVersionNumber = topVersion.length == 1 ? Integer.valueOf(topVersion[0]) : Integer.valueOf(topVersion[0] + topVersion[1] + (topVersion.length > 2 ? topVersion[2] : '0')).intValue();
+    			
     			String[] checkVersion = punct.split(checkVers);
                 //System.out.println("checkVersion (" + checkVers + "): " + checkVersion[0] + " length: " + checkVersion.length);
 
@@ -514,7 +516,7 @@ public final class ClassLoaderBuilder {
     				}
     			}
     			
-    			int checkVersionNumber = Integer.valueOf(checkVersion[0] + checkVersion[1] + (checkVersion.length > 2 ? checkVersion[2] : '0')).intValue();
+    			int checkVersionNumber = checkVersion.length == 1 ? Integer.valueOf(checkVersion[0]) : Integer.valueOf(checkVersion[0] + checkVersion[1] + (checkVersion.length > 2 ? checkVersion[2] : '0')).intValue();
     			
     			if (topVersionNumber >= checkVersionNumber) {
     				//remove it

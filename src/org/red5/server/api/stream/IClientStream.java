@@ -59,4 +59,11 @@ public interface IClientStream extends IStream {
 	 */
 	void setClientBufferDuration(int bufferTime);
 	
+	/**
+	 * Get the buffer duration for this stream as requested by the client.
+	 * 
+	 * @return bufferTime duration in ms the client wants to buffer
+	 */
+	int getClientBufferDuration();	
+	
 }

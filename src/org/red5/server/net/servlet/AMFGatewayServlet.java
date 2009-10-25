@@ -208,7 +208,7 @@ public class AMFGatewayServlet extends HttpServlet {
 		IoBuffer reqBuffer = IoBuffer.allocate(req.getContentLength());
 		ServletUtils.copy(req.getInputStream(), reqBuffer.asOutputStream());
 		reqBuffer.flip();
-		RemotingPacket packet = (RemotingPacket) codecFactory.getSimpleDecoder().decode(null, reqBuffer);
+		RemotingPacket packet = (RemotingPacket) codecFactory.getRemotingDecoder().decode(null, reqBuffer);
 		String path = req.getContextPath();
 		if (path == null) {
 			path = "";
@@ -263,7 +263,7 @@ public class AMFGatewayServlet extends HttpServlet {
 	 */
 	protected void sendResponse(HttpServletResponse resp, RemotingPacket packet) throws Exception {
 		log.debug("Sending response");
-		IoBuffer respBuffer = codecFactory.getSimpleEncoder().encode(null, packet);
+		IoBuffer respBuffer = codecFactory.getRemotingEncoder().encode(null, packet);
 		if (respBuffer != null) {
     		final ServletOutputStream out = resp.getOutputStream();
     		resp.setContentLength(respBuffer.limit());

@@ -83,7 +83,7 @@ public class RTMPProtocolEncoder implements Constants, IEventEncoder {
 	 * Tolerance (in milliseconds) for late media on streams. A set of levels based on this
 	 * value will be determined. 
 	 */
-	private long baseTolerance = 250;
+	private long baseTolerance = 15000;
 
 	/**
 	 * Highest tardiness level before dropping key frames
@@ -205,7 +205,7 @@ public class RTMPProtocolEncoder implements Constants, IEventEncoder {
 	 * @param message the message
 	 * @return true to drop; false to send
 	 */
-	private boolean dropMessage(RTMP rtmp, int channelId, IRTMPEvent message) {
+	protected boolean dropMessage(RTMP rtmp, int channelId, IRTMPEvent message) {
 		//whether or not the packet will be dropped
 		boolean drop = false;
 
@@ -240,25 +240,26 @@ public class RTMPProtocolEncoder implements Constants, IEventEncoder {
     		if (conn != null) {
         		log.debug("Last ping time for connection: {}", conn.getLastPingTime());
         		tardiness -= conn.getLastPingTime();
+        		//if we're watching vod, subtract the buffer time
+        		if (!isLive) {
+        			RTMPConnection rtmpConn = (RTMPConnection) conn;
+        			int streamId = rtmpConn.getStreamIdForChannel(channelId);
+        			IClientStream stream = rtmpConn.getStreamById(streamId);
+        			if (stream != null) {
+            			int clientBufferDuration = stream.getClientBufferDuration();
+            			if (clientBufferDuration > 0) {
+            				//two times the buffer duration seems to work best with vod
+            				tardiness -= clientBufferDuration * 2;
+            			}
+            			log.debug("Client buffer duration: {}", clientBufferDuration);
+        			}
+        		}   
     		} else {
     			log.debug("Connection is null");
     		}
     		
     		//TODO: how should we differ handling based on live or vod?
-    		
-    		//if we're watching vod, subtract the buffer time
-    		if (!isLive) {
-    			RTMPConnection rtmpConn = (RTMPConnection) conn;
-    			int streamId = rtmpConn.getStreamIdForChannel(channelId);
-    			IClientStream stream = rtmpConn.getStreamById(streamId);
-    			int clientBufferDuration = stream.getClientBufferDuration();
-    			if (clientBufferDuration > 0) {
-    				//two times the buffer duration seems to work best with vod
-    				tardiness -= clientBufferDuration * 2;
-    			}
-    			log.debug("Client buffer duration: {}", clientBufferDuration);
-    		}
-    		
+    		    		
     		//TODO: if we are VOD do we "pause" the provider when we are consistently late?
     		
     		log.debug("Packet timestamp: {}; tardiness: {}; now: {}; message clock time: {}", new Object[] { timestamp,

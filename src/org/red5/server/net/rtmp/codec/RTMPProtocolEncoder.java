@@ -86,15 +86,16 @@ public class RTMPProtocolEncoder implements Constants, IEventEncoder {
 	private long baseTolerance = 15000;
 
 	/**
-	 * Highest tardiness level before dropping key frames
-	 */
-	private long highestTolerance = baseTolerance + (long) (baseTolerance * 0.3);
-
-	/**
-	 * Lowest tardiness level, between this value and base value disposible frames
+	 * Middle tardiness level, between base and this value disposible frames
+	 * will be dropped. Between this and highest value regulare interframes
 	 * will be dropped.
 	 */
-	private long lowestTolerance = baseTolerance - (long) (baseTolerance * 0.3);
+	private long midTolerance = baseTolerance + (long) (baseTolerance * 0.3);
+	
+	/**
+	 * Highest tardiness level before dropping key frames
+	 */
+	private long highestTolerance = baseTolerance + (long) (baseTolerance * 0.6);
 
 	/**
 	 * Encodes object with given protocol state to byte buffer
@@ -191,13 +192,14 @@ public class RTMPProtocolEncoder implements Constants, IEventEncoder {
 	}
 
 	/**
-	 * Determine if this message should be dropped for lateness.
+	 * Determine if this message should be dropped for lateness. Live publish data
+	 * does not come through this section, only outgoing data does.
 	 * 
 	 * - determine latency between server and client using ping
 	 * - ping timestamp is unsigned int (4 bytes) and is set from value on sender
 	 * 
 	 * 1st drop disposable frames - lowest mark
-	 * 2nd drop interframes - middle / base mark
+	 * 2nd drop interframes - middle
 	 * 3rd drop key frames - high mark
 	 * 
 	 * @param rtmp the protocol state
@@ -209,6 +211,7 @@ public class RTMPProtocolEncoder implements Constants, IEventEncoder {
 		//whether or not the packet will be dropped
 		boolean drop = false;
 
+		//whether or not the packet is video data
 		boolean isVideo = false;
 		
 		//we only drop audio or video data
@@ -261,7 +264,8 @@ public class RTMPProtocolEncoder implements Constants, IEventEncoder {
     		
     		//TDJ: fix for live, without it, we was getting late on this special case:
     		//  - Packet timestamp: 494998; tardiness: -2716; now: 1256697216204; message clock time: 1256697213518
-    		tardiness = Math.abs(tardiness);
+    		//Paul: Negative values mean the data is early and that is ok, especially for publish
+    		//tardiness = Math.abs(tardiness);
     		
     		//TODO: TDJ: For live, we should have different tolerance for audio and video. Waiting okay from dev team to do it.
     		
@@ -272,8 +276,11 @@ public class RTMPProtocolEncoder implements Constants, IEventEncoder {
     		log.debug("Packet timestamp: {}; tardiness: {}; now: {}; message clock time: {}", new Object[] { timestamp,
     				tardiness, now, clockTimeOfMessage });
     
-    		if (tardiness < lowestTolerance) {
+    		//anything coming in less than the base will be allowed to pass, it will not be
+    		//dropped or manipulated
+    		if (tardiness < baseTolerance) {
     			//frame is below lowest bounds, let it go
+    			
     		} else if (tardiness > highestTolerance) {
     			//frame is really late, drop it no matter what type
     			log.debug("Dropping late message: {}", message);
@@ -290,13 +297,13 @@ public class RTMPProtocolEncoder implements Constants, IEventEncoder {
         				//if its a key frame the inter and disposible checks can be skipped
         				log.debug("Resuming stream with key frame; message: {}", message);
         				mapping.setKeyFrameNeeded(false);
-        			} else if (tardiness >= lowestTolerance && tardiness < baseTolerance) {
+        			} else if (tardiness >= baseTolerance && tardiness < midTolerance) {
         				//drop disposible frames
         				if (video.getFrameType() == FrameType.DISPOSABLE_INTERFRAME) {
         	    			log.debug("Dropping disposible frame; message: {}", message);        					
         					drop = true;
         				}
-        			} else if (tardiness >= baseTolerance && tardiness <= highestTolerance) {
+        			} else if (tardiness >= midTolerance && tardiness <= highestTolerance) {
         				//drop inter-frames and disposible frames
     	    			log.debug("Dropping disposible or inter frame; message: {}", message);        					
         				drop = true;
@@ -468,11 +475,11 @@ public class RTMPProtocolEncoder implements Constants, IEventEncoder {
 			case TYPE_BYTES_READ:
 				return encodeBytesRead((BytesRead) message);
 			case TYPE_AUDIO_DATA:
-				//TODO: drop the message if its "late"
+				log.trace("Encode audio message");
 
 				return encodeAudioData((AudioData) message);
 			case TYPE_VIDEO_DATA:
-				//TODO: drop the message if its "late"
+				log.trace("Encode video message");
 
 				return encodeVideoData((VideoData) message);
 			case TYPE_FLEX_SHARED_OBJECT:
@@ -861,8 +868,8 @@ public class RTMPProtocolEncoder implements Constants, IEventEncoder {
 	}
 
 	private void updateTolerance() {
-		highestTolerance = baseTolerance + (long) (baseTolerance * 0.3);
-		lowestTolerance = baseTolerance - (long) (baseTolerance * 0.3);
+		midTolerance = baseTolerance + (long) (baseTolerance * 0.3);
+		highestTolerance = baseTolerance + (long) (baseTolerance * 0.6);
 	}
 
 	/**

@@ -242,45 +242,46 @@ public class RTMPProtocolEncoder implements Constants, IEventEncoder {
     		mapping.setLastStreamTime(timestamp);
     
     		long clockTimeOfMessage = mapping.getClockStartTime() + timestamp - mapping.getStreamStartTime();
+    		
     		//determine tardiness / how late it is
     		long tardiness = clockTimeOfMessage - now;
-    		
-    		//subtract the ping time / latency from the tardiness value
-    		IConnection conn = Red5.getConnectionLocal();
-    		if (conn != null) {
-        		log.debug("Last ping time for connection: {}", conn.getLastPingTime());
-        		tardiness -= conn.getLastPingTime();
-        		//if we're watching vod, subtract the buffer time
-        		if (!isLive) {
-        			RTMPConnection rtmpConn = (RTMPConnection) conn;
-        			int streamId = rtmpConn.getStreamIdForChannel(channelId);
-        			IClientStream stream = rtmpConn.getStreamById(streamId);
-        			if (stream != null) {
-            			int clientBufferDuration = stream.getClientBufferDuration();
-            			if (clientBufferDuration > 0) {
-            				//two times the buffer duration seems to work best with vod
-            				tardiness -= clientBufferDuration * 2;
-            			}
-            			log.debug("Client buffer duration: {}", clientBufferDuration);
-        			}
-        		}   
-    		} else {
-    			log.debug("Connection is null");
-    		}
-    		
-    		
     		
     		//TDJ: EXPERIMENTAL dropping for LIVE packets in future (default false)
     		if(isLive && dropLiveFuture) {
     			tardiness = Math.abs(tardiness);
     		}
     		
+    		//subtract the ping time / latency from the tardiness value
+    		IConnection conn = Red5.getConnectionLocal();
+    		if (conn != null) {
+        		log.debug("Last ping time for connection: {}", conn.getLastPingTime());
+        		tardiness -= conn.getLastPingTime();
+        		//subtract the buffer time
+    			RTMPConnection rtmpConn = (RTMPConnection) conn;
+    			int streamId = rtmpConn.getStreamIdForChannel(channelId);
+    			IClientStream stream = rtmpConn.getStreamById(streamId);
+    			if (stream != null) {
+        			int clientBufferDuration = stream.getClientBufferDuration();
+        			if (clientBufferDuration > 0) {
+        				//two times the buffer duration seems to work best with vod
+        				if (!isLive) {
+        					tardiness -= clientBufferDuration * 2;
+        				} else {
+        					tardiness -= clientBufferDuration;
+        				}
+        			}
+        			log.debug("Client buffer duration: {}", clientBufferDuration);
+    			}
+    		} else {
+    			log.debug("Connection is null");
+    		}
+    		
     		//TODO: how should we differ handling based on live or vod?
     		    		
     		//TODO: if we are VOD do we "pause" the provider when we are consistently late?
     		
-    		log.debug("Packet timestamp: {}; tardiness: {}; now: {}; message clock time: {}", new Object[] { timestamp,
-    				tardiness, now, clockTimeOfMessage });
+    		log.debug("Packet timestamp: {}; tardiness: {}; now: {}; message clock time: {}, dropLiveFuture{}", new Object[] { timestamp,
+    				tardiness, now, clockTimeOfMessage, dropLiveFuture });
     
     		//anything coming in less than the base will be allowed to pass, it will not be
     		//dropped or manipulated

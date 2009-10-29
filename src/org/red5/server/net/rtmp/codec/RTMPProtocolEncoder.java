@@ -97,6 +97,13 @@ public class RTMPProtocolEncoder implements Constants, IEventEncoder {
 	 */
 	private long highestTolerance = baseTolerance + (long) (baseTolerance * 0.6);
 
+	
+	/**
+	 * Indicates if we should drop live packets with future timestamp 
+	 * (i.e, when publisher bandwith is limited) - EXPERIMENTAL
+	 * */
+	private boolean dropLiveFuture = false;
+	
 	/**
 	 * Encodes object with given protocol state to byte buffer
 	 * 
@@ -262,12 +269,11 @@ public class RTMPProtocolEncoder implements Constants, IEventEncoder {
     		}
     		
     		
-    		//TDJ: fix for live, without it, we was getting late on this special case:
-    		//  - Packet timestamp: 494998; tardiness: -2716; now: 1256697216204; message clock time: 1256697213518
-    		//Paul: Negative values mean the data is early and that is ok, especially for publish
-    		//tardiness = Math.abs(tardiness);
     		
-    		//TODO: TDJ: For live, we should have different tolerance for audio and video. Waiting okay from dev team to do it.
+    		//TDJ: EXPERIMENTAL dropping for LIVE packets in future (default false)
+    		if(isLive && dropLiveFuture) {
+    			tardiness = Math.abs(tardiness);
+    		}
     		
     		//TODO: how should we differ handling based on live or vod?
     		    		
@@ -885,6 +891,13 @@ public class RTMPProtocolEncoder implements Constants, IEventEncoder {
 		this.baseTolerance = baseTolerance;
 		//update high and low tolerance
 		updateTolerance();
+	}
+	
+	/**
+	 *   Setter for dropLiveFuture
+	 * */
+	public void setDropLiveFuture(boolean dropLiveFuture) {
+		this.dropLiveFuture = dropLiveFuture;
 	}
 
 	public long getBaseTolerance() {

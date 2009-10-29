@@ -69,6 +69,10 @@ public class RTMPMinaProtocolEncoder extends ProtocolEncoderAdapter {
 		}
 	}
 
+    public RTMPProtocolEncoder getEncoder() {
+		return encoder;
+	}
+    
 	/**
 	 * Setter for serializer.
 	 *
@@ -78,12 +82,17 @@ public class RTMPMinaProtocolEncoder extends ProtocolEncoderAdapter {
 		encoder.setSerializer(serializer);
 	}
     
+	/**
+	 * Setter for baseTolerance
+	 * */
 	public void setBaseTolerance(long baseTolerance) {
 		encoder.setBaseTolerance(baseTolerance);
 	}
-
-	public RTMPProtocolEncoder getEncoder() {
-		return encoder;
-	}
-    
+	
+	/**
+	 * Setter for dropLiveFuture
+	 * */
+	public void setDropLiveFuture (boolean dropLiveFuture) {
+		encoder.setDropLiveFuture(dropLiveFuture);
+	}    
 }

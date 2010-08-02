@@ -27,6 +27,7 @@ import java.util.Arrays;
  * @author Matteo Merli (matteo.merli@gmail.com)
  */
 public final class UnsignedShort extends UnsignedNumber {
+	
 	static final long serialVersionUID = 1L;
 
 	private int value;
@@ -58,8 +59,7 @@ public final class UnsignedShort extends UnsignedNumber {
 	public static UnsignedShort fromBytes(byte[] c, int idx) {
 		UnsignedShort number = new UnsignedShort();
 		if ((c.length - idx) < 2) {
-			throw new IllegalArgumentException(
-					"An UnsignedShort number is composed of 2 bytes.");
+			throw new IllegalArgumentException("An UnsignedShort number is composed of 2 bytes.");
 		}
 		number.value = ((c[0] << 8) | (c[1] & 0xFFFF));
 		return number;
@@ -103,7 +103,7 @@ public final class UnsignedShort extends UnsignedNumber {
 
 	@Override
 	public byte[] getBytes() {
-		return new byte[]{(byte) ((value >> 8) & 0xFF), (byte) (value & 0xFF)};
+		return new byte[] { (byte) ((value >> 8) & 0xFF), (byte) (value & 0xFF) };
 	}
 
 	@Override
@@ -125,7 +125,7 @@ public final class UnsignedShort extends UnsignedNumber {
 			return false;
 		}
 	}
-	
+
 	@Override
 	public int hashCode() {
 		return value;
@@ -139,8 +139,7 @@ public final class UnsignedShort extends UnsignedNumber {
 	@Override
 	public void shiftRight(int nBits) {
 		if (Math.abs(nBits) > 16) {
-			throw new IllegalArgumentException("Cannot right shift " + nBits
-					+ " an UnsignedShort.");
+			throw new IllegalArgumentException("Cannot right shift " + nBits + " an UnsignedShort.");
 		}
 		value >>>= nBits;
 	}
@@ -148,8 +147,7 @@ public final class UnsignedShort extends UnsignedNumber {
 	@Override
 	public void shiftLeft(int nBits) {
 		if (Math.abs(nBits) > 16) {
-			throw new IllegalArgumentException("Cannot left shift " + nBits
-					+ " an UnsignedShort.");
+			throw new IllegalArgumentException("Cannot left shift " + nBits + " an UnsignedShort.");
 		}
 		value <<= nBits;
 	}

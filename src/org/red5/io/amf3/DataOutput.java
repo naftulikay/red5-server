@@ -23,7 +23,6 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.charset.Charset;
 
-import org.apache.mina.core.buffer.IoBuffer;
 import org.red5.io.object.Serializer;
 
 /**
@@ -39,21 +38,16 @@ public class DataOutput implements IDataOutput {
 	/** The output stream. */
 	private Output output;
 	
-	/** The serializer to use. */
-	private Serializer serializer;
-	
 	/** Raw data of output destination. */
-	private IoBuffer buffer;
+	private ByteBuffer buffer;
 	
 	/**
 	 * Create a new DataOutput.
 	 * 
 	 * @param output		destination to write to
-	 * @param serializer	the serializer to use
 	 */
-	protected DataOutput(Output output, Serializer serializer) {
+	protected DataOutput(Output output) {
 		this.output = output;
-		this.serializer = serializer;
 		buffer = output.getBuffer();
 	}
 	
@@ -116,7 +110,7 @@ public class DataOutput implements IDataOutput {
 
     /** {@inheritDoc} */
 	public void writeObject(Object value) {
-		serializer.serialize(output, value);
+		Serializer.serialize(output, value);
 	}
 
     /** {@inheritDoc} */

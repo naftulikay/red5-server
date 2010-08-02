@@ -45,7 +45,7 @@ public class Deserializer {
      * @return Object object
 	 */
 	@SuppressWarnings({ "unchecked", "rawtypes" })
-	public <T> T deserialize(Input in, Type target) {
+	public static <T> T deserialize(Input in, Type target) {
 		
 		byte type = in.readDataType();
 		log.debug("Type: {} target: {}", type, (target != null ? target.toString() : "Target not specified"));
@@ -82,16 +82,16 @@ public class Deserializer {
 				result = in.readDate(target);
 				break;
 			case DataTypes.CORE_ARRAY:
-				result = in.readArray(this, target);
+				result = in.readArray(target);
 				break;
 			case DataTypes.CORE_MAP:
-				result = in.readMap(this, target);
+				result = in.readMap(target);
 				break;
 			case DataTypes.CORE_XML:
 				result = in.readXML(target);
 				break;
 			case DataTypes.CORE_OBJECT:
-				result = in.readObject(this, target);
+				result = in.readObject(target);
 				break;
 			case DataTypes.CORE_BYTEARRAY:
 				result = in.readByteArray(target);
@@ -126,7 +126,7 @@ public class Deserializer {
      * @param target target
      * @return object
      */
-	protected Object postProcessExtension(Object result, Type target) {
+	protected static Object postProcessExtension(Object result, Type target) {
 		// does nothing at the moment, but will later!
 		return result;
 	}

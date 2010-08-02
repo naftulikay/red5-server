@@ -43,7 +43,6 @@ import java.util.TreeSet;
 import org.apache.commons.beanutils.BeanUtils;
 import org.apache.commons.beanutils.BeanUtilsBean;
 import org.apache.commons.beanutils.ConvertUtilsBean;
-import org.apache.mina.core.buffer.IoBuffer;
 import org.red5.io.amf.AMF;
 import org.red5.io.object.DataTypes;
 import org.red5.io.object.Deserializer;
@@ -177,7 +176,7 @@ public class Input extends org.red5.io.amf.Input implements org.red5.io.object.I
 	 * 
 	 * @param buf        Byte buffer
 	 */
-	public Input(IoBuffer buf) {
+	public Input(ByteBuffer buf) {
 		super(buf);
 		amf3_mode = 0;
 		stringReferences = new ArrayList<String>();
@@ -190,7 +189,7 @@ public class Input extends org.red5.io.amf.Input implements org.red5.io.object.I
 	 * @param buf buffer
 	 * @param refStorage ref storage
 	 */
-	public Input(IoBuffer buf, RefStorage refStorage) {
+	public Input(ByteBuffer buf, RefStorage refStorage) {
 		super(buf);
 		this.stringReferences = refStorage.stringReferences;
 		this.classReferences = refStorage.classReferences;
@@ -208,9 +207,9 @@ public class Input extends org.red5.io.amf.Input implements org.red5.io.object.I
 	/**
 	 * Provide access to raw data.
 	 * 
-	 * @return IoBuffer
+	 * @return ByteBuffer
 	 */
-	protected IoBuffer getBuffer() {
+	protected ByteBuffer getBuffer() {
 		return buf;
 	}
 
@@ -375,7 +374,7 @@ public class Input extends org.red5.io.amf.Input implements org.red5.io.object.I
 		log.debug("readString - new length: {}", len);
 		int limit = buf.limit();
 		log.debug("readString - limit: {}", limit);
-		final ByteBuffer strBuf = buf.buf();
+		final ByteBuffer strBuf = buf.duplicate();
 		strBuf.limit(strBuf.position() + len);
 		final String string = AMF3.CHARSET.decode(strBuf).toString();
 		log.debug("String: {}", string);
@@ -394,7 +393,7 @@ public class Input extends org.red5.io.amf.Input implements org.red5.io.object.I
 	public String readString(int length) {
 		log.debug("readString - length: {}", length);
 		int limit = buf.limit();
-		final ByteBuffer strBuf = buf.buf();
+		final ByteBuffer strBuf = buf.duplicate();
 		strBuf.limit(strBuf.position() + length);
 		final String string = AMF3.CHARSET.decode(strBuf).toString();
 		log.debug("String: {}", string);
@@ -423,7 +422,6 @@ public class Input extends org.red5.io.amf.Input implements org.red5.io.object.I
 			// Reference to previously found date
 			return (Date) getReference(ref >> 1);
 		}
-
 		long ms = (long) buf.getDouble();
 		Date date = new Date(ms);
 		storeReference(date);
@@ -808,7 +806,6 @@ public class Input extends org.red5.io.amf.Input implements org.red5.io.object.I
 			// Reference
 			return (ByteArray) getReference(type >> 1);
 		}
-
 		type >>= 1;
 		ByteArray result = new ByteArray(buf, type);
 		storeReference(result);
@@ -1003,7 +1000,7 @@ public class Input extends org.red5.io.amf.Input implements org.red5.io.object.I
 		}
 		len >>= 1;
 		int limit = buf.limit();
-		final ByteBuffer strBuf = buf.buf();
+		final ByteBuffer strBuf = buf.duplicate();
 		strBuf.limit(strBuf.position() + len);
 		final String xmlString = AMF3.CHARSET.decode(strBuf).toString();
 		buf.limit(limit); // Reset the limit

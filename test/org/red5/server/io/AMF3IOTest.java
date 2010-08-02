@@ -19,14 +19,16 @@ package org.red5.server.io;
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 */
 
+import java.nio.ByteBuffer;
 import java.util.List;
 
 import junit.framework.Assert;
 
-import org.apache.mina.core.buffer.IoBuffer;
 import org.junit.Test;
 import org.red5.io.amf3.Input;
 import org.red5.io.amf3.Output;
+import org.red5.io.object.Deserializer;
+import org.red5.io.object.Serializer;
 import org.red5.io.utils.HexDump;
 import org.red5.server.net.rtmp.message.StreamAction;
 
@@ -37,13 +39,13 @@ import org.red5.server.net.rtmp.message.StreamAction;
 */
 public class AMF3IOTest extends AbstractIOTest {
 
-	IoBuffer buf;
+	ByteBuffer buf;
 
 	/** {@inheritDoc} */
 	@Override
 	void dumpOutput() {
 		buf.flip();
-		System.err.println(HexDump.formatHexDump(buf.getHexDump()));
+		System.err.println(HexDump.prettyPrintHex(buf));
 	}
 
 	/** {@inheritDoc} */
@@ -55,18 +57,16 @@ public class AMF3IOTest extends AbstractIOTest {
 	/** {@inheritDoc} */
 	@Override
 	void setupIO() {
-		buf = IoBuffer.allocate(0); // 1kb
-		buf.setAutoExpand(true);
-		buf.setAutoShrink(true);
+		buf = ByteBuffer.allocate(0); // 1kb
 		in = new Input(buf);
 		out = new Output(buf);
 	}
 	
 	public void testEnum() {
 		log.debug("Testing Enum");
-		serializer.serialize(out, StreamAction.CONNECT);
+		Serializer.serialize(out, StreamAction.CONNECT);
 		dumpOutput();
-		Object object = deserializer.deserialize(in, StreamAction.class);
+		Object object = Deserializer.deserialize(in, StreamAction.class);
 		log.debug("Enums - {} {}", object.getClass().getName(), StreamAction.CONNECT.getClass().getName());
 		Assert.assertEquals(object.getClass().getName(), StreamAction.CONNECT.getClass().getName());
 		resetOutput();
@@ -81,9 +81,9 @@ public class AMF3IOTest extends AbstractIOTest {
 				(byte) 0x02, (byte) 0x00, (byte) 0x00, (byte) 0x07, (byte) 0xD0, (byte) 0x7F, (byte) 0xFF, (byte) 0xFF,
 				(byte) 0xFF, (byte) 0x80, (byte) 0x00, (byte) 0x00, (byte) 0x00 };
 
-		in = new Input(IoBuffer.wrap(v));
+		in = new Input(ByteBuffer.wrap(v));
 
-		List<Object> vectorOut = deserializer.deserialize(in, null);
+		List<Object> vectorOut = Deserializer.deserialize(in, null);
 		//[2, 2000, 2147483647, -2147483648]
 		Assert.assertNotNull(vectorOut);
 		Assert.assertEquals(vectorOut.size(), 4);
@@ -101,9 +101,9 @@ public class AMF3IOTest extends AbstractIOTest {
 				(byte) 0x02, (byte) 0x00, (byte) 0x00, (byte) 0x07, (byte) 0xD0, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF,
 				(byte) 0xFF, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00 };
 
-		in = new Input(IoBuffer.wrap(v));
+		in = new Input(ByteBuffer.wrap(v));
 
-		List<Object> vectorOut = deserializer.deserialize(in, null);
+		List<Object> vectorOut = Deserializer.deserialize(in, null);
 		//[2, 2000, 4294967295, 0]
 		Assert.assertNotNull(vectorOut);
 		Assert.assertEquals(vectorOut.size(), 4);
@@ -127,9 +127,9 @@ public class AMF3IOTest extends AbstractIOTest {
 				(byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x7F, (byte) 0xF0, (byte) 0x00,
 				(byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00 };
 
-		in = new Input(IoBuffer.wrap(v));
+		in = new Input(ByteBuffer.wrap(v));
 
-		List<Object> vectorOut = deserializer.deserialize(in, List.class);
+		List<Object> vectorOut = Deserializer.deserialize(in, List.class);
 		//[1.1, -1.1, 1.7976931348623157E308, 4.9E-324, NaN, -Infinity, Infinity]
 		Assert.assertNotNull(vectorOut);
 		Assert.assertEquals(vectorOut.size(), 7);
@@ -147,9 +147,9 @@ public class AMF3IOTest extends AbstractIOTest {
 				(byte) 0x66, (byte) 0x6F, (byte) 0x6F, (byte) 0x52, (byte) 0x65, (byte) 0x66, (byte) 0x01, (byte) 0x06,
 				(byte) 0x00, (byte) 0x06, (byte) 0x09, (byte) 0x66, (byte) 0x6F, (byte) 0x6F, (byte) 0x33 };
 
-		in = new Input(IoBuffer.wrap(v));
+		in = new Input(ByteBuffer.wrap(v));
 
-		List<Object> vectorOut = deserializer.deserialize(in, null);
+		List<Object> vectorOut = Deserializer.deserialize(in, null);
 		//[foo, null, fooRef, foo3]
 		Assert.assertNotNull(vectorOut);
 		Assert.assertEquals(vectorOut.size(), 4);

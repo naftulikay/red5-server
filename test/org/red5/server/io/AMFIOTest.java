@@ -20,7 +20,8 @@ package org.red5.server.io;
  *
 */
 
-import org.apache.mina.core.buffer.IoBuffer;
+import java.nio.ByteBuffer;
+
 import org.red5.io.amf.Input;
 import org.red5.io.amf.Output;
 import org.red5.io.utils.HexDump;
@@ -31,13 +32,13 @@ import org.red5.io.utils.HexDump;
 */
 public class AMFIOTest extends AbstractIOTest {
 
-	IoBuffer buf;
+	ByteBuffer buf;
 
 	/** {@inheritDoc} */
 	@Override
 	void dumpOutput() {
 		buf.flip();
-		System.err.println(HexDump.formatHexDump(buf.getHexDump()));
+		System.err.println(HexDump.prettyPrintHex(buf));
 	}
 
 	/** {@inheritDoc} */
@@ -49,8 +50,7 @@ public class AMFIOTest extends AbstractIOTest {
 	/** {@inheritDoc} */
 	@Override
 	void setupIO() {
-		buf = IoBuffer.allocate(0); // 1kb
-		buf.setAutoExpand(true);
+		buf = ByteBuffer.allocate(0); // 1kb
 		in = new Input(buf);
 		out = new Output(buf);
 	}

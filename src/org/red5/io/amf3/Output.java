@@ -32,7 +32,6 @@ import java.util.Set;
 import net.sf.ehcache.Element;
 
 import org.apache.commons.beanutils.BeanMap;
-import org.apache.mina.core.buffer.IoBuffer;
 import org.red5.annotations.Anonymous;
 import org.red5.compatibility.flex.messaging.io.ObjectProxy;
 import org.red5.io.amf.AMF;
@@ -72,7 +71,7 @@ public class Output extends org.red5.io.amf.Output implements org.red5.io.object
 	 * @param buf instance of IoBuffer
 	 * @see IoBuffer
 	 */
-	public Output(IoBuffer buf) {
+	public Output(ByteBuffer buf) {
 		super(buf);
 		amf3_mode = 0;
 		stringReferences = new HashMap<String, Integer>();
@@ -90,7 +89,7 @@ public class Output extends org.red5.io.amf.Output implements org.red5.io.object
 	 *
 	 * @return IoBuffer
 	 */
-	protected IoBuffer getBuffer() {
+	protected ByteBuffer getBuffer() {
 		return buf;
 	}
 
@@ -165,7 +164,6 @@ public class Output extends org.red5.io.amf.Output implements org.red5.io.object
 			putInteger(pos << 1);
 			return;
 		}
-
 		putInteger(len << 1 | 1);
 		buf.put(encoded);
 		stringReferences.put(str, stringReferences.size());
@@ -179,7 +177,6 @@ public class Output extends org.red5.io.amf.Output implements org.red5.io.object
 			putInteger(1);
 			return;
 		}
-
 		final byte[] encoded = encodeString(string);
 		putString(string, encoded);
 	}
@@ -548,9 +545,8 @@ public class Output extends org.red5.io.amf.Output implements org.red5.io.object
 			putInteger(getReferenceId(array) << 1);
 			return;
 		}
-
 		storeReference(array);
-		IoBuffer data = array.getData();
+		ByteBuffer data = array.getData();
 		putInteger(data.limit() << 1 | 1);
 		byte[] tmp = new byte[data.limit()];
 		int old = data.position();

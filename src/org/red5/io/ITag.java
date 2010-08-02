@@ -19,7 +19,7 @@ package org.red5.io;
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA 
  */
 
-import org.apache.mina.core.buffer.IoBuffer;
+import java.nio.ByteBuffer;
 
 /**
  * A Tag represents the contents or payload of a streamable file.
@@ -35,7 +35,7 @@ public interface ITag extends IoConstants {
 	 * 
 	 * @return ByteBuffer        Body as byte buffer
 	 */
-	public IoBuffer getBody();
+	public ByteBuffer getBody();
 
 	/**
 	 * Return the size of the body
@@ -63,7 +63,7 @@ public interface ITag extends IoConstants {
 	 * 
 	 * @return ByteBuffer        Data as byte buffer
 	 */
-	public IoBuffer getData();
+	public ByteBuffer getData();
 
 	/**
 	 * Returns previous tag size
@@ -76,7 +76,7 @@ public interface ITag extends IoConstants {
 	 * Set the body ByteBuffer.
      * @param body               Body as ByteBuffer
      */
-	public void setBody(IoBuffer body);
+	public void setBody(ByteBuffer body);
 
 	/**
 	 * Set the size of the body.

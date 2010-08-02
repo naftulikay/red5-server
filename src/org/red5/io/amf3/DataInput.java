@@ -23,7 +23,6 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.charset.Charset;
 
-import org.apache.mina.core.buffer.IoBuffer;
 import org.red5.io.object.Deserializer;
 
 /**
@@ -38,22 +37,17 @@ public class DataInput implements IDataInput {
 
 	/** The input stream. */
 	private Input input;
-	
-	/** The deserializer to use. */
-	private Deserializer deserializer;
-	
+		
 	/** Raw data of input source. */
-	private IoBuffer buffer;
+	private ByteBuffer buffer;
 	
 	/**
 	 * Create a new DataInput.
 	 * 
 	 * @param input			input to use
-	 * @param deserializer	the deserializer to use
 	 */
-	protected DataInput(Input input, Deserializer deserializer) {
+	protected DataInput(Input input) {
 		this.input = input;
-		this.deserializer = deserializer;
 		buffer = input.getBuffer();
 	}
 
@@ -111,7 +105,7 @@ public class DataInput implements IDataInput {
 	public String readMultiByte(int length, String charSet) {
 		final Charset cs = Charset.forName(charSet);
 		int limit = buffer.limit();
-		final ByteBuffer strBuf = buffer.buf();
+		final ByteBuffer strBuf = buffer.duplicate();
 		strBuf.limit(strBuf.position() + length);
 		final String string = cs.decode(strBuf).toString();
 		buffer.limit(limit); // Reset the limit
@@ -120,7 +114,7 @@ public class DataInput implements IDataInput {
 
 	/** {@inheritDoc} */
 	public Object readObject() {
-		return deserializer.deserialize(input, Object.class);
+		return Deserializer.deserialize(input, Object.class);
 	}
 
 	/** {@inheritDoc} */
@@ -130,29 +124,29 @@ public class DataInput implements IDataInput {
 
 	/** {@inheritDoc} */
 	public int readUnsignedByte() {
-		return buffer.getUnsigned();
-	}
-
-	/** {@inheritDoc} */
-	public long readUnsignedInt() {
-		return buffer.getUnsignedInt();
+		return buffer.get() & 0xff;
 	}
 
 	/** {@inheritDoc} */
 	public int readUnsignedShort() {
-		return buffer.getUnsignedShort();
+		return buffer.getShort() & 0xffff;
+	}	
+	
+	/** {@inheritDoc} */
+	public long readUnsignedInt() {
+		return buffer.getInt() & 0xffffffffL;
 	}
 
 	/** {@inheritDoc} */
 	public String readUTF() {
-		int length = buffer.getUnsignedShort();
+		int length = buffer.getShort() & 0xffff;
 		return readUTFBytes(length);
 	}
 
 	/** {@inheritDoc} */
 	public String readUTFBytes(int length) {
 		int limit = buffer.limit();
-		final ByteBuffer strBuf = buffer.buf();
+		final ByteBuffer strBuf = buffer.duplicate();
 		strBuf.limit(strBuf.position() + length);
 		final String string = AMF3.CHARSET.decode(strBuf).toString();
 		buffer.limit(limit); // Reset the limit

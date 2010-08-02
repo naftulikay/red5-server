@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <projectDescription>
-	<name>red5_server</name>
-	<comment></comment>
+	<name>red5_server_netty</name>
+	<comment>Experimental work for IO replacement</comment>
 	<projects>
 	</projects>
 	<buildSpec>

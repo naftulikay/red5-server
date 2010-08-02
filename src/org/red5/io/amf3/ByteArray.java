@@ -19,15 +19,17 @@ package org.red5.io.amf3;
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  */
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.zip.Deflater;
 import java.util.zip.DeflaterOutputStream;
 import java.util.zip.InflaterInputStream;
 
-import org.apache.mina.core.buffer.IoBuffer;
-import org.red5.io.object.Deserializer;
-import org.red5.io.object.Serializer;
+import com.google.common.io.ByteArrayDataOutput;
+import com.google.common.io.ByteStreams;
 
 /**
  * Red5 version of the Flex ByteArray class.
@@ -38,7 +40,7 @@ import org.red5.io.object.Serializer;
 public class ByteArray implements IDataInput, IDataOutput {
 
 	/** Internal storage for array contents. */
-	protected IoBuffer data;
+	protected ByteBuffer data;
 	
 	/** Object used to read from array. */
 	protected IDataInput dataInput;
@@ -52,13 +54,16 @@ public class ByteArray implements IDataInput, IDataOutput {
 	 * @param buffer
 	 * @param length
 	 */
-	protected ByteArray(IoBuffer buffer, int length) {
-		data = IoBuffer.allocate(length);
-		data.setAutoExpand(true);
-		byte[] tmp = new byte[length];
-		buffer.get(tmp);
-		data.put(tmp);
-		data.flip();
+	protected ByteArray(ByteBuffer buffer, int length) {
+		ByteArrayDataOutput output = ByteStreams.newDataOutput(length);
+		if (buffer.hasArray()) {
+			output.write(buffer.array());
+		} else {
+			byte[] tmp = new byte[length];
+			buffer.get(tmp);
+			output.write(tmp);
+		}
+		data = ByteBuffer.wrap(output.toByteArray());
 		prepareIO();
 	}
 	
@@ -66,8 +71,7 @@ public class ByteArray implements IDataInput, IDataOutput {
 	 * Public constructor. Creates new empty ByteArray.
 	 */
 	public ByteArray() {
-		data = IoBuffer.allocate(0);
-		data.setAutoExpand(true);
+		data = ByteBuffer.allocate(0);
 		prepareIO();
 	}
 
@@ -78,11 +82,10 @@ public class ByteArray implements IDataInput, IDataOutput {
 		// we assume that everything in ByteArray is in AMF3
 		Input input = new Input(data);
 		input.enforceAMF3();
-		dataInput = new DataInput(input, new Deserializer());
-
+		dataInput = new DataInput(input);
 		Output output = new Output(data);
 		output.enforceAMF3();
-		dataOutput = new DataOutput(output, new Serializer());
+		dataOutput = new DataOutput(output);
 	}
 	
 	/**
@@ -90,7 +93,7 @@ public class ByteArray implements IDataInput, IDataOutput {
 	 * 
 	 * @return byte buffer
 	 */
-	protected IoBuffer getData() {
+	protected ByteBuffer getData() {
 		return data;
 	}
 	
@@ -133,7 +136,7 @@ public class ByteArray implements IDataInput, IDataOutput {
 	/**
 	 * Return string representation of the array's contents.
 	 * 
-	 * @return string representaiton of array's contents.
+	 * @return string representation of array's contents.
 	 */
 	public String toString() {
 		int old = data.position();
@@ -149,9 +152,8 @@ public class ByteArray implements IDataInput, IDataOutput {
 	 * Compress contents using zlib.
 	 */
 	public void compress() {
-		IoBuffer tmp = IoBuffer.allocate(0);
-		tmp.setAutoExpand(true);
-		DeflaterOutputStream deflater = new DeflaterOutputStream(tmp.asOutputStream(), new Deflater(Deflater.BEST_COMPRESSION));
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		DeflaterOutputStream deflater = new DeflaterOutputStream(baos, new Deflater(Deflater.BEST_COMPRESSION));
 		byte[] tmpData = new byte[data.limit()];
 		data.position(0);
 		data.get(tmpData);
@@ -159,9 +161,7 @@ public class ByteArray implements IDataInput, IDataOutput {
 			deflater.write(tmpData);
 			deflater.finish();
 		} catch (IOException e) {
-			//docs state that free is optional
-			tmp.free();
-			throw new RuntimeException("could not compress data", e);
+			throw new RuntimeException("Could not compress data", e);
 		} finally {
 			if (deflater != null) {
 				try {
@@ -170,9 +170,8 @@ public class ByteArray implements IDataInput, IDataOutput {
 				}
 			}
 		}
-		data.free();
-		data = tmp;
-		data.flip();
+		data.clear();
+		data = ByteBuffer.wrap(baos.toByteArray());
 		prepareIO();
 	}
 	
@@ -181,22 +180,22 @@ public class ByteArray implements IDataInput, IDataOutput {
 	 */
 	public void uncompress() {
 		data.position(0);
-		InflaterInputStream inflater = new InflaterInputStream(data.asInputStream());
-		byte[] buffer = new byte[8192];
-		IoBuffer tmp = IoBuffer.allocate(0);
-		tmp.setAutoExpand(true);
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		ByteArrayInputStream bais = new ByteArrayInputStream(data.array());
+		InflaterInputStream inflater = new InflaterInputStream(bais);
 		try {
+			byte[] buffer = new byte[8192];
 			while (inflater.available() > 0) {
 				int decompressed = inflater.read(buffer);
 				if (decompressed <= 0) {
 					// Finished decompression
 					break;
 				}
-				tmp.put(buffer, 0, decompressed);
+				baos.write(buffer);
 			}
+			bais.close();
 		} catch (IOException e) {
-			tmp.free();
-			throw new RuntimeException("could not uncompress data", e);
+			throw new RuntimeException("Could not uncompress data", e);
 		} finally {
 			if (inflater != null) {
 				try {
@@ -205,9 +204,8 @@ public class ByteArray implements IDataInput, IDataOutput {
 				}
 			}
 		}
-		data.free();
-		data = tmp;
-		data.flip();
+		data.clear();
+		data = ByteBuffer.wrap(baos.toByteArray());
 		prepareIO();
 	}
 	

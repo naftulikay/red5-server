@@ -20,8 +20,7 @@ package org.red5.io;
  */
 
 import java.io.IOException;
-
-import org.apache.mina.core.buffer.IoBuffer;
+import java.nio.ByteBuffer;
 
 /**
  * Writes tags to FLV file
@@ -73,7 +72,7 @@ public interface ITagWriter {
 	 * @return                       <code>true</code> on success, <code>false</code> otherwise
 	 * @throws IOException           I/O exception
 	 */
-	public boolean writeTag(byte type, IoBuffer data) throws IOException;
+	public boolean writeTag(byte type, ByteBuffer data) throws IOException;
 
 	/**
 	 * Write a Stream to disk using bytes

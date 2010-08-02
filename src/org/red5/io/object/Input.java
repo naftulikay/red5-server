@@ -19,10 +19,10 @@ package org.red5.io.object;
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA 
  */
 
+import java.lang.reflect.Type;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
-import java.lang.reflect.Type;
 
 import org.red5.io.amf3.ByteArray;
 import org.w3c.dom.Document;
@@ -88,33 +88,31 @@ public interface Input {
 	 * Read an array. This can result in a List or Map being
 	 * deserialized depending on the array type found.
 	 * 
-	 * @param deserializer deserializer
 	 * @param target target type
 	 * 
 	 * @return		   array
 	 */
-	Object readArray(Deserializer deserializer, Type target);
+	Object readArray(Type target);
 
 	/**
 	 * Read a map containing key - value pairs. This can result
 	 * in a List or Map being deserialized depending on the
 	 * map type found.
-	 * @param deserializer deserializer
+	 * 
 	 * @param target target type
 	 * 
 	 * @return		   Map
 	 */
-	Object readMap(Deserializer deserializer, Type target);
+	Object readMap(Type target);
 
 	/**
 	 * Read an object.
 	 * 
-	 * @param deserializer deserializer
 	 * @param target target type
 	 * 
 	 * @return		   object
 	 */
-	Object readObject(Deserializer deserializer, Type target);
+	Object readObject(Type target);
 
 	/**
 	 * Read XML document
@@ -154,10 +152,10 @@ public interface Input {
 	/**
 	 * Read key - value pairs. This is required for the RecordSet
 	 * deserializer.
-	 * @param deserializer deserializer
+	 * 
 	 * @return key-value pairs
 	 */
-	Map<String, Object> readKeyValues(Deserializer deserializer);
+	Map<String, Object> readKeyValues();
 
 	/**
 	 * Read Vector<int> object.

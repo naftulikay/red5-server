@@ -57,6 +57,7 @@ import com.google.common.io.ByteStreams;
  *
  * @author The Red5 Project (red5@osflash.org)
  * @author Luke Hubbard, Codegent Ltd (luke@codegent.com)
+ * 
  */
 @SuppressWarnings("serial")
 public class Input extends BaseInput implements org.red5.io.object.Input {

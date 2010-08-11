@@ -57,14 +57,12 @@ import com.google.common.io.ByteStreams;
  * @author Luke Hubbard, Codegent Ltd (luke@codegent.com)
  * @author Paul Gregoire (mondain@gmail.com)
  * @author Harald Radi (harald.radi@nme.at)
+ * @author Tyler Kocheran
  */
 public class Output extends BaseOutput implements org.red5.io.object.Output {
 
 	protected static Logger log = LoggerFactory.getLogger(Output.class);
 
-	/**
-	 * Cache encoded strings... the TK way...
-	 */
 	private static Cache stringCache;
 
 	private static Cache serializeCache;

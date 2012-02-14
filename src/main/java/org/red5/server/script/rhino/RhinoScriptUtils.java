@@ -20,10 +20,15 @@ import java.io.IOException;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
-import java.util.Map;
 import java.util.regex.PatternSyntaxException;
 
-import javax.script.*;
+import javax.script.Bindings;
+import javax.script.Compilable;
+import javax.script.CompiledScript;
+import javax.script.Invocable;
+import javax.script.ScriptContext;
+import javax.script.ScriptEngine;
+import javax.script.ScriptEngineManager;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -61,7 +66,7 @@ public class RhinoScriptUtils {
 	 * @throws java.io.IOException
 	 */
 	public static Object createRhinoObject(String scriptSource,
-			Class[] interfaces, Class extendedClass)
+			Class<?>[] interfaces, Class<?> extendedClass)
 			throws ScriptCompilationException, IOException, Exception {
 		if (log.isDebugEnabled()) {
 			log.debug("Script Engine Manager: " + mgr.getClass().getName());
@@ -151,6 +156,7 @@ public class RhinoScriptUtils {
 				log.debug("Calling: " + name);
 			}
 			try {
+				@SuppressWarnings("unused")
 				Method apiMethod = null;
 				Invocable invocable = (Invocable) engine;
 				if (null == instance) {
@@ -167,9 +173,9 @@ public class RhinoScriptUtils {
 							o = invocable.invokeFunction(name, args);
 						} catch (Exception ex) {
 							log.debug("Function not found: " + name);
-							Class[] interfaces = (Class[]) engine
+							Class<?>[] interfaces = (Class[]) engine
 									.get("interfaces");
-							for (Class clazz : interfaces) {
+							for (Class<?> clazz : interfaces) {
 								// java6 style
 								o = invocable.getInterface(engine
 										.get((String) engine.get("className")),
